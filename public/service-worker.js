@@ -1,4 +1,5 @@
-const CACHE_NAME = 'cattalytics-static-v1'
+// Use a cache name that includes a timestamp so new builds get a fresh cache and old caches are removed
+const CACHE_NAME = 'cattalytics-static-v' + Date.now()
 
 // Keep the pre-cache list minimal (avoid referencing source files that don't exist in production)
 const ASSETS = [
@@ -27,6 +28,7 @@ self.addEventListener('install', evt => {
   })())
   // Activate the new SW as soon as it's finished installing
   try { self.skipWaiting() } catch (e) { /* ignore */ }
+  try { console.log('ServiceWorker installed, cache=', CACHE_NAME) } catch (e) { /* ignore */ }
 })
 
 self.addEventListener('activate', evt => {
@@ -34,6 +36,18 @@ self.addEventListener('activate', evt => {
     caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k))))
   )
   self.clients.claim()
+})
+
+// Allow the page to tell the SW to skipWaiting and activate immediately
+self.addEventListener('message', (evt) => {
+  try {
+    if (!evt.data) return
+    if (evt.data.type === 'SKIP_WAITING') {
+      try { self.skipWaiting() } catch(e){}
+    }
+  } catch (e) {
+    /* ignore */
+  }
 })
 
 self.addEventListener('fetch', evt => {

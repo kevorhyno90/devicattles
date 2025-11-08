@@ -1,4 +1,10 @@
 import React, { useEffect, useState } from 'react'
+import Pastures from './Pastures'
+import AnimalTreatment from './AnimalTreatment'
+import AnimalFeeding from './AnimalFeeding'
+import AnimalMeasurement from './AnimalMeasurement'
+import AnimalBreeding from './AnimalBreeding'
+import AnimalMilkYield from './AnimalMilkYield'
 
 // Realized Animals component: HTML5 controls, inline validation, unique tag checks,
 // realistic sample data, and non-placeholder behavior.
@@ -114,6 +120,45 @@ export default function Animals() {
     const groupName = groups.find(g => g.id === a.groupId)?.name || ''
     return (a.id || '').toLowerCase().includes(q) || (a.tag || '').toLowerCase().includes(q) || (a.name || '').toLowerCase().includes(q) || (a.breed || '').toLowerCase().includes(q) || groupName.toLowerCase().includes(q)
   })
+  const [expandedIds, setExpandedIds] = useState([])
+  const [inlineEditingId, setInlineEditingId] = useState(null)
+  const [inlineForm, setInlineForm] = useState(emptyAnimal)
+  const [modalOpenId, setModalOpenId] = useState(null)
+
+  function toggleExpand(id){
+    // Open modal-like expansive view for a single animal to mimic Farmbrite
+    if (modalOpenId === id) {
+      setModalOpenId(null)
+      setExpandedIds(prev => prev.filter(x => x !== id))
+    } else {
+      setModalOpenId(id)
+      setExpandedIds([id])
+    }
+  }
+
+  function startInlineEdit(a){
+    setInlineEditingId(a.id)
+    setInlineForm({ ...a })
+  }
+
+  function saveInlineEdit(){
+    if(!inlineEditingId) return
+    setAnimals(animals.map(x => x.id === inlineEditingId ? { ...x, ...inlineForm } : x))
+    setInlineEditingId(null)
+  }
+
+  function cancelInlineEdit(){ setInlineEditingId(null) }
+
+  function handleInlineChange(field, value){ setInlineForm(f => ({ ...f, [field]: value })) }
+
+  function recordWeight(a){
+    const input = window.prompt('Enter new weight (kg)', a.weight || '')
+    if (input === null) return
+    const w = Number(input)
+    if (Number.isNaN(w)) { window.alert('Invalid number'); return }
+    const ts = new Date().toISOString()
+    setAnimals(animals.map(x => x.id === a.id ? { ...x, weight: w, weightLogs: [...(x.weightLogs||[]), { weight: w, date: ts }] } : x))
+  }
 
   return (
     <section>
@@ -121,10 +166,16 @@ export default function Animals() {
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         <button onClick={() => { resetForm(); setTab('addAnimal') }} disabled={tab === 'addAnimal'}>Add Animal</button>
-        <button onClick={() => { resetGroupForm(); setTab('addGroup') }} disabled={tab === 'addGroup'}>Add Group</button>
-        <button onClick={() => setTab('list')} disabled={tab === 'list'}>List</button>
+  <button onClick={() => { resetGroupForm(); setTab('addGroup') }} disabled={tab === 'addGroup'}>Add Group</button>
+  <button onClick={() => setTab('pastures')} disabled={tab === 'pastures'}>Pastures</button>
+  <button onClick={() => setTab('treatment')} disabled={tab === 'treatment'}>Treatment</button>
+  <button onClick={() => setTab('feeding')} disabled={tab === 'feeding'}>Feeding</button>
+  <button onClick={() => setTab('measurement')} disabled={tab === 'measurement'}>Measurement</button>
+  <button onClick={() => setTab('breeding')} disabled={tab === 'breeding'}>Breeding</button>
+  <button onClick={() => setTab('milkyield')} disabled={tab === 'milkyield'}>Milk Yield</button>
+  <button onClick={() => setTab('list')} disabled={tab === 'list'}>List</button>
         <div style={{ marginLeft: 'auto' }}>
-          <input aria-label="Search" placeholder="Search animals/groups" value={filter} onChange={e => setFilter(e.target.value)} />
+          <input className="search-input" aria-label="Search" placeholder="Search animals/groups" value={filter} onChange={e => setFilter(e.target.value)} />
         </div>
       </div>
 
@@ -239,23 +290,197 @@ export default function Animals() {
       )}
 
       <div>
+        {tab === 'pastures' && (
+          <div style={{ marginBottom: 16 }}>
+            <Pastures />
+          </div>
+        )}
+
+        {tab === 'treatment' && (
+          <div style={{ marginBottom: 16 }}>
+            <AnimalTreatment animals={animals} />
+          </div>
+        )}
+
+        {tab === 'feeding' && (
+          <div style={{ marginBottom: 16 }}>
+            <AnimalFeeding animals={animals} />
+          </div>
+        )}
+
+        {tab === 'measurement' && (
+          <div style={{ marginBottom: 16 }}>
+            <AnimalMeasurement animals={animals} />
+          </div>
+        )}
+
+        {tab === 'breeding' && (
+          <div style={{ marginBottom: 16 }}>
+            <AnimalBreeding animals={animals} />
+          </div>
+        )}
+
+        {tab === 'milkyield' && (
+          <div style={{ marginBottom: 16 }}>
+            <AnimalMilkYield animals={animals} />
+          </div>
+        )}
         <h3>Animals ({filtered.length})</h3>
-        <ul>
-          {filtered.map(a => (
-            <li key={a.id} style={{ marginBottom: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <strong>{a.name}</strong> <em>({a.id})</em> {a.tag ? <span>• {a.tag}</span> : null}
-                  <div style={{ fontSize: 12, color: '#444' }}>{a.breed}{a.color ? ` • ${a.color}` : ''}{a.weight ? ` • ${a.weight}kg` : ''}{a.dob ? ` • DOB: ${a.dob}` : ''}</div>
-                  <div style={{ fontSize: 12, color: '#666' }}>{groups.find(g => g.id === a.groupId)?.name || 'No group'} • {a.status}</div>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          {filtered.map(a => {
+            const isExp = expandedIds.includes(a.id)
+            const groupName = groups.find(g => g.id === a.groupId)?.name || 'No group'
+            return (
+              <li key={a.id} className="animal-card" style={{ marginBottom: 12 }}>
+                <div className="animal-summary">
+                  <div>
+                    <div className="animal-meta"><strong>{a.name}</strong> <em>({a.id})</em> {a.tag ? <span>• {a.tag}</span> : null}</div>
+                    <div className="animal-sub">{a.breed}{a.color ? ` • ${a.color}` : ''}{a.weight ? ` • ${a.weight}kg` : ''} • {groupName} • {a.status}</div>
+                  </div>
+                  <div className="animal-controls">
+                    <button onClick={() => toggleExpand(a.id)} aria-expanded={isExp}>{isExp ? 'Close' : 'Expand'}</button>
+                    <button onClick={() => startEditAnimal(a)}>Edit</button>
+                    <button onClick={() => deleteAnimal(a.id)} style={{ marginLeft: 8 }}>Delete</button>
+                  </div>
                 </div>
+
+                <div className={"animal-details" + (isExp ? ' expanded' : '')} aria-hidden={!isExp}>
+      {/* Modal / Drawer for expansive animal view */}
+      {modalOpenId && (() => {
+        const a = animals.find(x => x.id === modalOpenId)
+        if (!a) return null
+        const gname = groups.find(g => g.id === a.groupId)?.name || 'No group'
+        return (
+          <div className="drawer-overlay" onClick={() => setModalOpenId(null)}>
+            <div className="drawer" onClick={e => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0 }}>{a.name} — {a.id}</h3>
                 <div>
-                  <button onClick={() => startEditAnimal(a)}>Edit</button>
-                  <button onClick={() => deleteAnimal(a.id)} style={{ marginLeft: 8 }}>Delete</button>
+                  <button onClick={() => { startEditAnimal(a) }}>Edit full</button>
+                  <button onClick={() => setModalOpenId(null)} style={{ marginLeft: 8 }}>Close</button>
                 </div>
               </div>
-            </li>
-          ))}
+              <div style={{ marginTop: 12 }}>
+                <div style={{ display: 'flex', gap: 16 }}>
+                  <div style={{ width: 280, border: '1px solid #eee', padding: 12, borderRadius: 8 }}>
+                    <div style={{ width: '100%', height: 160, background: '#f3f3f3', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, marginBottom: 8 }}>Photo</div>
+                    <div><strong>Tag:</strong> {a.tag}</div>
+                    <div style={{ marginTop: 6 }}><strong>Breed:</strong> {a.breed}</div>
+                    <div style={{ marginTop: 6 }}><strong>Sex:</strong> {a.sex}</div>
+                    <div style={{ marginTop: 6 }}><strong>Group:</strong> {gname}</div>
+                    <div style={{ marginTop: 6 }}><strong>Status:</strong> {a.status}</div>
+                    <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                      <button onClick={() => recordWeight(a)}>Record weight</button>
+                      <button onClick={() => startInlineEdit(a)}>Quick edit</button>
+                    </div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div><strong>DOB</strong><div>{a.dob || '—'}</div></div>
+                      <div><strong>Weight</strong><div>{a.weight ? `${a.weight} kg` : '—'}</div></div>
+                      <div><strong>Sire</strong><div>{a.sire || '—'}</div></div>
+                      <div><strong>Dam</strong><div>{a.dam || '—'}</div></div>
+                    </div>
+
+                    <div style={{ marginTop: 12 }}>
+                      <strong>Notes</strong>
+                      <div style={{ marginTop: 6, padding: 10, border: '1px solid #eee', borderRadius: 6 }}>{a.notes || '—'}</div>
+                    </div>
+
+                    <div style={{ marginTop: 12 }}>
+                      <strong>Weight log</strong>
+                      <div style={{ marginTop: 8 }}>
+                        {(!a.weightLogs || !a.weightLogs.length) ? <div style={{ color: '#666' }}>No weight records</div> : (
+                          <ul>
+                            {(a.weightLogs || []).slice().reverse().map((w, idx) => (
+                              <li key={idx}>{new Date(w.date).toLocaleString()} — {w.weight} kg</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+                  {/* Expansive layout: left column (photo + stats) right column (details, logs, actions) */}
+                  <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                    <div style={{ minWidth: 180, maxWidth: 240, border: '1px solid #ddd', padding: 12, borderRadius: 8 }}>
+                      <div style={{ width: '100%', height: 120, background: '#f3f3f3', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, marginBottom: 8 }}>
+                        <div style={{ color: '#888' }}>Photo</div>
+                      </div>
+                      <div style={{ fontSize: 14 }}>
+                        <div><strong>{a.name}</strong> <em>({a.id})</em></div>
+                        <div style={{ marginTop: 6 }}>{a.breed} • {a.color || '—'}</div>
+                        <div style={{ marginTop: 6 }}>Current weight: <strong>{a.weight || '—'}</strong> kg</div>
+                        <div style={{ marginTop: 6 }}>Group: {groups.find(g=>g.id===a.groupId)?.name || '—'}</div>
+                      </div>
+                      <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+                        <button onClick={() => recordWeight(a)}>Record weight</button>
+                        <button onClick={() => startInlineEdit(a)}>Quick edit</button>
+                      </div>
+                    </div>
+
+                    <div style={{ flex: 1 }}>
+                      {inlineEditingId === a.id ? (
+                        <div style={{ border: '1px solid #eee', padding: 12, borderRadius: 6 }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                            <label>Tag<input value={inlineForm.tag} onChange={e => handleInlineChange('tag', e.target.value)} /></label>
+                            <label>Name<input value={inlineForm.name} onChange={e => handleInlineChange('name', e.target.value)} /></label>
+                            <label>Breed<input value={inlineForm.breed} onChange={e => handleInlineChange('breed', e.target.value)} /></label>
+                            <label>Color<input value={inlineForm.color} onChange={e => handleInlineChange('color', e.target.value)} /></label>
+                            <label>DOB<input type="date" value={inlineForm.dob} onChange={e => handleInlineChange('dob', e.target.value)} /></label>
+                            <label>Weight<input type="number" step="0.1" value={inlineForm.weight} onChange={e => handleInlineChange('weight', e.target.value)} /></label>
+                            <label>Sire<input value={inlineForm.sire} onChange={e => handleInlineChange('sire', e.target.value)} /></label>
+                            <label>Dam<input value={inlineForm.dam} onChange={e => handleInlineChange('dam', e.target.value)} /></label>
+                          </div>
+                          <div style={{ marginTop: 8 }}>
+                            <button onClick={saveInlineEdit}>Save</button>
+                            <button onClick={cancelInlineEdit} style={{ marginLeft: 8 }}>Cancel</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                            <label>Tag<input value={a.tag} readOnly /></label>
+                            <label>Breed<input value={a.breed} readOnly /></label>
+                            <label>Sex<select value={a.sex} disabled><option>F</option><option>M</option></select></label>
+                            <label>Color<input value={a.color} readOnly /></label>
+                            <label>DOB<input type="date" value={a.dob} readOnly /></label>
+                            <label>Weight (kg)<input type="number" value={a.weight} readOnly /></label>
+                            <label>Sire<input value={a.sire} readOnly /></label>
+                            <label>Dam<input value={a.dam} readOnly /></label>
+                            <label className="animal-notes" style={{ gridColumn: '1 / -1' }}>Notes<textarea value={a.notes} readOnly /></label>
+                          </div>
+
+                          <div style={{ marginTop: 12 }}>
+                            <strong>Weight log</strong>
+                            <div style={{ marginTop: 6 }}>
+                              {(!a.weightLogs || !a.weightLogs.length) ? <div style={{ color: '#666' }}>No weight records</div> : (
+                                <ul style={{ marginTop: 6 }}>
+                                  {(a.weightLogs || []).slice().reverse().map((w, idx) => (
+                                    <li key={idx}>{new Date(w.date).toLocaleString()} — {w.weight} kg</li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          </div>
+
+                          <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                            <button onClick={() => { startEditAnimal(a) }}>Edit full</button>
+                            <button onClick={() => toggleExpand(a.id)}>Close</button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </li>
+            )
+          })}
         </ul>
       </div>
     </section>
