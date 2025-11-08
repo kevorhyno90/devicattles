@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import Animals from './modules/Animals'
+import Animals from './modules/AnimalsClean'
 import Pastures from './modules/Pastures'
 import Finance from './modules/Finance'
 
