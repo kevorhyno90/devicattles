@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import Pastures from './Pastures'
-import AnimalTreatment from './AnimalTreatment'
+import HealthSystem from './HealthSystem'
 import AnimalFeeding from './AnimalFeeding'
 import AnimalMeasurement from './AnimalMeasurement'
 import AnimalBreeding from './AnimalBreeding'
 import AnimalMilkYield from './AnimalMilkYield'
+import { fileToDataUrl, estimateDataUrlSize, uid } from '../lib/image'
 
 // Realized Animals component: HTML5 controls, inline validation, unique tag checks,
 // realistic sample data, and non-placeholder behavior.
@@ -18,9 +19,9 @@ export default function Animals() {
   ]
 
   const SAMPLE_ANIMALS = [
-    { id: 'A-001', tag: 'TAG1001', name: 'Bessie', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2019-05-10', weight: 450, sire: 'S-100', dam: 'D-200', groupId: 'G-001', status: 'Active', notes: 'High producing cow' },
-    { id: 'A-002', tag: 'TAG1002', name: 'Molly', breed: 'Jersey', sex: 'F', color: 'Brown', dob: '2020-03-22', weight: 380, sire: 'S-101', dam: 'D-201', groupId: 'G-001', status: 'Active', notes: '' },
-    { id: 'A-003', tag: 'TAG1003', name: 'Duke', breed: 'Angus', sex: 'M', color: 'Black', dob: '2018-11-02', weight: 620, sire: '', dam: '', groupId: 'G-002', status: 'Sold', notes: 'Sold at market' }
+    { id: 'A-001', tag: 'TAG1001', name: 'Bessie', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2019-05-10', weight: 450, sire: 'S-100', dam: 'D-200', groupId: 'G-001', status: 'Active', notes: 'High producing cow', owner: 'Farm Owner', registration: 'REG-9001', tattoo: 'T-01', purchaseDate: '2019-06-01', purchasePrice: 1200, vendor: 'Local Auction', tags: ['dairy','priority'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 3, lactationStatus: 'Lactating' },
+    { id: 'A-002', tag: 'TAG1002', name: 'Molly', breed: 'Jersey', sex: 'F', color: 'Brown', dob: '2020-03-22', weight: 380, sire: 'S-101', dam: 'D-201', groupId: 'G-001', status: 'Active', notes: '', owner: '', registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', pregnancyStatus: 'Unknown', expectedDue: '', parity: 1, lactationStatus: 'Dry' },
+    { id: 'A-003', tag: 'TAG1003', name: 'Duke', breed: 'Angus', sex: 'M', color: 'Black', dob: '2018-11-02', weight: 620, sire: '', dam: '', groupId: 'G-002', status: 'Sold', notes: 'Sold at market', owner: '', registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' }
   ]
 
   const [tab, setTab] = useState('list')
@@ -28,7 +29,7 @@ export default function Animals() {
   const [groups, setGroups] = useState([])
   const [filter, setFilter] = useState('')
 
-  const emptyAnimal = { id: '', tag: '', name: '', breed: '', sex: 'F', color: '', dob: '', weight: '', sire: '', dam: '', groupId: '', status: 'Active', notes: '' }
+  const emptyAnimal = { id: '', tag: '', name: '', breed: '', sex: 'F', color: '', dob: '', weight: '', sire: '', dam: '', groupId: '', status: 'Active', notes: '', owner: '', registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', photos: [], pregnancyStatus: 'Unknown', expectedDue: '', parity: '', lactationStatus: 'NA' }
   const [form, setForm] = useState(emptyAnimal)
   const [editingId, setEditingId] = useState(null)
   const [errors, setErrors] = useState({})
@@ -64,12 +65,57 @@ export default function Animals() {
       const w = Number(a.weight)
       if (Number.isNaN(w) || w < 0) e.weight = 'Weight must be a positive number'
     }
+    if (a.purchaseDate) {
+      const pd = Date.parse(a.purchaseDate)
+      if (Number.isNaN(pd)) e.purchaseDate = 'Invalid purchase date'
+    }
+    if (a.purchasePrice) {
+      const p = Number(a.purchasePrice)
+      if (Number.isNaN(p) || p < 0) e.purchasePrice = 'Purchase price must be a positive number'
+    }
     // tag uniqueness
     if (a.tag && animals.some(x => x.tag === a.tag && x.id !== a.id)) e.tag = 'Tag must be unique'
     return e
   }
 
   function resetForm() { setForm(emptyAnimal); setEditingId(null); setErrors({}) }
+
+  const MAX_PHOTOS = 5
+  const MAX_PHOTO_BYTES = 2 * 1024 * 1024 // 2 MB
+  const MAX_DIM = 1024
+  const JPG_QUALITY = 0.8
+
+  async function handleFiles(selectedFiles) {
+    if (!selectedFiles || !selectedFiles.length) return
+    const current = Array.isArray(form.photos) ? [...form.photos] : []
+    for (let i = 0; i < selectedFiles.length; i++) {
+      if (current.length >= MAX_PHOTOS) break
+      const f = selectedFiles[i]
+      try {
+        const { dataUrl, mime, size } = await fileToDataUrl(f, { maxDim: MAX_DIM, quality: JPG_QUALITY })
+        if (size > MAX_PHOTO_BYTES) {
+          window.alert(`${f.name} is too large after compression (${Math.round(size/1024)} KB). Skipping.`)
+          continue
+        }
+        current.push({ id: uid('p-'), dataUrl, filename: f.name, mime, size, createdAt: new Date().toISOString() })
+      } catch (err) {
+        console.error('Failed processing image', err)
+        window.alert('Failed to process ' + f.name)
+      }
+    }
+    setForm(f => ({ ...f, photos: current }))
+  }
+
+  function handleFileInput(e){
+    const files = e.target.files
+    handleFiles(files)
+    // reset input value so same file can be picked again
+    e.target.value = ''
+  }
+
+  function removePhoto(photoId){
+    setForm(f => ({ ...f, photos: (f.photos || []).filter(p => p.id !== photoId) }))
+  }
 
   function saveAnimal(e) {
     e && e.preventDefault()
@@ -83,6 +129,8 @@ export default function Animals() {
       setAnimals(animals.map(a => a.id === editingId ? { ...a, ...candidate } : a))
     } else {
       const id = 'A-' + (1000 + Math.floor(Math.random() * 900000))
+      // normalize tags: accept comma-separated string or array
+      if (candidate.tags && typeof candidate.tags === 'string') candidate.tags = candidate.tags.split(',').map(t => t.trim()).filter(Boolean)
       setAnimals([...animals, { ...candidate, id }])
     }
     resetForm()
@@ -165,15 +213,15 @@ export default function Animals() {
       <h2>Cattalytics — Livestock</h2>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <button onClick={() => { resetGroupForm(); setTab('addGroup') }} disabled={tab === 'addGroup'}>Groups</button>
         <button onClick={() => { resetForm(); setTab('addAnimal') }} disabled={tab === 'addAnimal'}>Add Animal</button>
-  <button onClick={() => { resetGroupForm(); setTab('addGroup') }} disabled={tab === 'addGroup'}>Add Group</button>
-  <button onClick={() => setTab('pastures')} disabled={tab === 'pastures'}>Pastures</button>
-  <button onClick={() => setTab('treatment')} disabled={tab === 'treatment'}>Treatment</button>
-  <button onClick={() => setTab('feeding')} disabled={tab === 'feeding'}>Feeding</button>
-  <button onClick={() => setTab('measurement')} disabled={tab === 'measurement'}>Measurement</button>
-  <button onClick={() => setTab('breeding')} disabled={tab === 'breeding'}>Breeding</button>
-  <button onClick={() => setTab('milkyield')} disabled={tab === 'milkyield'}>Milk Yield</button>
-  <button onClick={() => setTab('list')} disabled={tab === 'list'}>List</button>
+        <button onClick={() => setTab('list')} disabled={tab === 'list'}>List</button>
+        <button onClick={() => setTab('pastures')} disabled={tab === 'pastures'}>Pastures</button>
+        <button onClick={() => setTab('health')} disabled={tab === 'health'}>Health System</button>
+        <button onClick={() => setTab('feeding')} disabled={tab === 'feeding'}>Feeding</button>
+        <button onClick={() => setTab('measurement')} disabled={tab === 'measurement'}>Measurement</button>
+        <button onClick={() => setTab('breeding')} disabled={tab === 'breeding'}>Breeding</button>
+        <button onClick={() => setTab('milkyield')} disabled={tab === 'milkyield'}>Milk Yield</button>
         <div style={{ marginLeft: 'auto' }}>
           <input className="search-input" aria-label="Search" placeholder="Search animals/groups" value={filter} onChange={e => setFilter(e.target.value)} />
         </div>
@@ -251,6 +299,94 @@ export default function Animals() {
               </select>
             </label>
 
+            <label>
+              Owner
+              <input value={form.owner} onChange={e => setForm({ ...form, owner: e.target.value })} />
+            </label>
+
+            <label>
+              Registration #
+              <input value={form.registration} onChange={e => setForm({ ...form, registration: e.target.value })} />
+            </label>
+
+            <label>
+              Tattoo / ID
+              <input value={form.tattoo} onChange={e => setForm({ ...form, tattoo: e.target.value })} />
+            </label>
+
+            <label>
+              Purchase date
+              <input type="date" value={form.purchaseDate} onChange={e => setForm({ ...form, purchaseDate: e.target.value })} />
+              {errors.purchaseDate && <div style={{ color: 'crimson' }}>{errors.purchaseDate}</div>}
+            </label>
+
+            <label>
+              Purchase price
+              <input type="number" step="0.01" value={form.purchasePrice} onChange={e => setForm({ ...form, purchasePrice: e.target.value })} />
+              {errors.purchasePrice && <div style={{ color: 'crimson' }}>{errors.purchasePrice}</div>}
+            </label>
+
+            <label>
+              Vendor
+              <input value={form.vendor} onChange={e => setForm({ ...form, vendor: e.target.value })} />
+            </label>
+
+            <label>
+              Tags (comma separated)
+              <input value={typeof form.tags === 'string' ? form.tags : (form.tags || []).join(', ')} onChange={e => setForm({ ...form, tags: e.target.value })} />
+            </label>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={{ display: 'block', marginBottom: 6 }}>Photos (up to 5, each ≤ 2 MB)</label>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                <input type="file" accept="image/*" multiple onChange={handleFileInput} />
+                <small style={{ color: '#666' }}>Files will be resized to {MAX_DIM}px and compressed.</small>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {(form.photos || []).map((p, idx) => (
+                  <div key={p.id} style={{ width: 120, border: '1px solid #ddd', padding: 6, borderRadius: 6, textAlign: 'center' }}>
+                    <img src={p.dataUrl} alt={`preview ${idx+1}`} style={{ width: '100%', height: 72, objectFit: 'cover', borderRadius: 4 }} />
+                    <div style={{ fontSize: 12, marginTop: 6 }}>{p.filename || 'photo'}</div>
+                    <div style={{ fontSize: 11, color: '#666' }}>{Math.round((p.size||0)/1024)} KB</div>
+                    <button type="button" onClick={() => removePhoto(p.id)} aria-label={`Remove photo ${idx+1}`} style={{ marginTop: 6 }}>Remove</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <label>
+              Photo URL
+              <input value={form.photo} onChange={e => setForm({ ...form, photo: e.target.value })} />
+            </label>
+
+            <label>
+              Pregnancy status
+              <select value={form.pregnancyStatus} onChange={e => setForm({ ...form, pregnancyStatus: e.target.value })}>
+                <option>Not Pregnant</option>
+                <option>Pregnant</option>
+                <option>Unknown</option>
+                <option>Not Applicable</option>
+              </select>
+            </label>
+
+            <label>
+              Expected due
+              <input type="date" value={form.expectedDue} onChange={e => setForm({ ...form, expectedDue: e.target.value })} />
+            </label>
+
+            <label>
+              Parity
+              <input type="number" min="0" value={form.parity} onChange={e => setForm({ ...form, parity: e.target.value })} />
+            </label>
+
+            <label>
+              Lactation status
+              <select value={form.lactationStatus} onChange={e => setForm({ ...form, lactationStatus: e.target.value })}>
+                <option>Lactating</option>
+                <option>Dry</option>
+                <option>NA</option>
+              </select>
+            </label>
+
             <label style={{ gridColumn: '1 / -1' }}>
               Notes
               <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
@@ -296,9 +432,9 @@ export default function Animals() {
           </div>
         )}
 
-        {tab === 'treatment' && (
+        {tab === 'health' && (
           <div style={{ marginBottom: 16 }}>
-            <AnimalTreatment animals={animals} />
+            <HealthSystem animals={animals} setAnimals={setAnimals} groups={groups} />
           </div>
         )}
 
@@ -329,6 +465,7 @@ export default function Animals() {
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {filtered.map(a => {
             const isExp = expandedIds.includes(a.id)
+            const preview = (a.photos && a.photos.length) ? a.photos[0].dataUrl : (a.photo || null)
             const groupName = groups.find(g => g.id === a.groupId)?.name || 'No group'
             return (
               <li key={a.id} className="animal-card" style={{ marginBottom: 12 }}>
@@ -350,6 +487,7 @@ export default function Animals() {
         const a = animals.find(x => x.id === modalOpenId)
         if (!a) return null
         const gname = groups.find(g => g.id === a.groupId)?.name || 'No group'
+        const preview = (a.photos && a.photos.length) ? a.photos[0].dataUrl : (a.photo || null)
         return (
           <div className="drawer-overlay" onClick={() => setModalOpenId(null)}>
             <div className="drawer" onClick={e => e.stopPropagation()}>
@@ -363,10 +501,14 @@ export default function Animals() {
               <div style={{ marginTop: 12 }}>
                 <div style={{ display: 'flex', gap: 16 }}>
                   <div style={{ width: 280, border: '1px solid #eee', padding: 12, borderRadius: 8 }}>
-                    <div style={{ width: '100%', height: 160, background: '#f3f3f3', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, marginBottom: 8 }}>Photo</div>
+                    <div style={{ width: '100%', height: 160, background: '#f3f3f3', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, marginBottom: 8 }}>
+                      {preview ? <img src={preview} alt={a.name} style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 6 }} /> : <div>Photo</div>}
+                    </div>
                     <div><strong>Tag:</strong> {a.tag}</div>
                     <div style={{ marginTop: 6 }}><strong>Breed:</strong> {a.breed}</div>
                     <div style={{ marginTop: 6 }}><strong>Sex:</strong> {a.sex}</div>
+                    <div style={{ marginTop: 6 }}><strong>Owner:</strong> {a.owner || '—'}</div>
+                    <div style={{ marginTop: 6 }}><strong>Reg #:</strong> {a.registration || '—'}</div>
                     <div style={{ marginTop: 6 }}><strong>Group:</strong> {gname}</div>
                     <div style={{ marginTop: 6 }}><strong>Status:</strong> {a.status}</div>
                     <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
@@ -380,11 +522,30 @@ export default function Animals() {
                       <div><strong>Weight</strong><div>{a.weight ? `${a.weight} kg` : '—'}</div></div>
                       <div><strong>Sire</strong><div>{a.sire || '—'}</div></div>
                       <div><strong>Dam</strong><div>{a.dam || '—'}</div></div>
+                      <div><strong>Tattoo</strong><div>{a.tattoo || '—'}</div></div>
+                      <div><strong>Parity</strong><div>{a.parity !== undefined && a.parity !== '' ? a.parity : '—'}</div></div>
                     </div>
 
                     <div style={{ marginTop: 12 }}>
                       <strong>Notes</strong>
                       <div style={{ marginTop: 6, padding: 10, border: '1px solid #eee', borderRadius: 6 }}>{a.notes || '—'}</div>
+                    </div>
+
+                    <div style={{ marginTop: 12 }}>
+                      <strong>Purchase</strong>
+                      <div style={{ marginTop: 6 }}>{a.purchaseDate ? `${a.purchaseDate}` : '—'} {a.purchasePrice ? `— $${a.purchasePrice}` : ''}</div>
+                      <div style={{ marginTop: 6 }}>{a.vendor || '—'}</div>
+                    </div>
+
+                    <div style={{ marginTop: 12 }}>
+                      <strong>Tags</strong>
+                      <div style={{ marginTop: 6 }}>{(a.tags || []).length ? (a.tags || []).join(', ') : '—'}</div>
+                    </div>
+
+                    <div style={{ marginTop: 12 }}>
+                      <strong>Repro</strong>
+                      <div style={{ marginTop: 6 }}>Pregnancy: {a.pregnancyStatus || '—'} {a.expectedDue ? `— due ${a.expectedDue}` : ''}</div>
+                      <div style={{ marginTop: 6 }}>Lactation: {a.lactationStatus || '—'}</div>
                     </div>
 
                     <div style={{ marginTop: 12 }}>
@@ -410,12 +571,14 @@ export default function Animals() {
                   <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
                     <div style={{ minWidth: 180, maxWidth: 240, border: '1px solid #ddd', padding: 12, borderRadius: 8 }}>
                       <div style={{ width: '100%', height: 120, background: '#f3f3f3', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, marginBottom: 8 }}>
-                        <div style={{ color: '#888' }}>Photo</div>
+                        {preview ? <img src={preview} alt={a.name} style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 6 }} /> : <div style={{ color: '#888' }}>Photo</div>}
                       </div>
                       <div style={{ fontSize: 14 }}>
                         <div><strong>{a.name}</strong> <em>({a.id})</em></div>
                         <div style={{ marginTop: 6 }}>{a.breed} • {a.color || '—'}</div>
                         <div style={{ marginTop: 6 }}>Current weight: <strong>{a.weight || '—'}</strong> kg</div>
+                        <div style={{ marginTop: 6 }}>Owner: {a.owner || '—'}</div>
+                        <div style={{ marginTop: 6 }}>Reg #: {a.registration || '—'}</div>
                         <div style={{ marginTop: 6 }}>Group: {groups.find(g=>g.id===a.groupId)?.name || '—'}</div>
                       </div>
                       <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
@@ -454,6 +617,9 @@ export default function Animals() {
                             <label>Sire<input value={a.sire} readOnly /></label>
                             <label>Dam<input value={a.dam} readOnly /></label>
                             <label className="animal-notes" style={{ gridColumn: '1 / -1' }}>Notes<textarea value={a.notes} readOnly /></label>
+                            <label style={{ gridColumn: '1 / -1' }}><strong>Purchase</strong><div>{a.purchaseDate || '—'} {a.purchasePrice ? ` — $${a.purchasePrice}` : ''}</div><div>{a.vendor || '—'}</div></label>
+                            <label style={{ gridColumn: '1 / -1' }}><strong>Tags</strong><div>{(a.tags || []).length ? (a.tags || []).join(', ') : '—'}</div></label>
+                            <label style={{ gridColumn: '1 / -1' }}><strong>Reproduction</strong><div>Pregnancy: {a.pregnancyStatus || '—'} {a.expectedDue ? `— due ${a.expectedDue}` : ''}</div><div>Lactation: {a.lactationStatus || '—'}</div></label>
                           </div>
 
                           <div style={{ marginTop: 12 }}>
