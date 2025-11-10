@@ -6,7 +6,7 @@ const SAMPLE = [
 ]
 
 export default function Resources(){
-  const KEY = 'cattalytics:resources'
+  const KEY = 'devinsfarm:resources'
   const [items, setItems] = useState([])
   const [name, setName] = useState('')
   const [qty, setQty] = useState(1)

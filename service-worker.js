@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cattalytics-static-v1'
+const CACHE_NAME = 'devinsfarm-static-v1'
 
 // Keep the pre-cache list minimal (avoid referencing source files that don't exist in production)
 const ASSETS = [

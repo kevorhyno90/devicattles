@@ -1,7 +1,11 @@
-:root{--green:#2b8c3e;--bg:#f7fff7;--muted:#555}
-body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin:0;background:var(--bg);color:#111}
-.app header{background:var(--green);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+:root{--green:#2b8c3e;--bg:#f0f7f0;--muted:#555}
+body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin:0;background-color:var(--bg);color:#111;background-image:none}
+.app header{background:linear-gradient(90deg,var(--green),#1f6b2d);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
 .app header h1{margin:0;font-size:1.2rem}
+.app header img.logo{height:36px;border-radius:6px;background:transparent}
+
+/* allow setting a background on the app container via inline styles */
+.app.bg-on{background-repeat:no-repeat;background-position:center top;background-size:cover}
 nav button{background:transparent;border:0;color:#fff;padding:8px 10px;margin-left:4px;cursor:pointer}
 nav button.active{background:rgba(255,255,255,0.12);border-radius:6px}
 main{padding:16px}
@@ -35,3 +39,27 @@ footer{padding:12px 16px;font-size:0.85rem;color:var(--muted)}
 .drawer button{background:var(--green);color:#fff;border:0;padding:6px 10px;border-radius:6px}
 .drawer .drawer-left{width:280px}
 .drawer .drawer-right{flex:1}
+
+/* HealthSystem / EMR styles */
+.health-root{display:flex;flex-direction:column;gap:12px}
+.health-header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.health-title{font-size:1.15rem;margin:0;color:#123}
+.health-toolbar{display:flex;gap:8px}
+.tab-btn{background:transparent;border:1px solid transparent;padding:8px 10px;border-radius:8px;cursor:pointer;color:#234}
+.tab-btn:hover{background:rgba(18,52,86,0.04)}
+.tab-btn.active{background:#123a2a;color:#fff;border-color:rgba(0,0,0,0.06);background:linear-gradient(180deg,#2b8c3e,#216b33)}
+.panel{background:#fff;padding:14px;border-radius:10px;box-shadow:0 8px 24px rgba(18,30,20,0.04)}
+.columns{display:grid;grid-template-columns:320px 1fr;gap:14px}
+.patient-list-item{padding:10px;border-radius:8px;border:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer}
+.patient-list-item:hover{box-shadow:0 6px 18px rgba(20,30,20,0.04);transform:translateY(-1px)}
+.patient-list-item.selected{background:linear-gradient(90deg,#f7fff7,#ffffff);border-color:#e6f5e6}
+.badge{background:#eef7ee;color:#226b2b;padding:4px 8px;border-radius:999px;font-size:0.8rem}
+.card{background:#fff;border-radius:8px;padding:12px;border:1px solid #eee}
+.muted{color:#666;font-size:0.9rem}
+.controls button{margin-left:6px}
+
+/* veterinary flags and vitals */
+.flag{display:inline-block;padding:4px 8px;border-radius:999px;font-size:0.75rem;background:#fff6f6;color:#8a1f1f;border:1px solid #ffdede}
+.flag.green{background:#eefaf0;color:#1f6f2a;border:1px solid #dff3de}
+.vitals-row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.vitals-item{background:#fbfffb;border:1px solid #eef6ee;padding:6px 8px;border-radius:6px;font-size:0.9rem}

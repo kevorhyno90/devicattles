@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Animals from './modules/Animals'
 import Tasks from './modules/Tasks'
 import Finance from './modules/Finance'
@@ -11,10 +11,37 @@ import Reports from './modules/Reports'
 export default function App() {
   const [view, setView] = useState('dashboard')
 
+  // UI branding/settings persisted in localStorage
+  const SETTINGS_KEY = 'devinsfarm:ui:settings'
+  // prefer a compact badge by default so header shows a clear logo
+  const defaultSettings = { backgroundOn: true, background: 'bg-farm.svg', logo: 'logo-badge.svg', uploadedLogo: '' }
+  const [settings, setSettings] = useState(defaultSettings)
+
+  useEffect(()=>{
+    try{
+      const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null')
+      if(s) setSettings(prev=> ({ ...prev, ...s }))
+    }catch(e){}
+  }, [])
+
+  useEffect(()=>{ try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)) }catch(e){} }, [settings])
+
   return (
-    <div className="app">
+    <div className={`app ${settings.backgroundOn? 'bg-on' : ''}`} style={ settings.backgroundOn && settings.background ? { backgroundImage: `url('/assets/${settings.background}')` } : {} }>
       <header>
-        <h1>Cattalytics</h1>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          {settings.logo ? (
+            <img
+              src={ settings.logo === 'uploaded' && settings.uploadedLogo ? settings.uploadedLogo : `/assets/${settings.logo}` }
+              className="logo"
+              alt="Devins Farm logo"
+              style={{ height:36 }}
+              onError={()=> setSettings(s=> ({ ...s, logo: '' }))}
+            />
+          ) : null}
+          {/* show textual title only when no logo is selected or logo failed to load */}
+          {!settings.logo ? <h1>Devins Farm</h1> : null}
+        </div>
         <nav>
           <button className={view==='dashboard'? 'active':''} onClick={()=>setView('dashboard')}>Dashboard</button>
           <button className={view==='animals'? 'active':''} onClick={()=>setView('animals')}>Animals</button>
@@ -72,14 +99,51 @@ export default function App() {
         {view === 'settings' && (
           <section>
             <h2>Settings</h2>
-            <p>Brand: Cattalytics</p>
-            <button onClick={()=>{ if(confirm('Clear local demo data?')){ localStorage.clear(); location.reload() }}}>Clear demo data</button>
+            <div style={{ display:'grid', gap:10, maxWidth:640 }}>
+              <label>
+                <input type="checkbox" checked={settings.backgroundOn} onChange={e=>setSettings(s=> ({ ...s, backgroundOn: e.target.checked }))} /> Enable background
+              </label>
+
+              <label>
+                Background
+                <select value={settings.background} onChange={e=>setSettings(s=> ({ ...s, background: e.target.value }))}>
+                  <option value="">None</option>
+                  <option value="bg-farm.svg">Farm (default)</option>
+                  <option value="bg-fields.svg">Fields</option>
+                </select>
+              </label>
+
+              <label>
+                Logo
+                <select value={settings.logo} onChange={e=>setSettings(s=> ({ ...s, logo: e.target.value }))}>
+                  <option value="logo-wordmark.svg">Wordmark</option>
+                  <option value="logo-badge.svg">Badge</option>
+                  <option value="logo-icon.svg">Icon</option>
+                  <option value="uploaded">Uploaded SVG</option>
+                </select>
+              </label>
+
+              <label>
+                Upload SVG logo (optional)
+                <input type="file" accept="image/svg+xml" onChange={e=>{
+                  const f = e.target.files && e.target.files[0]
+                  if(!f) return
+                  const reader = new FileReader()
+                  reader.onload = ev => { const data = ev.target.result; setSettings(s=> ({ ...s, uploadedLogo: data, logo: 'uploaded' })) }
+                  reader.readAsDataURL(f)
+                }} />
+              </label>
+
+              <div>
+                <button onClick={()=>{ if(confirm('Clear local demo data?')){ localStorage.clear(); location.reload() }}}>Clear demo data</button>
+              </div>
+            </div>
           </section>
         )}
       </main>
 
       <footer>
-        <small>© Cattalytics — Dairy & Farm Management</small>
+        <small>© Devins Farm — Dairy & Farm Management</small>
       </footer>
     </div>
   )

@@ -210,7 +210,7 @@ export default function Animals() {
 
   return (
     <section>
-      <h2>Cattalytics — Livestock</h2>
+  <h2>Devins Farm — Livestock</h2>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         <button onClick={() => { resetGroupForm(); setTab('addGroup') }} disabled={tab === 'addGroup'}>Groups</button>

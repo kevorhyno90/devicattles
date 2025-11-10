@@ -1,5 +1,5 @@
 // Use a cache name that includes a timestamp so new builds get a fresh cache and old caches are removed
-const CACHE_NAME = 'cattalytics-static-v' + Date.now()
+const CACHE_NAME = 'devinsfarm-static-v' + Date.now()
 
 // Keep the pre-cache list minimal (avoid referencing source files that don't exist in production)
 const ASSETS = [

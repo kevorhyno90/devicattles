@@ -1,6 +1,6 @@
-# Cattalytics — Dairy & Farm Management (PWA)
+# Devins Farm — Dairy & Farm Management (PWA)
 
-This repository now contains a minimal Progressive Web App scaffold for "Cattalytics" — a starter PWA for dairy & farm management. It is a front-end-only demo that stores data in `localStorage` and is installable as a PWA.
+This repository now contains a minimal Progressive Web App scaffold for "Devins Farm" — a starter PWA for dairy & farm management. It is a front-end-only demo that stores data in `localStorage` and is installable as a PWA.
 
 Quick start
 
