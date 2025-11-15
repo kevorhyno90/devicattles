@@ -1,20 +1,129 @@
-:root{--green:#2b8c3e;--bg:#f0f7f0;--muted:#555}
-body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin:0;background-color:var(--bg);color:#111;background-image:none}
-.app header{background:linear-gradient(90deg,var(--green),#1f6b2d);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
-.app header h1{margin:0;font-size:1.2rem}
-.app header img.logo{height:36px;border-radius:6px;background:transparent}
+:root{
+	--accent1:#ff8a00;
+	--accent2:#ff2d55;
+	--accent3:#7c4dff;
+	--green:#2b8c3e;
+	--bg:#f6fbff;
+	--muted:#555;
+	--card-bg: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,255,250,0.95));
+}
+body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin:0;background-color:var(--bg);color:#111;background-image:none;line-height:1.5}
+.app header{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 18px rgba(0,0,0,0.08)}
+.app header h1{margin:0;font-size:1.2rem;color:#fff}
+.app header img.logo{height:44px;border-radius:6px;background:transparent}
+
+/* Brand wordmark next to logo: colorful gradient text */
+.brand{display:flex;align-items:center;gap:12px}
+.logo-wrap{width:68px;height:68px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));box-shadow:0 8px 30px rgba(124,77,255,0.12);border:1px solid rgba(255,255,255,0.12)}
+.logo-wrap .logo{height:56px;width:auto;border-radius:8px;display:block}
+.brand-wordmark{font-weight:800;font-size:1.25rem;line-height:1;color:#fff}
+.brand-wordmark{background:linear-gradient(90deg,var(--accent1),var(--accent2),var(--accent3));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand-tag{font-size:0.78rem;color:rgba(255,255,255,0.9);margin-top:4px;opacity:0.95}
+
+/* Shimmer animation for wordmark */
+.brand-wordmark{position:relative;display:inline-block}
+.brand-wordmark::after{content:'';position:absolute;top:0;left:-120%;width:40%;height:100%;background:linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.28), rgba(255,255,255,0.08));transform:skewX(-20deg);transition:all .6s;opacity:0}
+.brand-wordmark.shimmer::after{left:150%;opacity:1;animation:shimmer 2.2s linear infinite}
+@keyframes shimmer{0%{left:-120%}100%{left:150%}}
+
+/* Logo hover reveal */
+.logo-wrap{transition:transform .22s, box-shadow .22s}
+.logo-wrap:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 18px 40px rgba(124,77,255,0.16)}
+
+/* Theme variants */
+.app.theme-light header{background:linear-gradient(90deg,#f8fafc,#eef6ff);color:#123}
+.app.theme-light .brand-wordmark{background:linear-gradient(90deg,#1f6b33,#1b8f6a);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+.app.theme-bold{color:#e6f7ff;--muted:rgba(230,245,255,0.85)}
+.app.theme-bold header{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:inherit}
+.app.theme-bold .brand-wordmark{background:linear-gradient(90deg,var(--accent1),var(--accent2),var(--accent3));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+.app.theme-calm{color:#06283b;--muted:rgba(6,40,59,0.75)}
+.app.theme-calm header{background:linear-gradient(90deg,#3a8b5a,#2b8c3e);color:inherit}
+.app.theme-calm .brand-wordmark{background:linear-gradient(90deg,#d6f6e0,#2b8c3e);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+.app.theme-contrast{background-color:#000;color:#fff;--muted:rgba(255,255,255,0.8)}
+.app.theme-contrast header{background:#000;color:#fff}
+.app.theme-contrast .brand-wordmark{background:linear-gradient(90deg,#fff,#ffd700);-webkit-background-clip:text;background-clip:text;color:transparent}
+.app.theme-contrast .panel, .app.theme-contrast .card, .app.theme-contrast section{background:#111;border:1px solid #333;color:#fff}
+.app.theme-contrast input, .app.theme-contrast select, .app.theme-contrast textarea{background:#222;border:1px solid #444;color:#fff}
+.app.theme-contrast th, .app.theme-contrast td{color:#fff;border-bottom:1px solid #333}
+.app.theme-contrast h1, .app.theme-contrast h2, .app.theme-contrast h3, .app.theme-contrast h4{color:#fff}
+
+/* Catalytics-inspired theme (clean, modern, high contrast) */
+.app.theme-catalytics{background-color:#f8fafc;color:#1e293b;--muted:#64748b;--accent1:#0f766e;--accent2:#059669;--accent3:#0d9488;--green:#059669;--bg:#f8fafc;--card-bg:#ffffff}
+.app.theme-catalytics header{background:linear-gradient(90deg, #0f766e, #059669);color:#ffffff;border-bottom:1px solid rgba(0,0,0,0.1)}
+.app.theme-catalytics .brand-wordmark{background:linear-gradient(90deg,#ffffff,#f0fdfa);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+.app.theme-catalytics .brand-tag{color:rgba(255,255,255,0.95)}
+.app.theme-catalytics .logo-wrap{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.app.theme-catalytics nav button{color:#ffffff;font-weight:500}
+.app.theme-catalytics nav button.active{background:rgba(255,255,255,0.2);color:#ffffff;border-radius:8px}
+.app.theme-catalytics nav button:hover{background:rgba(255,255,255,0.1)}
+.app.theme-catalytics .panel, .app.theme-catalytics .card, .app.theme-catalytics section{background:#ffffff;border:1px solid #e2e8f0;box-shadow:0 4px 16px rgba(0,0,0,0.08);color:#1e293b}
+.app.theme-catalytics .section{background:#ffffff}
+.app.theme-catalytics .tab-btn{color:#475569;border:1px solid #e2e8f0;background:#ffffff;font-weight:500}
+.app.theme-catalytics .tab-btn:hover{background:#f1f5f9;color:#334155}
+.app.theme-catalytics .tab-btn.active{background:#059669;color:#ffffff;border-color:#059669}
+.app.theme-catalytics .badge{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;font-weight:600}
+.app.theme-catalytics .flag{background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-weight:500}
+.app.theme-catalytics .flag.green{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.app.theme-catalytics input, .app.theme-catalytics select, .app.theme-catalytics textarea{background:#ffffff;border:1px solid #d1d5db;color:#1f2937;font-size:14px;font-weight:500}
+.app.theme-catalytics input:focus, .app.theme-catalytics select:focus, .app.theme-catalytics textarea:focus{border-color:#059669;outline:none;box-shadow:0 0 0 3px rgba(5,150,105,0.1)}
+.app.theme-catalytics .add-row button, .app.theme-catalytics .drawer button, .app.theme-catalytics .controls button{background:#059669;color:#ffffff;font-weight:600;border:none;box-shadow:0 2px 8px rgba(5,150,105,0.2)}
+.app.theme-catalytics .add-row button:hover, .app.theme-catalytics .drawer button:hover, .app.theme-catalytics .controls button:hover{background:#047857;transform:translateY(-1px);box-shadow:0 4px 12px rgba(5,150,105,0.3)}
+.app.theme-catalytics footer{background:#ffffff;color:#64748b;border-top:1px solid #e2e8f0}
+.app.theme-catalytics h1, .app.theme-catalytics h2, .app.theme-catalytics h3, .app.theme-catalytics h4{color:#0f172a;font-weight:700;margin-bottom:0.75em}
+.app.theme-catalytics th{background:#f8fafc;color:#374151;font-weight:600;border-bottom:2px solid #e5e7eb}
+.app.theme-catalytics td{color:#1f2937;border-bottom:1px solid #f3f4f6;font-weight:500}
+.app.theme-catalytics .animal-card{background:#ffffff;border:1px solid #e5e7eb;color:#1f2937;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.app.theme-catalytics .animal-card:hover{box-shadow:0 8px 24px rgba(0,0,0,0.12);border-color:#d1d5db}
+.app.theme-catalytics .animal-meta{color:#0f172a;font-weight:600}
+.app.theme-catalytics .animal-sub{color:#64748b;font-weight:500}
+.app.theme-catalytics .patient-list-item{background:#ffffff;border:1px solid #e5e7eb;color:#1f2937}
+.app.theme-catalytics .patient-list-item:hover{background:#f8fafc;border-color:#d1d5db}
+.app.theme-catalytics .patient-list-item.selected{background:#f0fdf4;border-color:#bbf7d0}
+.app.theme-catalytics .vitals-item{background:#f8fafc;border:1px solid #e5e7eb;color:#374151;font-weight:500}
+.app.theme-catalytics .muted{color:#64748b;font-weight:500}
+.app.theme-catalytics p{color:#374151;font-weight:500;line-height:1.6}
+
+/* Cyberpunk theme (dark, neon magenta/cyan) */
+.app.theme-cyberpunk{background-color:#0a0814;color:#f0f8ff;--muted:rgba(240,248,255,0.8)}
+.app.theme-cyberpunk{--accent1:#00e5ff;--accent2:#ff00c8;--accent3:#7a05ff}
+.app.theme-cyberpunk header{background:linear-gradient(90deg, rgba(10,8,20,0.98), rgba(15,10,25,0.98));border-bottom:1px solid rgba(255,255,255,0.05);box-shadow:0 10px 40px rgba(0,0,0,0.8);color:inherit}
+.app.theme-cyberpunk .brand-wordmark{background:linear-gradient(90deg,#00e5ff,#ff00c8,#7a05ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.app.theme-cyberpunk .brand-tag{color:rgba(240,248,255,0.9)}
+.app.theme-cyberpunk .logo-wrap{background:linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));border:1px solid rgba(0,229,255,0.12);box-shadow:0 12px 36px rgba(122,5,255,0.08);}
+.app.theme-cyberpunk nav button{color:#f0f8ff}
+.app.theme-cyberpunk nav button.active{box-shadow:0 8px 30px rgba(0,229,255,0.08), inset 0 -2px 0 rgba(122,5,255,0.08);background:linear-gradient(90deg, rgba(0,229,255,0.08), rgba(122,5,255,0.06))}
+.app.theme-cyberpunk .panel, .app.theme-cyberpunk .card, .app.theme-cyberpunk section{background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.05);box-shadow:0 14px 48px rgba(2,8,12,0.8);color:#f0f8ff}
+.app.theme-cyberpunk .tab-btn{color:#f0f8ff;border-color:rgba(255,255,255,0.04)}
+.app.theme-cyberpunk .tab-btn.active{background:linear-gradient(90deg,#00e5ff33,#ff00c833);color:#ffffff}
+.app.theme-cyberpunk .badge{background:linear-gradient(90deg,#2a1a2a,#3a2a3a);color:#ffd6ff;border:1px solid rgba(255,214,255,0.1)}
+.app.theme-cyberpunk .flag{background:linear-gradient(90deg,#1a1420,#140a18);color:#ffd6ff;border:1px solid rgba(255,0,200,0.08)}
+.app.theme-cyberpunk .add-row input, .app.theme-cyberpunk input, .app.theme-cyberpunk select, .app.theme-cyberpunk textarea{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#f0f8ff;placeholder-color:rgba(240,248,255,0.5)}
+.app.theme-cyberpunk .add-row button, .app.theme-cyberpunk .drawer button, .app.theme-cyberpunk .controls button{background:linear-gradient(90deg,#00e5ff,#ff00c8);color:#0a0814;font-weight:600}
+.app.theme-cyberpunk footer{background:transparent;color:rgba(240,248,255,0.85);border-top:1px solid rgba(255,255,255,0.03);}
+.app.theme-cyberpunk .brand-wordmark.shimmer::after{background:linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.2), rgba(255,255,255,0.08));}
+.app.theme-cyberpunk h1, .app.theme-cyberpunk h2, .app.theme-cyberpunk h3, .app.theme-cyberpunk h4{color:#ffffff}
+.app.theme-cyberpunk th, .app.theme-cyberpunk td{color:#f0f8ff;border-bottom:1px solid rgba(255,255,255,0.08)}
+.app.theme-cyberpunk .animal-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#f0f8ff}
+.app.theme-cyberpunk .animal-meta{color:#ffffff}
+.app.theme-cyberpunk .animal-sub{color:rgba(240,248,255,0.8)}
 
 /* allow setting a background on the app container via inline styles */
 .app.bg-on{background-repeat:no-repeat;background-position:center top;background-size:cover}
-nav button{background:transparent;border:0;color:#fff;padding:8px 10px;margin-left:4px;cursor:pointer}
-nav button.active{background:rgba(255,255,255,0.12);border-radius:6px}
+nav button{background:transparent;border:0;color:inherit;padding:8px 12px;margin-left:6px;cursor:pointer;border-radius:8px;transition:all .18s}
+nav button:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.08)}
+nav button.active{background:linear-gradient(90deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.08)}
 main{padding:16px}
-section{background:#fff;padding:12px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.section{background:var(--card-bg);padding:12px;border-radius:12px;box-shadow:0 8px 28px rgba(27,38,30,0.06)}
+h1, h2, h3, h4, h5, h6{color:inherit;margin-top:0;margin-bottom:0.5em}
+p{margin-top:0;margin-bottom:1em}
 .add-row{display:flex;gap:8px;margin-bottom:12px}
-.add-row input{flex:1;padding:8px;border:1px solid #ddd;border-radius:6px}
+.add-row input{flex:1;padding:8px;border:1px solid #ddd;border-radius:6px;color:inherit}
 .add-row button{background:var(--green);color:#fff;border:0;padding:8px 12px;border-radius:6px}
 table{width:100%;border-collapse:collapse;margin-top:8px}
-th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;color:inherit}
 footer{padding:12px 16px;font-size:0.85rem;color:var(--muted)}
 
 /* Animal card / expansive details (Farmbrite-like) */
@@ -43,9 +152,9 @@ footer{padding:12px 16px;font-size:0.85rem;color:var(--muted)}
 /* HealthSystem / EMR styles */
 .health-root{display:flex;flex-direction:column;gap:12px}
 .health-header{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.health-title{font-size:1.15rem;margin:0;color:#123}
+.health-title{font-size:1.15rem;margin:0;color:inherit}
 .health-toolbar{display:flex;gap:8px}
-.tab-btn{background:transparent;border:1px solid transparent;padding:8px 10px;border-radius:8px;cursor:pointer;color:#234}
+.tab-btn{background:transparent;border:1px solid transparent;padding:8px 10px;border-radius:8px;cursor:pointer;color:inherit}
 .tab-btn:hover{background:rgba(18,52,86,0.04)}
 .tab-btn.active{background:#123a2a;color:#fff;border-color:rgba(0,0,0,0.06);background:linear-gradient(180deg,#2b8c3e,#216b33)}
 .panel{background:#fff;padding:14px;border-radius:10px;box-shadow:0 8px 24px rgba(18,30,20,0.04)}
@@ -54,12 +163,12 @@ footer{padding:12px 16px;font-size:0.85rem;color:var(--muted)}
 .patient-list-item:hover{box-shadow:0 6px 18px rgba(20,30,20,0.04);transform:translateY(-1px)}
 .patient-list-item.selected{background:linear-gradient(90deg,#f7fff7,#ffffff);border-color:#e6f5e6}
 .badge{background:#eef7ee;color:#226b2b;padding:4px 8px;border-radius:999px;font-size:0.8rem}
-.card{background:#fff;border-radius:8px;padding:12px;border:1px solid #eee}
-.muted{color:#666;font-size:0.9rem}
+.card{background:linear-gradient(180deg, #ffffff, #fbfffd);border-radius:12px;padding:14px;border:1px solid rgba(34,34,34,0.04);box-shadow:0 8px 24px rgba(18,30,20,0.04)}
+.muted{color:var(--muted,#666);font-size:0.9rem}
 .controls button{margin-left:6px}
 
 /* veterinary flags and vitals */
-.flag{display:inline-block;padding:4px 8px;border-radius:999px;font-size:0.75rem;background:#fff6f6;color:#8a1f1f;border:1px solid #ffdede}
+.flag{display:inline-block;padding:6px 10px;border-radius:999px;font-size:0.78rem;background:linear-gradient(90deg,#fff6f6,#fffdfd);color:#8a1f1f;border:1px solid #ffdede}
 .flag.green{background:#eefaf0;color:#1f6f2a;border:1px solid #dff3de}
 .vitals-row{display:flex;gap:8px;align-items:center;margin-top:8px}
 .vitals-item{background:#fbfffb;border:1px solid #eef6ee;padding:6px 8px;border-radius:6px;font-size:0.9rem}

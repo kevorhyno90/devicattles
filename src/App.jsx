@@ -14,7 +14,7 @@ export default function App() {
   // UI branding/settings persisted in localStorage
   const SETTINGS_KEY = 'devinsfarm:ui:settings'
   // prefer a compact badge by default so header shows a clear logo
-  const defaultSettings = { backgroundOn: true, background: 'bg-farm.svg', logo: 'logo-badge.svg', uploadedLogo: '' }
+  const defaultSettings = { backgroundOn: false, background: 'bg-farm.svg', logo: 'logo-badge.svg', uploadedLogo: '', theme: 'catalytics' }
   const [settings, setSettings] = useState(defaultSettings)
 
   useEffect(()=>{
@@ -27,20 +27,21 @@ export default function App() {
   useEffect(()=>{ try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)) }catch(e){} }, [settings])
 
   return (
-    <div className={`app ${settings.backgroundOn? 'bg-on' : ''}`} style={ settings.backgroundOn && settings.background ? { backgroundImage: `url('/assets/${settings.background}')` } : {} }>
+    <div className={`app ${settings.backgroundOn? 'bg-on' : ''} theme-${settings.theme || 'bold'}`} style={ settings.backgroundOn && settings.background ? { backgroundImage: `url('/assets/${settings.background}')` } : {} }>
       <header>
-        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-          {settings.logo ? (
+        <div style={{ display:'flex', alignItems:'center', gap:12 }} className="brand">
+          <div className="logo-wrap" aria-hidden>
             <img
               src={ settings.logo === 'uploaded' && settings.uploadedLogo ? settings.uploadedLogo : `/assets/${settings.logo}` }
               className="logo"
               alt="Devins Farm logo"
-              style={{ height:36 }}
               onError={()=> setSettings(s=> ({ ...s, logo: '' }))}
             />
-          ) : null}
-          {/* show textual title only when no logo is selected or logo failed to load */}
-          {!settings.logo ? <h1>Devins Farm</h1> : null}
+          </div>
+          <div>
+            <div className="brand-wordmark">Devins Farm</div>
+            <div className="brand-tag">Dairy & Farm Management</div>
+          </div>
         </div>
         <nav>
           <button className={view==='dashboard'? 'active':''} onClick={()=>setView('dashboard')}>Dashboard</button>
@@ -98,45 +99,145 @@ export default function App() {
 
         {view === 'settings' && (
           <section>
-            <h2>Settings</h2>
-            <div style={{ display:'grid', gap:10, maxWidth:640 }}>
-              <label>
-                <input type="checkbox" checked={settings.backgroundOn} onChange={e=>setSettings(s=> ({ ...s, backgroundOn: e.target.checked }))} /> Enable background
-              </label>
+            <div style={{ marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '8px' }}>Settings</h2>
+              <p style={{ color: 'var(--muted)', margin: 0 }}>Customize your application appearance and preferences</p>
+            </div>
+            
+            <div style={{ display: 'grid', gap: '24px', maxWidth: '800px' }}>
+              
+              {/* Appearance Section */}
+              <div className="card" style={{ padding: '24px' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '16px', color: 'inherit' }}>Appearance</h3>
+                <div style={{ display: 'grid', gap: '20px' }}>
+                  
+                  <div style={{ display: 'grid', gap: '8px' }}>
+                    <label style={{ fontWeight: '500', color: 'inherit', fontSize: '14px' }}>
+                      Theme
+                    </label>
+                    <select 
+                      value={settings.theme || 'catalytics'} 
+                      onChange={e=>setSettings(s=> ({ ...s, theme: e.target.value }))}
+                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', fontWeight: '500' }}
+                    >
+                      <option value="catalytics">Catalytics (Clean & Modern)</option>
+                      <option value="light">Light</option>
+                      <option value="bold">Bold Colorful</option>
+                      <option value="calm">Calm Green</option>
+                      <option value="contrast">High Contrast</option>
+                      <option value="evolution">Evolution X (dark neon)</option>
+                      <option value="cyberpunk">Cyberpunk (neon)</option>
+                    </select>
+                  </div>
 
-              <label>
-                Background
-                <select value={settings.background} onChange={e=>setSettings(s=> ({ ...s, background: e.target.value }))}>
-                  <option value="">None</option>
-                  <option value="bg-farm.svg">Farm (default)</option>
-                  <option value="bg-fields.svg">Fields</option>
-                </select>
-              </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0' }}>
+                    <input 
+                      type="checkbox" 
+                      id="backgroundToggle"
+                      checked={settings.backgroundOn} 
+                      onChange={e=>setSettings(s=> ({ ...s, backgroundOn: e.target.checked }))}
+                      style={{ width: '16px', height: '16px' }}
+                    />
+                    <label htmlFor="backgroundToggle" style={{ fontWeight: '500', color: 'inherit', fontSize: '14px' }}>
+                      Enable background image
+                    </label>
+                  </div>
 
-              <label>
-                Logo
-                <select value={settings.logo} onChange={e=>setSettings(s=> ({ ...s, logo: e.target.value }))}>
-                  <option value="logo-wordmark.svg">Wordmark</option>
-                  <option value="logo-badge.svg">Badge</option>
-                  <option value="logo-icon.svg">Icon</option>
-                  <option value="uploaded">Uploaded SVG</option>
-                </select>
-              </label>
+                  {settings.backgroundOn && (
+                    <div style={{ display: 'grid', gap: '8px' }}>
+                      <label style={{ fontWeight: '500', color: 'inherit', fontSize: '14px' }}>
+                        Background Image
+                      </label>
+                      <select 
+                        value={settings.background} 
+                        onChange={e=>setSettings(s=> ({ ...s, background: e.target.value }))}
+                        style={{ padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', fontWeight: '500' }}
+                      >
+                        <option value="">None</option>
+                        <option value="bg-farm.svg">Farm (default)</option>
+                        <option value="bg-fields.svg">Fields</option>
+                      </select>
+                    </div>
+                  )}
 
-              <label>
-                Upload SVG logo (optional)
-                <input type="file" accept="image/svg+xml" onChange={e=>{
-                  const f = e.target.files && e.target.files[0]
-                  if(!f) return
-                  const reader = new FileReader()
-                  reader.onload = ev => { const data = ev.target.result; setSettings(s=> ({ ...s, uploadedLogo: data, logo: 'uploaded' })) }
-                  reader.readAsDataURL(f)
-                }} />
-              </label>
-
-              <div>
-                <button onClick={()=>{ if(confirm('Clear local demo data?')){ localStorage.clear(); location.reload() }}}>Clear demo data</button>
+                </div>
               </div>
+
+              {/* Branding Section */}
+              <div className="card" style={{ padding: '24px' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '16px', color: 'inherit' }}>Branding</h3>
+                <div style={{ display: 'grid', gap: '20px' }}>
+                  
+                  <div style={{ display: 'grid', gap: '8px' }}>
+                    <label style={{ fontWeight: '500', color: 'inherit', fontSize: '14px' }}>
+                      Logo Style
+                    </label>
+                    <select 
+                      value={settings.logo} 
+                      onChange={e=>setSettings(s=> ({ ...s, logo: e.target.value }))}
+                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', fontWeight: '500' }}
+                    >
+                      <option value="logo-wordmark.svg">Wordmark</option>
+                      <option value="logo-badge.svg">Badge</option>
+                      <option value="logo-icon.svg">Icon</option>
+                      <option value="uploaded">Custom Upload</option>
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'grid', gap: '8px' }}>
+                    <label style={{ fontWeight: '500', color: 'inherit', fontSize: '14px' }}>
+                      Upload Custom Logo
+                    </label>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={e=>{
+                        const f = e.target.files && e.target.files[0]
+                        if(!f) return
+                        const reader = new FileReader()
+                        reader.onload = ev => { const data = ev.target.result; setSettings(s=> ({ ...s, uploadedLogo: data, logo: 'uploaded' })) }
+                        reader.readAsDataURL(f)
+                      }}
+                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', fontWeight: '500' }}
+                    />
+                    <p style={{ fontSize: '12px', color: 'var(--muted)', margin: 0 }}>
+                      Supports PNG, JPG, and SVG files
+                    </p>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Data Management Section */}
+              <div className="card" style={{ padding: '24px' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '16px', color: 'inherit' }}>Data Management</h3>
+                <div style={{ display: 'grid', gap: '16px' }}>
+                  
+                  <div style={{ padding: '16px', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: '8px' }}>
+                    <h4 style={{ fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0', color: '#92400e' }}>Reset Application Data</h4>
+                    <p style={{ fontSize: '14px', margin: '0 0 12px 0', color: '#92400e' }}>
+                      This will clear all your local demo data including animals, tasks, and settings.
+                    </p>
+                    <button 
+                      onClick={()=>{ if(confirm('Are you sure you want to clear all local demo data? This action cannot be undone.')){ localStorage.clear(); location.reload() }}}
+                      style={{ 
+                        background: '#dc2626', 
+                        color: '#ffffff', 
+                        border: 'none', 
+                        padding: '10px 16px', 
+                        borderRadius: '6px', 
+                        fontSize: '14px', 
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Clear All Data
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+
             </div>
           </section>
         )}

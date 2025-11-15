@@ -621,8 +621,169 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
     const rxHtml = sectionRows('Prescriptions', rx, r=> `<tr><td style="padding:6px;border:1px solid #eee">${esc(r.createdAt||'')} — ${esc(r.drug||'')} — ${esc(r.dose||'')}</td></tr>`)
     const billsHtml = sectionRows('Billing', bills, b=> `<tr><td style="padding:6px;border:1px solid #eee">${esc(b.createdAt||'')} — ${esc(b.desc||'')} — ${esc(b.amount||'')} — ${b.paid? 'Paid' : 'Unpaid'}</td></tr>`)
 
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Full record - ${esc(p.name||p.id||'patient')}</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:18px;color:#111}h1{margin-bottom:6px}h3{margin-top:18px;color:#2b8c3e}table{margin-top:6px}td{vertical-align:top}</style></head><body><h1>${esc(p.name||'(unnamed)')}</h1><div><strong>ID:</strong> ${esc(p.id||'')}</div><div><strong>Tag:</strong> ${esc(p.tag||'')}</div><div><strong>Owner:</strong> ${esc(p.owner?.name||'')}</div><div><strong>Created:</strong> ${esc(p.createdAt||'')}</div>${notesHtml}${vitalsHtml}${vaccHtml}${medsHtml}${attachHtml}${apptsHtml}${rxHtml}${billsHtml}</body></html>`
+    // Polished header with Devins Farm branding
+    const headerHtml = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="flex:0 0 auto"><img src="/assets/logo-badge.svg" alt="Devins Farm" style="height:64px;max-height:64px" onerror="this.style.display='none'"/></div>
+        <div style="flex:1">
+          <h2 style="margin:0;color:#2b8c3e">Devins Farm</h2>
+          <div style="margin-top:4px;color:#666">123 Farm Road · Countryside · (555) 555-0123 · devinsfarm@example.com</div>
+        </div>
+      </div>`
+
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Full record - ${esc(p.name||p.id||'patient')}</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:18px;color:#111}h1{margin-bottom:6px}h2{margin:0}h3{margin-top:18px;color:#2b8c3e}table{margin-top:6px}td{vertical-align:top}.muted{color:#666}</style></head><body>${headerHtml}<h1>${esc(p.name||'(unnamed)')}</h1><div><strong>ID:</strong> ${esc(p.id||'')}</div><div><strong>Tag:</strong> ${esc(p.tag||'')}</div><div><strong>Owner:</strong> ${esc(p.owner?.name||'')}</div><div><strong>Created:</strong> ${esc(p.createdAt||'')}</div>${notesHtml}${vitalsHtml}${vaccHtml}${medsHtml}${attachHtml}${apptsHtml}${rxHtml}${billsHtml}</body></html>`
     return html
+  }
+
+  // DOCX export helpers using dynamic import of 'docx' if available
+  async function exportDocxForPatient(patientId){
+    const p = patients.find(x=> x.id === patientId)
+    if(!p) return alert('Patient not found')
+      try{
+        const docx = await new Function('return import("docx")')()
+      const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun } = docx
+
+      // helper: fetch an image (data: or url), convert svg -> png if needed, return ArrayBuffer
+      async function fetchImageArrayBuffer(src){
+        if(!src) return null
+        try{
+          // fetch via browser so data: URLs are supported
+          const res = await fetch(src)
+          const blob = await res.blob()
+          if(!blob) return null
+          if(blob.type === 'image/svg+xml'){
+            // convert SVG blob to PNG via canvas
+            const svgText = await blob.text()
+            const svgUrl = URL.createObjectURL(new Blob([svgText], { type: 'image/svg+xml' }))
+            const img = new Image()
+            img.src = svgUrl
+            await new Promise((resolve, reject)=>{ img.onload = resolve; img.onerror = reject })
+            const canvas = document.createElement('canvas')
+            canvas.width = img.width || 400
+            canvas.height = img.height || 120
+            const ctx = canvas.getContext('2d')
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+            const pngBlob = await new Promise(r=> canvas.toBlob(r, 'image/png'))
+            URL.revokeObjectURL(svgUrl)
+            return await pngBlob.arrayBuffer()
+          }
+          return await blob.arrayBuffer()
+        }catch(e){ console.error('fetchImage failed', e); return null }
+      }
+
+      // load logo from persisted settings if present
+      const uiSettings = (()=>{ try{ return JSON.parse(localStorage.getItem('devinsfarm:ui:settings')||'{}') }catch(e){ return {} } })()
+      const logoSrc = uiSettings.logo === 'uploaded' && uiSettings.uploadedLogo ? uiSettings.uploadedLogo : (uiSettings.logo ? `/assets/${uiSettings.logo}` : null)
+      let logoBuffer = null
+      if(logoSrc){ logoBuffer = await fetchImageArrayBuffer(logoSrc) }
+
+      const doc = new Document({ sections: [] })
+
+      // Header: Devins Farm
+      const headerParagraphs = []
+      if(logoBuffer){
+        headerParagraphs.push(new Paragraph({ children: [ new ImageRun({ data: new Uint8Array(logoBuffer), transformation: { width: 120, height: 120 } }) ] }))
+      }
+      headerParagraphs.push(new Paragraph({ children: [ new TextRun({ text: 'Devins Farm', bold:true, size: 28 }) ] }))
+      headerParagraphs.push(new Paragraph({ children: [ new TextRun({ text: '123 Farm Road · Countryside · (555) 555-0123 · devinsfarm@example.com', size: 20, color: '666666' }) ] }))
+
+      // Build content paragraphs per section
+      const body = []
+      body.push(new Paragraph({ text: `Patient: ${p.name || '(unnamed)'}`, heading: HeadingLevel.HEADING_1 }))
+      body.push(new Paragraph({ text: `ID: ${p.id || ''}` }))
+      if(p.tag) body.push(new Paragraph({ text: `Tag: ${p.tag}` }))
+      if(p.owner?.name) body.push(new Paragraph({ text: `Owner: ${p.owner.name}` }))
+      body.push(new Paragraph({ text: `Created: ${p.createdAt || ''}` }))
+
+      const pushSection = (title, items, render) => {
+        body.push(new Paragraph({ text: title, heading: HeadingLevel.HEADING_2 }))
+        if(!items || items.length===0){ body.push(new Paragraph({ text: 'No records' })) ; return }
+        items.forEach(it=> body.push(new Paragraph({ text: render(it) })))
+      }
+
+      pushSection('Notes', p.notes||[], n=> `${n.createdAt || ''} — ${n.subjective || ''} ${n.objective ? '\nObj: '+n.objective : ''} ${n.assessment ? '\nAssess: '+n.assessment : ''} ${n.plan ? '\nPlan: '+n.plan : ''}`)
+      pushSection('Vitals', p.vitals||[], v=> `${v.createdAt || ''} — Weight: ${v.weight ?? ''} kg — Temp: ${v.temp ?? ''} °C — HR: ${v.hr ?? ''} bpm — ${v.notes || ''}`)
+      pushSection('Vaccinations', p.vaccinations||[], v=> `${v.createdAt || v.date || ''} — ${v.vaccine || ''} ${v.lot ? '(lot '+v.lot+')' : ''}`)
+      pushSection('Medications', p.medications||[], m=> `${m.createdAt || ''} — ${m.drug || m.name || ''} — ${m.dose || ''}`)
+      pushSection('Attachments', p.attachments||[], a=> `${a.createdAt || ''} — ${a.filename || ''}`)
+      pushSection('Appointments', appointments.filter(a=> a.patientId === p.id), a=> `${a.when || a.createdAt || ''} — ${a.reason || ''} — ${a.status || ''}`)
+      pushSection('Prescriptions', prescriptions.filter(r=> r.patientId === p.id), r=> `${r.createdAt || ''} — ${r.drug || ''} — ${r.dose || ''}`)
+      pushSection('Billing', billing.filter(b=> b.patientId === p.id), b=> `${b.createdAt || ''} — ${b.desc || ''} — ${b.amount || ''} — ${b.paid ? 'Paid' : 'Unpaid'}`)
+
+      // Assemble document section
+      doc.addSection({ headers: { default: { children: headerParagraphs } }, children: body })
+
+      const packer = new Packer()
+      const blob = await packer.toBlob(doc)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a'); a.href = url; a.download = `patient-${p.id}.docx`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url)
+
+    }catch(e){
+      console.error('docx export failed', e)
+      alert('DOCX export requires the `docx` package. Please install it (npm install docx) and reload.')
+    }
+  }
+
+  async function exportAllPatientsDocx(){
+    try{
+      const docx = await new Function('return import("docx")')()
+      const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun } = docx
+      const doc = new Document({ sections: [] })
+      const children = []
+
+      // attempt to fetch logo to embed
+      const uiSettings = (()=>{ try{ return JSON.parse(localStorage.getItem('devinsfarm:ui:settings')||'{}') }catch(e){ return {} } })()
+      const logoSrc = uiSettings.logo === 'uploaded' && uiSettings.uploadedLogo ? uiSettings.uploadedLogo : (uiSettings.logo ? `/assets/${uiSettings.logo}` : null)
+      async function fetchImageArrayBuffer(src){
+        if(!src) return null
+        try{
+          const res = await fetch(src)
+          const blob = await res.blob()
+          if(!blob) return null
+          if(blob.type === 'image/svg+xml'){
+            const svgText = await blob.text()
+            const svgUrl = URL.createObjectURL(new Blob([svgText], { type: 'image/svg+xml' }))
+            const img = new Image()
+            img.src = svgUrl
+            await new Promise((resolve, reject)=>{ img.onload = resolve; img.onerror = reject })
+            const canvas = document.createElement('canvas')
+            canvas.width = img.width || 400
+            canvas.height = img.height || 120
+            const ctx = canvas.getContext('2d')
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+            const pngBlob = await new Promise(r=> canvas.toBlob(r, 'image/png'))
+            URL.revokeObjectURL(svgUrl)
+            return await pngBlob.arrayBuffer()
+          }
+          return await blob.arrayBuffer()
+        }catch(e){ console.error('fetchImage failed', e); return null }
+      }
+
+      let logoBuffer = null
+      if(logoSrc) logoBuffer = await fetchImageArrayBuffer(logoSrc)
+
+      if(logoBuffer){
+        children.push(new Paragraph({ children: [ new ImageRun({ data: new Uint8Array(logoBuffer), transformation: { width: 120, height: 120 } }) ] }))
+      }
+
+      children.push(new Paragraph({ text: 'Devins Farm', heading: HeadingLevel.TITLE }))
+      children.push(new Paragraph({ text: '123 Farm Road · Countryside · (555) 555-0123 · devinsfarm@example.com' }))
+      patients.forEach(p=>{
+        children.push(new Paragraph({ text: `Patient: ${p.name || '(unnamed)'}`, heading: HeadingLevel.HEADING_1 }))
+        children.push(new Paragraph({ text: `ID: ${p.id || ''}` }))
+        if(p.tag) children.push(new Paragraph({ text: `Tag: ${p.tag}` }))
+        if(p.owner?.name) children.push(new Paragraph({ text: `Owner: ${p.owner.name}` }))
+        children.push(new Paragraph({ text: `Created: ${p.createdAt || ''}` }))
+        (p.notes||[]).forEach(n=> children.push(new Paragraph({ text: `${n.createdAt || ''} — ${n.subjective || ''}` })))
+        // page break
+        children.push(new Paragraph({ children: [ new TextRun({ text: '', break: 1 }) ] }))
+      })
+      doc.addSection({ children })
+      const packer = new Packer()
+      const blob = await packer.toBlob(doc)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a'); a.href = url; a.download = `full-health-records.docx`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url)
+    }catch(e){ console.error('docx export failed', e); alert('DOCX export requires the `docx` package. Please install it (npm install docx) and reload.') }
   }
 
   function downloadDocForPatient(patientId){
