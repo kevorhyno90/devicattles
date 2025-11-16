@@ -16,6 +16,7 @@ export default function Tasks(){
   const [activeTab, setActiveTab] = useState('all')
   const [showAddForm, setShowAddForm] = useState(false)
   const [modalOpenId, setModalOpenId] = useState(null)
+  const [editingId, setEditingId] = useState(null)
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterPriority, setFilterPriority] = useState('all')
   const [sortBy, setSortBy] = useState('due')
@@ -80,6 +81,39 @@ export default function Tasks(){
     setItems(items.map(i => i.id === id ? { ...i, ...updates } : i))
   }
 
+  function startEdit(task){
+    setFormData({
+      title: task.title,
+      description: task.description || '',
+      assignedTo: task.assignedTo || 'Unassigned',
+      due: task.due || '',
+      priority: task.priority || 'Medium',
+      category: task.category || 'Animal Care',
+      estimatedHours: task.estimatedHours || 1,
+      location: task.location || ''
+    })
+    setEditingId(task.id)
+    setShowAddForm(true)
+  }
+
+  function saveEdit(){
+    if(!formData.title.trim()) return
+    setItems(items.map(i => i.id === editingId ? {
+      ...i,
+      ...formData,
+      title: formData.title.trim()
+    } : i))
+    setFormData({ title: '', description: '', assignedTo: 'Unassigned', due: '', priority: 'Medium', category: 'Animal Care', estimatedHours: 1, location: '' })
+    setEditingId(null)
+    setShowAddForm(false)
+  }
+
+  function cancelEdit(){
+    setFormData({ title: '', description: '', assignedTo: 'Unassigned', due: '', priority: 'Medium', category: 'Animal Care', estimatedHours: 1, location: '' })
+    setEditingId(null)
+    setShowAddForm(false)
+  }
+
   // Filter and sort logic
   const filteredItems = items.filter(task => {
     if(activeTab === 'pending' && task.done) return false
@@ -137,7 +171,7 @@ export default function Tasks(){
       {/* Add Task Form */}
       {showAddForm && (
         <div className="card" style={{ marginBottom: '20px', padding: '20px' }}>
-          <h3>Add New Task</h3>
+          <h3>{editingId ? 'Edit Task' : 'Add New Task'}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
             <input placeholder="Task title" value={formData.title} onChange={e=>setFormData({...formData, title: e.target.value})} />
             <select value={formData.category} onChange={e=>setFormData({...formData, category: e.target.value})}>
@@ -155,8 +189,8 @@ export default function Tasks(){
             <input placeholder="Location" value={formData.location} onChange={e=>setFormData({...formData, location: e.target.value})} style={{ gridColumn: '1 / -1' }} />
           </div>
           <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
-            <button onClick={add} style={{ background: 'var(--green)', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px' }}>Add Task</button>
-            <button onClick={() => setShowAddForm(false)} style={{ background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px' }}>Cancel</button>
+            <button onClick={editingId ? saveEdit : add} style={{ background: 'var(--green)', color: '#fff', padding: '10px 16px', border: 'none', borderRadius: '6px' }}>{editingId ? 'Save Changes' : 'Add Task'}</button>
+            <button onClick={editingId ? cancelEdit : () => setShowAddForm(false)} style={{ background: '#6b7280', color: '#fff', padding: '10px 16px', border: 'none', borderRadius: '6px' }}>Cancel</button>
           </div>
         </div>
       )}
@@ -209,6 +243,7 @@ export default function Tasks(){
               </div>
               <div className="controls">
                 <button onClick={() => setModalOpenId(task.id)}>View</button>
+                <button onClick={() => startEdit(task)}>Edit</button>
                 <button onClick={() => remove(task.id)}>Delete</button>
               </div>
             </div>
@@ -234,6 +269,7 @@ export default function Tasks(){
                 <h3>{task.title}</h3>
                 <div>
                   <button onClick={() => toggleDone(task.id)}>{task.done ? 'Mark Incomplete' : 'Mark Complete'}</button>
+                  <button onClick={() => { setModalOpenId(null); startEdit(task); }} style={{ marginLeft: '8px' }}>Edit</button>
                   <button onClick={() => setModalOpenId(null)} style={{ marginLeft: '8px' }}>Close</button>
                 </div>
               </div>

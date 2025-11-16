@@ -4,12 +4,25 @@ import Tasks from './modules/Tasks'
 import Finance from './modules/Finance'
 import Schedules from './modules/Schedules'
 import Crops from './modules/Crops'
-import Resources from './modules/Resources'
-import FarmMap from './modules/FarmMap'
 import Reports from './modules/Reports'
+import Inventory from './modules/Inventory'
+import Groups from './modules/Groups'
+import Pastures from './modules/Pastures'
+import HealthSystem from './modules/HealthSystem'
 
 export default function App() {
   const [view, setView] = useState('dashboard')
+  const [animals, setAnimals] = useState([])
+
+  // Load animals for passing to health system and groups
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('cattalytics:animals')
+      if (stored) setAnimals(JSON.parse(stored))
+    } catch (e) {
+      setAnimals([])
+    }
+  }, [view]) // Reload when view changes to keep animals fresh
 
   // UI branding/settings persisted in localStorage
   const SETTINGS_KEY = 'devinsfarm:ui:settings'
@@ -49,9 +62,8 @@ export default function App() {
           <button className={view==='crops'? 'active':''} onClick={()=>setView('crops')}>Crops</button>
           <button className={view==='tasks'? 'active':''} onClick={()=>setView('tasks')}>Tasks</button>
           <button className={view==='schedules'? 'active':''} onClick={()=>setView('schedules')}>Schedules</button>
-          <button className={view==='resources'? 'active':''} onClick={()=>setView('resources')}>Resources</button>
+          <button className={view==='inventory'? 'active':''} onClick={()=>setView('inventory')}>Inventory</button>
           <button className={view==='finance'? 'active':''} onClick={()=>setView('finance')}>Finance</button>
-          <button className={view==='farmmap'? 'active':''} onClick={()=>setView('farmmap')}>Farm Map</button>
           <button className={view==='reports'? 'active':''} onClick={()=>setView('reports')}>Reports</button>
           <button className={view==='settings'? 'active':''} onClick={()=>setView('settings')}>Settings</button>
         </nav>
@@ -63,29 +75,35 @@ export default function App() {
             <h2>Farm Overview</h2>
             <p>Welcome to your comprehensive farm management system. Manage livestock, crops, finances, tasks, and operations all in one place. Use the navigation to access different modules and manage your farm data efficiently.</p>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginTop: '24px' }}>
-              <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
-                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)' }}>🐄 Livestock</h3>
-                <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Animal breeding, health tracking, feeding schedules, and milk yield monitoring</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginTop: '24px' }}>
+              <div className="card" style={{ padding: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setView('animals')}>
+                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)', fontSize: '48px' }}>🐄</h3>
+                <h4 style={{ margin: '8px 0', color: 'var(--green)' }}>Livestock</h4>
+                <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Animal breeding, health tracking, feeding schedules, milk yield, groups, and pastures</p>
               </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
-                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)' }}>🌾 Crops</h3>
+              <div className="card" style={{ padding: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setView('crops')}>
+                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)', fontSize: '48px' }}>🌾</h3>
+                <h4 style={{ margin: '8px 0', color: 'var(--green)' }}>Crops</h4>
                 <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Crop planning, treatment tracking, yield recording, and field management</p>
               </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
-                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)' }}>💰 Finance</h3>
+              <div className="card" style={{ padding: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setView('finance')}>
+                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)', fontSize: '48px' }}>💰</h3>
+                <h4 style={{ margin: '8px 0', color: 'var(--green)' }}>Finance</h4>
                 <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Income tracking, expense management, profit analysis, and financial reporting</p>
               </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
-                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)' }}>✅ Tasks</h3>
+              <div className="card" style={{ padding: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setView('tasks')}>
+                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)', fontSize: '48px' }}>✅</h3>
+                <h4 style={{ margin: '8px 0', color: 'var(--green)' }}>Tasks</h4>
                 <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Daily operations, scheduled activities, staff assignments, and progress tracking</p>
               </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
-                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)' }}>🗺️ Resources</h3>
-                <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Equipment management, facility tracking, and resource allocation</p>
+              <div className="card" style={{ padding: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setView('inventory')}>
+                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)', fontSize: '48px' }}>📦</h3>
+                <h4 style={{ margin: '8px 0', color: 'var(--green)' }}>Inventory</h4>
+                <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Feed supplies, veterinary medicines, equipment, and stock management</p>
               </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
-                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)' }}>📊 Reports</h3>
+              <div className="card" style={{ padding: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setView('reports')}>
+                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)', fontSize: '48px' }}>📊</h3>
+                <h4 style={{ margin: '8px 0', color: 'var(--green)' }}>Reports</h4>
                 <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Performance analytics, productivity reports, and operational insights</p>
               </div>
             </div>
@@ -93,35 +111,75 @@ export default function App() {
         )}
 
         {view === 'animals' && (
-          <Animals />
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <Animals />
+          </section>
         )}
 
         {view === 'tasks' && (
-          <Tasks />
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <Tasks />
+          </section>
         )}
 
         {view === 'schedules' && (
-          <Schedules />
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <Schedules />
+          </section>
         )}
 
         {view === 'crops' && (
-          <Crops />
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <Crops />
+          </section>
         )}
 
-        {view === 'resources' && (
-          <Resources />
+        {view === 'inventory' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <Inventory />
+          </section>
         )}
 
         {view === 'farmmap' && (
-          <FarmMap />
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <FarmMap />
+          </section>
         )}
 
         {view === 'reports' && (
-          <Reports />
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <Reports />
+          </section>
         )}
 
         {view === 'finance' && (
-          <Finance />
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <Finance />
+          </section>
         )}
 
         {view === 'settings' && (

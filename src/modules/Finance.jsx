@@ -35,6 +35,7 @@ export default function Finance(){
   const [activeTab, setActiveTab] = useState('all')
   const [showAddForm, setShowAddForm] = useState(false)
   const [modalOpenId, setModalOpenId] = useState(null)
+  const [editingId, setEditingId] = useState(null)
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterType, setFilterType] = useState('all')
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
@@ -101,6 +102,44 @@ export default function Finance(){
 
   function updateEntry(id, updates){
     setItems(items.map(i => i.id === id ? { ...i, ...updates } : i))
+  }
+
+  function startEdit(entry){
+    setFormData({
+      amount: Math.abs(entry.amount).toString(),
+      type: entry.type,
+      category: entry.category,
+      subcategory: entry.subcategory || '',
+      description: entry.description || '',
+      paymentMethod: entry.paymentMethod || 'Cash',
+      vendor: entry.vendor || '',
+      date: entry.date || new Date().toISOString().slice(0,10)
+    })
+    setEditingId(entry.id)
+    setShowAddForm(true)
+  }
+
+  function saveEdit(){
+    const amt = parseFloat(formData.amount || 0)
+    if(!formData.description.trim() || !amt) return
+    
+    const finalAmount = formData.type === 'expense' ? -Math.abs(amt) : Math.abs(amt)
+    
+    setItems(items.map(i => i.id === editingId ? {
+      ...i,
+      ...formData,
+      amount: finalAmount,
+      description: formData.description.trim()
+    } : i))
+    setFormData({ amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10) })
+    setEditingId(null)
+    setShowAddForm(false)
+  }
+
+  function cancelEdit(){
+    setFormData({ amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10) })
+    setEditingId(null)
+    setShowAddForm(false)
   }
 
   // Filter and calculate totals
@@ -194,7 +233,7 @@ export default function Finance(){
       {/* Add Transaction Form */}
       {showAddForm && (
         <div className="card" style={{ marginBottom: '20px', padding: '20px' }}>
-          <h3>Add New Transaction</h3>
+          <h3>{editingId ? 'Edit Transaction' : 'Add New Transaction'}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Type</label>
@@ -257,8 +296,8 @@ export default function Finance(){
             </div>
           </div>
           <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
-            <button onClick={add} style={{ background: 'var(--green)', color: '#fff', padding: '10px 16px', border: 'none', borderRadius: '6px' }}>Add Transaction</button>
-            <button onClick={() => setShowAddForm(false)} style={{ background: '#6b7280', color: '#fff', padding: '10px 16px', border: 'none', borderRadius: '6px' }}>Cancel</button>
+            <button onClick={editingId ? saveEdit : add} style={{ background: 'var(--green)', color: '#fff', padding: '10px 16px', border: 'none', borderRadius: '6px' }}>{editingId ? 'Save Changes' : 'Add Transaction'}</button>
+            <button onClick={editingId ? cancelEdit : () => setShowAddForm(false)} style={{ background: '#6b7280', color: '#fff', padding: '10px 16px', border: 'none', borderRadius: '6px' }}>Cancel</button>
           </div>
         </div>
       )}
@@ -323,6 +362,7 @@ export default function Finance(){
                 </div>
                 <div className="controls">
                   <button onClick={() => setModalOpenId(entry.id)}>View</button>
+                  <button onClick={() => startEdit(entry)}>Edit</button>
                   <button onClick={() => remove(entry.id)}>Delete</button>
                 </div>
               </div>
@@ -340,7 +380,10 @@ export default function Finance(){
             <div className="drawer" onClick={e => e.stopPropagation()}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h3>{entry.description}</h3>
-                <button onClick={() => setModalOpenId(null)}>Close</button>
+                <div>
+                  <button onClick={() => { setModalOpenId(null); startEdit(entry); }}>Edit</button>
+                  <button onClick={() => setModalOpenId(null)} style={{ marginLeft: '8px' }}>Close</button>
+                </div>
               </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px' }}>

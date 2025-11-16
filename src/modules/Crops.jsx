@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
 
 const SAMPLE = [
   {
@@ -180,6 +180,48 @@ const RISK_LEVELS = ['Very Low', 'Low', 'Medium', 'High', 'Very High']
 const COMPLIANCE_TYPES = ['Pesticide Application', 'Fertilizer Application', 'Organic Certification', 'GAP Compliance', 'Worker Safety', 'Environmental Protection']
 const SUSTAINABILITY_METRICS = ['Carbon Footprint', 'Water Usage', 'Soil Health', 'Biodiversity', 'Energy Usage', 'Nutrient Efficiency', 'Erosion Control', 'Pollinator Support']
 
+// Memoized Crop Card Component for better performance
+const CropCard = React.memo(({ crop, onViewDetails, onDelete }) => (
+  <div className="card" style={{ padding: '20px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+          <h3 style={{ margin: 0 }}>{crop.name}</h3>
+          <span className={`badge ${crop.status === 'Harvested' ? 'green' : crop.status === 'Failed' ? 'flag' : ''}`}>{crop.status}</span>
+          <span className="badge">{crop.irrigationType}</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '12px' }}>
+          <div>
+            <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px' }}>Variety</div>
+            <div style={{ fontWeight: '500' }}>{crop.variety || 'Not specified'}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px' }}>Field</div>
+            <div style={{ fontWeight: '500' }}>{crop.field || 'Not specified'}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px' }}>Area</div>
+            <div style={{ fontWeight: '500' }}>{crop.area} acres</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px' }}>Soil Type</div>
+            <div style={{ fontWeight: '500' }}>{crop.soilType}</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '20px', fontSize: '14px', color: 'var(--muted)' }}>
+          <span>📅 Planted: {crop.planted || 'Not set'}</span>
+          <span>🌾 Expected Harvest: {crop.expectedHarvest || 'Not set'}</span>
+          <span>💧 {crop.irrigationType}</span>
+        </div>
+      </div>
+      <div className="controls">
+        <button onClick={onViewDetails}>View Details</button>
+        <button onClick={onDelete}>Delete</button>
+      </div>
+    </div>
+  </div>
+))
+
 export default function Crops(){
   const KEY = 'cattalytics:crops:v2' // Changed key to force reload of new data
   const [items, setItems] = useState([])
@@ -197,14 +239,26 @@ export default function Crops(){
   })
 
   useEffect(()=>{
-    // Force clear old data and load new comprehensive sample data
-    localStorage.removeItem('cattalytics:crops')
-    localStorage.removeItem('cattalytics:crops:v2')
-    console.log('Loading comprehensive crop data with health monitoring...', SAMPLE)
-    setItems(SAMPLE)
+    // Load from localStorage or use sample data
+    const saved = localStorage.getItem(KEY)
+    if(saved) {
+      try {
+        setItems(JSON.parse(saved))
+      } catch(e) {
+        console.log('Loading sample data...')
+        setItems(SAMPLE)
+      }
+    } else {
+      console.log('Loading sample data...')
+      setItems(SAMPLE)
+    }
   }, [])
 
-  useEffect(()=> localStorage.setItem(KEY, JSON.stringify(items)), [items])
+  useEffect(()=> {
+    if(items.length > 0) {
+      localStorage.setItem(KEY, JSON.stringify(items))
+    }
+  }, [items])
 
   function add(){
     if(!formData.name.trim() || !formData.area) return
@@ -331,19 +385,19 @@ export default function Crops(){
     } : i))
   }
 
-  function calculateTotalCost(crop){
+  const calculateTotalCost = useCallback((crop) => {
     const seedCost = crop.seedCost || 0
     const treatmentCost = crop.treatments?.reduce((sum, t) => sum + (t.cost || 0), 0) || 0
     const operationCost = crop.fieldOperations?.reduce((sum, op) => sum + (op.fuel || 0), 0) || 0
     const irrigationCost = crop.irrigationRecords?.reduce((sum, ir) => sum + (ir.cost || 0), 0) || 0
     return seedCost + treatmentCost + operationCost + irrigationCost
-  }
+  }, [])
 
-  function calculateProfit(crop){
+  const calculateProfit = useCallback((crop) => {
     const totalCost = calculateTotalCost(crop)
     const revenue = crop.yieldRecords?.reduce((sum, y) => sum + (y.totalValue || 0), 0) || 0
     return revenue - totalCost
-  }
+  }, [calculateTotalCost])
 
   function addHealthMonitoring(cropId, healthData){
     setItems(items.map(i => i.id === cropId ? {
@@ -416,50 +470,6 @@ export default function Crops(){
     return 'High'
   }
 
-  function addSoilTest(cropId, testData){
-    setItems(items.map(i => i.id === cropId ? {
-      ...i,
-      soilTests: [...(i.soilTests || []), { 
-        id: Date.now(), 
-        ...testData,
-        date: new Date().toISOString().slice(0,10)
-      }]
-    } : i))
-  }
-
-  function addIrrigation(cropId, irrigationData){
-    setItems(items.map(i => i.id === cropId ? {
-      ...i,
-      irrigation: [...(i.irrigation || []), { 
-        id: Date.now(), 
-        ...irrigationData,
-        date: new Date().toISOString().slice(0,10)
-      }]
-    } : i))
-  }
-
-  function addFieldOperation(cropId, operationData){
-    setItems(items.map(i => i.id === cropId ? {
-      ...i,
-      fieldOperations: [...(i.fieldOperations || []), { 
-        id: Date.now(), 
-        ...operationData,
-        date: new Date().toISOString().slice(0,10)
-      }]
-    } : i))
-  }
-
-  function addPestManagement(cropId, pestData){
-    setItems(items.map(i => i.id === cropId ? {
-      ...i,
-      pestManagement: [...(i.pestManagement || []), { 
-        id: Date.now(), 
-        ...pestData,
-        date: new Date().toISOString().slice(0,10)
-      }]
-    } : i))
-  }
-
   function calculateHealthScore(crop){
     const recent = crop.healthMonitoring?.slice(-3) || []
     if(recent.length === 0) return 0
@@ -476,25 +486,27 @@ export default function Crops(){
     return 'High'
   }
 
-  // Filter and sort crops
-  const filteredItems = items.filter(crop => {
-    if(filterStatus !== 'all' && crop.status !== filterStatus) return false
-    if(activeTab === 'active' && ['Harvested', 'Failed'].includes(crop.status)) return false
-    if(activeTab === 'completed' && !['Harvested', 'Failed'].includes(crop.status)) return false
-    return true
-  }).sort((a, b) => {
-    if(sortBy === 'planted') return new Date(b.planted || '1900-01-01') - new Date(a.planted || '1900-01-01')
-    if(sortBy === 'area') return b.area - a.area
-    if(sortBy === 'name') return a.name.localeCompare(b.name)
-    return 0
-  })
+  // Memoized filter and sort
+  const filteredItems = useMemo(() => {
+    return items.filter(crop => {
+      if(filterStatus !== 'all' && crop.status !== filterStatus) return false
+      if(activeTab === 'active' && ['Harvested', 'Failed'].includes(crop.status)) return false
+      if(activeTab === 'completed' && !['Harvested', 'Failed'].includes(crop.status)) return false
+      return true
+    }).sort((a, b) => {
+      if(sortBy === 'planted') return new Date(b.planted || '1900-01-01') - new Date(a.planted || '1900-01-01')
+      if(sortBy === 'area') return b.area - a.area
+      if(sortBy === 'name') return a.name.localeCompare(b.name)
+      return 0
+    })
+  }, [items, filterStatus, activeTab, sortBy])
 
-  const stats = {
+  const stats = useMemo(() => ({
     total: items.length,
     totalArea: items.reduce((sum, crop) => sum + crop.area, 0),
     active: items.filter(c => !['Harvested', 'Failed'].includes(c.status)).length,
     harvested: items.filter(c => c.status === 'Harvested').length
-  }
+  }), [items])
 
   return (
     <section>
@@ -645,44 +657,12 @@ export default function Crops(){
       {/* Crops Grid */}
       <div style={{ display: 'grid', gap: '12px' }}>
         {filteredItems.map(crop => (
-          <div key={crop.id} className="card" style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                  <h3 style={{ margin: 0 }}>{crop.name}</h3>
-                  <span className={`badge ${crop.status === 'Harvested' ? 'green' : crop.status === 'Failed' ? 'flag' : ''}`}>{crop.status}</span>
-                  <span className="badge">{crop.irrigationType}</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '12px' }}>
-                  <div>
-                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px' }}>Variety</div>
-                    <div style={{ fontWeight: '500' }}>{crop.variety || 'Not specified'}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px' }}>Field</div>
-                    <div style={{ fontWeight: '500' }}>{crop.field || 'Not specified'}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px' }}>Area</div>
-                    <div style={{ fontWeight: '500' }}>{crop.area} acres</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px' }}>Soil Type</div>
-                    <div style={{ fontWeight: '500' }}>{crop.soilType}</div>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '20px', fontSize: '14px', color: 'var(--muted)' }}>
-                  <span>📅 Planted: {crop.planted || 'Not set'}</span>
-                  <span>🌾 Expected Harvest: {crop.expectedHarvest || 'Not set'}</span>
-                  <span>💧 {crop.irrigationType}</span>
-                </div>
-              </div>
-              <div className="controls">
-                <button onClick={() => setModalOpenId(crop.id)}>View Details</button>
-                <button onClick={() => remove(crop.id)}>Delete</button>
-              </div>
-            </div>
-          </div>
+          <CropCard 
+            key={crop.id} 
+            crop={crop} 
+            onViewDetails={() => setModalOpenId(crop.id)}
+            onDelete={() => remove(crop.id)}
+          />
         ))}
       </div>
 
@@ -872,13 +852,13 @@ export default function Crops(){
                       <div><strong>Planting Depth:</strong> {crop.plantingDepth}"</div>
                       <div><strong>Soil Type:</strong> {crop.soilType}</div>
                       <div><strong>Irrigation Method:</strong> {crop.irrigationMethod}</div>
-                      <div><strong>Status:</strong> <span style={{ color: getStatusColor(crop.status) }}>{crop.status}</span></div>
+                      <div><strong>Status:</strong> <span className={`badge ${crop.status === 'Harvested' ? 'green' : crop.status === 'Failed' ? 'flag' : ''}`}>{crop.status}</span></div>
                       <div><strong>Contract Price:</strong> ${crop.contractPrice}/unit</div>
-                      <div><strong>Insurance Coverage:</strong> ${crop.insuranceCoverage}</div>
+                      <div><strong>Insurance Coverage:</strong> {crop.insuranceCoverage ? 'Yes' : 'No'}</div>
                       <div><strong>Certification:</strong> {crop.certificationLevel}</div>
                       <div><strong>Market Destination:</strong> {crop.marketDestination}</div>
-                      {crop.gpsCoordinates && <div><strong>GPS:</strong> {crop.gpsCoordinates}</div>}
-                      <div style={{ marginTop: '12px' }}><strong>Notes:</strong> {crop.notes}</div>
+                      {crop.gpsCoordinates && <div><strong>GPS:</strong> {crop.gpsCoordinates.lat}, {crop.gpsCoordinates.lng}</div>}
+                      <div style={{ marginTop: '12px' }}><strong>Notes:</strong> {typeof crop.notes === 'string' ? crop.notes : (crop.notes?.length > 0 ? `${crop.notes.length} notes recorded` : 'No notes')}</div>
                     </div>
                   </div>
 
