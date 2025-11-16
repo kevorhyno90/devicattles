@@ -1,7 +1,7 @@
 {
   "name": "Devins Farm",
   "short_name": "Devins Farm",
-  "description": "Devins Farm — Dairy & Farm management PWA: animals, pastures, inventory, and finance.",
+  "description": "Devins Farm — Comprehensive farm management system: livestock, crops, finances, tasks, resources, and operations.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f0f7f0",

@@ -1,18 +1,49 @@
 import React, { useEffect, useState } from 'react'
 
 const SAMPLE = [
-  { id: 'F-001', date: '2025-01-12', amount: 120.00, category: 'Vet', notes: 'Vaccines' },
-  { id: 'F-002', date: '2025-02-05', amount: 45.50, category: 'Feed', notes: 'Hay' }
+  { id: 'F-001', date: '2025-01-12', amount: -120.00, type: 'expense', category: 'Veterinary', subcategory: 'Vaccines', description: 'Annual vaccination program', notes: [], paymentMethod: 'Credit Card', vendor: 'Valley Veterinary Clinic' },
+  { id: 'F-002', date: '2025-01-15', amount: -245.50, type: 'expense', category: 'Feed', subcategory: 'Hay', description: 'Premium alfalfa hay - 50 bales', notes: [], paymentMethod: 'Check', vendor: 'Green Valley Feed' },
+  { id: 'F-003', date: '2025-01-20', amount: 1250.00, type: 'income', category: 'Milk Sales', subcategory: 'Wholesale', description: 'Weekly milk delivery to processing plant', notes: [], paymentMethod: 'Bank Transfer', vendor: 'Dairy Processors Inc' },
+  { id: 'F-004', date: '2025-01-22', amount: -89.99, type: 'expense', category: 'Equipment', subcategory: 'Maintenance', description: 'Milking equipment parts replacement', notes: [], paymentMethod: 'Debit Card', vendor: 'Farm Equipment Supply' }
 ]
+
+const EXPENSE_CATEGORIES = [
+  { name: 'Feed', subcategories: ['Hay', 'Grain', 'Supplements', 'Pasture Seed'] },
+  { name: 'Veterinary', subcategories: ['Vaccines', 'Treatment', 'Checkups', 'Emergency Care'] },
+  { name: 'Equipment', subcategories: ['Purchase', 'Maintenance', 'Repair', 'Fuel'] },
+  { name: 'Labor', subcategories: ['Wages', 'Benefits', 'Contract Work', 'Training'] },
+  { name: 'Utilities', subcategories: ['Electricity', 'Water', 'Internet', 'Phone'] },
+  { name: 'Insurance', subcategories: ['Liability', 'Equipment', 'Livestock', 'Property'] },
+  { name: 'Transportation', subcategories: ['Fuel', 'Vehicle Maintenance', 'Delivery', 'Travel'] },
+  { name: 'Other', subcategories: ['Supplies', 'Professional Services', 'Miscellaneous'] }
+]
+
+const INCOME_CATEGORIES = [
+  { name: 'Milk Sales', subcategories: ['Wholesale', 'Direct Sales', 'Farmers Market'] },
+  { name: 'Livestock Sales', subcategories: ['Cattle Sales', 'Breeding Stock', 'Calf Sales'] },
+  { name: 'Crop Sales', subcategories: ['Hay', 'Grain', 'Silage'] },
+  { name: 'Services', subcategories: ['Custom Work', 'Consulting', 'Equipment Rental'] },
+  { name: 'Government', subcategories: ['Subsidies', 'Grants', 'Tax Credits'] },
+  { name: 'Other', subcategories: ['Investment Income', 'Insurance Claims', 'Miscellaneous'] }
+]
+
+const PAYMENT_METHODS = ['Cash', 'Check', 'Credit Card', 'Debit Card', 'Bank Transfer', 'Mobile Payment']
 
 export default function Finance(){
   const KEY = 'cattalytics:finance'
   const [items, setItems] = useState([])
-  const [newAmount, setNewAmount] = useState('')
-  const [newCategory, setNewCategory] = useState('')
-  const [editingId, setEditingId] = useState(null)
-  const [editValues, setEditValues] = useState({})
+  const [activeTab, setActiveTab] = useState('all')
+  const [showAddForm, setShowAddForm] = useState(false)
   const [modalOpenId, setModalOpenId] = useState(null)
+  const [filterCategory, setFilterCategory] = useState('all')
+  const [filterType, setFilterType] = useState('all')
+  const [dateRange, setDateRange] = useState({ start: '', end: '' })
+  
+  // Form states
+  const [formData, setFormData] = useState({
+    amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', 
+    description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10)
+  })
 
   function addNoteToTransaction(tx){
     const note = window.prompt('Add note for transaction ' + tx.id,'')
@@ -27,105 +58,339 @@ export default function Finance(){
     else setItems(SAMPLE)
   }, [])
 
-  useEffect(()=>{
-    localStorage.setItem(KEY, JSON.stringify(items))
-  }, [items])
+  useEffect(()=> localStorage.setItem(KEY, JSON.stringify(items)), [items])
 
   function add(){
-    const amt = parseFloat(newAmount||0)
-    if(!newCategory.trim() || !amt) return
+    const amt = parseFloat(formData.amount || 0)
+    if(!formData.description.trim() || !amt) return
+    
+    const finalAmount = formData.type === 'expense' ? -Math.abs(amt) : Math.abs(amt)
     const id = 'F-' + Math.floor(1000 + Math.random()*9000)
-    setItems([...items, { id, date: new Date().toISOString().slice(0,10), amount: amt, category: newCategory.trim(), notes: '' }])
-    setNewAmount('')
-    setNewCategory('')
+    
+    const newEntry = {
+      id,
+      ...formData,
+      amount: finalAmount,
+      description: formData.description.trim(),
+      notes: [],
+      createdDate: new Date().toISOString()
+    }
+    
+    setItems([...items, newEntry])
+    setFormData({ amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10) })
+    setShowAddForm(false)
   }
 
   function remove(id){
-    if(!confirm('Delete finance entry '+id+'?')) return
+    if(!confirm('Delete financial entry '+id+'?')) return
     setItems(items.filter(i=>i.id!==id))
   }
 
-  function startEdit(item){
-    setEditingId(item.id)
-    setEditValues({...item})
+  function addNote(entryId, noteText){
+    if(!noteText.trim()) return
+    setItems(items.map(i => i.id === entryId ? {
+      ...i,
+      notes: [...(i.notes || []), { 
+        id: Date.now(), 
+        text: noteText.trim(), 
+        date: new Date().toISOString(),
+        author: 'Current User'
+      }]
+    } : i))
   }
 
-  function saveEdit(){
-    setItems(items.map(i=> i.id===editingId ? {...i, ...editValues} : i))
-    setEditingId(null)
+  function updateEntry(id, updates){
+    setItems(items.map(i => i.id === id ? { ...i, ...updates } : i))
+  }
+
+  // Filter and calculate totals
+  const filteredItems = items.filter(entry => {
+    if(filterType !== 'all' && entry.type !== filterType) return false
+    if(filterCategory !== 'all' && entry.category !== filterCategory) return false
+    if(dateRange.start && entry.date < dateRange.start) return false
+    if(dateRange.end && entry.date > dateRange.end) return false
+    return true
+  }).sort((a, b) => new Date(b.date) - new Date(a.date))
+
+  const currentDate = new Date()
+  const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().slice(0,10)
+  const currentMonthItems = items.filter(i => i.date >= currentMonthStart)
+
+  const stats = {
+    totalIncome: items.filter(i => i.amount > 0).reduce((sum, i) => sum + i.amount, 0),
+    totalExpenses: items.filter(i => i.amount < 0).reduce((sum, i) => sum + Math.abs(i.amount), 0),
+    monthlyIncome: currentMonthItems.filter(i => i.amount > 0).reduce((sum, i) => sum + i.amount, 0),
+    monthlyExpenses: currentMonthItems.filter(i => i.amount < 0).reduce((sum, i) => sum + Math.abs(i.amount), 0),
+    netProfit: items.reduce((sum, i) => sum + i.amount, 0),
+    monthlyNet: currentMonthItems.reduce((sum, i) => sum + i.amount, 0)
+  }
+
+  const getCategoryOptions = () => {
+    return formData.type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES
+  }
+
+  const getSubcategories = () => {
+    const categoryObj = getCategoryOptions().find(cat => cat.name === formData.category)
+    return categoryObj ? categoryObj.subcategories : []
   }
 
   return (
     <section>
-      <h2>Finance</h2>
-      <div className="add-row">
-        <input placeholder="Amount" value={newAmount} onChange={e=>setNewAmount(e.target.value)} />
-        <input placeholder="Category" value={newCategory} onChange={e=>setNewCategory(e.target.value)} />
-        <button onClick={add}>Add</button>
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ margin: 0 }}>Financial Management</h2>
+          <button onClick={() => setShowAddForm(!showAddForm)} style={{ background: 'var(--green)', color: '#fff', padding: '10px 16px', borderRadius: '8px', border: 'none' }}>Add Transaction</button>
+        </div>
+        
+        {/* Financial Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
+          <div className="card" style={{ padding: '20px' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>This Month</h3>
+            <div style={{ display: 'grid', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Income:</span>
+                <span style={{ color: 'var(--green)', fontWeight: '600' }}>${stats.monthlyIncome.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Expenses:</span>
+                <span style={{ color: '#dc2626', fontWeight: '600' }}>${stats.monthlyExpenses.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e7eb', paddingTop: '8px', fontWeight: '700' }}>
+                <span>Net:</span>
+                <span style={{ color: stats.monthlyNet >= 0 ? 'var(--green)' : '#dc2626' }}>${stats.monthlyNet.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="card" style={{ padding: '20px' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>All Time</h3>
+            <div style={{ display: 'grid', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Total Income:</span>
+                <span style={{ color: 'var(--green)', fontWeight: '600' }}>${stats.totalIncome.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Total Expenses:</span>
+                <span style={{ color: '#dc2626', fontWeight: '600' }}>${stats.totalExpenses.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e7eb', paddingTop: '8px', fontWeight: '700' }}>
+                <span>Net Profit:</span>
+                <span style={{ color: stats.netProfit >= 0 ? 'var(--green)' : '#dc2626' }}>${stats.netProfit.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: '20px' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>Quick Actions</h3>
+            <div style={{ display: 'grid', gap: '8px' }}>
+              <button onClick={() => setShowAddForm(true)} style={{ padding: '8px', background: 'var(--green)', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '14px' }}>Record Transaction</button>
+              <button onClick={() => console.log('Export data')} style={{ padding: '8px', background: '#6b7280', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '14px' }}>Export Report</button>
+              <button onClick={() => console.log('Generate report')} style={{ padding: '8px', background: '#6b7280', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '14px' }}>Monthly Report</button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <table>
-        <thead><tr><th>ID</th><th>Date</th><th>Amount</th><th>Category</th><th>Notes</th><th/></tr></thead>
-        <tbody>
-          {items.map(a=> (
-            <tr key={a.id}>
-              <td>{a.id}</td>
-              <td>{editingId===a.id ? <input type="date" value={editValues.date||''} onChange={e=>setEditValues({...editValues, date: e.target.value})} /> : a.date}</td>
-              <td>{editingId===a.id ? <input value={editValues.amount||0} onChange={e=>setEditValues({...editValues, amount: parseFloat(e.target.value||0)})} /> : a.amount}</td>
-              <td>{editingId===a.id ? <input value={editValues.category||''} onChange={e=>setEditValues({...editValues, category: e.target.value})} /> : a.category}</td>
-              <td>{editingId===a.id ? <input value={editValues.notes||''} onChange={e=>setEditValues({...editValues, notes: e.target.value})} /> : a.notes}</td>
-              <td style={{width:200}}>
-                {editingId===a.id ? (
-                  <>
-                    <button onClick={saveEdit}>Save</button>
-                    <button onClick={()=>setEditingId(null)}>Cancel</button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={()=>{ setModalOpenId(a.id); }}>{'Expand'}</button>
-                    <button onClick={()=>startEdit(a)}>Edit</button>
-                    <button onClick={()=>remove(a.id)}>Delete</button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Add Transaction Form */}
+      {showAddForm && (
+        <div className="card" style={{ marginBottom: '20px', padding: '20px' }}>
+          <h3>Add New Transaction</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Type</label>
+              <select value={formData.type} onChange={e => {
+                const newType = e.target.value
+                setFormData({
+                  ...formData, 
+                  type: newType,
+                  category: newType === 'expense' ? 'Feed' : 'Milk Sales',
+                  subcategory: newType === 'expense' ? 'Hay' : 'Wholesale'
+                })
+              }}>
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Amount</label>
+              <input 
+                type="number" 
+                step="0.01" 
+                placeholder="0.00" 
+                value={formData.amount} 
+                onChange={e => setFormData({...formData, amount: e.target.value})} 
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Date</label>
+              <input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Category</label>
+              <select value={formData.category} onChange={e => {
+                const newCategory = e.target.value
+                const subcategories = getCategoryOptions().find(cat => cat.name === newCategory)?.subcategories || []
+                setFormData({...formData, category: newCategory, subcategory: subcategories[0] || ''})
+              }}>
+                {getCategoryOptions().map(cat => <option key={cat.name} value={cat.name}>{cat.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Subcategory</label>
+              <select value={formData.subcategory} onChange={e => setFormData({...formData, subcategory: e.target.value})}>
+                {getSubcategories().map(sub => <option key={sub} value={sub}>{sub}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Payment Method</label>
+              <select value={formData.paymentMethod} onChange={e => setFormData({...formData, paymentMethod: e.target.value})}>
+                {PAYMENT_METHODS.map(method => <option key={method} value={method}>{method}</option>)}
+              </select>
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Description</label>
+              <input placeholder="Enter transaction description" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Vendor/Customer</label>
+              <input placeholder="Enter vendor or customer name" value={formData.vendor} onChange={e => setFormData({...formData, vendor: e.target.value})} />
+            </div>
+          </div>
+          <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+            <button onClick={add} style={{ background: 'var(--green)', color: '#fff', padding: '10px 16px', border: 'none', borderRadius: '6px' }}>Add Transaction</button>
+            <button onClick={() => setShowAddForm(false)} style={{ background: '#6b7280', color: '#fff', padding: '10px 16px', border: 'none', borderRadius: '6px' }}>Cancel</button>
+          </div>
+        </div>
+      )}
 
-      {/* Drawer for expansive finance view */}
+      {/* Filters */}
+      <div className="card" style={{ marginBottom: '20px', padding: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', alignItems: 'end' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Type</label>
+            <select value={filterType} onChange={e => setFilterType(e.target.value)}>
+              <option value="all">All Types</option>
+              <option value="income">Income</option>
+              <option value="expense">Expenses</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Category</label>
+            <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
+              <option value="all">All Categories</option>
+              {[...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES].map(cat => 
+                <option key={cat.name} value={cat.name}>{cat.name}</option>
+              )}
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Start Date</label>
+            <input type="date" value={dateRange.start} onChange={e => setDateRange({...dateRange, start: e.target.value})} />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>End Date</label>
+            <input type="date" value={dateRange.end} onChange={e => setDateRange({...dateRange, end: e.target.value})} />
+          </div>
+          <div>
+            <button onClick={() => {setFilterType('all'); setFilterCategory('all'); setDateRange({start: '', end: ''})}} style={{ background: '#6b7280', color: '#fff', padding: '8px 12px', border: 'none', borderRadius: '4px' }}>Clear Filters</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Transactions List */}
+      <div style={{ display: 'grid', gap: '8px' }}>
+        {filteredItems.map(entry => (
+          <div key={entry.id} className="card" style={{ padding: '16px', borderLeft: `4px solid ${entry.amount >= 0 ? 'var(--green)' : '#dc2626'}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+                  <h4 style={{ margin: 0 }}>{entry.description}</h4>
+                  <span className={`badge ${entry.amount >= 0 ? 'green' : ''}`}>{entry.category}</span>
+                  <span className="badge">{entry.subcategory}</span>
+                </div>
+                <div style={{ display: 'flex', gap: '20px', fontSize: '14px', color: 'var(--muted)', marginBottom: '4px' }}>
+                  <span>📅 {entry.date}</span>
+                  <span>💳 {entry.paymentMethod}</span>
+                  {entry.vendor && <span>🏪 {entry.vendor}</span>}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '18px', fontWeight: '700', color: entry.amount >= 0 ? 'var(--green)' : '#dc2626' }}>
+                    {entry.amount >= 0 ? '+' : ''}${Math.abs(entry.amount).toFixed(2)}
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--muted)' }}>{entry.id}</div>
+                </div>
+                <div className="controls">
+                  <button onClick={() => setModalOpenId(entry.id)}>View</button>
+                  <button onClick={() => remove(entry.id)}>Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Transaction Detail Modal */}
       {modalOpenId && (() => {
-        const t = items.find(x => x.id === modalOpenId)
-        if(!t) return null
+        const entry = items.find(e => e.id === modalOpenId)
+        if(!entry) return null
         return (
           <div className="drawer-overlay" onClick={() => setModalOpenId(null)}>
             <div className="drawer" onClick={e => e.stopPropagation()}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                <h3 style={{margin:0}}>{t.category} • {t.description || t.id}</h3>
-                <div>
-                  <button onClick={() => { setModalOpenId(null); startEdit(t); }}>Edit</button>
-                  <button onClick={() => setModalOpenId(null)} style={{marginLeft:8}}>Close</button>
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3>{entry.description}</h3>
+                <button onClick={() => setModalOpenId(null)}>Close</button>
               </div>
-              <div style={{marginTop:12, display:'flex', gap:16}}>
-                <div style={{width:320, border:'1px solid #eee', padding:12, borderRadius:8}}>
-                  <div><strong>Amount</strong> ${t.amount}</div>
-                  <div style={{marginTop:8}}><strong>Date</strong> {t.date}</div>
-                  <div style={{marginTop:8}}><strong>Category</strong> {t.category}</div>
-                  <div style={{marginTop:12}}>
-                    <button onClick={() => addNoteToTransaction(t)}>Add note</button>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px' }}>
+                <div>
+                  <div>
+                    <h4>Transaction Notes</h4>
+                    <div style={{ marginBottom: '12px' }}>
+                      <input 
+                        placeholder="Add a note..." 
+                        onKeyPress={e => {
+                          if(e.key === 'Enter' && e.target.value.trim()) {
+                            addNote(entry.id, e.target.value)
+                            e.target.value = ''
+                          }
+                        }}
+                        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db' }}
+                      />
+                    </div>
+                    <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                      {(entry.notes || []).slice().reverse().map(note => (
+                        <div key={note.id} style={{ padding: '12px', background: '#f9fafb', borderRadius: '8px', marginBottom: '12px' }}>
+                          <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '4px' }}>
+                            {note.author} • {new Date(note.date).toLocaleString()}
+                          </div>
+                          <div>{note.text}</div>
+                        </div>
+                      ))}
+                      {(!entry.notes || entry.notes.length === 0) && (
+                        <div style={{ color: 'var(--muted)', fontStyle: 'italic', padding: '20px', textAlign: 'center' }}>No notes yet</div>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div style={{flex:1}}>
-                  <div><strong>Notes</strong></div>
-                  <div style={{marginTop:8}}>
-                    {(!t.notes || !t.notes.length) ? <div style={{color:'#666'}}>No notes</div> : (
-                      <ul>
-                        {(t.notes||[]).slice().reverse().map((n, idx) => (
-                          <li key={idx}>{new Date(n.date).toLocaleString()} — {n.text}</li>
-                        ))}
-                      </ul>
-                    )}
+                
+                <div className="card" style={{ padding: '20px', height: 'fit-content' }}>
+                  <h4>Transaction Details</h4>
+                  <div style={{ display: 'grid', gap: '12px', fontSize: '14px' }}>
+                    <div><strong>Amount:</strong> 
+                      <span style={{ color: entry.amount >= 0 ? 'var(--green)' : '#dc2626', fontWeight: '700', marginLeft: '8px' }}>
+                        {entry.amount >= 0 ? '+' : ''}${Math.abs(entry.amount).toFixed(2)}
+                      </span>
+                    </div>
+                    <div><strong>Type:</strong> <span className={`badge ${entry.amount >= 0 ? 'green' : ''}`}>{entry.type}</span></div>
+                    <div><strong>Category:</strong> {entry.category}</div>
+                    <div><strong>Subcategory:</strong> {entry.subcategory}</div>
+                    <div><strong>Date:</strong> {entry.date}</div>
+                    <div><strong>Payment Method:</strong> {entry.paymentMethod}</div>
+                    {entry.vendor && <div><strong>Vendor/Customer:</strong> {entry.vendor}</div>}
+                    <div><strong>Transaction ID:</strong> {entry.id}</div>
+                    {entry.createdDate && <div><strong>Created:</strong> {new Date(entry.createdDate).toLocaleString()}</div>}
                   </div>
                 </div>
               </div>
