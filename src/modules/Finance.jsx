@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
 
 const SAMPLE = [
-  { id: 'F-001', date: '2025-01-12', amount: -120.00, type: 'expense', category: 'Veterinary', subcategory: 'Vaccines', description: 'Annual vaccination program', notes: [], paymentMethod: 'Credit Card', vendor: 'Valley Veterinary Clinic' },
-  { id: 'F-002', date: '2025-01-15', amount: -245.50, type: 'expense', category: 'Feed', subcategory: 'Hay', description: 'Premium alfalfa hay - 50 bales', notes: [], paymentMethod: 'Check', vendor: 'Green Valley Feed' },
-  { id: 'F-003', date: '2025-01-20', amount: 1250.00, type: 'income', category: 'Milk Sales', subcategory: 'Wholesale', description: 'Weekly milk delivery to processing plant', notes: [], paymentMethod: 'Bank Transfer', vendor: 'Dairy Processors Inc' },
-  { id: 'F-004', date: '2025-01-22', amount: -89.99, type: 'expense', category: 'Equipment', subcategory: 'Maintenance', description: 'Milking equipment parts replacement', notes: [], paymentMethod: 'Debit Card', vendor: 'Farm Equipment Supply' }
+  { id: 'F-001', date: '2025-01-12', amount: -18000.00, type: 'expense', category: 'Veterinary', subcategory: 'Vaccines', description: 'Annual vaccination program', notes: [], paymentMethod: 'M-Pesa', vendor: 'Valley Veterinary Clinic' },
+  { id: 'F-002', date: '2025-01-15', amount: -36825.00, type: 'expense', category: 'Feed', subcategory: 'Hay', description: 'Premium alfalfa hay - 50 bales', notes: [], paymentMethod: 'Bank Transfer', vendor: 'Green Valley Feed' },
+  { id: 'F-003', date: '2025-01-20', amount: 187500.00, type: 'income', category: 'Milk Sales', subcategory: 'Wholesale', description: 'Weekly milk delivery to processing plant', notes: [], paymentMethod: 'Bank Transfer', vendor: 'Dairy Processors Inc' },
+  { id: 'F-004', date: '2025-01-22', amount: -13499.00, type: 'expense', category: 'Equipment', subcategory: 'Maintenance', description: 'Milking equipment parts replacement', notes: [], paymentMethod: 'M-Pesa', vendor: 'Farm Equipment Supply' }
 ]
 
 const EXPENSE_CATEGORIES = [
@@ -27,7 +27,7 @@ const INCOME_CATEGORIES = [
   { name: 'Other', subcategories: ['Investment Income', 'Insurance Claims', 'Miscellaneous'] }
 ]
 
-const PAYMENT_METHODS = ['Cash', 'Check', 'Credit Card', 'Debit Card', 'Bank Transfer', 'Mobile Payment']
+const PAYMENT_METHODS = ['Cash', 'M-Pesa', 'Bank Transfer', 'Credit Card', 'Debit Card', 'Check']
 
 export default function Finance(){
   const KEY = 'cattalytics:finance'
@@ -188,15 +188,15 @@ export default function Finance(){
             <div style={{ display: 'grid', gap: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Income:</span>
-                <span style={{ color: 'var(--green)', fontWeight: '600' }}>${stats.monthlyIncome.toFixed(2)}</span>
+                <span style={{ color: 'var(--green)', fontWeight: '600' }}>KES {stats.monthlyIncome.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Expenses:</span>
-                <span style={{ color: '#dc2626', fontWeight: '600' }}>${stats.monthlyExpenses.toFixed(2)}</span>
+                <span style={{ color: '#dc2626', fontWeight: '600' }}>KES {stats.monthlyExpenses.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e7eb', paddingTop: '8px', fontWeight: '700' }}>
                 <span>Net:</span>
-                <span style={{ color: stats.monthlyNet >= 0 ? 'var(--green)' : '#dc2626' }}>${stats.monthlyNet.toFixed(2)}</span>
+                <span style={{ color: stats.monthlyNet >= 0 ? 'var(--green)' : '#dc2626' }}>KES {stats.monthlyNet.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
               </div>
             </div>
           </div>
@@ -206,15 +206,15 @@ export default function Finance(){
             <div style={{ display: 'grid', gap: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Total Income:</span>
-                <span style={{ color: 'var(--green)', fontWeight: '600' }}>${stats.totalIncome.toFixed(2)}</span>
+                <span style={{ color: 'var(--green)', fontWeight: '600' }}>KES {stats.totalIncome.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Total Expenses:</span>
-                <span style={{ color: '#dc2626', fontWeight: '600' }}>${stats.totalExpenses.toFixed(2)}</span>
+                <span style={{ color: '#dc2626', fontWeight: '600' }}>KES {stats.totalExpenses.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e7eb', paddingTop: '8px', fontWeight: '700' }}>
                 <span>Net Profit:</span>
-                <span style={{ color: stats.netProfit >= 0 ? 'var(--green)' : '#dc2626' }}>${stats.netProfit.toFixed(2)}</span>
+                <span style={{ color: stats.netProfit >= 0 ? 'var(--green)' : '#dc2626' }}>KES {stats.netProfit.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
               </div>
             </div>
           </div>
@@ -356,7 +356,7 @@ export default function Finance(){
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '18px', fontWeight: '700', color: entry.amount >= 0 ? 'var(--green)' : '#dc2626' }}>
-                    {entry.amount >= 0 ? '+' : ''}${Math.abs(entry.amount).toFixed(2)}
+                    {entry.amount >= 0 ? '+' : '-'}KES {Math.abs(entry.amount).toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--muted)' }}>{entry.id}</div>
                 </div>
@@ -423,7 +423,7 @@ export default function Finance(){
                   <div style={{ display: 'grid', gap: '12px', fontSize: '14px' }}>
                     <div><strong>Amount:</strong> 
                       <span style={{ color: entry.amount >= 0 ? 'var(--green)' : '#dc2626', fontWeight: '700', marginLeft: '8px' }}>
-                        {entry.amount >= 0 ? '+' : ''}${Math.abs(entry.amount).toFixed(2)}
+                        {entry.amount >= 0 ? '+' : '-'}KES {Math.abs(entry.amount).toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                       </span>
                     </div>
                     <div><strong>Type:</strong> <span className={`badge ${entry.amount >= 0 ? 'green' : ''}`}>{entry.type}</span></div>

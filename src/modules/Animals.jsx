@@ -5,6 +5,7 @@ import AnimalFeeding from './AnimalFeeding'
 import AnimalMeasurement from './AnimalMeasurement'
 import AnimalBreeding from './AnimalBreeding'
 import AnimalMilkYield from './AnimalMilkYield'
+import AnimalTreatment from './AnimalTreatment'
 import { fileToDataUrl, estimateDataUrlSize, uid } from '../lib/image'
 
 // Realized Animals component: HTML5 controls, inline validation, unique tag checks,
@@ -19,7 +20,7 @@ export default function Animals() {
   ]
 
   const SAMPLE_ANIMALS = [
-    { id: 'A-001', tag: 'TAG1001', name: 'Bessie', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2019-05-10', weight: 450, sire: 'S-100', dam: 'D-200', groupId: 'G-001', status: 'Active', notes: 'High producing cow', owner: 'Farm Owner', registration: 'REG-9001', tattoo: 'T-01', purchaseDate: '2019-06-01', purchasePrice: 1200, vendor: 'Local Auction', tags: ['dairy','priority'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 3, lactationStatus: 'Lactating' },
+    { id: 'A-001', tag: 'TAG1001', name: 'Bessie', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2019-05-10', weight: 450, sire: 'S-100', dam: 'D-200', groupId: 'G-001', status: 'Active', notes: 'High producing cow', owner: 'Farm Owner', registration: 'REG-9001', tattoo: 'T-01', purchaseDate: '2019-06-01', purchasePrice: 180000, vendor: 'Local Auction', tags: ['dairy','priority'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 3, lactationStatus: 'Lactating' },
     { id: 'A-002', tag: 'TAG1002', name: 'Molly', breed: 'Jersey', sex: 'F', color: 'Brown', dob: '2020-03-22', weight: 380, sire: 'S-101', dam: 'D-201', groupId: 'G-001', status: 'Active', notes: '', owner: '', registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', pregnancyStatus: 'Unknown', expectedDue: '', parity: 1, lactationStatus: 'Dry' },
     { id: 'A-003', tag: 'TAG1003', name: 'Duke', breed: 'Angus', sex: 'M', color: 'Black', dob: '2018-11-02', weight: 620, sire: '', dam: '', groupId: 'G-002', status: 'Sold', notes: 'Sold at market', owner: '', registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' }
   ]
@@ -28,6 +29,10 @@ export default function Animals() {
   const [animals, setAnimals] = useState([])
   const [groups, setGroups] = useState([])
   const [filter, setFilter] = useState('')
+  const [filterGroup, setFilterGroup] = useState('all')
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [filterSex, setFilterSex] = useState('all')
+  const [sortBy, setSortBy] = useState('name')
 
   const emptyAnimal = { id: '', tag: '', name: '', breed: '', sex: 'F', color: '', dob: '', weight: '', sire: '', dam: '', groupId: '', status: 'Active', notes: '', owner: '', registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', photos: [], pregnancyStatus: 'Unknown', expectedDue: '', parity: '', lactationStatus: 'NA' }
   const [form, setForm] = useState(emptyAnimal)
@@ -164,9 +169,43 @@ export default function Animals() {
 
   const q = filter.trim().toLowerCase()
   const filtered = animals.filter(a => {
-    if (!q) return true
-    const groupName = groups.find(g => g.id === a.groupId)?.name || ''
-    return (a.id || '').toLowerCase().includes(q) || (a.tag || '').toLowerCase().includes(q) || (a.name || '').toLowerCase().includes(q) || (a.breed || '').toLowerCase().includes(q) || groupName.toLowerCase().includes(q)
+    // Text search
+    if (q) {
+      const groupName = groups.find(g => g.id === a.groupId)?.name || ''
+      const matchesText = (a.id || '').toLowerCase().includes(q) || 
+                         (a.tag || '').toLowerCase().includes(q) || 
+                         (a.name || '').toLowerCase().includes(q) || 
+                         (a.breed || '').toLowerCase().includes(q) || 
+                         groupName.toLowerCase().includes(q)
+      if (!matchesText) return false
+    }
+    
+    // Group filter
+    if (filterGroup !== 'all') {
+      if (filterGroup === 'ungrouped' && a.groupId) return false
+      if (filterGroup !== 'ungrouped' && a.groupId !== filterGroup) return false
+    }
+    
+    // Status filter
+    if (filterStatus !== 'all' && a.status !== filterStatus) return false
+    
+    // Sex filter
+    if (filterSex !== 'all' && a.sex !== filterSex) return false
+    
+    return true
+  })
+
+  // Sort animals
+  const sortedAnimals = [...filtered].sort((a, b) => {
+    switch(sortBy) {
+      case 'name': return (a.name || '').localeCompare(b.name || '')
+      case 'tag': return (a.tag || '').localeCompare(b.tag || '')
+      case 'breed': return (a.breed || '').localeCompare(b.breed || '')
+      case 'dob': return (a.dob || '').localeCompare(b.dob || '')
+      case 'weight': return (parseFloat(b.weight) || 0) - (parseFloat(a.weight) || 0)
+      case 'status': return (a.status || '').localeCompare(b.status || '')
+      default: return 0
+    }
   })
   const [expandedIds, setExpandedIds] = useState([])
   const [inlineEditingId, setInlineEditingId] = useState(null)
@@ -219,6 +258,7 @@ export default function Animals() {
         <button onClick={() => setTab('pastures')} disabled={tab === 'pastures'}>Pastures</button>
         <button onClick={() => setTab('health')} disabled={tab === 'health'}>Health System</button>
         <button onClick={() => setTab('feeding')} disabled={tab === 'feeding'}>Feeding</button>
+        <button onClick={() => setTab('treatment')} disabled={tab === 'treatment'}>Treatment</button>
         <button onClick={() => setTab('measurement')} disabled={tab === 'measurement'}>Measurement</button>
         <button onClick={() => setTab('breeding')} disabled={tab === 'breeding'}>Breeding</button>
         <button onClick={() => setTab('milkyield')} disabled={tab === 'milkyield'}>Milk Yield</button>
@@ -401,28 +441,126 @@ export default function Animals() {
       )}
 
       {tab === 'addGroup' && (
-        <form onSubmit={saveGroup} style={{ marginBottom: 16 }}>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input placeholder="Group name" value={groupName} onChange={e => setGroupName(e.target.value)} />
-            <input placeholder="Description" value={groupDesc} onChange={e => setGroupDesc(e.target.value)} />
-            <button type="submit">Save Group</button>
-            <button type="button" onClick={() => { resetGroupForm(); setTab('list') }} style={{ marginLeft: 8 }}>Cancel</button>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3>🏷️ Animal Groups</h3>
           </div>
-          <div style={{ marginTop: 8 }}>
-            <strong>Existing groups</strong>
-            <ul>
-              {groups.map(g => (
-                <li key={g.id} style={{ marginBottom: 6 }}>
-                  <strong>{g.name}</strong> — {g.desc}
-                  <div>
-                    <button onClick={() => startEditGroup(g)}>Edit</button>
-                    <button onClick={() => deleteGroup(g.id)} style={{ marginLeft: 8 }}>Delete</button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+
+          {/* Summary Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
+            <div className="card" style={{ padding: 16, background: '#f0fdf4' }}>
+              <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Groups</div>
+              <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{groups.length}</div>
+            </div>
+            <div className="card" style={{ padding: 16, background: '#eff6ff' }}>
+              <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Animals</div>
+              <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>{animals.length}</div>
+            </div>
+            <div className="card" style={{ padding: 16, background: '#fef3c7' }}>
+              <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Ungrouped</div>
+              <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f59e0b' }}>{animals.filter(a => !a.groupId).length}</div>
+            </div>
           </div>
-        </form>
+
+          {/* Add/Edit Form */}
+          <div className="card" style={{ padding: 20, marginBottom: 20 }}>
+            <h4 style={{ marginTop: 0 }}>{editingGroupId ? 'Edit Group' : 'Add New Group'}</h4>
+            <form onSubmit={saveGroup}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
+                <div>
+                  <label>Group Name *</label>
+                  <input placeholder="e.g., Dairy Herd A" value={groupName} onChange={e => setGroupName(e.target.value)} required />
+                </div>
+                <div>
+                  <label>Description</label>
+                  <input placeholder="Brief description of the group" value={groupDesc} onChange={e => setGroupDesc(e.target.value)} />
+                </div>
+              </div>
+              <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+                <button type="submit">{editingGroupId ? 'Update Group' : 'Create Group'}</button>
+                <button type="button" onClick={() => { resetGroupForm() }}>Reset</button>
+                {editingGroupId && (
+                  <button type="button" onClick={() => { resetGroupForm() }} style={{ marginLeft: 'auto' }}>Cancel Edit</button>
+                )}
+              </div>
+            </form>
+          </div>
+
+          {/* Groups List */}
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div style={{ padding: 16, borderBottom: '1px solid #eee', background: '#f9fafb' }}>
+              <h4 style={{ margin: 0 }}>Existing Groups ({groups.length})</h4>
+            </div>
+            {groups.length === 0 ? (
+              <div style={{ padding: 40, textAlign: 'center' }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>🏷️</div>
+                <h4>No groups yet</h4>
+                <p style={{ color: '#666' }}>Create your first group to organize animals</p>
+              </div>
+            ) : (
+              <div style={{ maxHeight: 500, overflowY: 'auto' }}>
+                {groups.map(g => {
+                  const groupAnimals = animals.filter(a => a.groupId === g.id)
+                  const femaleCount = groupAnimals.filter(a => a.sex === 'F').length
+                  const maleCount = groupAnimals.filter(a => a.sex === 'M').length
+                  
+                  return (
+                    <div key={g.id} style={{ padding: 16, borderBottom: '1px solid #eee' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                            <h4 style={{ margin: 0 }}>{g.name}</h4>
+                            <span className="badge" style={{ background: '#e0f2fe' }}>{groupAnimals.length} animals</span>
+                            {femaleCount > 0 && <span className="badge" style={{ background: '#fce7f3' }}>{femaleCount} ♀</span>}
+                            {maleCount > 0 && <span className="badge" style={{ background: '#dbeafe' }}>{maleCount} ♂</span>}
+                          </div>
+                          <p style={{ margin: '4px 0 0 0', color: '#666', fontSize: 14 }}>{g.desc || 'No description'}</p>
+                          
+                          {groupAnimals.length > 0 && (
+                            <div style={{ marginTop: 12, padding: 12, background: '#f9fafb', borderRadius: 6 }}>
+                              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Animals in this group:</div>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                {groupAnimals.slice(0, 10).map(a => (
+                                  <span key={a.id} style={{ fontSize: 12, padding: '4px 8px', background: 'white', borderRadius: 4, border: '1px solid #e5e7eb' }}>
+                                    {a.name || a.tag || a.id}
+                                  </span>
+                                ))}
+                                {groupAnimals.length > 10 && (
+                                  <span style={{ fontSize: 12, padding: '4px 8px', color: '#666' }}>+{groupAnimals.length - 10} more</span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, marginLeft: 16 }}>
+                          <button className="tab-btn" onClick={() => startEditGroup(g)}>✏️ Edit</button>
+                          <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => deleteGroup(g.id)}>🗑️ Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Ungrouped Animals Warning */}
+          {animals.filter(a => !a.groupId).length > 0 && (
+            <div className="card" style={{ padding: 16, marginTop: 16, background: '#fef3c7', borderLeft: '4px solid #f59e0b' }}>
+              <h4 style={{ margin: '0 0 8px 0', color: '#92400e' }}>⚠️ Ungrouped Animals</h4>
+              <p style={{ margin: '0 0 8px 0', color: '#78350f' }}>
+                {animals.filter(a => !a.groupId).length} animal(s) are not assigned to any group.
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                {animals.filter(a => !a.groupId).map(a => (
+                  <span key={a.id} style={{ fontSize: 12, padding: '4px 8px', background: 'white', borderRadius: 4, border: '1px solid #fbbf24' }}>
+                    {a.name || a.tag || a.id}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       <div>
@@ -461,9 +599,99 @@ export default function Animals() {
             <AnimalMilkYield animals={animals} />
           </div>
         )}
-        <h3>Animals ({filtered.length})</h3>
+
+        {tab === 'treatment' && (
+          <div style={{ marginBottom: 16 }}>
+            <AnimalTreatment animals={animals} />
+          </div>
+        )}
+
+        {/* List View Filters and Stats */}
+        {tab === 'list' && (
+          <div style={{ marginBottom: 20 }}>
+            {/* Summary Stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
+              <div className="card" style={{ padding: 16, background: '#f0fdf4' }}>
+                <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Animals</div>
+                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{animals.length}</div>
+              </div>
+              <div className="card" style={{ padding: 16, background: '#fce7f3' }}>
+                <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Female</div>
+                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#ec4899' }}>{animals.filter(a => a.sex === 'F').length}</div>
+              </div>
+              <div className="card" style={{ padding: 16, background: '#dbeafe' }}>
+                <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Male</div>
+                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#3b82f6' }}>{animals.filter(a => a.sex === 'M').length}</div>
+              </div>
+              <div className="card" style={{ padding: 16, background: '#d1fae5' }}>
+                <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Active</div>
+                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#10b981' }}>{animals.filter(a => a.status === 'Active').length}</div>
+              </div>
+              <div className="card" style={{ padding: 16, background: '#eff6ff' }}>
+                <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Groups</div>
+                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>{groups.length}</div>
+              </div>
+              <div className="card" style={{ padding: 16, background: '#fef3c7' }}>
+                <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Breeds</div>
+                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f59e0b' }}>{new Set(animals.map(a => a.breed).filter(Boolean)).size}</div>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="card" style={{ padding: 16, marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h4 style={{ margin: 0 }}>Filters & Sorting</h4>
+                {(filterGroup !== 'all' || filterStatus !== 'all' || filterSex !== 'all' || sortBy !== 'name') && (
+                  <button onClick={() => { setFilterGroup('all'); setFilterStatus('all'); setFilterSex('all'); setSortBy('name') }}>
+                    Clear All
+                  </button>
+                )}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+                <div>
+                  <label>Group</label>
+                  <select value={filterGroup} onChange={e => setFilterGroup(e.target.value)}>
+                    <option value="all">All Groups</option>
+                    <option value="ungrouped">Ungrouped</option>
+                    {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label>Status</label>
+                  <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                    <option value="all">All Status</option>
+                    <option value="Active">Active</option>
+                    <option value="Sold">Sold</option>
+                    <option value="Deceased">Deceased</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Sex</label>
+                  <select value={filterSex} onChange={e => setFilterSex(e.target.value)}>
+                    <option value="all">All</option>
+                    <option value="F">Female</option>
+                    <option value="M">Male</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Sort By</label>
+                  <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                    <option value="name">Name</option>
+                    <option value="tag">Tag</option>
+                    <option value="breed">Breed</option>
+                    <option value="dob">Date of Birth</option>
+                    <option value="weight">Weight (Desc)</option>
+                    <option value="status">Status</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <h3>Animals ({sortedAnimals.length})</h3>
         <ul style={{ listStyle: 'none', padding: 0 }}>
-          {filtered.map(a => {
+          {sortedAnimals.map(a => {
             const isExp = expandedIds.includes(a.id)
             const preview = (a.photos && a.photos.length) ? a.photos[0].dataUrl : (a.photo || null)
             const groupName = groups.find(g => g.id === a.groupId)?.name || 'No group'
@@ -533,7 +761,7 @@ export default function Animals() {
 
                     <div style={{ marginTop: 12 }}>
                       <strong>Purchase</strong>
-                      <div style={{ marginTop: 6 }}>{a.purchaseDate ? `${a.purchaseDate}` : '—'} {a.purchasePrice ? `— $${a.purchasePrice}` : ''}</div>
+                      <div style={{ marginTop: 6 }}>{a.purchaseDate ? `${a.purchaseDate}` : '—'} {a.purchasePrice ? `— KES ${Number(a.purchasePrice).toLocaleString()}` : ''}</div>
                       <div style={{ marginTop: 6 }}>{a.vendor || '—'}</div>
                     </div>
 

@@ -8,8 +8,8 @@ const SAMPLE = [
     subcategory: 'Hay',
     quantity: 450, 
     unit: 'bales',
-    unitCost: 8.50,
-    totalValue: 3825,
+    unitCost: 1275,
+    totalValue: 573750,
     location: 'Barn A',
     supplier: 'Green Valley Feed',
     lastOrdered: '2025-10-15',
@@ -27,8 +27,8 @@ const SAMPLE = [
     subcategory: 'Concentrate',
     quantity: 2800, 
     unit: 'lbs',
-    unitCost: 0.45,
-    totalValue: 1260,
+    unitCost: 67.50,
+    totalValue: 189000,
     location: 'Feed Storage',
     supplier: 'Farm Supply Co',
     lastOrdered: '2025-11-01',
@@ -46,8 +46,8 @@ const SAMPLE = [
     subcategory: 'Minerals',
     quantity: 15, 
     unit: 'bags',
-    unitCost: 42.00,
-    totalValue: 630,
+    unitCost: 6300,
+    totalValue: 94500,
     location: 'Supply Room',
     supplier: 'Valley Veterinary',
     lastOrdered: '2025-09-20',
@@ -65,8 +65,8 @@ const SAMPLE = [
     subcategory: 'Dewormer',
     quantity: 8, 
     unit: 'bottles',
-    unitCost: 125.00,
-    totalValue: 1000,
+    unitCost: 18750,
+    totalValue: 150000,
     location: 'Vet Supplies',
     supplier: 'Valley Veterinary',
     lastOrdered: '2025-08-15',
@@ -84,8 +84,8 @@ const SAMPLE = [
     subcategory: 'Fencing',
     quantity: 12, 
     unit: 'rolls',
-    unitCost: 85.00,
-    totalValue: 1020,
+    unitCost: 12750,
+    totalValue: 153000,
     location: 'Equipment Shed',
     supplier: 'Farm Hardware',
     lastOrdered: '2025-07-10',
@@ -475,7 +475,7 @@ export default function Inventory(){
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
           <div className="card" style={{ padding: '16px', background: '#f0fdf4' }}>
             <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Total Inventory Value</div>
-            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>${totalValue.toFixed(2)}</div>
+            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>KES {totalValue.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#fef3c7' }}>
             <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Low Stock Alerts</div>
@@ -497,7 +497,7 @@ export default function Inventory(){
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
           <div className="card" style={{ padding: '16px', background: '#f0fdf4' }}>
             <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Total Equipment Value</div>
-            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>${totalEquipmentValue.toLocaleString()}</div>
+            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>KES {totalEquipmentValue.toLocaleString('en-KE')}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#fef3c7' }}>
             <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Service Due (30 days)</div>
@@ -544,7 +544,7 @@ export default function Inventory(){
               </select>
             </div>
             <div>
-              <label>Unit Cost ($)</label>
+              <label>Unit Cost (KES)</label>
               <input type="number" step="0.01" value={formData.unitCost} onChange={e => setFormData({...formData, unitCost: e.target.value})} />
             </div>
             <div>
@@ -630,11 +630,11 @@ export default function Inventory(){
               <input type="date" value={equipmentForm.purchaseDate} onChange={e => setEquipmentForm({...equipmentForm, purchaseDate: e.target.value})} />
             </div>
             <div>
-              <label>Purchase Price ($)</label>
+              <label>Purchase Price (KES)</label>
               <input type="number" step="0.01" value={equipmentForm.purchasePrice} onChange={e => setEquipmentForm({...equipmentForm, purchasePrice: e.target.value})} />
             </div>
             <div>
-              <label>Current Value ($)</label>
+              <label>Current Value (KES)</label>
               <input type="number" step="0.01" value={equipmentForm.currentValue} onChange={e => setEquipmentForm({...equipmentForm, currentValue: e.target.value})} />
             </div>
             <div>
@@ -790,7 +790,7 @@ export default function Inventory(){
                   </div>
                   <div>
                     <div className="muted">Current Value</div>
-                    <div style={{ fontWeight: '600', color: 'var(--green)', fontSize: '16px' }}>${(eq.currentValue || 0).toLocaleString()}</div>
+                    <div style={{ fontWeight: '600', color: 'var(--green)', fontSize: '16px' }}>KES {(eq.currentValue || 0).toLocaleString('en-KE')}</div>
                   </div>
                   <div>
                     <div className="muted">Location</div>
@@ -874,11 +874,11 @@ export default function Inventory(){
                     </div>
                     <div>
                       <div className="muted">Unit Cost</div>
-                      <div style={{ fontWeight: '600' }}>${(item.unitCost || 0).toFixed(2)}</div>
+                      <div style={{ fontWeight: '600' }}>KES {(item.unitCost || 0).toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                     </div>
                     <div>
                       <div className="muted">Total Value</div>
-                      <div style={{ fontWeight: '600', color: 'var(--green)' }}>${(item.totalValue || 0).toFixed(2)}</div>
+                      <div style={{ fontWeight: '600', color: 'var(--green)' }}>KES {(item.totalValue || 0).toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                     </div>
                     <div>
                       <div className="muted">Location</div>
@@ -956,8 +956,8 @@ export default function Inventory(){
                       <div><strong>Category:</strong> {item.category}</div>
                       <div><strong>Subcategory:</strong> {item.subcategory || 'N/A'}</div>
                       <div><strong>Current Stock:</strong> {item.quantity} {item.unit}</div>
-                      <div><strong>Unit Cost:</strong> ${(item.unitCost || 0).toFixed(2)}</div>
-                      <div><strong>Total Value:</strong> ${(item.totalValue || 0).toFixed(2)}</div>
+                      <div><strong>Unit Cost:</strong> KES {(item.unitCost || 0).toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                      <div><strong>Total Value:</strong> KES {(item.totalValue || 0).toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                       <div><strong>Quality:</strong> {item.quality}</div>
                       <div><strong>Location:</strong> {item.location}</div>
                       <div><strong>Supplier:</strong> {item.supplier || 'N/A'}</div>
@@ -1025,9 +1025,9 @@ export default function Inventory(){
                     <h4>Financial Information</h4>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', fontSize: '14px' }}>
                       <div><strong>Purchase Date:</strong> {eq.purchaseDate ? new Date(eq.purchaseDate).toLocaleDateString() : 'N/A'}</div>
-                      <div><strong>Purchase Price:</strong> ${(eq.purchasePrice || 0).toLocaleString()}</div>
-                      <div><strong>Current Value:</strong> <span style={{ color: 'var(--green)', fontWeight: 'bold', fontSize: '16px' }}>${(eq.currentValue || 0).toLocaleString()}</span></div>
-                      <div><strong>Depreciation:</strong> {eq.purchasePrice ? `$${(eq.purchasePrice - (eq.currentValue || 0)).toLocaleString()}` : 'N/A'}</div>
+                      <div><strong>Purchase Price:</strong> KES {(eq.purchasePrice || 0).toLocaleString('en-KE')}</div>
+                      <div><strong>Current Value:</strong> <span style={{ color: 'var(--green)', fontWeight: 'bold', fontSize: '16px' }}>KES {(eq.currentValue || 0).toLocaleString('en-KE')}</span></div>
+                      <div><strong>Depreciation:</strong> {eq.purchasePrice ? `KES ${(eq.purchasePrice - (eq.currentValue || 0)).toLocaleString('en-KE')}` : 'N/A'}</div>
                       <div><strong>Insurance Policy:</strong> {eq.insurancePolicy || 'N/A'}</div>
                       <div><strong>Insurance Expiry:</strong> {eq.insuranceExpiry ? new Date(eq.insuranceExpiry).toLocaleDateString() : 'N/A'}</div>
                       <div><strong>Warranty Expiry:</strong> {eq.warrantyExpiry ? new Date(eq.warrantyExpiry).toLocaleDateString() : 'N/A'}</div>
