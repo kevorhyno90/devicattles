@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
+import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 
 const SAMPLE = [
   { 
@@ -450,6 +451,85 @@ export default function Inventory(){
   })
   const operationalEquipment = equipment.filter(e => e.status === 'Operational').length
 
+  const fileInputRef = useRef(null)
+
+  function handleExportCSV() {
+    if (view === 'supplies') {
+      exportToCSV(items, 'inventory_items.csv')
+    } else {
+      exportToCSV(equipment, 'equipment.csv')
+    }
+  }
+
+  function handleExportExcel() {
+    if (view === 'supplies') {
+      exportToExcel(items, 'inventory_items_export.csv')
+    } else {
+      exportToExcel(equipment, 'equipment_export.csv')
+    }
+  }
+
+  function handleExportJSON() {
+    if (view === 'supplies') {
+      exportToJSON(items, 'inventory_items.json')
+    } else {
+      exportToJSON(equipment, 'equipment.json')
+    }
+  }
+
+  function handleImportClick() {
+    fileInputRef.current?.click()
+  }
+
+  function handleImportFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const ext = file.name.split('.').pop()?.toLowerCase()
+
+    if (ext === 'json') {
+      importFromJSON(file, (data, error) => {
+        if (error) {
+          alert('Import failed: ' + error.message)
+          return
+        }
+        if (view === 'supplies') {
+          if (confirm(`Import ${data.length} items? This will merge with existing data.`)) {
+            setItems([...items, ...data])
+            alert(`Imported ${data.length} items`)
+          }
+        } else {
+          if (confirm(`Import ${data.length} equipment records? This will merge with existing data.`)) {
+            setEquipment([...equipment, ...data])
+            alert(`Imported ${data.length} equipment records`)
+          }
+        }
+      })
+    } else if (ext === 'csv') {
+      importFromCSV(file, (data, error) => {
+        if (error) {
+          alert('Import failed: ' + error.message)
+          return
+        }
+        if (view === 'supplies') {
+          if (confirm(`Import ${data.length} items? This will merge with existing data.`)) {
+            setItems([...items, ...data])
+            alert(`Imported ${data.length} items`)
+          }
+        } else {
+          if (confirm(`Import ${data.length} equipment records? This will merge with existing data.`)) {
+            setEquipment([...equipment, ...data])
+            alert(`Imported ${data.length} equipment records`)
+          }
+        }
+      })
+    } else {
+      alert('Unsupported file type. Use CSV or JSON.')
+    }
+
+    e.target.value = '' // Reset input
+  }
+
   return (
     <div>
       <div className="health-header">
@@ -457,7 +537,7 @@ export default function Inventory(){
           <h2>{view === 'supplies' ? '📦' : '🚜'} {view === 'supplies' ? 'Inventory' : 'Equipment'} Management</h2>
           <p className="muted">{view === 'supplies' ? 'Track supplies, monitor stock levels, and manage reordering' : 'Track machinery, equipment, maintenance, and service records'}</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button className={view === 'supplies' ? 'tab-btn active' : 'tab-btn'} onClick={() => { setView('supplies'); setShowAddForm(false); resetForm() }}>
             📦 Supplies
           </button>
@@ -467,6 +547,19 @@ export default function Inventory(){
           <button className="tab-btn" onClick={()=> setShowAddForm(!showAddForm)}>
             {showAddForm ? '✕ Cancel' : `+ Add ${view === 'supplies' ? 'Item' : 'Equipment'}`}
           </button>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
+            <button onClick={handleExportCSV} title="Export to CSV" style={{ fontSize: 12 }}>📊 CSV</button>
+            <button onClick={handleExportExcel} title="Export to Excel" style={{ fontSize: 12 }}>📈 Excel</button>
+            <button onClick={handleExportJSON} title="Export to JSON" style={{ fontSize: 12 }}>📄 JSON</button>
+            <button onClick={handleImportClick} title="Import from file" style={{ fontSize: 12 }}>📥 Import</button>
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              accept=".csv,.json" 
+              style={{ display: 'none' }} 
+              onChange={handleImportFile}
+            />
+          </div>
         </div>
       </div>
 

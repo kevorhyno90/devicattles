@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
+import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 
 const SAMPLE = [
   { id: 'T-001', title: 'Check water troughs', description: 'Inspect all water systems in pastures A-D', assignedTo: 'John Smith', due: '2025-11-16', priority: 'High', category: 'Maintenance', done: false, createdDate: '2025-11-15', estimatedHours: 2, notes: [], location: 'Pasture A-D' },
@@ -139,12 +140,122 @@ export default function Tasks(){
     overdue: items.filter(t => !t.done && t.due && new Date(t.due) < new Date()).length
   }
 
+  const fileInputRef = useRef(null)
+
+  function handleExportCSV() {
+    const data = filtered.map(t => ({
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      category: t.category,
+      priority: t.priority,
+      assignedTo: t.assignedTo,
+      due: t.due,
+      status: t.done ? 'Completed' : 'Pending',
+      createdDate: t.createdDate,
+      estimatedHours: t.estimatedHours,
+      location: t.location
+    }))
+    exportToCSV(data, 'tasks.csv')
+  }
+
+  function handleExportExcel() {
+    const data = filtered.map(t => ({
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      category: t.category,
+      priority: t.priority,
+      assignedTo: t.assignedTo,
+      due: t.due,
+      status: t.done ? 'Completed' : 'Pending',
+      createdDate: t.createdDate,
+      estimatedHours: t.estimatedHours,
+      location: t.location
+    }))
+    exportToExcel(data, 'tasks_export.csv')
+  }
+
+  function handleExportJSON() {
+    exportToJSON(filtered, 'tasks.json')
+  }
+
+  function handleImportClick() {
+    fileInputRef.current?.click()
+  }
+
+  function handleImportFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const ext = file.name.split('.').pop()?.toLowerCase()
+
+    if (ext === 'json') {
+      importFromJSON(file, (data, error) => {
+        if (error) {
+          alert('Import failed: ' + error.message)
+          return
+        }
+        if (confirm(`Import ${data.length} tasks? This will merge with existing data.`)) {
+          const imported = data.map(t => ({
+            ...t,
+            id: t.id || 'T-' + Math.floor(1000 + Math.random()*9000)
+          }))
+          setItems([...items, ...imported])
+          alert(`Imported ${imported.length} tasks`)
+        }
+      })
+    } else if (ext === 'csv') {
+      importFromCSV(file, (data, error) => {
+        if (error) {
+          alert('Import failed: ' + error.message)
+          return
+        }
+        if (confirm(`Import ${data.length} tasks? This will merge with existing data.`)) {
+          const imported = data.map(t => ({
+            id: t.id || 'T-' + Math.floor(1000 + Math.random()*9000),
+            title: t.title || '',
+            description: t.description || '',
+            category: t.category || 'Other',
+            priority: t.priority || 'Medium',
+            assignedTo: t.assignedTo || 'Unassigned',
+            due: t.due || '',
+            done: t.status === 'Completed',
+            createdDate: t.createdDate || new Date().toISOString().slice(0,10),
+            estimatedHours: t.estimatedHours ? Number(t.estimatedHours) : 1,
+            location: t.location || '',
+            notes: []
+          }))
+          setItems([...items, ...imported])
+          alert(`Imported ${imported.length} tasks`)
+        }
+      })
+    } else {
+      alert('Unsupported file type. Use CSV or JSON.')
+    }
+
+    e.target.value = ''
+  }
+
   return (
     <section>
       <div style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
           <h2 style={{ margin: 0 }}>Task Management</h2>
-          <button onClick={() => setShowAddForm(!showAddForm)} className="add-row button" style={{ background: 'var(--green)', color: '#fff', padding: '10px 16px', borderRadius: '8px', border: 'none' }}>Add New Task</button>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button onClick={handleExportCSV} title="Export to CSV" style={{ fontSize: 12 }}>📊 CSV</button>
+            <button onClick={handleExportExcel} title="Export to Excel" style={{ fontSize: 12 }}>📈 Excel</button>
+            <button onClick={handleExportJSON} title="Export to JSON" style={{ fontSize: 12 }}>📄 JSON</button>
+            <button onClick={handleImportClick} title="Import from file" style={{ fontSize: 12 }}>📥 Import</button>
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              accept=".csv,.json" 
+              style={{ display: 'none' }} 
+              onChange={handleImportFile}
+            />
+            <button onClick={() => setShowAddForm(!showAddForm)} className="add-row button" style={{ background: 'var(--green)', color: '#fff', padding: '10px 16px', borderRadius: '8px', border: 'none' }}>Add New Task</button>
+          </div>
         </div>
         
         {/* Stats Cards */}

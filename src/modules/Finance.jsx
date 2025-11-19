@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
+import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 
 const SAMPLE = [
   { id: 'F-001', date: '2025-01-12', amount: -18000.00, type: 'expense', category: 'Veterinary', subcategory: 'Vaccines', description: 'Annual vaccination program', notes: [], paymentMethod: 'M-Pesa', vendor: 'Valley Veterinary Clinic' },
@@ -45,6 +46,64 @@ export default function Finance(){
     amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', 
     description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10)
   })
+
+  const fileInputRef = useRef(null)
+
+  function handleExportCSV() {
+    exportToCSV(items, 'finance_transactions.csv')
+  }
+
+  function handleExportExcel() {
+    exportToExcel(items, 'finance_transactions.csv')
+  }
+
+  function handleExportJSON() {
+    exportToJSON(items, 'finance_transactions.json')
+  }
+
+  function handleImportClick() {
+    fileInputRef.current?.click()
+  }
+
+  function handleImportFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const ext = file.name.split('.').pop()?.toLowerCase()
+
+    if (ext === 'json') {
+      importFromJSON(file, (data, error) => {
+        if (error) {
+          alert('Import failed: ' + error.message)
+          return
+        }
+        if (confirm(`Import ${data.length} transactions? This will merge with existing data.`)) {
+          setItems([...items, ...data])
+          alert(`Imported ${data.length} transactions`)
+        }
+      })
+    } else if (ext === 'csv') {
+      importFromCSV(file, (data, error) => {
+        if (error) {
+          alert('Import failed: ' + error.message)
+          return
+        }
+        if (confirm(`Import ${data.length} transactions? This will merge with existing data.`)) {
+          const imported = data.map(t => ({
+            ...t,
+            amount: parseFloat(t.amount) || 0,
+            notes: t.notes ? JSON.parse(t.notes) : []
+          }))
+          setItems([...items, ...imported])
+          alert(`Imported ${imported.length} transactions`)
+        }
+      })
+    } else {
+      alert('Unsupported file type. Use CSV or JSON.')
+    }
+
+    e.target.value = ''
+  }
 
   function addNoteToTransaction(tx){
     const note = window.prompt('Add note for transaction ' + tx.id,'')
@@ -176,9 +235,22 @@ export default function Finance(){
   return (
     <section>
       <div style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
           <h2 style={{ margin: 0 }}>Financial Management</h2>
-          <button onClick={() => setShowAddForm(!showAddForm)} style={{ background: 'var(--green)', color: '#fff', padding: '10px 16px', borderRadius: '8px', border: 'none' }}>Add Transaction</button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button onClick={handleExportCSV} title="Export to CSV">📊 CSV</button>
+            <button onClick={handleExportExcel} title="Export to Excel">📈 Excel</button>
+            <button onClick={handleExportJSON} title="Export to JSON">📄 JSON</button>
+            <button onClick={handleImportClick} title="Import from file">📥 Import</button>
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              accept=".csv,.json" 
+              style={{ display: 'none' }} 
+              onChange={handleImportFile}
+            />
+            <button onClick={() => setShowAddForm(!showAddForm)} style={{ background: 'var(--green)', color: '#fff', padding: '10px 16px', borderRadius: '8px', border: 'none' }}>Add Transaction</button>
+          </div>
         </div>
         
         {/* Financial Stats */}

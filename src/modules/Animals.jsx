@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import Pastures from './Pastures'
 import HealthSystem from './HealthSystem'
 import AnimalFeeding from './AnimalFeeding'
@@ -6,7 +6,11 @@ import AnimalMeasurement from './AnimalMeasurement'
 import AnimalBreeding from './AnimalBreeding'
 import AnimalMilkYield from './AnimalMilkYield'
 import AnimalTreatment from './AnimalTreatment'
+import CalfManagement from './CalfManagement'
+import BSFFarming from './BSFFarming'
+import AzollaFarming from './AzollaFarming'
 import { fileToDataUrl, estimateDataUrlSize, uid } from '../lib/image'
+import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
 
 // Realized Animals component: HTML5 controls, inline validation, unique tag checks,
 // realistic sample data, and non-placeholder behavior.
@@ -247,6 +251,141 @@ export default function Animals() {
     setAnimals(animals.map(x => x.id === a.id ? { ...x, weight: w, weightLogs: [...(x.weightLogs||[]), { weight: w, date: ts }] } : x))
   }
 
+  // Export functions
+  const fileInputRef = useRef(null)
+
+  function handleExportCSV() {
+    const exportData = animals.map(a => ({
+      id: a.id,
+      tag: a.tag,
+      name: a.name,
+      species: a.species,
+      breed: a.breed,
+      sex: a.sex,
+      dob: a.dob,
+      age: a.age || '',
+      weight: a.weight || '',
+      group: a.group || '',
+      status: a.status,
+      sire: a.sire || '',
+      dam: a.dam || '',
+      notes: a.notes || ''
+    }))
+    exportToCSV(exportData, 'animals.csv')
+  }
+
+  function handleExportExcel() {
+    const exportData = animals.map(a => ({
+      id: a.id,
+      tag: a.tag,
+      name: a.name,
+      species: a.species,
+      breed: a.breed,
+      sex: a.sex,
+      dob: a.dob,
+      age: a.age || '',
+      weight: a.weight || '',
+      group: a.group || '',
+      status: a.status,
+      sire: a.sire || '',
+      dam: a.dam || '',
+      notes: a.notes || ''
+    }))
+    exportToExcel(exportData, 'animals_export.csv')
+  }
+
+  function handleExportJSON() {
+    exportToJSON(animals, 'animals.json')
+  }
+
+  function handleImportClick() {
+    fileInputRef.current?.click()
+  }
+
+  function handleImportFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const ext = file.name.split('.').pop()?.toLowerCase()
+
+    if (ext === 'json') {
+      importFromJSON(file, (data, error) => {
+        if (error) {
+          alert('Import failed: ' + error.message)
+          return
+        }
+        if (confirm(`Import ${data.length} animals? This will merge with existing data.`)) {
+          const imported = data.map(a => ({
+            ...a,
+            id: a.id || uid()
+          }))
+          setAnimals([...animals, ...imported])
+          alert(`Imported ${imported.length} animals`)
+        }
+      })
+    } else if (ext === 'csv') {
+      importFromCSV(file, (data, error) => {
+        if (error) {
+          alert('Import failed: ' + error.message)
+          return
+        }
+        if (confirm(`Import ${data.length} animals? This will merge with existing data.`)) {
+          const imported = data.map(a => ({
+            id: a.id || uid(),
+            tag: a.tag || '',
+            name: a.name || '',
+            species: a.species || '',
+            breed: a.breed || '',
+            sex: a.sex || '',
+            dob: a.dob || '',
+            age: a.age || '',
+            weight: a.weight ? Number(a.weight) : 0,
+            group: a.group || '',
+            status: a.status || 'active',
+            sire: a.sire || '',
+            dam: a.dam || '',
+            notes: a.notes || ''
+          }))
+          setAnimals([...animals, ...imported])
+          alert(`Imported ${imported.length} animals`)
+        }
+      })
+    } else {
+      alert('Unsupported file type. Use CSV or JSON.')
+    }
+
+    e.target.value = '' // Reset input
+  }
+
+  function handleBatchPrint() {
+    const filtered = animals.filter(filterAnimal)
+    if (filtered.length === 0) {
+      alert('No animals to print')
+      return
+    }
+
+    batchPrint(filtered, (animal) => `
+      <div style="padding: 20px; border: 2px solid #000; margin-bottom: 20px;">
+        <h2 style="margin-top: 0;">Animal Record: ${animal.tag || animal.name}</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><th style="text-align: left; width: 150px;">Tag:</th><td>${animal.tag || 'N/A'}</td></tr>
+          <tr><th style="text-align: left;">Name:</th><td>${animal.name}</td></tr>
+          <tr><th style="text-align: left;">Species:</th><td>${animal.species}</td></tr>
+          <tr><th style="text-align: left;">Breed:</th><td>${animal.breed || 'N/A'}</td></tr>
+          <tr><th style="text-align: left;">Sex:</th><td>${animal.sex}</td></tr>
+          <tr><th style="text-align: left;">Date of Birth:</th><td>${animal.dob || 'N/A'}</td></tr>
+          <tr><th style="text-align: left;">Age:</th><td>${animal.age || 'N/A'}</td></tr>
+          <tr><th style="text-align: left;">Weight:</th><td>${animal.weight ? animal.weight + ' kg' : 'N/A'}</td></tr>
+          <tr><th style="text-align: left;">Group:</th><td>${animal.group || 'N/A'}</td></tr>
+          <tr><th style="text-align: left;">Status:</th><td>${animal.status}</td></tr>
+          <tr><th style="text-align: left;">Sire:</th><td>${animal.sire || 'N/A'}</td></tr>
+          <tr><th style="text-align: left;">Dam:</th><td>${animal.dam || 'N/A'}</td></tr>
+          <tr><th style="text-align: left;">Notes:</th><td>${animal.notes || 'N/A'}</td></tr>
+        </table>
+      </div>
+    `, 'Animal Records')
+  }
+
   return (
     <section>
   <h2>Livestock Management System</h2>
@@ -262,7 +401,22 @@ export default function Animals() {
         <button onClick={() => setTab('measurement')} disabled={tab === 'measurement'}>Measurement</button>
         <button onClick={() => setTab('breeding')} disabled={tab === 'breeding'}>Breeding</button>
         <button onClick={() => setTab('milkyield')} disabled={tab === 'milkyield'}>Milk Yield</button>
-        <div style={{ marginLeft: 'auto' }}>
+        <button onClick={() => setTab('calf')} disabled={tab === 'calf'}>🐮 Calf Mgmt</button>
+        <button onClick={() => setTab('bsf')} disabled={tab === 'bsf'}>🪰 BSF Farm</button>
+        <button onClick={() => setTab('azolla')} disabled={tab === 'azolla'}>🌿 Azolla</button>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button onClick={handleExportCSV} title="Export to CSV">📊 CSV</button>
+          <button onClick={handleExportExcel} title="Export to Excel">📈 Excel</button>
+          <button onClick={handleExportJSON} title="Export to JSON">📄 JSON</button>
+          <button onClick={handleImportClick} title="Import from file">📥 Import</button>
+          <button onClick={handleBatchPrint} title="Print all animals">🖨️ Print</button>
+          <input 
+            ref={fileInputRef}
+            type="file" 
+            accept=".csv,.json" 
+            style={{ display: 'none' }} 
+            onChange={handleImportFile}
+          />
           <input className="search-input" aria-label="Search" placeholder="Search animals/groups" value={filter} onChange={e => setFilter(e.target.value)} />
         </div>
       </div>
@@ -603,6 +757,24 @@ export default function Animals() {
         {tab === 'treatment' && (
           <div style={{ marginBottom: 16 }}>
             <AnimalTreatment animals={animals} />
+          </div>
+        )}
+
+        {tab === 'calf' && (
+          <div style={{ marginBottom: 16 }}>
+            <CalfManagement animals={animals} />
+          </div>
+        )}
+
+        {tab === 'bsf' && (
+          <div style={{ marginBottom: 16 }}>
+            <BSFFarming />
+          </div>
+        )}
+
+        {tab === 'azolla' && (
+          <div style={{ marginBottom: 16 }}>
+            <AzollaFarming />
           </div>
         )}
 

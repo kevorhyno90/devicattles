@@ -621,13 +621,20 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
     const rxHtml = sectionRows('Prescriptions', rx, r=> `<tr><td style="padding:6px;border:1px solid #eee">${esc(r.createdAt||'')} — ${esc(r.drug||'')} — ${esc(r.dose||'')}</td></tr>`)
     const billsHtml = sectionRows('Billing', bills, b=> `<tr><td style="padding:6px;border:1px solid #eee">${esc(b.createdAt||'')} — ${esc(b.desc||'')} — ${esc(b.amount||'')} — ${b.paid? 'Paid' : 'Unpaid'}</td></tr>`)
 
-    // Polished header with Devins Farm branding
+    // Polished header with farm branding
+    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     const headerHtml = `
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <div style="flex:0 0 auto"><img src="/assets/logo-badge.svg" alt="Devins Farm" style="height:64px;max-height:64px" onerror="this.style.display='none'"/></div>
-        <div style="flex:1">
-          <h2 style="margin:0;color:#2b8c3e">Devins Farm</h2>
-          <div style="margin-top:4px;color:#666">123 Farm Road · Countryside · (555) 555-0123 · devinsfarm@example.com</div>
+      <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #000; padding-bottom: 15px;">
+        <h1 style="margin: 0; font-size: 28pt; letter-spacing: 2px;">HEADINGJR FARM</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+          <div style="flex: 1;"></div>
+          <div style="flex: 2; text-align: center;">
+            <p style="margin: 5px 0; font-size: 11pt;">Patient Health Record</p>
+            <p style="margin: 5px 0; font-size: 10pt; color: #555;">Date: ${today}</p>
+          </div>
+          <div style="flex: 1; text-align: right; font-size: 9pt; font-style: italic; color: #666;">
+            Made by<br/>Dr. Devin Omwenga
+          </div>
         </div>
       </div>`
 
@@ -641,7 +648,7 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
     if(!p) return alert('Patient not found')
       try{
         const docx = await new Function('return import("docx")')()
-      const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun } = docx
+      const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun, AlignmentType } = docx
 
       // helper: fetch an image (data: or url), convert svg -> png if needed, return ArrayBuffer
       async function fetchImageArrayBuffer(src){
@@ -679,13 +686,25 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
 
       const doc = new Document({ sections: [] })
 
-      // Header: Devins Farm
+      // Header: HEADINGJR FARM
+      const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
       const headerParagraphs = []
-      if(logoBuffer){
-        headerParagraphs.push(new Paragraph({ children: [ new ImageRun({ data: new Uint8Array(logoBuffer), transformation: { width: 120, height: 120 } }) ] }))
-      }
-      headerParagraphs.push(new Paragraph({ children: [ new TextRun({ text: 'Devins Farm', bold:true, size: 28 }) ] }))
-      headerParagraphs.push(new Paragraph({ children: [ new TextRun({ text: '123 Farm Road · Countryside · (555) 555-0123 · devinsfarm@example.com', size: 20, color: '666666' }) ] }))
+      headerParagraphs.push(new Paragraph({ 
+        children: [ new TextRun({ text: 'HEADINGJR FARM', bold:true, size: 32 }) ],
+        alignment: AlignmentType.CENTER
+      }))
+      headerParagraphs.push(new Paragraph({ 
+        children: [ new TextRun({ text: 'Patient Health Record', size: 22 }) ],
+        alignment: AlignmentType.CENTER
+      }))
+      headerParagraphs.push(new Paragraph({ 
+        children: [ new TextRun({ text: `Date: ${today}`, size: 20, color: '555555' }) ],
+        alignment: AlignmentType.CENTER
+      }))
+      headerParagraphs.push(new Paragraph({ 
+        children: [ new TextRun({ text: 'Made by Dr. Devin Omwenga', size: 18, italics: true, color: '666666' }) ],
+        alignment: AlignmentType.RIGHT
+      }))
 
       // Build content paragraphs per section
       const body = []
@@ -727,9 +746,28 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
   async function exportAllPatientsDocx(){
     try{
       const docx = await new Function('return import("docx")')()
-      const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun } = docx
+      const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun, AlignmentType } = docx
       const doc = new Document({ sections: [] })
       const children = []
+
+      // Header: HEADINGJR FARM
+      const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+      children.push(new Paragraph({ 
+        children: [ new TextRun({ text: 'HEADINGJR FARM', bold:true, size: 32 }) ],
+        alignment: AlignmentType.CENTER
+      }))
+      children.push(new Paragraph({ 
+        children: [ new TextRun({ text: 'Patient Health Records', size: 22 }) ],
+        alignment: AlignmentType.CENTER
+      }))
+      children.push(new Paragraph({ 
+        children: [ new TextRun({ text: `Date: ${today}`, size: 20, color: '555555' }) ],
+        alignment: AlignmentType.CENTER
+      }))
+      children.push(new Paragraph({ 
+        children: [ new TextRun({ text: 'Made by Dr. Devin Omwenga', size: 18, italics: true, color: '666666' }) ],
+        alignment: AlignmentType.RIGHT
+      }))
 
       // attempt to fetch logo to embed
       const uiSettings = (()=>{ try{ return JSON.parse(localStorage.getItem('devinsfarm:ui:settings')||'{}') }catch(e){ return {} } })()
@@ -762,12 +800,8 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
       let logoBuffer = null
       if(logoSrc) logoBuffer = await fetchImageArrayBuffer(logoSrc)
 
-      if(logoBuffer){
-        children.push(new Paragraph({ children: [ new ImageRun({ data: new Uint8Array(logoBuffer), transformation: { width: 120, height: 120 } }) ] }))
-      }
+      // Logo removed since we have HEADINGJR FARM header already added above
 
-      children.push(new Paragraph({ text: 'Devins Farm', heading: HeadingLevel.TITLE }))
-      children.push(new Paragraph({ text: '123 Farm Road · Countryside · (555) 555-0123 · devinsfarm@example.com' }))
       patients.forEach(p=>{
         children.push(new Paragraph({ text: `Patient: ${p.name || '(unnamed)'}`, heading: HeadingLevel.HEADING_1 }))
         children.push(new Paragraph({ text: `ID: ${p.id || ''}` }))

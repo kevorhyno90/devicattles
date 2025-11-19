@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import Dashboard from './modules/Dashboard'
+import NotificationCenter from './modules/NotificationCenter'
 import Animals from './modules/Animals'
 import Tasks from './modules/Tasks'
 import Finance from './modules/Finance'
@@ -9,10 +11,92 @@ import Inventory from './modules/Inventory'
 import Groups from './modules/Groups'
 import Pastures from './modules/Pastures'
 import HealthSystem from './modules/HealthSystem'
+import Login from './modules/Login'
+import AuditLog from './modules/AuditLog'
+import BackupRestore from './modules/BackupRestore'
+import { isAuthenticated, getCurrentSession, logout, getCurrentUserName, getCurrentUserRole } from './lib/auth'
+import { logAction, ACTIONS, ENTITIES } from './lib/audit'
+import { isAuthRequired, getDefaultUser } from './lib/appSettings'
+import { startReminderChecker, stopReminderChecker, getUnreadCount } from './lib/notifications'
+import { checkAllAutoNotifications } from './lib/autoNotifications'
 
 export default function App() {
+  const [authenticated, setAuthenticated] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null)
   const [view, setView] = useState('dashboard')
   const [animals, setAnimals] = useState([])
+  const [unreadNotifications, setUnreadNotifications] = useState(0)
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false)
+  
+  // UI branding/settings - must be declared before any conditional returns
+  const SETTINGS_KEY = 'devinsfarm:ui:settings'
+  const defaultSettings = { backgroundOn: false, background: 'bg-farm.svg', logo: 'logo-badge.svg', uploadedLogo: '', theme: 'catalytics' }
+  const [settings, setSettings] = useState(defaultSettings)
+
+  // PWA Install Prompt Handler
+  useEffect(() => {
+    const handleInstallPrompt = (e) => {
+      setShowInstallPrompt(true)
+    }
+    
+    window.addEventListener('pwa-install-available', handleInstallPrompt)
+    
+    return () => {
+      window.removeEventListener('pwa-install-available', handleInstallPrompt)
+    }
+  }, [])
+
+  const handleInstallClick = async () => {
+    const installed = await window.installPWA?.()
+    if (installed) {
+      setShowInstallPrompt(false)
+    }
+  }
+
+  // Check authentication on mount
+  useEffect(() => {
+    // If auth is not required (personal mode), auto-login as default user
+    if (!isAuthRequired()) {
+      const defaultUser = getDefaultUser()
+      setCurrentUser(defaultUser)
+      setAuthenticated(true)
+    } else if (isAuthenticated()) {
+      const session = getCurrentSession()
+      setCurrentUser(session)
+      setAuthenticated(true)
+    }
+  }, [])
+
+  // Start notification/reminder checker
+  useEffect(() => {
+    if (authenticated) {
+      // Run initial check
+      checkAllAutoNotifications()
+      
+      const intervalId = startReminderChecker()
+      
+      // Update unread count
+      const updateUnreadCount = () => {
+        setUnreadNotifications(getUnreadCount())
+      }
+      
+      updateUnreadCount()
+      const countInterval = setInterval(updateUnreadCount, 30000) // Every 30 seconds
+      
+      // Check auto notifications every hour
+      const autoCheckInterval = setInterval(checkAllAutoNotifications, 60 * 60 * 1000)
+      
+      // Listen for new notifications
+      window.addEventListener('newNotification', updateUnreadCount)
+      
+      return () => {
+        stopReminderChecker(intervalId)
+        clearInterval(countInterval)
+        clearInterval(autoCheckInterval)
+        window.removeEventListener('newNotification', updateUnreadCount)
+      }
+    }
+  }, [authenticated])
 
   // Load animals for passing to health system and groups
   useEffect(() => {
@@ -23,13 +107,8 @@ export default function App() {
       setAnimals([])
     }
   }, [view]) // Reload when view changes to keep animals fresh
-
-  // UI branding/settings persisted in localStorage
-  const SETTINGS_KEY = 'devinsfarm:ui:settings'
-  // prefer a compact badge by default so header shows a clear logo
-  const defaultSettings = { backgroundOn: false, background: 'bg-farm.svg', logo: 'logo-badge.svg', uploadedLogo: '', theme: 'catalytics' }
-  const [settings, setSettings] = useState(defaultSettings)
-
+  
+  // Load UI settings
   useEffect(()=>{
     try{
       const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null')
@@ -37,7 +116,31 @@ export default function App() {
     }catch(e){}
   }, [])
 
-  useEffect(()=>{ try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)) }catch(e){} }, [settings])
+  // Save UI settings
+  useEffect(()=>{ 
+    try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)) }
+    catch(e){} 
+  }, [settings])
+
+  function handleLoginSuccess(user) {
+    setCurrentUser(user)
+    setAuthenticated(true)
+  }
+
+  function handleLogout() {
+    logAction(ACTIONS.LOGOUT, ENTITIES.USER, currentUser?.userId || 'unknown', {
+      username: currentUser?.username
+    })
+    logout()
+    setAuthenticated(false)
+    setCurrentUser(null)
+    setView('dashboard')
+  }
+
+  // Show login if not authenticated
+  if (!authenticated) {
+    return <Login onLoginSuccess={handleLoginSuccess} />
+  }
 
   return (
     <div className={`app ${settings.backgroundOn? 'bg-on' : ''} theme-${settings.theme || 'bold'}`} style={ settings.backgroundOn && settings.background ? { backgroundImage: `url('/assets/${settings.background}')` } : {} }>
@@ -56,59 +159,274 @@ export default function App() {
             <div className="brand-tag">Comprehensive Farm Management</div>
           </div>
         </div>
-        <nav>
-          <button className={view==='dashboard'? 'active':''} onClick={()=>setView('dashboard')}>Dashboard</button>
-          <button className={view==='animals'? 'active':''} onClick={()=>setView('animals')}>Livestock</button>
-          <button className={view==='crops'? 'active':''} onClick={()=>setView('crops')}>Crops</button>
-          <button className={view==='tasks'? 'active':''} onClick={()=>setView('tasks')}>Tasks</button>
-          <button className={view==='schedules'? 'active':''} onClick={()=>setView('schedules')}>Schedules</button>
-          <button className={view==='inventory'? 'active':''} onClick={()=>setView('inventory')}>Inventory</button>
-          <button className={view==='finance'? 'active':''} onClick={()=>setView('finance')}>Finance</button>
-          <button className={view==='reports'? 'active':''} onClick={()=>setView('reports')}>Reports</button>
-          <button className={view==='settings'? 'active':''} onClick={()=>setView('settings')}>Settings</button>
-        </nav>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {showInstallPrompt && (
+            <button
+              onClick={handleInstallClick}
+              style={{
+                padding: '6px 12px',
+                background: '#10b981',
+                border: 'none',
+                color: 'white',
+                borderRadius: 6,
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+              title="Install app on your device"
+            >
+              📥 Install App
+            </button>
+          )}
+          {unreadNotifications > 0 && (
+            <div 
+              onClick={() => setView('notifications')}
+              style={{
+                position: 'relative',
+                cursor: 'pointer',
+                padding: '6px 10px',
+                background: 'rgba(255,255,255,0.2)',
+                borderRadius: 6,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+              title="View notifications"
+            >
+              🔔
+              <span style={{
+                background: '#ef4444',
+                color: 'white',
+                borderRadius: 10,
+                padding: '2px 6px',
+                fontSize: 11,
+                fontWeight: 600
+              }}>
+                {unreadNotifications}
+              </span>
+            </div>
+          )}
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', textAlign: 'right' }}>
+            <div style={{ fontWeight: 600 }}>{getCurrentUserName()}</div>
+            <div style={{ fontSize: 11 }}>{getCurrentUserRole()}</div>
+          </div>
+          <button 
+            onClick={handleLogout}
+            style={{ 
+              padding: '6px 12px', 
+              background: 'rgba(255,255,255,0.2)', 
+              border: '1px solid rgba(255,255,255,0.3)',
+              color: 'white',
+              borderRadius: 6,
+              cursor: 'pointer',
+              fontSize: 13
+            }}
+          >
+            Logout
+          </button>
+        </div>
       </header>
+      <nav style={{ 
+        background: '#ffffff', 
+        padding: '12px 20px', 
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)', 
+        borderBottom: '2px solid #e5e7eb',
+        display: 'flex',
+        gap: '8px',
+        flexWrap: 'wrap',
+        alignItems: 'center'
+      }}>
+          <button 
+            className={view==='dashboard'? 'active':''} 
+            onClick={()=>setView('dashboard')}
+            style={{
+              background: view==='dashboard' ? '#059669' : '#f3f4f6',
+              color: view==='dashboard' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >📊 Dashboard</button>
+          <button 
+            className={view==='notifications'? 'active':''} 
+            onClick={()=>setView('notifications')}
+            style={{
+              background: view==='notifications' ? '#059669' : '#f3f4f6',
+              color: view==='notifications' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            🔔 Notifications
+            {unreadNotifications > 0 && (
+              <span style={{
+                marginLeft: 4,
+                background: '#ef4444',
+                color: 'white',
+                borderRadius: 10,
+                padding: '1px 5px',
+                fontSize: 10,
+                fontWeight: 600
+              }}>
+                {unreadNotifications}
+              </span>
+            )}
+          </button>
+          <button 
+            className={view==='animals'? 'active':''} 
+            onClick={()=>setView('animals')}
+            style={{
+              background: view==='animals' ? '#059669' : '#f3f4f6',
+              color: view==='animals' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >🐄 Livestock</button>
+          <button 
+            className={view==='crops'? 'active':''} 
+            onClick={()=>setView('crops')}
+            style={{
+              background: view==='crops' ? '#059669' : '#f3f4f6',
+              color: view==='crops' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >🌾 Crops</button>
+          <button 
+            className={view==='tasks'? 'active':''} 
+            onClick={()=>setView('tasks')}
+            style={{
+              background: view==='tasks' ? '#059669' : '#f3f4f6',
+              color: view==='tasks' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >✅ Tasks</button>
+          <button 
+            className={view==='schedules'? 'active':''} 
+            onClick={()=>setView('schedules')}
+            style={{
+              background: view==='schedules' ? '#059669' : '#f3f4f6',
+              color: view==='schedules' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >📅 Schedules</button>
+          <button 
+            className={view==='inventory'? 'active':''} 
+            onClick={()=>setView('inventory')}
+            style={{
+              background: view==='inventory' ? '#059669' : '#f3f4f6',
+              color: view==='inventory' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >📦 Inventory</button>
+          <button 
+            className={view==='finance'? 'active':''} 
+            onClick={()=>setView('finance')}
+            style={{
+              background: view==='finance' ? '#059669' : '#f3f4f6',
+              color: view==='finance' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >💰 Finance</button>
+          <button 
+            className={view==='reports'? 'active':''} 
+            onClick={()=>setView('reports')}
+            style={{
+              background: view==='reports' ? '#059669' : '#f3f4f6',
+              color: view==='reports' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >📊 Reports</button>
+          <button 
+            className={view==='audit'? 'active':''} 
+            onClick={()=>setView('audit')}
+            style={{
+              background: view==='audit' ? '#059669' : '#f3f4f6',
+              color: view==='audit' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >📋 Audit Log</button>
+          <button 
+            className={view==='backup'? 'active':''} 
+            onClick={()=>setView('backup')}
+            style={{
+              background: view==='backup' ? '#059669' : '#f3f4f6',
+              color: view==='backup' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >💾 Backup</button>
+          <button 
+            className={view==='settings'? 'active':''} 
+            onClick={()=>setView('settings')}
+            style={{
+              background: view==='settings' ? '#059669' : '#f3f4f6',
+              color: view==='settings' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >⚙️ Settings</button>
+        </nav>
 
       <main>
-        {view === 'dashboard' && (
-          <section>
-            <h2>Farm Overview</h2>
-            <p>Welcome to your comprehensive farm management system. Manage livestock, crops, finances, tasks, and operations all in one place. Use the navigation to access different modules and manage your farm data efficiently.</p>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginTop: '24px' }}>
-              <div className="card" style={{ padding: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setView('animals')}>
-                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)', fontSize: '48px' }}>🐄</h3>
-                <h4 style={{ margin: '8px 0', color: 'var(--green)' }}>Livestock</h4>
-                <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Animal breeding, health tracking, feeding schedules, milk yield, groups, and pastures</p>
-              </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setView('crops')}>
-                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)', fontSize: '48px' }}>🌾</h3>
-                <h4 style={{ margin: '8px 0', color: 'var(--green)' }}>Crops</h4>
-                <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Crop planning, treatment tracking, yield recording, and field management</p>
-              </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setView('finance')}>
-                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)', fontSize: '48px' }}>💰</h3>
-                <h4 style={{ margin: '8px 0', color: 'var(--green)' }}>Finance</h4>
-                <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Income tracking, expense management, profit analysis, and financial reporting</p>
-              </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setView('tasks')}>
-                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)', fontSize: '48px' }}>✅</h3>
-                <h4 style={{ margin: '8px 0', color: 'var(--green)' }}>Tasks</h4>
-                <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Daily operations, scheduled activities, staff assignments, and progress tracking</p>
-              </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setView('inventory')}>
-                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)', fontSize: '48px' }}>📦</h3>
-                <h4 style={{ margin: '8px 0', color: 'var(--green)' }}>Inventory</h4>
-                <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Feed supplies, veterinary medicines, equipment, and stock management</p>
-              </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setView('reports')}>
-                <h3 style={{ margin: '0 0 8px 0', color: 'var(--green)', fontSize: '48px' }}>📊</h3>
-                <h4 style={{ margin: '8px 0', color: 'var(--green)' }}>Reports</h4>
-                <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Performance analytics, productivity reports, and operational insights</p>
-              </div>
-            </div>
-          </section>
-        )}
+        {view === 'dashboard' && <Dashboard onNavigate={setView} />}
+        {view === 'notifications' && <NotificationCenter />}
 
         {view === 'animals' && (
           <section>
@@ -170,6 +488,24 @@ export default function App() {
               ← Back to Dashboard
             </button>
             <Reports />
+          </section>
+        )}
+
+        {view === 'audit' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <AuditLog />
+          </section>
+        )}
+
+        {view === 'backup' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <BackupRestore />
           </section>
         )}
 

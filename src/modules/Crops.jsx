@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react'
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
+import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 
 const SAMPLE = [
   {
@@ -508,12 +509,137 @@ export default function Crops(){
     harvested: items.filter(c => c.status === 'Harvested').length
   }), [items])
 
+  const fileInputRef = useRef(null)
+
+  function handleExportCSV() {
+    const data = filtered.map(c => ({
+      id: c.id,
+      name: c.name,
+      variety: c.variety,
+      planted: c.planted,
+      expectedHarvest: c.expectedHarvest,
+      actualHarvest: c.actualHarvest,
+      area: c.area,
+      field: c.field,
+      status: c.status,
+      soilType: c.soilType,
+      irrigationType: c.irrigationType,
+      seedCost: c.seedCost,
+      healthScore: c.healthScore,
+      notes: c.notes
+    }))
+    exportToCSV(data, 'crops.csv')
+  }
+
+  function handleExportExcel() {
+    const data = filtered.map(c => ({
+      id: c.id,
+      name: c.name,
+      variety: c.variety,
+      planted: c.planted,
+      expectedHarvest: c.expectedHarvest,
+      actualHarvest: c.actualHarvest,
+      area: c.area,
+      field: c.field,
+      status: c.status,
+      soilType: c.soilType,
+      irrigationType: c.irrigationType,
+      seedCost: c.seedCost,
+      healthScore: c.healthScore,
+      notes: c.notes
+    }))
+    exportToExcel(data, 'crops_export.csv')
+  }
+
+  function handleExportJSON() {
+    exportToJSON(filtered, 'crops.json')
+  }
+
+  function handleImportClick() {
+    fileInputRef.current?.click()
+  }
+
+  function handleImportFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const ext = file.name.split('.').pop()?.toLowerCase()
+
+    if (ext === 'json') {
+      importFromJSON(file, (data, error) => {
+        if (error) {
+          alert('Import failed: ' + error.message)
+          return
+        }
+        if (confirm(`Import ${data.length} crops? This will merge with existing data.`)) {
+          const imported = data.map(c => ({
+            ...c,
+            id: c.id || 'C-' + Math.floor(100 + Math.random()*900)
+          }))
+          setItems([...items, ...imported])
+          alert(`Imported ${imported.length} crops`)
+        }
+      })
+    } else if (ext === 'csv') {
+      importFromCSV(file, (data, error) => {
+        if (error) {
+          alert('Import failed: ' + error.message)
+          return
+        }
+        if (confirm(`Import ${data.length} crops? This will merge with existing data.`)) {
+          const imported = data.map(c => ({
+            id: c.id || 'C-' + Math.floor(100 + Math.random()*900),
+            name: c.name || '',
+            variety: c.variety || '',
+            planted: c.planted || '',
+            plantDate: c.planted || '',
+            expectedHarvest: c.expectedHarvest || '',
+            actualHarvest: c.actualHarvest || '',
+            area: c.area ? Number(c.area) : 0,
+            field: c.field || '',
+            status: c.status || 'Planning',
+            soilType: c.soilType || '',
+            irrigationType: c.irrigationType || '',
+            irrigationMethod: c.irrigationType || '',
+            seedCost: c.seedCost ? Number(c.seedCost) : 0,
+            healthScore: c.healthScore ? Number(c.healthScore) : 75,
+            notes: c.notes || '',
+            treatments: [],
+            yieldRecords: [],
+            soilTests: [],
+            irrigationRecords: [],
+            weatherEvents: []
+          }))
+          setItems([...items, ...imported])
+          alert(`Imported ${imported.length} crops`)
+        }
+      })
+    } else {
+      alert('Unsupported file type. Use CSV or JSON.')
+    }
+
+    e.target.value = ''
+  }
+
   return (
     <section>
       <div style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
           <h2 style={{ margin: 0 }}>Crop Management</h2>
-          <button onClick={() => setShowAddForm(!showAddForm)} style={{ background: 'var(--green)', color: '#fff', padding: '10px 16px', borderRadius: '8px', border: 'none' }}>Add New Crop</button>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button onClick={handleExportCSV} title="Export to CSV" style={{ fontSize: 12 }}>📊 CSV</button>
+            <button onClick={handleExportExcel} title="Export to Excel" style={{ fontSize: 12 }}>📈 Excel</button>
+            <button onClick={handleExportJSON} title="Export to JSON" style={{ fontSize: 12 }}>📄 JSON</button>
+            <button onClick={handleImportClick} title="Import from file" style={{ fontSize: 12 }}>📥 Import</button>
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              accept=".csv,.json" 
+              style={{ display: 'none' }} 
+              onChange={handleImportFile}
+            />
+            <button onClick={() => setShowAddForm(!showAddForm)} style={{ background: 'var(--green)', color: '#fff', padding: '10px 16px', borderRadius: '8px', border: 'none' }}>Add New Crop</button>
+          </div>
         </div>
         
         {/* Stats Cards */}

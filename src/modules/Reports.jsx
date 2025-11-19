@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel } from 'docx'
+import { calculateFeedEfficiency, calculateAnimalROI, comparePerformanceByPeriod, getTopPerformers } from '../lib/advancedAnalytics'
+import { formatCurrency } from '../lib/currency'
 
 function downloadJson(obj, filename='export.json'){ try{ const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }catch(e){ console.error(e) } }
 
@@ -42,26 +44,40 @@ function jsonToXml(obj, rootName = 'data') {
 async function downloadDocx(data, filename='export.docx', title='Report', section='data') {
   try {
     const sections = []
+    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     
-    // Header with logo area
+    // Header: HEADINGJR FARM
     sections.push(
       new Paragraph({
-        text: title,
+        text: 'HEADINGJR FARM',
         heading: HeadingLevel.HEADING_1,
+        alignment: AlignmentType.CENTER,
         spacing: { after: 100 }
       })
     )
     
     sections.push(
       new Paragraph({
-        text: `Farm Management Report`,
+        text: title,
+        alignment: AlignmentType.CENTER,
         spacing: { after: 50 }
       })
     )
     
     sections.push(
       new Paragraph({
-        text: `Generated: ${new Date().toLocaleString()}`,
+        text: `Date: ${today}`,
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 50 }
+      })
+    )
+    
+    sections.push(
+      new Paragraph({
+        children: [
+          new TextRun({ text: 'Made by Dr. Devin Omwenga', italics: true, color: '666666' })
+        ],
+        alignment: AlignmentType.RIGHT,
         spacing: { after: 300 }
       })
     )
@@ -358,6 +374,7 @@ export default function Reports(){
           <button className={`tab-btn ${section==='tasks'? 'active' : ''}`} onClick={()=>setSection('tasks')}>Tasks</button>
           <button className={`tab-btn ${section==='finance'? 'active' : ''}`} onClick={()=>setSection('finance')}>Finance</button>
           <button className={`tab-btn ${section==='health'? 'active' : ''}`} onClick={()=>setSection('health')}>Health</button>
+          <button className={`tab-btn ${section==='analytics'? 'active' : ''}`} onClick={()=>setSection('analytics')} style={{background: 'linear-gradient(135deg, var(--accent1), var(--accent2))', color: '#fff', fontWeight: '600'}}>📊 Advanced Analytics</button>
         </div>
       </div>
 
@@ -437,6 +454,11 @@ export default function Reports(){
           </div>
         </div>
         
+        {/* Advanced Analytics Section */}
+        {section === 'analytics' && <AdvancedAnalyticsSection />}
+        
+        {section !== 'analytics' && (
+        <>
         <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:12 }}>
           <select value={section} onChange={e=>setSection(e.target.value)}>
             <option value="animals">Animals</option>
@@ -496,6 +518,8 @@ export default function Reports(){
             </div>
           ))}
         </div>
+        </>
+        )}
       </div>
 
       {/* Data Viewer Modal */}
@@ -865,3 +889,301 @@ export default function Reports(){
     </div>
   )
 }
+
+// Advanced Analytics Component
+function AdvancedAnalyticsSection() {
+  const [activeTab, setActiveTab] = useState('fer')
+  const [periodType, setPeriodType] = useState('month')
+  const [ferData, setFerData] = useState(null)
+  const [roiData, setRoiData] = useState(null)
+  const [comparisonData, setComparisonData] = useState(null)
+  const [topPerformers, setTopPerformers] = useState([])
+
+  const animals = JSON.parse(localStorage.getItem('devinsfarm:animals') || '[]')
+
+  useEffect(() => {
+    if (activeTab === 'fer') {
+      setFerData(calculateFeedEfficiency(animals))
+    } else if (activeTab === 'roi') {
+      setRoiData(calculateAnimalROI(animals))
+    } else if (activeTab === 'comparison') {
+      setComparisonData(comparePerformanceByPeriod(periodType))
+    } else if (activeTab === 'top') {
+      setTopPerformers(getTopPerformers('roi', 10))
+    }
+  }, [activeTab, periodType])
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+        <button 
+          className={`tab-btn ${activeTab === 'fer' ? 'active' : ''}`}
+          onClick={() => setActiveTab('fer')}
+        >
+          📊 Feed Efficiency Ratio
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'roi' ? 'active' : ''}`}
+          onClick={() => setActiveTab('roi')}
+        >
+          💰 ROI Analysis
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'comparison' ? 'active' : ''}`}
+          onClick={() => setActiveTab('comparison')}
+        >
+          📈 Comparative Analysis
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'top' ? 'active' : ''}`}
+          onClick={() => setActiveTab('top')}
+        >
+          🏆 Top Performers
+        </button>
+      </div>
+
+      {/* Feed Efficiency Ratio */}
+      {activeTab === 'fer' && ferData && (
+        <div>
+          <div className="card" style={{ marginBottom: 20, padding: 20 }}>
+            <h3>Feed Efficiency Ratio (FER) Analysis</h3>
+            <p className="muted">FER = Weight Gain (kg) / Feed Consumed (kg)</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, marginTop: 20 }}>
+              <div>
+                <div style={{ fontSize: 32, fontWeight: 'bold', color: 'var(--accent1)' }}>
+                  {ferData.averageFER.toFixed(3)}
+                </div>
+                <div className="muted">Average FER</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 32, fontWeight: 'bold', color: 'var(--green)' }}>
+                  {ferData.analyzedAnimals}
+                </div>
+                <div className="muted">Animals Analyzed</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gap: 12 }}>
+            {ferData.results.map(result => (
+              <div key={result.animalId} className="card" style={{ padding: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 16 }}>{result.animalName}</div>
+                    <div className="muted">
+                      {result.startWeight}kg → {result.endWeight}kg over {result.days} days
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 24, fontWeight: 'bold', color: result.fer > 0.15 ? 'var(--green)' : result.fer > 0.10 ? '#f59e0b' : '#ef4444' }}>
+                      {result.fer.toFixed(3)}
+                    </div>
+                    <div style={{ 
+                      display: 'inline-block',
+                      padding: '4px 12px',
+                      borderRadius: 12,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      background: result.efficiency === 'Excellent' ? '#d1fae5' : 
+                                  result.efficiency === 'Good' ? '#fef3c7' : 
+                                  result.efficiency === 'Average' ? '#dbeafe' : '#fecaca',
+                      color: result.efficiency === 'Excellent' ? '#065f46' : 
+                             result.efficiency === 'Good' ? '#92400e' : 
+                             result.efficiency === 'Average' ? '#1e40af' : '#991b1b'
+                    }}>
+                      {result.efficiency}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: 14 }}>
+                  <div>Weight Gain: <strong>{result.weightGain.toFixed(1)} kg</strong></div>
+                  <div>Feed Consumed: <strong>{result.feedConsumed.toFixed(1)} kg</strong></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ROI Analysis */}
+      {activeTab === 'roi' && roiData && (
+        <div>
+          <div className="card" style={{ marginBottom: 20, padding: 20, background: 'linear-gradient(135deg, #059669, #10b981)', color: '#fff' }}>
+            <h3 style={{ color: '#fff', margin: '0 0 16px 0' }}>Return on Investment (ROI) Summary</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 28, fontWeight: 'bold' }}>{formatCurrency(roiData.summary.totalRevenue)}</div>
+                <div style={{ opacity: 0.9 }}>Total Revenue</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 28, fontWeight: 'bold' }}>{formatCurrency(roiData.summary.totalCosts)}</div>
+                <div style={{ opacity: 0.9 }}>Total Costs</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 28, fontWeight: 'bold' }}>{formatCurrency(roiData.summary.totalProfit)}</div>
+                <div style={{ opacity: 0.9 }}>Net Profit</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 28, fontWeight: 'bold' }}>{roiData.summary.averageROI.toFixed(1)}%</div>
+                <div style={{ opacity: 0.9 }}>Average ROI</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gap: 12 }}>
+            {roiData.results.map(result => (
+              <div key={result.animalId} className="card" style={{ padding: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 16 }}>{result.animalName}</div>
+                    <div className="muted">{result.animalType} - {result.status}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 24, fontWeight: 'bold', color: result.roi > 0 ? 'var(--green)' : '#ef4444' }}>
+                      {result.roi.toFixed(1)}%
+                    </div>
+                    <div style={{ 
+                      display: 'inline-block',
+                      padding: '4px 12px',
+                      borderRadius: 12,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      background: result.roi > 50 ? '#d1fae5' : result.roi > 20 ? '#fef3c7' : result.roi > 0 ? '#dbeafe' : '#fecaca',
+                      color: result.roi > 50 ? '#065f46' : result.roi > 20 ? '#92400e' : result.roi > 0 ? '#1e40af' : '#991b1b'
+                    }}>
+                      {result.profitability}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, fontSize: 14 }}>
+                  <div>
+                    <div className="muted">Costs</div>
+                    <div>Purchase: {formatCurrency(result.costs.purchase)}</div>
+                    <div>Feed: {formatCurrency(result.costs.feed)}</div>
+                    <div>Treatment: {formatCurrency(result.costs.treatment)}</div>
+                    <div style={{ fontWeight: 600, marginTop: 4 }}>Total: {formatCurrency(result.costs.total)}</div>
+                  </div>
+                  <div>
+                    <div className="muted">Revenue</div>
+                    <div>Milk: {formatCurrency(result.revenue.milk)}</div>
+                    <div>Sale: {formatCurrency(result.revenue.sale)}</div>
+                    <div style={{ fontWeight: 600, marginTop: 4 }}>Total: {formatCurrency(result.revenue.total)}</div>
+                    <div style={{ fontWeight: 700, fontSize: 16, color: result.profit > 0 ? 'var(--green)' : '#ef4444', marginTop: 4 }}>
+                      Profit: {formatCurrency(result.profit)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Comparative Analysis */}
+      {activeTab === 'comparison' && comparisonData && (
+        <div>
+          <div style={{ marginBottom: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
+            <label>Period Type:</label>
+            <select value={periodType} onChange={e => setPeriodType(e.target.value)} style={{ padding: '6px 12px', borderRadius: 6 }}>
+              <option value="month">Monthly</option>
+              <option value="quarter">Quarterly</option>
+            </select>
+          </div>
+
+          <div className="card" style={{ marginBottom: 20, padding: 20 }}>
+            <h3>Performance Trends</h3>
+            {comparisonData.trends && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, marginTop: 16 }}>
+                <div>
+                  <div className="muted">Income Change</div>
+                  <div style={{ fontSize: 24, fontWeight: 'bold', color: comparisonData.trends.incomeChange > 0 ? 'var(--green)' : '#ef4444' }}>
+                    {comparisonData.trends.incomeChange > 0 ? '↑' : '↓'} {Math.abs(comparisonData.trends.incomeChange).toFixed(1)}%
+                  </div>
+                </div>
+                <div>
+                  <div className="muted">Expense Change</div>
+                  <div style={{ fontSize: 24, fontWeight: 'bold', color: comparisonData.trends.expensesChange > 0 ? '#ef4444' : 'var(--green)' }}>
+                    {comparisonData.trends.expensesChange > 0 ? '↑' : '↓'} {Math.abs(comparisonData.trends.expensesChange).toFixed(1)}%
+                  </div>
+                </div>
+                <div>
+                  <div className="muted">Profit Change</div>
+                  <div style={{ fontSize: 24, fontWeight: 'bold', color: comparisonData.trends.profitChange > 0 ? 'var(--green)' : '#ef4444' }}>
+                    {comparisonData.trends.profitChange > 0 ? '↑' : '↓'} {Math.abs(comparisonData.trends.profitChange).toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gap: 12 }}>
+            {comparisonData.periods.map((period, idx) => (
+              <div key={idx} className="card" style={{ padding: 16 }}>
+                <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 12 }}>{period.period}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12, fontSize: 14 }}>
+                  <div>
+                    <div className="muted">Income</div>
+                    <div style={{ fontWeight: 600, color: 'var(--green)' }}>{formatCurrency(period.income)}</div>
+                  </div>
+                  <div>
+                    <div className="muted">Expenses</div>
+                    <div style={{ fontWeight: 600, color: '#ef4444' }}>{formatCurrency(period.expenses)}</div>
+                  </div>
+                  <div>
+                    <div className="muted">Profit</div>
+                    <div style={{ fontWeight: 600, color: period.profit > 0 ? 'var(--green)' : '#ef4444' }}>
+                      {formatCurrency(period.profit)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="muted">Milk Production</div>
+                    <div style={{ fontWeight: 600 }}>{period.milkProduction.toFixed(1)} L</div>
+                  </div>
+                  <div>
+                    <div className="muted">Feed Costs</div>
+                    <div style={{ fontWeight: 600 }}>{formatCurrency(period.feedCosts)}</div>
+                  </div>
+                  <div>
+                    <div className="muted">Profit Margin</div>
+                    <div style={{ fontWeight: 600 }}>{period.profitMargin.toFixed(1)}%</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Top Performers */}
+      {activeTab === 'top' && topPerformers && (
+        <div>
+          <div className="card" style={{ padding: 20, marginBottom: 20, background: 'linear-gradient(135deg, #f59e0b, #eab308)', color: '#fff' }}>
+            <h3 style={{ margin: 0, color: '#fff' }}>🏆 Top 10 Performers by ROI</h3>
+          </div>
+          <div style={{ display: 'grid', gap: 12 }}>
+            {topPerformers.map((performer, idx) => (
+              <div key={performer.animalId} className="card" style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div style={{ fontSize: 28, fontWeight: 'bold', color: idx < 3 ? '#f59e0b' : 'var(--muted)' }}>
+                    #{idx + 1}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 16 }}>{performer.animalName}</div>
+                    <div className="muted">{performer.profitability}</div>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 24, fontWeight: 'bold', color: 'var(--green)' }}>
+                    {performer.roi.toFixed(1)}%
+                  </div>
+                  <div className="muted">ROI</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+

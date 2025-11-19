@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
+import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
 
 const SAMPLE = [
   { id: 'TREAT-001', animalId: 'A-001', date: '2025-06-01', timestamp: '2025-06-01T10:30:00', treatmentType: 'Hoof Care', treatment: 'Hoof trim', veterinarian: 'Dr. Smith', medication: '', dosage: '', cost: 50, duration: '', nextDue: '', status: 'Completed', severity: 'Routine', notes: 'Regular maintenance' },
@@ -102,13 +103,209 @@ export default function AnimalTreatment({ animals }){
     treatmentSummary[item.treatmentType].cost += item.cost || 0
   })
 
+  const fileInputRef = useRef(null)
+
+  function handleExportCSV() {
+    const data = filteredItems.map(t => {
+      const animal = (animals||[]).find(a => a.id === t.animalId)
+      return {
+        id: t.id,
+        animalTag: animal?.tag || t.animalId,
+        animalName: animal?.name || '',
+        date: t.date,
+        treatmentType: t.treatmentType,
+        treatment: t.treatment,
+        veterinarian: t.veterinarian,
+        medication: t.medication,
+        dosage: t.dosage,
+        cost: t.cost,
+        status: t.status,
+        severity: t.severity,
+        nextDue: t.nextDue,
+        notes: t.notes
+      }
+    })
+    exportToCSV(data, 'treatment_records.csv')
+  }
+
+  function handleExportExcel() {
+    const data = filteredItems.map(t => {
+      const animal = (animals||[]).find(a => a.id === t.animalId)
+      return {
+        id: t.id,
+        animalTag: animal?.tag || t.animalId,
+        animalName: animal?.name || '',
+        date: t.date,
+        treatmentType: t.treatmentType,
+        treatment: t.treatment,
+        veterinarian: t.veterinarian,
+        medication: t.medication,
+        dosage: t.dosage,
+        cost: t.cost,
+        status: t.status,
+        severity: t.severity,
+        nextDue: t.nextDue,
+        notes: t.notes
+      }
+    })
+    exportToExcel(data, 'treatment_records_export.csv')
+  }
+
+  function handleExportJSON() {
+    exportToJSON(filteredItems, 'treatment_records.json')
+  }
+
+  function handleImportClick() {
+    fileInputRef.current?.click()
+  }
+
+  function handleImportFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const ext = file.name.split('.').pop()?.toLowerCase()
+
+    if (ext === 'json') {
+      importFromJSON(file, (data, error) => {
+        if (error) {
+          alert('Import failed: ' + error.message)
+          return
+        }
+        if (confirm(`Import ${data.length} treatment records? This will merge with existing data.`)) {
+          const imported = data.map(t => ({
+            ...t,
+            id: t.id || 'TREAT-' + Math.floor(1000 + Math.random()*9000)
+          }))
+          setItems([...items, ...imported])
+          alert(`Imported ${imported.length} treatment records`)
+        }
+      })
+    } else if (ext === 'csv') {
+      importFromCSV(file, (data, error) => {
+        if (error) {
+          alert('Import failed: ' + error.message)
+          return
+        }
+        if (confirm(`Import ${data.length} treatment records? This will merge with existing data.`)) {
+          const imported = data.map(t => ({
+            id: t.id || 'TREAT-' + Math.floor(1000 + Math.random()*9000),
+            animalId: t.animalId || '',
+            date: t.date || new Date().toISOString().slice(0,10),
+            timestamp: t.timestamp || new Date().toISOString(),
+            treatmentType: t.treatmentType || 'Other',
+            treatment: t.treatment || '',
+            veterinarian: t.veterinarian || '',
+            medication: t.medication || '',
+            dosage: t.dosage || '',
+            cost: t.cost ? Number(t.cost) : 0,
+            duration: t.duration || '',
+            nextDue: t.nextDue || '',
+            status: t.status || 'Completed',
+            severity: t.severity || 'Routine',
+            notes: t.notes || ''
+          }))
+          setItems([...items, ...imported])
+          alert(`Imported ${imported.length} treatment records`)
+        }
+      })
+    } else {
+      alert('Unsupported file type. Use CSV or JSON.')
+    }
+
+    e.target.value = ''
+  }
+
+  function handleBatchPrint() {
+    if (filteredItems.length === 0) {
+      alert('No treatment records to print')
+      return
+    }
+
+    batchPrint(filteredItems, (item) => {
+      const animal = (animals||[]).find(a => a.id === item.animalId)
+      return `
+        <div style="padding: 20px; border: 2px solid #000;">
+          <h2 style="margin-top: 0;">💊 Treatment Record: ${item.id}</h2>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <tr>
+              <th style="text-align: left; width: 150px; border: 1px solid #000; padding: 8px;">Animal:</th>
+              <td style="border: 1px solid #000; padding: 8px;">${animal?.tag || item.animalId} - ${animal?.name || 'N/A'}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left; border: 1px solid #000; padding: 8px;">Date:</th>
+              <td style="border: 1px solid #000; padding: 8px;">${item.date}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left; border: 1px solid #000; padding: 8px;">Treatment Type:</th>
+              <td style="border: 1px solid #000; padding: 8px;">${item.treatmentType}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left; border: 1px solid #000; padding: 8px;">Treatment:</th>
+              <td style="border: 1px solid #000; padding: 8px;">${item.treatment}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left; border: 1px solid #000; padding: 8px;">Veterinarian:</th>
+              <td style="border: 1px solid #000; padding: 8px;">${item.veterinarian || 'N/A'}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left; border: 1px solid #000; padding: 8px;">Medication:</th>
+              <td style="border: 1px solid #000; padding: 8px;">${item.medication || 'N/A'}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left; border: 1px solid #000; padding: 8px;">Dosage:</th>
+              <td style="border: 1px solid #000; padding: 8px;">${item.dosage || 'N/A'}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left; border: 1px solid #000; padding: 8px;">Status:</th>
+              <td style="border: 1px solid #000; padding: 8px;">${item.status}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left; border: 1px solid #000; padding: 8px;">Severity:</th>
+              <td style="border: 1px solid #000; padding: 8px;">${item.severity}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left; border: 1px solid #000; padding: 8px;">Cost:</th>
+              <td style="border: 1px solid #000; padding: 8px;">$${item.cost || 0}</td>
+            </tr>
+            ${item.nextDue ? `
+            <tr>
+              <th style="text-align: left; border: 1px solid #000; padding: 8px;">Next Due:</th>
+              <td style="border: 1px solid #000; padding: 8px;">${item.nextDue}</td>
+            </tr>
+            ` : ''}
+            ${item.notes ? `
+            <tr>
+              <th style="text-align: left; border: 1px solid #000; padding: 8px;">Notes:</th>
+              <td style="border: 1px solid #000; padding: 8px;">${item.notes}</td>
+            </tr>
+            ` : ''}
+          </table>
+        </div>
+      `
+    }, 'Treatment Records', 'Animal Treatment Records')
+  }
+
   return (
     <section>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
         <h3>💊 Treatments & Medical Records</h3>
-        <button onClick={() => setShowAddForm(!showAddForm)}>
-          {showAddForm ? '✕ Cancel' : '+ Add Treatment Record'}
-        </button>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button onClick={handleExportCSV} title="Export to CSV" style={{ fontSize: 12 }}>📊 CSV</button>
+          <button onClick={handleExportExcel} title="Export to Excel" style={{ fontSize: 12 }}>📈 Excel</button>
+          <button onClick={handleExportJSON} title="Export to JSON" style={{ fontSize: 12 }}>📄 JSON</button>
+          <button onClick={handleImportClick} title="Import from file" style={{ fontSize: 12 }}>📥 Import</button>
+          <button onClick={handleBatchPrint} title="Print all records" style={{ fontSize: 12 }}>🖨️ Print</button>
+          <input 
+            ref={fileInputRef}
+            type="file" 
+            accept=".csv,.json" 
+            style={{ display: 'none' }} 
+            onChange={handleImportFile}
+          />
+          <button onClick={() => setShowAddForm(!showAddForm)}>
+            {showAddForm ? '✕ Cancel' : '+ Add Treatment Record'}
+          </button>
+        </div>
       </div>
 
       {/* Summary Stats */}

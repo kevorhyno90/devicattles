@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
+import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
 
 // Comprehensive Ingredient Library with Kenya Prices (KES per kg)
 // Now includes ME (Metabolizable Energy, MJ/kg DM) alongside NEL
@@ -470,6 +471,99 @@ export default function AnimalFeeding({ animals }){
     ? Object.entries(REQUIREMENTS)
     : Object.entries(REQUIREMENTS).filter(([_, req]) => req.category === animalCategory)
 
+  // Export/Import functions
+  const fileInputRef = useRef(null)
+
+  function exportIngredientsCSV() {
+    const data = Object.entries(INGREDIENTS).map(([name, ing]) => ({
+      name,
+      category: ing.category,
+      DM: ing.DM,
+      CP: ing.CP,
+      NDF: ing.NDF,
+      ADF: ing.ADF,
+      TDN: ing.TDN,
+      NEL: ing.NEL,
+      ME: ing.ME,
+      Ca: ing.Ca,
+      P: ing.P,
+      price: ing.price || 0
+    }))
+    exportToCSV(data, 'ingredients.csv')
+  }
+
+  function exportDietsCSV() {
+    const data = diets.map(d => ({
+      id: d.id,
+      name: d.name,
+      targetAnimal: d.targetAnimal,
+      created: d.created,
+      ingredients: d.ingredients.map(i => `${i.name}:${i.amount}kg`).join('; '),
+      totalDM: d.analysis.totalDM.toFixed(2),
+      totalCP: d.analysis.totalCP.toFixed(2),
+      costPerKg: d.analysis.costPerKg.toFixed(2)
+    }))
+    exportToCSV(data, 'diets.csv')
+  }
+
+  function exportRationsCSV() {
+    const data = rations.map(r => ({
+      id: r.id,
+      name: r.name,
+      dietName: r.dietName,
+      animals: r.animals.join('; '),
+      created: r.created
+    }))
+    exportToCSV(data, 'rations.csv')
+  }
+
+  function batchPrintRations() {
+    if (rations.length === 0) {
+      alert('No rations to print')
+      return
+    }
+
+    batchPrint(rations, (ration) => {
+      const diet = diets.find(d => d.id === ration.dietId)
+      return `
+        <div style="padding: 20px; border: 2px solid #000;">
+          <h2 style="margin-top: 0;">🔗 Ration Card: ${ration.name}</h2>
+          <p><strong>Diet:</strong> ${ration.dietName}</p>
+          <p><strong>Created:</strong> ${new Date(ration.created).toLocaleString()}</p>
+          <h3>Assigned Animals:</h3>
+          <ul>
+            ${ration.animals.map(a => `<li>${a}</li>`).join('')}
+          </ul>
+          ${diet ? `
+            <h3>Diet Composition:</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+              <thead>
+                <tr>
+                  <th style="border: 1px solid #000; padding: 8px; text-align: left;">Ingredient</th>
+                  <th style="border: 1px solid #000; padding: 8px; text-align: right;">Amount (kg)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${diet.ingredients.map(ing => `
+                  <tr>
+                    <td style="border: 1px solid #000; padding: 8px;">${ing.name}</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">${ing.amount}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <div style="margin-top: 20px; padding: 10px; background: #f0f0f0;">
+              <h4 style="margin-top: 0;">Nutritional Analysis:</h4>
+              <p><strong>Total DM:</strong> ${diet.analysis.totalDM.toFixed(2)} kg</p>
+              <p><strong>Total CP:</strong> ${diet.analysis.totalCP.toFixed(2)} kg</p>
+              <p><strong>Cost per kg:</strong> KES ${diet.analysis.costPerKg.toFixed(2)}</p>
+            </div>
+          ` : ''}
+        </div>
+      `
+    }, 'Ration Cards')
+  }
+
   return (
     <section>
       <div style={{ marginBottom: 16 }}>
@@ -477,7 +571,7 @@ export default function AnimalFeeding({ animals }){
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, borderBottom: '2px solid #e5e7eb' }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, borderBottom: '2px solid #e5e7eb', flexWrap: 'wrap' }}>
         {[
           { id: 'ingredients', label: '📚 Ingredient Library' },
           { id: 'requirements', label: '🎯 Requirements' },
@@ -502,6 +596,20 @@ export default function AnimalFeeding({ animals }){
             {tab.label}
           </button>
         ))}
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
+          {activeTab === 'ingredients' && (
+            <button onClick={exportIngredientsCSV} style={{ fontSize: 12 }} title="Export ingredients">📊 Export</button>
+          )}
+          {activeTab === 'diets' && (
+            <button onClick={exportDietsCSV} style={{ fontSize: 12 }} title="Export diets">📊 Export</button>
+          )}
+          {activeTab === 'rations' && (
+            <>
+              <button onClick={exportRationsCSV} style={{ fontSize: 12 }} title="Export rations">📊 Export</button>
+              <button onClick={batchPrintRations} style={{ fontSize: 12 }} title="Print all rations">🖨️ Print</button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* INGREDIENT LIBRARY */}

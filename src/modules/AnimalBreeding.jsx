@@ -9,6 +9,87 @@ const BREEDING_EVENTS = ['AI', 'Natural Breeding', 'Embryo Transfer', 'Heat Dete
 const BREEDING_METHODS = ['Artificial Insemination', 'Natural', 'Embryo Transfer', 'IVF']
 const BREEDING_STATUS = ['Scheduled', 'Completed', 'Confirmed', 'Failed', 'Pending Confirmation']
 
+// Heat cycle data by breed (in days)
+const HEAT_CYCLE_DAYS = {
+  // Cattle breeds
+  'Holstein': 21,
+  'Friesian': 21,
+  'Jersey': 21,
+  'Guernsey': 21,
+  'Ayrshire': 21,
+  'Brown Swiss': 21,
+  'Angus': 21,
+  'Hereford': 21,
+  'Simmental': 21,
+  'Charolais': 21,
+  'Limousin': 21,
+  // Pigs
+  'Large White': 21,
+  'Landrace': 21,
+  'Duroc': 21,
+  'Hampshire': 21,
+  'Yorkshire': 21,
+  'Berkshire': 21,
+  'Chester White': 21,
+  'Pietrain': 21,
+  // Sheep
+  'Merino': 17,
+  'Dorper': 17,
+  'Suffolk': 17,
+  'Hampshire (Sheep)': 17,
+  'Rambouillet': 17,
+  'Katahdin': 17,
+  // Goats
+  'Boer': 21,
+  'Saanen': 21,
+  'Alpine': 21,
+  'Nubian': 21,
+  'Toggenburg': 21,
+  'LaMancha': 21,
+  // Default
+  'default': 21
+}
+
+// Gestation period by species (in days)
+const GESTATION_DAYS = {
+  'Holstein': 280,
+  'Friesian': 280,
+  'Jersey': 279,
+  'Guernsey': 283,
+  'Ayrshire': 279,
+  'Brown Swiss': 290,
+  'Angus': 283,
+  'Hereford': 285,
+  'Simmental': 289,
+  'Charolais': 289,
+  'Limousin': 289,
+  // Pigs
+  'Large White': 114,
+  'Landrace': 114,
+  'Duroc': 114,
+  'Hampshire': 114,
+  'Yorkshire': 114,
+  'Berkshire': 114,
+  'Chester White': 114,
+  'Pietrain': 114,
+  // Sheep
+  'Merino': 150,
+  'Dorper': 150,
+  'Suffolk': 147,
+  'Hampshire (Sheep)': 147,
+  'Rambouillet': 150,
+  'Katahdin': 152,
+  // Goats
+  'Boer': 150,
+  'Saanen': 150,
+  'Alpine': 150,
+  'Nubian': 150,
+  'Toggenburg': 150,
+  'LaMancha': 145,
+  // Default cattle
+  'default': 283
+}
+
 export default function AnimalBreeding({ animals }){
   const KEY = 'cattalytics:animal:breeding'
   const [items, setItems] = useState([])
@@ -19,12 +100,41 @@ export default function AnimalBreeding({ animals }){
   const [method, setMethod] = useState('Artificial Insemination')
   const [technician, setTechnician] = useState('')
   const [expectedDue, setExpectedDue] = useState('')
+  const [returnToHeat, setReturnToHeat] = useState('')
   const [cost, setCost] = useState('')
   const [status, setStatus] = useState('Completed')
   const [notes, setNotes] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
   const [filterAnimal, setFilterAnimal] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
+
+  // Calculate return to heat and due date when animal or event changes
+  useEffect(() => {
+    if (animalId && animals) {
+      const animal = animals.find(a => a.id === animalId)
+      if (animal && (event === 'AI' || event === 'Natural Breeding' || event === 'Heat Detection')) {
+        calculateDates(animal.breed)
+      }
+    }
+  }, [animalId, event, animals])
+
+  function calculateDates(breed) {
+    const today = new Date()
+    
+    // Calculate return to heat date
+    const heatCycleDays = HEAT_CYCLE_DAYS[breed] || HEAT_CYCLE_DAYS['default']
+    const returnDate = new Date(today)
+    returnDate.setDate(returnDate.getDate() + heatCycleDays)
+    setReturnToHeat(returnDate.toISOString().slice(0, 10))
+    
+    // Calculate expected due date for breeding events
+    if (event === 'AI' || event === 'Natural Breeding') {
+      const gestationDays = GESTATION_DAYS[breed] || GESTATION_DAYS['default']
+      const dueDate = new Date(today)
+      dueDate.setDate(dueDate.getDate() + gestationDays)
+      setExpectedDue(dueDate.toISOString().slice(0, 10))
+    }
+  }
 
   useEffect(()=>{
     const raw = localStorage.getItem(KEY)
@@ -51,6 +161,7 @@ export default function AnimalBreeding({ animals }){
       method,
       technician: technician.trim(),
       expectedDue,
+      returnToHeat,
       cost: parseFloat(cost) || 0,
       status,
       notes: notes.trim()
@@ -60,6 +171,7 @@ export default function AnimalBreeding({ animals }){
     setSireName('')
     setTechnician('')
     setExpectedDue('')
+    setReturnToHeat('')
     setCost('')
     setNotes('')
     setShowAddForm(false)
@@ -129,6 +241,34 @@ export default function AnimalBreeding({ animals }){
         </div>
       )}
 
+      {/* Upcoming Return to Heat Alert */}
+      {(() => {
+        const upcomingHeat = filteredItems.filter(item => {
+          if (!item.returnToHeat) return false
+          const daysUntilHeat = Math.floor((new Date(item.returnToHeat) - new Date()) / (1000 * 60 * 60 * 24))
+          return daysUntilHeat >= 0 && daysUntilHeat <= 7
+        })
+        
+        if (upcomingHeat.length === 0) return null
+        
+        return (
+          <div className="card" style={{ padding: 16, marginBottom: 16, background: '#e0f2fe', borderLeft: '4px solid #0ea5e9' }}>
+            <h4 style={{ margin: '0 0 8px 0', color: '#075985' }}>🔔 Return to Heat Alert (Next 7 Days)</h4>
+            {upcomingHeat.map(item => {
+              const animal = (animals||[]).find(a => a.id === item.animalId)
+              const daysUntilHeat = Math.floor((new Date(item.returnToHeat) - new Date()) / (1000 * 60 * 60 * 24))
+              return (
+                <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #7dd3fc' }}>
+                  <strong>{animal?.name || animal?.tag || item.animalId}</strong> ({animal?.breed}) - 
+                  {daysUntilHeat === 0 ? ' Today!' : ` in ${daysUntilHeat} day${daysUntilHeat > 1 ? 's' : ''}`} 
+                  ({new Date(item.returnToHeat).toLocaleDateString()})
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
+
       {/* Add Form */}
       {showAddForm && (
         <div className="card" style={{ padding: 20, marginBottom: 20 }}>
@@ -168,8 +308,23 @@ export default function AnimalBreeding({ animals }){
               <input value={technician} onChange={e => setTechnician(e.target.value)} placeholder="Name" />
             </div>
             <div>
-              <label>Expected Due Date</label>
-              <input type="date" value={expectedDue} onChange={e => setExpectedDue(e.target.value)} />
+              <label>Expected Due Date {(event === 'AI' || event === 'Natural Breeding') && '(Auto-calculated)'}</label>
+              <input 
+                type="date" 
+                value={expectedDue} 
+                onChange={e => setExpectedDue(e.target.value)} 
+                title={animalId && animals ? `Based on ${animals.find(a => a.id === animalId)?.breed || 'breed'} gestation period` : ''}
+              />
+            </div>
+            <div>
+              <label>Return to Heat Date (Auto-calculated)</label>
+              <input 
+                type="date" 
+                value={returnToHeat} 
+                onChange={e => setReturnToHeat(e.target.value)}
+                style={{ background: '#f0fdf4' }}
+                title={animalId && animals ? `Based on ${animals.find(a => a.id === animalId)?.breed || 'breed'} heat cycle (${HEAT_CYCLE_DAYS[animals.find(a => a.id === animalId)?.breed] || HEAT_CYCLE_DAYS['default']} days)` : ''}
+              />
             </div>
             <div>
               <label>Cost ($)</label>
@@ -246,6 +401,17 @@ export default function AnimalBreeding({ animals }){
                         Expected Due: <strong>{new Date(item.expectedDue).toLocaleDateString()}</strong>
                         {daysUntilDue !== null && daysUntilDue > 0 && ` (${daysUntilDue} days)`}
                         {daysUntilDue !== null && daysUntilDue <= 0 && ' (Past due)'}
+                      </div>
+                    )}
+                    {item.returnToHeat && (
+                      <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+                        Return to Heat: <strong>{new Date(item.returnToHeat).toLocaleDateString()}</strong>
+                        {(() => {
+                          const daysUntilHeat = Math.floor((new Date(item.returnToHeat) - new Date()) / (1000 * 60 * 60 * 24))
+                          if (daysUntilHeat > 0) return ` (in ${daysUntilHeat} days)`
+                          if (daysUntilHeat === 0) return ' (Today!)'
+                          return ' (Past due)'
+                        })()}
                       </div>
                     )}
                     {item.technician && (
