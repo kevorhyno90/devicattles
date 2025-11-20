@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
+import { getFinancialSummary } from '../lib/moduleIntegration'
 
 const SAMPLE = [
   { id: 'F-001', date: '2025-01-12', amount: -18000.00, type: 'expense', category: 'Veterinary', subcategory: 'Vaccines', description: 'Annual vaccination program', notes: [], paymentMethod: 'M-Pesa', vendor: 'Valley Veterinary Clinic' },
@@ -222,6 +223,10 @@ export default function Finance(){
     netProfit: items.reduce((sum, i) => sum + i.amount, 0),
     monthlyNet: currentMonthItems.reduce((sum, i) => sum + i.amount, 0)
   }
+  
+  // Get integrated financial summary from all modules
+  const integratedSummary = getFinancialSummary()
+  const profitMargin = stats.totalIncome > 0 ? ((stats.netProfit / stats.totalIncome) * 100) : 0
 
   const getCategoryOptions = () => {
     return formData.type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES
@@ -254,52 +259,62 @@ export default function Finance(){
         </div>
         
         {/* Financial Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
-          <div className="card" style={{ padding: '20px' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>This Month</h3>
-            <div style={{ display: 'grid', gap: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Income:</span>
-                <span style={{ color: 'var(--green)', fontWeight: '600' }}>KES {stats.monthlyIncome.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Expenses:</span>
-                <span style={{ color: '#dc2626', fontWeight: '600' }}>KES {stats.monthlyExpenses.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e7eb', paddingTop: '8px', fontWeight: '700' }}>
-                <span>Net:</span>
-                <span style={{ color: stats.monthlyNet >= 0 ? 'var(--green)' : '#dc2626' }}>KES {stats.monthlyNet.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-              </div>
-            </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
+          <div className="card" style={{ padding: '20px', background: '#f0fdf4' }}>
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#15803d' }}>Total Income</h3>
+            <div style={{ fontSize: '28px', fontWeight: '700', color: '#15803d' }}>KES {stats.totalIncome.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>This Month: KES {stats.monthlyIncome.toFixed(2)}</div>
           </div>
           
-          <div className="card" style={{ padding: '20px' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>All Time</h3>
-            <div style={{ display: 'grid', gap: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Total Income:</span>
-                <span style={{ color: 'var(--green)', fontWeight: '600' }}>KES {stats.totalIncome.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Total Expenses:</span>
-                <span style={{ color: '#dc2626', fontWeight: '600' }}>KES {stats.totalExpenses.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e7eb', paddingTop: '8px', fontWeight: '700' }}>
-                <span>Net Profit:</span>
-                <span style={{ color: stats.netProfit >= 0 ? 'var(--green)' : '#dc2626' }}>KES {stats.netProfit.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-              </div>
-            </div>
+          <div className="card" style={{ padding: '20px', background: '#fef2f2' }}>
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#dc2626' }}>Total Expenses</h3>
+            <div style={{ fontSize: '28px', fontWeight: '700', color: '#dc2626' }}>KES {stats.totalExpenses.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>This Month: KES {stats.monthlyExpenses.toFixed(2)}</div>
           </div>
 
-          <div className="card" style={{ padding: '20px' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>Quick Actions</h3>
-            <div style={{ display: 'grid', gap: '8px' }}>
-              <button onClick={() => setShowAddForm(true)} style={{ padding: '8px', background: 'var(--green)', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '14px' }}>Record Transaction</button>
-              <button onClick={() => console.log('Export data')} style={{ padding: '8px', background: '#6b7280', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '14px' }}>Export Report</button>
-              <button onClick={() => console.log('Generate report')} style={{ padding: '8px', background: '#6b7280', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '14px' }}>Monthly Report</button>
+          <div className="card" style={{ padding: '20px', background: stats.netProfit >= 0 ? '#ecfdf5' : '#fef2f2' }}>
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: stats.netProfit >= 0 ? '#059669' : '#dc2626' }}>Net Profit/Loss</h3>
+            <div style={{ fontSize: '28px', fontWeight: '700', color: stats.netProfit >= 0 ? '#059669' : '#dc2626' }}>
+              {stats.netProfit >= 0 ? '+' : ''}KES {stats.netProfit.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+            </div>
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>This Month: {stats.monthlyNet >= 0 ? '+' : ''}KES {stats.monthlyNet.toFixed(2)}</div>
+          </div>
+          
+          <div className="card" style={{ padding: '20px', background: profitMargin >= 0 ? '#eff6ff' : '#fef2f2' }}>
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: profitMargin >= 0 ? '#2563eb' : '#dc2626' }}>Profit Margin</h3>
+            <div style={{ fontSize: '28px', fontWeight: '700', color: profitMargin >= 0 ? '#2563eb' : '#dc2626' }}>
+              {profitMargin.toFixed(1)}%
+            </div>
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              {profitMargin >= 20 ? '🎉 Excellent' : profitMargin >= 10 ? '👍 Good' : profitMargin >= 0 ? '⚠️ Low' : '❌ Loss'}
             </div>
           </div>
         </div>
+        
+        {/* Income/Expense Breakdown by Source */}
+        {integratedSummary.sources.length > 0 && (
+          <div className="card" style={{ padding: '20px', marginBottom: '20px' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>Income & Expenses by Source</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+              {integratedSummary.sources.map(source => (
+                <div key={source.source} style={{ padding: '12px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                  <div style={{ fontWeight: '600', fontSize: '14px', marginBottom: '8px', color: '#374151' }}>{source.source}</div>
+                  <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                    Income: <span style={{ color: '#15803d', fontWeight: '600' }}>KES {source.income.toFixed(2)}</span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                    Expenses: <span style={{ color: '#dc2626', fontWeight: '600' }}>KES {source.expenses.toFixed(2)}</span>
+                  </div>
+                  <div style={{ fontSize: '12px', borderTop: '1px solid #e5e7eb', paddingTop: '4px', marginTop: '4px' }}>
+                    Net: <span style={{ color: source.net >= 0 ? '#059669' : '#dc2626', fontWeight: '700' }}>
+                      {source.net >= 0 ? '+' : ''}KES {source.net.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Add Transaction Form */}

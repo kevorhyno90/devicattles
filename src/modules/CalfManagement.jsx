@@ -22,6 +22,9 @@ export default function CalfManagement({ animals }) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [selectedCalf, setSelectedCalf] = useState(null)
   const [activeTab, setActiveTab] = useState('overview')
+  const [editingCalfId, setEditingCalfId] = useState(null)
+  const [editingFeedingId, setEditingFeedingId] = useState(null)
+  const [editingHealthId, setEditingHealthId] = useState(null)
   
   // Form states
   const [formData, setFormData] = useState({
@@ -68,9 +71,30 @@ export default function CalfManagement({ animals }) {
       alert('Please provide tag and date of birth')
       return
     }
-    const id = 'CALF-' + Date.now()
-    const newCalf = { ...formData, id, vaccination: formData.vaccination || [] }
-    setCalves([...calves, newCalf])
+    
+    if(editingCalfId) {
+      // Update existing calf
+      setCalves(calves.map(c => c.id === editingCalfId ? { ...c, ...formData } : c))
+      setEditingCalfId(null)
+    } else {
+      // Add new calf
+      const id = 'CALF-' + Date.now()
+      const newCalf = { ...formData, id, vaccination: formData.vaccination || [] }
+      setCalves([...calves, newCalf])
+    }
+    
+    resetForm()
+    setShowAddForm(false)
+  }
+
+  function startEditCalf(calf) {
+    setEditingCalfId(calf.id)
+    setFormData({ ...calf })
+    setShowAddForm(true)
+  }
+
+  function cancelEditCalf() {
+    setEditingCalfId(null)
     resetForm()
     setShowAddForm(false)
   }
@@ -90,9 +114,26 @@ export default function CalfManagement({ animals }) {
       alert('Please select calf and enter quantity')
       return
     }
-    const id = 'FEED-' + Date.now()
-    setFeedingRecords([...feedingRecords, { ...feedingForm, id, timestamp: new Date().toISOString() }])
+    
+    if(editingFeedingId) {
+      setFeedingRecords(feedingRecords.map(f => f.id === editingFeedingId ? { ...f, ...feedingForm } : f))
+      setEditingFeedingId(null)
+    } else {
+      const id = 'FEED-' + Date.now()
+      setFeedingRecords([...feedingRecords, { ...feedingForm, id, timestamp: new Date().toISOString() }])
+    }
+    
     setFeedingForm({ ...feedingForm, quantity: '', notes: '' })
+  }
+
+  function startEditFeeding(record) {
+    setEditingFeedingId(record.id)
+    setFeedingForm({ ...record })
+  }
+
+  function cancelEditFeeding() {
+    setEditingFeedingId(null)
+    setFeedingForm({ calfId: '', date: new Date().toISOString().slice(0, 10), feedType: 'Milk Replacer', quantity: '', method: 'Bottle', temperature: '', notes: '' })
   }
 
   function addHealth() {
@@ -100,9 +141,26 @@ export default function CalfManagement({ animals }) {
       alert('Please select calf and type')
       return
     }
-    const id = 'HEALTH-' + Date.now()
-    setHealthRecords([...healthRecords, { ...healthForm, id, timestamp: new Date().toISOString() }])
+    
+    if(editingHealthId) {
+      setHealthRecords(healthRecords.map(h => h.id === editingHealthId ? { ...h, ...healthForm } : h))
+      setEditingHealthId(null)
+    } else {
+      const id = 'HEALTH-' + Date.now()
+      setHealthRecords([...healthRecords, { ...healthForm, id, timestamp: new Date().toISOString() }])
+    }
+    
     setHealthForm({ ...healthForm, treatment: '', medication: '', dosage: '', cost: '', notes: '' })
+  }
+
+  function startEditHealth(record) {
+    setEditingHealthId(record.id)
+    setHealthForm({ ...record })
+  }
+
+  function cancelEditHealth() {
+    setEditingHealthId(null)
+    setHealthForm({ calfId: '', date: new Date().toISOString().slice(0, 10), type: 'Vaccination', treatment: '', diagnosis: '', medication: '', dosage: '', veterinarian: '', cost: '', nextVisit: '', notes: '' })
   }
 
   function resetForm() {
@@ -238,8 +296,12 @@ export default function CalfManagement({ animals }) {
             </div>
           </div>
           <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-            <button onClick={addCalf}>Add Calf</button>
-            <button onClick={() => setShowAddForm(false)} style={{ background: '#6b7280' }}>Cancel</button>
+            <button onClick={addCalf}>{editingCalfId ? 'Update Calf' : 'Add Calf'}</button>
+            {editingCalfId ? (
+              <button onClick={cancelEditCalf} style={{ background: '#6b7280' }}>Cancel Edit</button>
+            ) : (
+              <button onClick={() => setShowAddForm(false)} style={{ background: '#6b7280' }}>Cancel</button>
+            )}
           </div>
         </div>
       )}
@@ -327,7 +389,8 @@ export default function CalfManagement({ animals }) {
                       </div>
                       <div style={{ display: 'flex', gap: 4, flexDirection: 'column' }}>
                         <button onClick={() => setSelectedCalf(calf)} style={{ fontSize: 12, padding: '4px 8px' }}>View Details</button>
-                        <button onClick={() => deleteCalf(calf.id)} style={{ fontSize: 12, padding: '4px 8px', background: '#dc2626' }}>Delete</button>
+                        <button onClick={() => startEditCalf(calf)} style={{ fontSize: 12, padding: '4px 8px', background: '#3b82f6' }}>✏️ Edit</button>
+                        <button onClick={() => deleteCalf(calf.id)} style={{ fontSize: 12, padding: '4px 8px', background: '#dc2626' }}>🗑️ Delete</button>
                       </div>
                     </div>
                   </div>

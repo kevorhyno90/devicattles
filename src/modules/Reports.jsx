@@ -46,10 +46,10 @@ async function downloadDocx(data, filename='export.docx', title='Report', sectio
     const sections = []
     const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     
-    // Header: HEADINGJR FARM
+    // Header: JR FARM
     sections.push(
       new Paragraph({
-        text: 'HEADINGJR FARM',
+        text: 'JR FARM',
         heading: HeadingLevel.HEADING_1,
         alignment: AlignmentType.CENTER,
         spacing: { after: 100 }
@@ -304,11 +304,15 @@ export default function Reports(){
       const health = JSON.parse(localStorage.getItem('cattalytics:health:patients') || '[]')
       const feeding = JSON.parse(localStorage.getItem('cattalytics:feeding') || '[]')
       const measurements = JSON.parse(localStorage.getItem('cattalytics:measurements') || '[]')
-      const breeding = JSON.parse(localStorage.getItem('cattalytics:breeding') || '[]')
+      const breeding = JSON.parse(localStorage.getItem('cattalytics:animal:breeding') || '[]')
       const milkYield = JSON.parse(localStorage.getItem('cattalytics:milk-yield') || '[]')
       const treatments = JSON.parse(localStorage.getItem('cattalytics:treatments') || '[]')
-      setItems({ animals, tasks, finance, crops, resources, schedules, groups, pastures, health, feeding, measurements, breeding, milkYield, treatments })
-    }catch(e){ setItems({ animals:[], tasks:[], finance:[], crops:[], resources:[], schedules:[], groups:[], pastures:[], health:[], feeding:[], measurements:[], breeding:[], milkYield:[], treatments:[] }) }
+      const semen = JSON.parse(localStorage.getItem('cattalytics:semen:inventory') || '[]')
+      const inventory = JSON.parse(localStorage.getItem('cattalytics:inventory') || '[]')
+      const poultry = JSON.parse(localStorage.getItem('cattalytics:poultry') || '[]')
+      const flocks = JSON.parse(localStorage.getItem('cattalytics:flocks') || '[]')
+      setItems({ animals, tasks, finance, crops, resources, schedules, groups, pastures, health, feeding, measurements, breeding, milkYield, treatments, semen, inventory, poultry, flocks })
+    }catch(e){ setItems({ animals:[], tasks:[], finance:[], crops:[], resources:[], schedules:[], groups:[], pastures:[], health:[], feeding:[], measurements:[], breeding:[], milkYield:[], treatments:[], semen:[], inventory:[], poultry:[], flocks:[] }) }
   }, [])
 
   function getSectionItems(){
@@ -327,6 +331,10 @@ export default function Reports(){
     if(section === 'breeding') return (m.breeding||[]).map(b=> ({ id: b.id || Math.random().toString(36).slice(2,8), data: b, type:'breeding' }))
     if(section === 'milkYield') return (m.milkYield||[]).map(my=> ({ id: my.id || Math.random().toString(36).slice(2,8), data: my, type:'milkYield' }))
     if(section === 'treatments') return (m.treatments||[]).map(t=> ({ id: t.id || Math.random().toString(36).slice(2,8), data: t, type:'treatment' }))
+    if(section === 'semen') return (m.semen||[]).map(s=> ({ id: s.id || Math.random().toString(36).slice(2,8), data: s, type:'semen' }))
+    if(section === 'inventory') return (m.inventory||[]).map(i=> ({ id: i.id || Math.random().toString(36).slice(2,8), data: i, type:'inventory' }))
+    if(section === 'poultry') return (m.poultry||[]).map(p=> ({ id: p.id || Math.random().toString(36).slice(2,8), data: p, type:'poultry' }))
+    if(section === 'flocks') return (m.flocks||[]).map(f=> ({ id: f.id || Math.random().toString(36).slice(2,8), data: f, type:'flock' }))
     return []
   }
 
@@ -367,13 +375,42 @@ export default function Reports(){
           <h3 className="health-title">Reports</h3>
           <div className="muted">Central report hub — export and preview datasets</div>
         </div>
-        <div className="health-toolbar">
-          <button className={`tab-btn ${section==='animals'? 'active' : ''}`} onClick={()=>setSection('animals')}>Animals</button>
-          <button className={`tab-btn ${section==='crops'? 'active' : ''}`} onClick={()=>setSection('crops')}>Crops</button>
-          <button className={`tab-btn ${section==='pastures'? 'active' : ''}`} onClick={()=>setSection('pastures')}>Pastures</button>
-          <button className={`tab-btn ${section==='tasks'? 'active' : ''}`} onClick={()=>setSection('tasks')}>Tasks</button>
-          <button className={`tab-btn ${section==='finance'? 'active' : ''}`} onClick={()=>setSection('finance')}>Finance</button>
-          <button className={`tab-btn ${section==='health'? 'active' : ''}`} onClick={()=>setSection('health')}>Health</button>
+        <div className="health-toolbar" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+            <strong>Report Module:</strong>
+            <select 
+              value={section} 
+              onChange={(e) => setSection(e.target.value)}
+              style={{ padding: '8px 12px', fontSize: '14px', minWidth: '200px' }}
+            >
+              <optgroup label="Livestock">
+                <option value="animals">Animals</option>
+                <option value="breeding">Breeding Records</option>
+                <option value="semen">Semen Inventory</option>
+                <option value="poultry">Poultry</option>
+                <option value="flocks">Flocks</option>
+                <option value="feeding">Feeding</option>
+                <option value="milkYield">Milk Yield</option>
+                <option value="treatments">Treatments</option>
+                <option value="measurements">Measurements</option>
+              </optgroup>
+              <optgroup label="Crops & Land">
+                <option value="crops">Crops</option>
+                <option value="pastures">Pastures</option>
+              </optgroup>
+              <optgroup label="Management">
+                <option value="finance">Finance</option>
+                <option value="inventory">Inventory</option>
+                <option value="tasks">Tasks</option>
+                <option value="schedules">Schedules</option>
+                <option value="groups">Groups</option>
+              </optgroup>
+              <optgroup label="Health & Resources">
+                <option value="health">Health System</option>
+                <option value="resources">Resources</option>
+              </optgroup>
+            </select>
+          </label>
           <button className={`tab-btn ${section==='analytics'? 'active' : ''}`} onClick={()=>setSection('analytics')} style={{background: 'linear-gradient(135deg, var(--accent1), var(--accent2))', color: '#fff', fontWeight: '600'}}>📊 Advanced Analytics</button>
         </div>
       </div>

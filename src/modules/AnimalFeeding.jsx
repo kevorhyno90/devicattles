@@ -354,6 +354,10 @@ export default function AnimalFeeding({ animals }){
   const [rationName, setRationName] = useState('')
   const [selectedDiet, setSelectedDiet] = useState('')
   const [selectedAnimals, setSelectedAnimals] = useState([])
+  
+  // Editing states
+  const [editingDietId, setEditingDietId] = useState(null)
+  const [editingRationId, setEditingRationId] = useState(null)
 
   useEffect(() => {
     const d = localStorage.getItem('rumen8:diets')
@@ -426,18 +430,46 @@ export default function AnimalFeeding({ animals }){
       return
     }
     const analysis = analyzeDiet()
-    const newDiet = {
-      id: Date.now(),
-      name: dietName,
-      targetAnimal,
-      ingredients: dietIngredients,
-      analysis,
-      created: new Date().toISOString()
+    
+    if(editingDietId) {
+      // Update existing diet
+      setDiets(diets.map(d => 
+        d.id === editingDietId 
+          ? { ...d, name: dietName, targetAnimal, ingredients: dietIngredients, analysis }
+          : d
+      ))
+      setEditingDietId(null)
+      alert('Diet updated!')
+    } else {
+      // Create new diet
+      const newDiet = {
+        id: Date.now(),
+        name: dietName,
+        targetAnimal,
+        ingredients: dietIngredients,
+        analysis,
+        created: new Date().toISOString()
+      }
+      setDiets([...diets, newDiet])
+      alert('Diet saved!')
     }
-    setDiets([...diets, newDiet])
+    
     setDietName('')
     setDietIngredients([])
-    alert('Diet saved!')
+  }
+
+  function startEditDiet(diet) {
+    setEditingDietId(diet.id)
+    setDietName(diet.name)
+    setTargetAnimal(diet.targetAnimal)
+    setDietIngredients(diet.ingredients)
+    setActiveTab('formulation')
+  }
+
+  function cancelEditDiet() {
+    setEditingDietId(null)
+    setDietName('')
+    setDietIngredients([])
   }
 
   function createRation() {
@@ -446,18 +478,47 @@ export default function AnimalFeeding({ animals }){
       return
     }
     const diet = diets.find(d => d.id === parseInt(selectedDiet))
-    setRations([...rations, {
-      id: Date.now(),
-      name: rationName,
-      dietId: diet.id,
-      dietName: diet.name,
-      animals: selectedAnimals,
-      created: new Date().toISOString()
-    }])
+    
+    if(editingRationId) {
+      // Update existing ration
+      setRations(rations.map(r => 
+        r.id === editingRationId 
+          ? { ...r, name: rationName, dietId: diet.id, dietName: diet.name, animals: selectedAnimals }
+          : r
+      ))
+      setEditingRationId(null)
+      alert('Ration updated!')
+    } else {
+      // Create new ration
+      setRations([...rations, {
+        id: Date.now(),
+        name: rationName,
+        dietId: diet.id,
+        dietName: diet.name,
+        animals: selectedAnimals,
+        created: new Date().toISOString()
+      }])
+      alert('Ration assigned!')
+    }
+    
     setRationName('')
     setSelectedDiet('')
     setSelectedAnimals([])
-    alert('Ration assigned!')
+  }
+
+  function startEditRation(ration) {
+    setEditingRationId(ration.id)
+    setRationName(ration.name)
+    setSelectedDiet(String(ration.dietId))
+    setSelectedAnimals(ration.animals)
+    setActiveTab('assignment')
+  }
+
+  function cancelEditRation() {
+    setEditingRationId(null)
+    setRationName('')
+    setSelectedDiet('')
+    setSelectedAnimals([])
   }
 
   const analysis = analyzeDiet()
@@ -554,9 +615,9 @@ export default function AnimalFeeding({ animals }){
             </table>
             <div style="margin-top: 20px; padding: 10px; background: #f0f0f0;">
               <h4 style="margin-top: 0;">Nutritional Analysis:</h4>
-              <p><strong>Total DM:</strong> ${diet.analysis.totalDM.toFixed(2)} kg</p>
-              <p><strong>Total CP:</strong> ${diet.analysis.totalCP.toFixed(2)} kg</p>
-              <p><strong>Cost per kg:</strong> KES ${diet.analysis.costPerKg.toFixed(2)}</p>
+              <p><strong>Total DM:</strong> {diet.analysis.totalDM.toFixed(2)} kg</p>
+              <p><strong>Total CP:</strong> {diet.analysis.totalCP.toFixed(2)} kg</p>
+              <p><strong>Cost per kg:</strong> KSH {diet.analysis.costPerKg.toFixed(2)}</p>
             </div>
           ` : ''}
         </div>
@@ -839,7 +900,10 @@ export default function AnimalFeeding({ animals }){
                   <div style={{ fontSize: 12, color: '#666' }}>KES {(analysis.costPerKg * analysis.DM).toFixed(2)}/head/day</div>
                 </div>
               </div>
-              <button onClick={saveDiet} style={{ marginTop: 20, width: '100%' }}>Save Diet</button>
+              <div style={{ marginTop: 20, display: 'flex', gap: 8 }}>
+                <button onClick={saveDiet} style={{ flex: 1 }}>{editingDietId ? 'Update Diet' : 'Save Diet'}</button>
+                {editingDietId && <button onClick={cancelEditDiet} style={{ flex: 1 }}>Cancel Edit</button>}
+              </div>
             </div>
           )}
         </div>
@@ -862,7 +926,10 @@ export default function AnimalFeeding({ animals }){
                       <h4 style={{ margin: '0 0 8px 0' }}>{diet.name}</h4>
                       <div style={{ fontSize: 14, color: '#666' }}>{diet.targetAnimal}</div>
                     </div>
-                    <button onClick={() => setDiets(diets.filter(d => d.id !== diet.id))} style={{ color: '#dc2626' }}>Delete</button>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => startEditDiet(diet)}>✏️ Edit</button>
+                      <button onClick={() => setDiets(diets.filter(d => d.id !== diet.id))} style={{ color: '#dc2626' }}>🗑️ Delete</button>
+                    </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 16, fontSize: 13 }}>
                     <div><strong>DM:</strong> {diet.analysis.DM.toFixed(1)} kg</div>
@@ -924,7 +991,10 @@ export default function AnimalFeeding({ animals }){
                   ))}
                 </div>
               </div>
-              <button onClick={createRation}>Create Ration</button>
+              <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+                <button onClick={createRation} style={{ flex: 1 }}>{editingRationId ? 'Update Ration' : 'Create Ration'}</button>
+                {editingRationId && <button onClick={cancelEditRation} style={{ flex: 1 }}>Cancel Edit</button>}
+              </div>
             </div>
           </div>
 
@@ -938,7 +1008,10 @@ export default function AnimalFeeding({ animals }){
                       <div style={{ fontSize: 13, color: '#666' }}>Diet: {r.dietName}</div>
                       <div style={{ fontSize: 13, color: '#666' }}>{r.animals.length} animals assigned</div>
                     </div>
-                    <button onClick={() => setRations(rations.filter(rat => rat.id !== r.id))} style={{ color: '#dc2626' }}>Delete</button>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => startEditRation(r)}>✏️ Edit</button>
+                      <button onClick={() => setRations(rations.filter(rat => rat.id !== r.id))} style={{ color: '#dc2626' }}>🗑️ Delete</button>
+                    </div>
                   </div>
                 </div>
               ))}

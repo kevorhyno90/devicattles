@@ -8,6 +8,7 @@ import {
   getInventoryAlerts,
   getFeedCostTrends
 } from '../lib/analytics'
+import { getFinancialSummary as getIntegratedFinancials } from '../lib/moduleIntegration'
 
 export default function Dashboard({ onNavigate }) {
   const [dashboardData, setDashboardData] = useState(null)
@@ -28,9 +29,20 @@ export default function Dashboard({ onNavigate }) {
     setLoading(true)
     try {
       const data = getDashboardData()
-      setDashboardData(data)
+      const integratedFinance = getIntegratedFinancials() || { bySource: {}, totalIncome: 0, totalExpenses: 0, netProfit: 0 }
+      // Convert bySource object to sources array for rendering
+      integratedFinance.sources = Object.entries(integratedFinance.bySource || {}).map(([source, data]) => ({
+        source,
+        ...data
+      }))
+      setDashboardData({ ...data, integratedFinance })
     } catch (error) {
       console.error('Error loading dashboard:', error)
+      // Set safe defaults on error
+      setDashboardData({ 
+        ...getDashboardData(),
+        integratedFinance: { bySource: {}, totalIncome: 0, totalExpenses: 0, netProfit: 0, sources: [] }
+      })
     }
     setLoading(false)
   }
@@ -39,7 +51,13 @@ export default function Dashboard({ onNavigate }) {
     return <div className="loading">Loading dashboard...</div>
   }
 
-  const { animals, breeding, health, tasks, finance, feedCosts, inventory, milkProduction } = dashboardData
+  const { animals, breeding, health, tasks, finance, feedCosts, inventory, milkProduction, integratedFinance } = dashboardData
+  
+  // Calculate comprehensive financials
+  const totalIncome = integratedFinance.totalIncome + finance.income
+  const totalExpenses = integratedFinance.totalExpenses + finance.expenses
+  const netProfit = totalIncome - totalExpenses
+  const profitMargin = totalIncome > 0 ? ((netProfit / totalIncome) * 100) : 0
 
   return (
     <div className="dashboard">
@@ -179,20 +197,22 @@ export default function Dashboard({ onNavigate }) {
         <div className="kpi-card" onClick={() => onNavigate && onNavigate('finance')}>
           <div className="kpi-icon">💰</div>
           <div className="kpi-content">
-            <h3>Finance (This Month)</h3>
-            <div className="kpi-value" style={{ color: finance.netProfit >= 0 ? '#10b981' : '#ef4444' }}>
-              ${finance.netProfit.toLocaleString()}
+            <h3>Total Finance</h3>
+            <div className="kpi-value" style={{ color: netProfit >= 0 ? '#10b981' : '#ef4444', fontSize: '28px' }}>
+              KES {netProfit.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
             </div>
-            <div className="kpi-subtitle">Net Profit</div>
+            <div className="kpi-subtitle">Net Profit/Loss</div>
             <div className="kpi-details">
               <div className="kpi-detail-item">
-                <span>Income:</span> <strong className="text-success">${finance.income.toLocaleString()}</strong>
+                <span>Total Income:</span> <strong className="text-success">KES {totalIncome.toFixed(2)}</strong>
               </div>
               <div className="kpi-detail-item">
-                <span>Expenses:</span> <strong className="text-danger">${finance.expenses.toLocaleString()}</strong>
+                <span>Total Expenses:</span> <strong className="text-danger">KES {totalExpenses.toFixed(2)}</strong>
               </div>
               <div className="kpi-detail-item">
-                <span>Profit Margin:</span> <strong>{finance.profitMargin}%</strong>
+                <span>Profit Margin:</span> <strong style={{color: profitMargin >= 0 ? '#10b981' : '#ef4444'}}>
+                  {profitMargin.toFixed(1)}%
+                </strong>
               </div>
             </div>
           </div>
@@ -221,6 +241,89 @@ export default function Dashboard({ onNavigate }) {
           </div>
         </div>
       </div>
+
+      {/* Comprehensive Financial Breakdown */}
+      {integratedFinance && integratedFinance.sources && integratedFinance.sources.length > 0 && (
+        <div className="card" style={{ padding: '20px', marginTop: '24px' }}>
+          <h3 style={{ margin: '0 0 20px 0', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            💰 Income & Expense Breakdown by Source
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+            {integratedFinance.sources.map(source => (
+              <div key={source.source} style={{ 
+                padding: '16px', 
+                background: source.net >= 0 ? '#f0fdf4' : '#fef2f2', 
+                borderRadius: '12px', 
+                border: `2px solid ${source.net >= 0 ? '#86efac' : '#fca5a5'}`,
+                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+              }}>
+                <div style={{ fontWeight: '700', fontSize: '16px', marginBottom: '12px', color: '#1f2937' }}>
+                  {source.source}
+                </div>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                    <span style={{ color: '#6b7280' }}>Income:</span>
+                    <span style={{ color: '#15803d', fontWeight: '600' }}>+KES {source.income.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                    <span style={{ color: '#6b7280' }}>Expenses:</span>
+                    <span style={{ color: '#dc2626', fontWeight: '600' }}>-KES {source.expenses.toFixed(2)}</span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    fontSize: '16px',
+                    borderTop: '1px solid #e5e7eb',
+                    paddingTop: '8px',
+                    marginTop: '4px'
+                  }}>
+                    <span style={{ fontWeight: '600', color: '#374151' }}>Net:</span>
+                    <span style={{ 
+                      fontWeight: '700', 
+                      fontSize: '18px',
+                      color: source.net >= 0 ? '#059669' : '#dc2626' 
+                    }}>
+                      {source.net >= 0 ? '+' : ''}KES {source.net.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Summary Totals */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(3, 1fr)', 
+            gap: '16px',
+            marginTop: '20px',
+            paddingTop: '20px',
+            borderTop: '2px solid #e5e7eb'
+          }}>
+            <div style={{ textAlign: 'center', padding: '16px', background: '#ecfdf5', borderRadius: '8px' }}>
+              <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Total Income</div>
+              <div style={{ fontSize: '28px', fontWeight: '700', color: '#15803d' }}>
+                KES {totalIncome.toFixed(2)}
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '16px', background: '#fef2f2', borderRadius: '8px' }}>
+              <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Total Expenses</div>
+              <div style={{ fontSize: '28px', fontWeight: '700', color: '#dc2626' }}>
+                KES {totalExpenses.toFixed(2)}
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '16px', background: netProfit >= 0 ? '#f0fdf4' : '#fef2f2', borderRadius: '8px' }}>
+              <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Net Profit/Loss</div>
+              <div style={{ fontSize: '28px', fontWeight: '700', color: netProfit >= 0 ? '#059669' : '#dc2626' }}>
+                {netProfit >= 0 ? '+' : ''}KES {netProfit.toFixed(2)}
+              </div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                Margin: {profitMargin.toFixed(1)}%
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards Row 2 */}
       <div className="kpi-grid">

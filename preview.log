@@ -1,6 +1,7 @@
 
-> cattalytics@0.1.0 preview
-> vite preview --host 0.0.0.0 --port 4173
+> devins-farm@0.1.0 preview
+> vite preview
 
   ➜  Local:   http://localhost:4173/
-  ➜  Network: http://10.0.1.247:4173/
+  ➜  Network: http://10.0.4.156:4173/
+  ➜  press h + enter to show help

@@ -100,6 +100,7 @@ const SAMPLE = [
 ]
 
 const CATEGORIES = ['Feed', 'Supplements', 'Veterinary', 'Seeds', 'Fertilizer', 'Pesticides', 'Maintenance', 'Equipment Parts', 'Supplies', 'Other']
+const SUPPLY_SUBCATEGORIES = ['Breeding', 'General', 'Safety', 'Office', 'Packaging', 'Tools']
 const UNITS = ['bales', 'lbs', 'kg', 'tons', 'bags', 'gallons', 'liters', 'bottles', 'boxes', 'rolls', 'units']
 const LOCATIONS = ['Barn A', 'Barn B', 'Feed Storage', 'Supply Room', 'Vet Supplies', 'Equipment Shed', 'Cold Storage', 'Office']
 

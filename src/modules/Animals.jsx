@@ -9,6 +9,7 @@ import AnimalTreatment from './AnimalTreatment'
 import CalfManagement from './CalfManagement'
 import BSFFarming from './BSFFarming'
 import AzollaFarming from './AzollaFarming'
+import PoultryManagement from './PoultryManagement'
 import { fileToDataUrl, estimateDataUrlSize, uid } from '../lib/image'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
 
@@ -388,210 +389,585 @@ export default function Animals() {
 
   return (
     <section>
-  <h2>Livestock Management System</h2>
+      <div style={{ marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '8px', color: 'inherit' }}>🐄 Livestock Management</h2>
+        <p style={{ color: 'var(--muted)', margin: 0 }}>Comprehensive livestock tracking and management system</p>
+      </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        <button onClick={() => { resetGroupForm(); setTab('addGroup') }} disabled={tab === 'addGroup'}>Groups</button>
-        <button onClick={() => { resetForm(); setTab('addAnimal') }} disabled={tab === 'addAnimal'}>Add Animal</button>
-        <button onClick={() => setTab('list')} disabled={tab === 'list'}>List</button>
-        <button onClick={() => setTab('pastures')} disabled={tab === 'pastures'}>Pastures</button>
-        <button onClick={() => setTab('health')} disabled={tab === 'health'}>Health System</button>
-        <button onClick={() => setTab('feeding')} disabled={tab === 'feeding'}>Feeding</button>
-        <button onClick={() => setTab('treatment')} disabled={tab === 'treatment'}>Treatment</button>
-        <button onClick={() => setTab('measurement')} disabled={tab === 'measurement'}>Measurement</button>
-        <button onClick={() => setTab('breeding')} disabled={tab === 'breeding'}>Breeding</button>
-        <button onClick={() => setTab('milkyield')} disabled={tab === 'milkyield'}>Milk Yield</button>
-        <button onClick={() => setTab('calf')} disabled={tab === 'calf'}>🐮 Calf Mgmt</button>
-        <button onClick={() => setTab('bsf')} disabled={tab === 'bsf'}>🪰 BSF Farm</button>
-        <button onClick={() => setTab('azolla')} disabled={tab === 'azolla'}>🌿 Azolla</button>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
-          <button onClick={handleExportCSV} title="Export to CSV">📊 CSV</button>
-          <button onClick={handleExportExcel} title="Export to Excel">📈 Excel</button>
-          <button onClick={handleExportJSON} title="Export to JSON">📄 JSON</button>
-          <button onClick={handleImportClick} title="Import from file">📥 Import</button>
-          <button onClick={handleBatchPrint} title="Print all animals">🖨️ Print</button>
-          <input 
-            ref={fileInputRef}
-            type="file" 
-            accept=".csv,.json" 
-            style={{ display: 'none' }} 
-            onChange={handleImportFile}
-          />
-          <input className="search-input" aria-label="Search" placeholder="Search animals/groups" value={filter} onChange={e => setFilter(e.target.value)} />
+      {/* Statistics Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--green)' }}>{animals.length}</div>
+          <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Total Animals</div>
+        </div>
+        <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#3b82f6' }}>{animals.filter(a => a.status === 'Active').length}</div>
+          <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Active</div>
+        </div>
+        <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#ec4899' }}>{animals.filter(a => a.sex === 'F').length}</div>
+          <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Female</div>
+        </div>
+        <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#6b7280' }}>{groups.length}</div>
+          <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Groups</div>
         </div>
       </div>
 
-      {tab === 'addAnimal' && (
-        <form onSubmit={saveAnimal} style={{ marginBottom: 16 }} noValidate>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <label>
-              Tag
-              <input value={form.tag} onChange={e => setForm({ ...form, tag: e.target.value })} />
-              {errors.tag && <div style={{ color: 'crimson' }}>{errors.tag}</div>}
-            </label>
+      {/* Tab Navigation */}
+      <div style={{ borderBottom: '2px solid #e5e7eb', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', overflowX: 'auto' }}>
+          <button
+            onClick={() => setTab('list')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: tab === 'list' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'list' ? '#f0fdf4' : 'transparent',
+              color: tab === 'list' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'list' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            📋 Animal List
+          </button>
+          <button
+            onClick={() => setTab('feeding')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: tab === 'feeding' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'feeding' ? '#f0fdf4' : 'transparent',
+              color: tab === 'feeding' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'feeding' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🌾 Feeding
+          </button>
+          <button
+            onClick={() => setTab('health')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: tab === 'health' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'health' ? '#f0fdf4' : 'transparent',
+              color: tab === 'health' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'health' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🏥 Health System
+          </button>
+          <button
+            onClick={() => setTab('treatment')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: tab === 'treatment' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'treatment' ? '#f0fdf4' : 'transparent',
+              color: tab === 'treatment' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'treatment' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            💊 Treatment
+          </button>
+          <button
+            onClick={() => setTab('breeding')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: tab === 'breeding' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'breeding' ? '#f0fdf4' : 'transparent',
+              color: tab === 'breeding' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'breeding' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🤰 Breeding
+          </button>
+          <button
+            onClick={() => setTab('milkyield')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: tab === 'milkyield' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'milkyield' ? '#f0fdf4' : 'transparent',
+              color: tab === 'milkyield' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'milkyield' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🥛 Milk Yield
+          </button>
+          <button
+            onClick={() => setTab('measurement')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: tab === 'measurement' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'measurement' ? '#f0fdf4' : 'transparent',
+              color: tab === 'measurement' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'measurement' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            📏 Measurement
+          </button>
+          <button
+            onClick={() => setTab('calf')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: tab === 'calf' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'calf' ? '#f0fdf4' : 'transparent',
+              color: tab === 'calf' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'calf' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🐮 Calf Mgmt
+          </button>
+          <button
+            onClick={() => setTab('pastures')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: tab === 'pastures' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'pastures' ? '#f0fdf4' : 'transparent',
+              color: tab === 'pastures' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'pastures' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🌱 Pastures
+          </button>
+          <button
+            onClick={() => setTab('bsf')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: tab === 'bsf' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'bsf' ? '#f0fdf4' : 'transparent',
+              color: tab === 'bsf' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'bsf' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🪰 BSF Farm
+          </button>
+          <button
+            onClick={() => setTab('azolla')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: tab === 'azolla' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'azolla' ? '#f0fdf4' : 'transparent',
+              color: tab === 'azolla' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'azolla' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🌿 Azolla
+          </button>
+          <button
+            onClick={() => setTab('poultry')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: tab === 'poultry' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'poultry' ? '#f0fdf4' : 'transparent',
+              color: tab === 'poultry' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'poultry' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🐔 Poultry
+          </button>
+          <button
+            onClick={() => { resetGroupForm(); setTab('addGroup') }}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: tab === 'addGroup' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'addGroup' ? '#f0fdf4' : 'transparent',
+              color: tab === 'addGroup' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'addGroup' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            👥 Groups
+          </button>
+        </div>
+      </div>
 
-            <label>
-              Name *
-              <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
-              {errors.name && <div style={{ color: 'crimson' }}>{errors.name}</div>}
-            </label>
+      {/* Tab Content */}
+      {tab === 'list' && (
+        <div>
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <button 
+              onClick={() => { resetForm(); setTab('addAnimal') }}
+              style={{ 
+                background: 'var(--green)', 
+                color: '#fff', 
+                padding: '10px 20px', 
+                border: 'none', 
+                borderRadius: '6px', 
+                cursor: 'pointer', 
+                fontWeight: '600',
+                fontSize: '14px'
+              }}
+            >
+              ➕ Add Animal
+            </button>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button onClick={handleExportCSV} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📊 CSV</button>
+              <button onClick={handleExportExcel} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📈 Excel</button>
+              <button onClick={handleExportJSON} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📄 JSON</button>
+              <button onClick={handleImportClick} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📥 Import</button>
+              <button onClick={handleBatchPrint} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>🖨️ Print</button>
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                accept=".csv,.json" 
+                style={{ display: 'none' }} 
+                onChange={handleImportFile}
+              />
+            </div>
+          </div>
 
-            <label>
-              Breed
-              <input value={form.breed} onChange={e => setForm({ ...form, breed: e.target.value })} />
-            </label>
-
-            <label>
-              Color
-              <input value={form.color} onChange={e => setForm({ ...form, color: e.target.value })} />
-            </label>
-
-            <label>
-              DOB
-              <input type="date" value={form.dob} onChange={e => setForm({ ...form, dob: e.target.value })} />
-              {errors.dob && <div style={{ color: 'crimson' }}>{errors.dob}</div>}
-            </label>
-
-            <label>
-              Weight (kg)
-              <input type="number" step="0.1" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} />
-              {errors.weight && <div style={{ color: 'crimson' }}>{errors.weight}</div>}
-            </label>
-
-            <label>
-              Sire
-              <input value={form.sire} onChange={e => setForm({ ...form, sire: e.target.value })} />
-            </label>
-
-            <label>
-              Dam
-              <input value={form.dam} onChange={e => setForm({ ...form, dam: e.target.value })} />
-            </label>
-
-            <label>
-              Sex
-              <select value={form.sex} onChange={e => setForm({ ...form, sex: e.target.value })}>
+          {/* Filters */}
+          <div className="card" style={{ marginBottom: '20px', padding: '16px' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                type="text"
+                placeholder="🔍 Search animals..."
+                value={filter}
+                onChange={e => setFilter(e.target.value)}
+                style={{ flex: '1 1 200px', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+              />
+              <select
+                value={filterGroup}
+                onChange={e => setFilterGroup(e.target.value)}
+                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+              >
+                <option value="all">All Groups</option>
+                <option value="ungrouped">Ungrouped</option>
+                {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </select>
+              <select
+                value={filterStatus}
+                onChange={e => setFilterStatus(e.target.value)}
+                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+              >
+                <option value="all">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Sold">Sold</option>
+                <option value="Deceased">Deceased</option>
+              </select>
+              <select
+                value={filterSex}
+                onChange={e => setFilterSex(e.target.value)}
+                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+              >
+                <option value="all">All</option>
                 <option value="F">Female</option>
                 <option value="M">Male</option>
               </select>
-            </label>
-
-            <label>
-              Status
-              <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-                <option>Active</option>
-                <option>Sold</option>
-                <option>Deceased</option>
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value)}
+                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+              >
+                <option value="name">Sort by Name</option>
+                <option value="tag">Sort by Tag</option>
+                <option value="breed">Sort by Breed</option>
+                <option value="dob">Sort by DOB</option>
+                <option value="weight">Sort by Weight</option>
+                <option value="status">Sort by Status</option>
               </select>
-            </label>
-
-            <label>
-              Group
-              <select value={form.groupId} onChange={e => setForm({ ...form, groupId: e.target.value })}>
-                <option value="">-- No group --</option>
-                {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-              </select>
-            </label>
-
-            <label>
-              Owner
-              <input value={form.owner} onChange={e => setForm({ ...form, owner: e.target.value })} />
-            </label>
-
-            <label>
-              Registration #
-              <input value={form.registration} onChange={e => setForm({ ...form, registration: e.target.value })} />
-            </label>
-
-            <label>
-              Tattoo / ID
-              <input value={form.tattoo} onChange={e => setForm({ ...form, tattoo: e.target.value })} />
-            </label>
-
-            <label>
-              Purchase date
-              <input type="date" value={form.purchaseDate} onChange={e => setForm({ ...form, purchaseDate: e.target.value })} />
-              {errors.purchaseDate && <div style={{ color: 'crimson' }}>{errors.purchaseDate}</div>}
-            </label>
-
-            <label>
-              Purchase price
-              <input type="number" step="0.01" value={form.purchasePrice} onChange={e => setForm({ ...form, purchasePrice: e.target.value })} />
-              {errors.purchasePrice && <div style={{ color: 'crimson' }}>{errors.purchasePrice}</div>}
-            </label>
-
-            <label>
-              Vendor
-              <input value={form.vendor} onChange={e => setForm({ ...form, vendor: e.target.value })} />
-            </label>
-
-            <label>
-              Tags (comma separated)
-              <input value={typeof form.tags === 'string' ? form.tags : (form.tags || []).join(', ')} onChange={e => setForm({ ...form, tags: e.target.value })} />
-            </label>
-
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ display: 'block', marginBottom: 6 }}>Photos (up to 5, each ≤ 2 MB)</label>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-                <input type="file" accept="image/*" multiple onChange={handleFileInput} />
-                <small style={{ color: '#666' }}>Files will be resized to {MAX_DIM}px and compressed.</small>
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {(form.photos || []).map((p, idx) => (
-                  <div key={p.id} style={{ width: 120, border: '1px solid #ddd', padding: 6, borderRadius: 6, textAlign: 'center' }}>
-                    <img src={p.dataUrl} alt={`preview ${idx+1}`} style={{ width: '100%', height: 72, objectFit: 'cover', borderRadius: 4 }} />
-                    <div style={{ fontSize: 12, marginTop: 6 }}>{p.filename || 'photo'}</div>
-                    <div style={{ fontSize: 11, color: '#666' }}>{Math.round((p.size||0)/1024)} KB</div>
-                    <button type="button" onClick={() => removePhoto(p.id)} aria-label={`Remove photo ${idx+1}`} style={{ marginTop: 6 }}>Remove</button>
-                  </div>
-                ))}
-              </div>
             </div>
-            <label>
-              Photo URL
-              <input value={form.photo} onChange={e => setForm({ ...form, photo: e.target.value })} />
-            </label>
-
-            <label>
-              Pregnancy status
-              <select value={form.pregnancyStatus} onChange={e => setForm({ ...form, pregnancyStatus: e.target.value })}>
-                <option>Not Pregnant</option>
-                <option>Pregnant</option>
-                <option>Unknown</option>
-                <option>Not Applicable</option>
-              </select>
-            </label>
-
-            <label>
-              Expected due
-              <input type="date" value={form.expectedDue} onChange={e => setForm({ ...form, expectedDue: e.target.value })} />
-            </label>
-
-            <label>
-              Parity
-              <input type="number" min="0" value={form.parity} onChange={e => setForm({ ...form, parity: e.target.value })} />
-            </label>
-
-            <label>
-              Lactation status
-              <select value={form.lactationStatus} onChange={e => setForm({ ...form, lactationStatus: e.target.value })}>
-                <option>Lactating</option>
-                <option>Dry</option>
-                <option>NA</option>
-              </select>
-            </label>
-
-            <label style={{ gridColumn: '1 / -1' }}>
-              Notes
-              <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
-            </label>
           </div>
-          <div style={{ marginTop: 8 }}>
-            <button type="submit">Save Animal</button>
-            <button type="button" onClick={resetForm} style={{ marginLeft: 8 }}>Reset</button>
-            {editingId && <button type="button" onClick={() => { resetForm(); setTab('list') }} style={{ marginLeft: 8 }}>Cancel</button>}
-          </div>
-        </form>
+
+          {/* Animal List */}
+          <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '16px', color: 'inherit' }}>Animals ({sortedAnimals.length})</h3>
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            {sortedAnimals.map(a => {
+              const isExp = expandedIds.includes(a.id)
+              const preview = (a.photos && a.photos.length) ? a.photos[0].dataUrl : (a.photo || null)
+              const groupName = groups.find(g => g.id === a.groupId)?.name || 'No group'
+              return (
+                <li key={a.id} className="card" style={{ marginBottom: 12, padding: 16 }}>
+                  <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                    {preview && (
+                      <img src={preview} alt={a.name} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} />
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                        <div>
+                          <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>{a.name}</h4>
+                          <div style={{ fontSize: '0.9rem', color: '#666', marginTop: 4 }}>
+                            {a.tag && <span style={{ marginRight: 12 }}>🏷️ {a.tag}</span>}
+                            <span style={{ marginRight: 12 }}>{a.sex === 'F' ? '♀' : '♂'} {a.breed}</span>
+                            <span>📊 {a.status}</span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={() => { editAnimal(a); setTab('addAnimal') }} style={{ padding: '6px 12px', fontSize: '0.85rem' }}>✏️ Edit</button>
+                          <button onClick={() => deleteAnimal(a.id)} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee', color: '#c00' }}>🗑️</button>
+                        </div>
+                      </div>
+                      
+                      {isExp && (
+                        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #e5e7eb', fontSize: '0.9rem' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                            {a.dob && <div><strong>DOB:</strong> {a.dob}</div>}
+                            {a.weight && <div><strong>Weight:</strong> {a.weight} kg</div>}
+                            {a.color && <div><strong>Color:</strong> {a.color}</div>}
+                            {groupName && <div><strong>Group:</strong> {groupName}</div>}
+                            {a.sire && <div><strong>Sire:</strong> {a.sire}</div>}
+                            {a.dam && <div><strong>Dam:</strong> {a.dam}</div>}
+                            {a.owner && <div><strong>Owner:</strong> {a.owner}</div>}
+                            {a.registration && <div><strong>Registration:</strong> {a.registration}</div>}
+                            {a.tattoo && <div><strong>Tattoo:</strong> {a.tattoo}</div>}
+                            {a.purchaseDate && <div><strong>Purchase Date:</strong> {a.purchaseDate}</div>}
+                            {a.purchasePrice && <div><strong>Purchase Price:</strong> KSH {Number(a.purchasePrice).toLocaleString()}</div>}
+                            {a.vendor && <div><strong>Vendor:</strong> {a.vendor}</div>}
+                            {a.pregnancyStatus && a.pregnancyStatus !== 'Not Pregnant' && (
+                              <div><strong>Pregnancy:</strong> {a.pregnancyStatus}</div>
+                            )}
+                            {a.expectedDue && <div><strong>Expected Due:</strong> {a.expectedDue}</div>}
+                            {a.parity > 0 && <div><strong>Parity:</strong> {a.parity}</div>}
+                            {a.lactationStatus && <div><strong>Lactation:</strong> {a.lactationStatus}</div>}
+                          </div>
+                          {a.notes && (
+                            <div style={{ marginTop: 12, padding: 12, background: '#f9fafb', borderRadius: 6 }}>
+                              <strong>Notes:</strong> {a.notes}
+                            </div>
+                          )}
+                          {a.photos && a.photos.length > 1 && (
+                            <div style={{ marginTop: 12 }}>
+                              <strong>Photos:</strong>
+                              <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                                {a.photos.map((p, idx) => (
+                                  <img key={p.id || idx} src={p.dataUrl} alt={`${a.name} ${idx+1}`} style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 6 }} />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <button 
+                        onClick={() => setExpandedIds(prev => isExp ? prev.filter(id => id !== a.id) : [...prev, a.id])}
+                        style={{ marginTop: 12, padding: '6px 12px', fontSize: '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db' }}
+                      >
+                        {isExp ? '▲ Show Less' : '▼ Show More'}
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
+
+      {/* Add/Edit Animal Form */}
+      {tab === 'addAnimal' && (
+        <div>
+          <h3 style={{ fontSize: '1.3rem', fontWeight: '600', marginBottom: '20px', color: 'inherit' }}>
+            {editingId ? '✏️ Edit Animal [v2.0]' : '➕ Add New Animal [v2.0]'}
+          </h3>
+          
+          <form onSubmit={saveAnimal} style={{ marginBottom: 16 }} noValidate>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <label>
+                Tag
+                <input value={form.tag} onChange={e => setForm({ ...form, tag: e.target.value })} />
+                {errors.tag && <div style={{ color: 'crimson' }}>{errors.tag}</div>}
+              </label>
+
+              <label>
+                Name *
+                <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+                {errors.name && <div style={{ color: 'crimson' }}>{errors.name}</div>}
+              </label>
+
+              <label>
+                Breed
+                <input value={form.breed} onChange={e => setForm({ ...form, breed: e.target.value })} />
+              </label>
+
+              <label>
+                Color
+                <input value={form.color} onChange={e => setForm({ ...form, color: e.target.value })} />
+              </label>
+
+              <label>
+                DOB
+                <input type="date" value={form.dob} onChange={e => setForm({ ...form, dob: e.target.value })} />
+                {errors.dob && <div style={{ color: 'crimson' }}>{errors.dob}</div>}
+              </label>
+
+              <label>
+                Weight (kg)
+                <input type="number" step="0.1" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} />
+                {errors.weight && <div style={{ color: 'crimson' }}>{errors.weight}</div>}
+              </label>
+
+              <label>
+                Sire
+                <input value={form.sire} onChange={e => setForm({ ...form, sire: e.target.value })} />
+              </label>
+
+              <label>
+                Dam
+                <input value={form.dam} onChange={e => setForm({ ...form, dam: e.target.value })} />
+              </label>
+
+              <label>
+                Sex
+                <select value={form.sex} onChange={e => setForm({ ...form, sex: e.target.value })}>
+                  <option value="F">Female</option>
+                  <option value="M">Male</option>
+                </select>
+              </label>
+
+              <label>
+                Status
+                <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+                  <option>Active</option>
+                  <option>Sold</option>
+                  <option>Deceased</option>
+                </select>
+              </label>
+
+              <label>
+                Group
+                <select value={form.groupId} onChange={e => setForm({ ...form, groupId: e.target.value })}>
+                  <option value="">-- No group --</option>
+                  {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                </select>
+              </label>
+
+              <label>
+                Owner
+                <input value={form.owner} onChange={e => setForm({ ...form, owner: e.target.value })} />
+              </label>
+
+              <label>
+                Registration #
+                <input value={form.registration} onChange={e => setForm({ ...form, registration: e.target.value })} />
+              </label>
+
+              <label>
+                Tattoo / ID
+                <input value={form.tattoo} onChange={e => setForm({ ...form, tattoo: e.target.value })} />
+              </label>
+
+              <label>
+                Purchase date
+                <input type="date" value={form.purchaseDate} onChange={e => setForm({ ...form, purchaseDate: e.target.value })} />
+                {errors.purchaseDate && <div style={{ color: 'crimson' }}>{errors.purchaseDate}</div>}
+              </label>
+
+              <label>
+                Purchase price
+                <input type="number" step="0.01" value={form.purchasePrice} onChange={e => setForm({ ...form, purchasePrice: e.target.value })} />
+                {errors.purchasePrice && <div style={{ color: 'crimson' }}>{errors.purchasePrice}</div>}
+              </label>
+
+              <label>
+                Vendor
+                <input value={form.vendor} onChange={e => setForm({ ...form, vendor: e.target.value })} />
+              </label>
+
+              <label>
+                Tags (comma separated)
+                <input value={typeof form.tags === 'string' ? form.tags : (form.tags || []).join(', ')} onChange={e => setForm({ ...form, tags: e.target.value })} />
+              </label>
+
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'block', marginBottom: 6 }}>Photos (up to 5, each ≤ 2 MB)</label>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                  <input type="file" accept="image/*" multiple onChange={handleFileInput} />
+                  <small style={{ color: '#666' }}>Files will be resized to {MAX_DIM}px and compressed.</small>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {(form.photos || []).map((p, idx) => (
+                    <div key={p.id} style={{ width: 120, border: '1px solid #ddd', padding: 6, borderRadius: 6, textAlign: 'center' }}>
+                      <img src={p.dataUrl} alt={`preview ${idx+1}`} style={{ width: '100%', height: 72, objectFit: 'cover', borderRadius: 4 }} />
+                      <div style={{ fontSize: 12, marginTop: 6 }}>{p.filename || 'photo'}</div>
+                      <div style={{ fontSize: 11, color: '#666' }}>{Math.round((p.size||0)/1024)} KB</div>
+                      <button type="button" onClick={() => removePhoto(p.id)} aria-label={`Remove photo ${idx+1}`} style={{ marginTop: 6 }}>Remove</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <label>
+                Photo URL
+                <input value={form.photo} onChange={e => setForm({ ...form, photo: e.target.value })} />
+              </label>
+
+              <label>
+                Pregnancy status
+                <select value={form.pregnancyStatus} onChange={e => setForm({ ...form, pregnancyStatus: e.target.value })}>
+                  <option>Not Pregnant</option>
+                  <option>Pregnant</option>
+                  <option>Unknown</option>
+                  <option>Not Applicable</option>
+                </select>
+              </label>
+
+              <label>
+                Expected due
+                <input type="date" value={form.expectedDue} onChange={e => setForm({ ...form, expectedDue: e.target.value })} />
+              </label>
+
+              <label>
+                Parity
+                <input type="number" min="0" value={form.parity} onChange={e => setForm({ ...form, parity: e.target.value })} />
+              </label>
+
+              <label>
+                Lactation status
+                <select value={form.lactationStatus} onChange={e => setForm({ ...form, lactationStatus: e.target.value })}>
+                  <option>Lactating</option>
+                  <option>Dry</option>
+                  <option>NA</option>
+                </select>
+              </label>
+
+              <label style={{ gridColumn: '1 / -1' }}>
+                Notes
+                <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+              </label>
+            </div>
+            <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+              <button type="submit" style={{ background: 'var(--green)', color: '#fff', padding: '10px 20px', fontWeight: 'bold', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                {editingId ? 'Update Animal' : 'Add Animal'}
+              </button>
+              <button type="button" onClick={resetForm} style={{ padding: '10px 20px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}>Reset</button>
+              {editingId && <button type="button" onClick={() => { resetForm(); setTab('list') }} style={{ padding: '10px 20px', background: '#666', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>}
+            </div>
+          </form>
+        </div>
       )}
 
       {tab === 'addGroup' && (
@@ -778,276 +1154,11 @@ export default function Animals() {
           </div>
         )}
 
-        {/* List View Filters and Stats */}
-        {tab === 'list' && (
-          <div style={{ marginBottom: 20 }}>
-            {/* Summary Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
-              <div className="card" style={{ padding: 16, background: '#f0fdf4' }}>
-                <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Animals</div>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{animals.length}</div>
-              </div>
-              <div className="card" style={{ padding: 16, background: '#fce7f3' }}>
-                <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Female</div>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#ec4899' }}>{animals.filter(a => a.sex === 'F').length}</div>
-              </div>
-              <div className="card" style={{ padding: 16, background: '#dbeafe' }}>
-                <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Male</div>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#3b82f6' }}>{animals.filter(a => a.sex === 'M').length}</div>
-              </div>
-              <div className="card" style={{ padding: 16, background: '#d1fae5' }}>
-                <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Active</div>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#10b981' }}>{animals.filter(a => a.status === 'Active').length}</div>
-              </div>
-              <div className="card" style={{ padding: 16, background: '#eff6ff' }}>
-                <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Groups</div>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>{groups.length}</div>
-              </div>
-              <div className="card" style={{ padding: 16, background: '#fef3c7' }}>
-                <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Breeds</div>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f59e0b' }}>{new Set(animals.map(a => a.breed).filter(Boolean)).size}</div>
-              </div>
-            </div>
-
-            {/* Filters */}
-            <div className="card" style={{ padding: 16, marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <h4 style={{ margin: 0 }}>Filters & Sorting</h4>
-                {(filterGroup !== 'all' || filterStatus !== 'all' || filterSex !== 'all' || sortBy !== 'name') && (
-                  <button onClick={() => { setFilterGroup('all'); setFilterStatus('all'); setFilterSex('all'); setSortBy('name') }}>
-                    Clear All
-                  </button>
-                )}
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-                <div>
-                  <label>Group</label>
-                  <select value={filterGroup} onChange={e => setFilterGroup(e.target.value)}>
-                    <option value="all">All Groups</option>
-                    <option value="ungrouped">Ungrouped</option>
-                    {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label>Status</label>
-                  <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-                    <option value="all">All Status</option>
-                    <option value="Active">Active</option>
-                    <option value="Sold">Sold</option>
-                    <option value="Deceased">Deceased</option>
-                  </select>
-                </div>
-                <div>
-                  <label>Sex</label>
-                  <select value={filterSex} onChange={e => setFilterSex(e.target.value)}>
-                    <option value="all">All</option>
-                    <option value="F">Female</option>
-                    <option value="M">Male</option>
-                  </select>
-                </div>
-                <div>
-                  <label>Sort By</label>
-                  <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
-                    <option value="name">Name</option>
-                    <option value="tag">Tag</option>
-                    <option value="breed">Breed</option>
-                    <option value="dob">Date of Birth</option>
-                    <option value="weight">Weight (Desc)</option>
-                    <option value="status">Status</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+        {tab === 'poultry' && (
+          <div style={{ marginBottom: 16 }}>
+            <PoultryManagement />
           </div>
         )}
-
-        <h3>Animals ({sortedAnimals.length})</h3>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {sortedAnimals.map(a => {
-            const isExp = expandedIds.includes(a.id)
-            const preview = (a.photos && a.photos.length) ? a.photos[0].dataUrl : (a.photo || null)
-            const groupName = groups.find(g => g.id === a.groupId)?.name || 'No group'
-            return (
-              <li key={a.id} className="animal-card" style={{ marginBottom: 12 }}>
-                <div className="animal-summary">
-                  <div>
-                    <div className="animal-meta"><strong>{a.name}</strong> <em>({a.id})</em> {a.tag ? <span>• {a.tag}</span> : null}</div>
-                    <div className="animal-sub">{a.breed}{a.color ? ` • ${a.color}` : ''}{a.weight ? ` • ${a.weight}kg` : ''} • {groupName} • {a.status}</div>
-                  </div>
-                  <div className="animal-controls">
-                    <button onClick={() => toggleExpand(a.id)} aria-expanded={isExp}>{isExp ? 'Close' : 'Expand'}</button>
-                    <button onClick={() => startEditAnimal(a)}>Edit</button>
-                    <button onClick={() => deleteAnimal(a.id)} style={{ marginLeft: 8 }}>Delete</button>
-                  </div>
-                </div>
-
-                <div className={"animal-details" + (isExp ? ' expanded' : '')} aria-hidden={!isExp}>
-      {/* Modal / Drawer for expansive animal view */}
-      {modalOpenId && (() => {
-        const a = animals.find(x => x.id === modalOpenId)
-        if (!a) return null
-        const gname = groups.find(g => g.id === a.groupId)?.name || 'No group'
-        const preview = (a.photos && a.photos.length) ? a.photos[0].dataUrl : (a.photo || null)
-        return (
-          <div className="drawer-overlay" onClick={() => setModalOpenId(null)}>
-            <div className="drawer" onClick={e => e.stopPropagation()}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ margin: 0 }}>{a.name} — {a.id}</h3>
-                <div>
-                  <button onClick={() => { startEditAnimal(a) }}>Edit full</button>
-                  <button onClick={() => setModalOpenId(null)} style={{ marginLeft: 8 }}>Close</button>
-                </div>
-              </div>
-              <div style={{ marginTop: 12 }}>
-                <div style={{ display: 'flex', gap: 16 }}>
-                  <div style={{ width: 280, border: '1px solid #eee', padding: 12, borderRadius: 8 }}>
-                    <div style={{ width: '100%', height: 160, background: '#f3f3f3', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, marginBottom: 8 }}>
-                      {preview ? <img src={preview} alt={a.name} style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 6 }} /> : <div>Photo</div>}
-                    </div>
-                    <div><strong>Tag:</strong> {a.tag}</div>
-                    <div style={{ marginTop: 6 }}><strong>Breed:</strong> {a.breed}</div>
-                    <div style={{ marginTop: 6 }}><strong>Sex:</strong> {a.sex}</div>
-                    <div style={{ marginTop: 6 }}><strong>Owner:</strong> {a.owner || '—'}</div>
-                    <div style={{ marginTop: 6 }}><strong>Reg #:</strong> {a.registration || '—'}</div>
-                    <div style={{ marginTop: 6 }}><strong>Group:</strong> {gname}</div>
-                    <div style={{ marginTop: 6 }}><strong>Status:</strong> {a.status}</div>
-                    <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                      <button onClick={() => recordWeight(a)}>Record weight</button>
-                      <button onClick={() => startInlineEdit(a)}>Quick edit</button>
-                    </div>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                      <div><strong>DOB</strong><div>{a.dob || '—'}</div></div>
-                      <div><strong>Weight</strong><div>{a.weight ? `${a.weight} kg` : '—'}</div></div>
-                      <div><strong>Sire</strong><div>{a.sire || '—'}</div></div>
-                      <div><strong>Dam</strong><div>{a.dam || '—'}</div></div>
-                      <div><strong>Tattoo</strong><div>{a.tattoo || '—'}</div></div>
-                      <div><strong>Parity</strong><div>{a.parity !== undefined && a.parity !== '' ? a.parity : '—'}</div></div>
-                    </div>
-
-                    <div style={{ marginTop: 12 }}>
-                      <strong>Notes</strong>
-                      <div style={{ marginTop: 6, padding: 10, border: '1px solid #eee', borderRadius: 6 }}>{a.notes || '—'}</div>
-                    </div>
-
-                    <div style={{ marginTop: 12 }}>
-                      <strong>Purchase</strong>
-                      <div style={{ marginTop: 6 }}>{a.purchaseDate ? `${a.purchaseDate}` : '—'} {a.purchasePrice ? `— KES ${Number(a.purchasePrice).toLocaleString()}` : ''}</div>
-                      <div style={{ marginTop: 6 }}>{a.vendor || '—'}</div>
-                    </div>
-
-                    <div style={{ marginTop: 12 }}>
-                      <strong>Tags</strong>
-                      <div style={{ marginTop: 6 }}>{(a.tags || []).length ? (a.tags || []).join(', ') : '—'}</div>
-                    </div>
-
-                    <div style={{ marginTop: 12 }}>
-                      <strong>Repro</strong>
-                      <div style={{ marginTop: 6 }}>Pregnancy: {a.pregnancyStatus || '—'} {a.expectedDue ? `— due ${a.expectedDue}` : ''}</div>
-                      <div style={{ marginTop: 6 }}>Lactation: {a.lactationStatus || '—'}</div>
-                    </div>
-
-                    <div style={{ marginTop: 12 }}>
-                      <strong>Weight log</strong>
-                      <div style={{ marginTop: 8 }}>
-                        {(!a.weightLogs || !a.weightLogs.length) ? <div style={{ color: '#666' }}>No weight records</div> : (
-                          <ul>
-                            {(a.weightLogs || []).slice().reverse().map((w, idx) => (
-                              <li key={idx}>{new Date(w.date).toLocaleString()} — {w.weight} kg</li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      })()}
-                  {/* Expansive layout: left column (photo + stats) right column (details, logs, actions) */}
-                  <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                    <div style={{ minWidth: 180, maxWidth: 240, border: '1px solid #ddd', padding: 12, borderRadius: 8 }}>
-                      <div style={{ width: '100%', height: 120, background: '#f3f3f3', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, marginBottom: 8 }}>
-                        {preview ? <img src={preview} alt={a.name} style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 6 }} /> : <div style={{ color: '#888' }}>Photo</div>}
-                      </div>
-                      <div style={{ fontSize: 14 }}>
-                        <div><strong>{a.name}</strong> <em>({a.id})</em></div>
-                        <div style={{ marginTop: 6 }}>{a.breed} • {a.color || '—'}</div>
-                        <div style={{ marginTop: 6 }}>Current weight: <strong>{a.weight || '—'}</strong> kg</div>
-                        <div style={{ marginTop: 6 }}>Owner: {a.owner || '—'}</div>
-                        <div style={{ marginTop: 6 }}>Reg #: {a.registration || '—'}</div>
-                        <div style={{ marginTop: 6 }}>Group: {groups.find(g=>g.id===a.groupId)?.name || '—'}</div>
-                      </div>
-                      <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
-                        <button onClick={() => recordWeight(a)}>Record weight</button>
-                        <button onClick={() => startInlineEdit(a)}>Quick edit</button>
-                      </div>
-                    </div>
-
-                    <div style={{ flex: 1 }}>
-                      {inlineEditingId === a.id ? (
-                        <div style={{ border: '1px solid #eee', padding: 12, borderRadius: 6 }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                            <label>Tag<input value={inlineForm.tag} onChange={e => handleInlineChange('tag', e.target.value)} /></label>
-                            <label>Name<input value={inlineForm.name} onChange={e => handleInlineChange('name', e.target.value)} /></label>
-                            <label>Breed<input value={inlineForm.breed} onChange={e => handleInlineChange('breed', e.target.value)} /></label>
-                            <label>Color<input value={inlineForm.color} onChange={e => handleInlineChange('color', e.target.value)} /></label>
-                            <label>DOB<input type="date" value={inlineForm.dob} onChange={e => handleInlineChange('dob', e.target.value)} /></label>
-                            <label>Weight<input type="number" step="0.1" value={inlineForm.weight} onChange={e => handleInlineChange('weight', e.target.value)} /></label>
-                            <label>Sire<input value={inlineForm.sire} onChange={e => handleInlineChange('sire', e.target.value)} /></label>
-                            <label>Dam<input value={inlineForm.dam} onChange={e => handleInlineChange('dam', e.target.value)} /></label>
-                          </div>
-                          <div style={{ marginTop: 8 }}>
-                            <button onClick={saveInlineEdit}>Save</button>
-                            <button onClick={cancelInlineEdit} style={{ marginLeft: 8 }}>Cancel</button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                            <label>Tag<input value={a.tag} readOnly /></label>
-                            <label>Breed<input value={a.breed} readOnly /></label>
-                            <label>Sex<select value={a.sex} disabled><option>F</option><option>M</option></select></label>
-                            <label>Color<input value={a.color} readOnly /></label>
-                            <label>DOB<input type="date" value={a.dob} readOnly /></label>
-                            <label>Weight (kg)<input type="number" value={a.weight} readOnly /></label>
-                            <label>Sire<input value={a.sire} readOnly /></label>
-                            <label>Dam<input value={a.dam} readOnly /></label>
-                            <label className="animal-notes" style={{ gridColumn: '1 / -1' }}>Notes<textarea value={a.notes} readOnly /></label>
-                            <label style={{ gridColumn: '1 / -1' }}><strong>Purchase</strong><div>{a.purchaseDate || '—'} {a.purchasePrice ? ` — $${a.purchasePrice}` : ''}</div><div>{a.vendor || '—'}</div></label>
-                            <label style={{ gridColumn: '1 / -1' }}><strong>Tags</strong><div>{(a.tags || []).length ? (a.tags || []).join(', ') : '—'}</div></label>
-                            <label style={{ gridColumn: '1 / -1' }}><strong>Reproduction</strong><div>Pregnancy: {a.pregnancyStatus || '—'} {a.expectedDue ? `— due ${a.expectedDue}` : ''}</div><div>Lactation: {a.lactationStatus || '—'}</div></label>
-                          </div>
-
-                          <div style={{ marginTop: 12 }}>
-                            <strong>Weight log</strong>
-                            <div style={{ marginTop: 6 }}>
-                              {(!a.weightLogs || !a.weightLogs.length) ? <div style={{ color: '#666' }}>No weight records</div> : (
-                                <ul style={{ marginTop: 6 }}>
-                                  {(a.weightLogs || []).slice().reverse().map((w, idx) => (
-                                    <li key={idx}>{new Date(w.date).toLocaleString()} — {w.weight} kg</li>
-                                  ))}
-                                </ul>
-                              )}
-                            </div>
-                          </div>
-
-                          <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                            <button onClick={() => { startEditAnimal(a) }}>Edit full</button>
-                            <button onClick={() => toggleExpand(a.id)}>Close</button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
       </div>
     </section>
   )

@@ -733,7 +733,7 @@ export default function Crops(){
               <input placeholder="e.g., Local Dairy Farms, Grain Elevator" value={formData.marketDestination} onChange={e => setFormData({...formData, marketDestination: e.target.value})} />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Contract Price ($/unit)</label>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Contract Price (KSH/unit)</label>
               <input type="number" step="0.01" placeholder="0.00" value={formData.contractPrice} onChange={e => setFormData({...formData, contractPrice: e.target.value})} />
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
@@ -979,7 +979,7 @@ export default function Crops(){
                       <div><strong>Soil Type:</strong> {crop.soilType}</div>
                       <div><strong>Irrigation Method:</strong> {crop.irrigationMethod}</div>
                       <div><strong>Status:</strong> <span className={`badge ${crop.status === 'Harvested' ? 'green' : crop.status === 'Failed' ? 'flag' : ''}`}>{crop.status}</span></div>
-                      <div><strong>Contract Price:</strong> ${crop.contractPrice}/unit</div>
+                      <div><strong>Contract Price:</strong> KSH {Number(crop.contractPrice).toLocaleString()}/unit</div>
                       <div><strong>Insurance Coverage:</strong> {crop.insuranceCoverage ? 'Yes' : 'No'}</div>
                       <div><strong>Certification:</strong> {crop.certificationLevel}</div>
                       <div><strong>Market Destination:</strong> {crop.marketDestination}</div>
@@ -991,19 +991,19 @@ export default function Crops(){
                   <div className="card" style={{ padding: '16px', marginBottom: '16px' }}>
                     <h4 style={{ marginBottom: '16px', color: 'var(--green)' }}>Financial Summary</h4>
                     <div style={{ display: 'grid', gap: '8px', fontSize: '14px' }}>
-                      <div><strong>Seed Cost:</strong> ${crop.seedCost}</div>
-                      <div><strong>Fertilizer Cost:</strong> ${(crop.treatments?.filter(t => t.type?.toLowerCase().includes('fertilizer')).reduce((sum, t) => sum + (t.cost || 0), 0) || 0).toFixed(2)}</div>
-                      <div><strong>Chemical Cost:</strong> ${(crop.treatments?.filter(t => !t.type?.toLowerCase().includes('fertilizer')).reduce((sum, t) => sum + (t.cost || 0), 0) || 0).toFixed(2)}</div>
-                      <div><strong>Field Operations:</strong> ${(crop.fieldOperations?.reduce((sum, op) => sum + (op.fuel || 0), 0) || 0).toFixed(2)}</div>
-                      <div><strong>Irrigation Cost:</strong> ${(crop.irrigationRecords?.reduce((sum, ir) => sum + (ir.cost || 0), 0) || 0).toFixed(2)}</div>
+                      <div><strong>Seed Cost:</strong> KSH {Number(crop.seedCost).toLocaleString()}</div>
+                      <div><strong>Fertilizer Cost:</strong> KSH {(crop.treatments?.filter(t => t.type?.toLowerCase().includes('fertilizer')).reduce((sum, t) => sum + (t.cost || 0), 0) || 0).toLocaleString()}</div>
+                      <div><strong>Chemical Cost:</strong> KSH {(crop.treatments?.filter(t => !t.type?.toLowerCase().includes('fertilizer')).reduce((sum, t) => sum + (t.cost || 0), 0) || 0).toLocaleString()}</div>
+                      <div><strong>Field Operations:</strong> KSH {(crop.fieldOperations?.reduce((sum, op) => sum + (op.fuel || 0), 0) || 0).toLocaleString()}</div>
+                      <div><strong>Irrigation Cost:</strong> KSH {(crop.irrigationRecords?.reduce((sum, ir) => sum + (ir.cost || 0), 0) || 0).toLocaleString()}</div>
                       <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: '8px', marginTop: '8px' }}>
-                        <strong>Total Input Cost:</strong> ${calculateTotalCost(crop).toFixed(2)}
+                        <strong>Total Input Cost:</strong> KSH {calculateTotalCost(crop).toLocaleString()}
                       </div>
-                      <div><strong>Revenue:</strong> ${(crop.yieldRecords?.reduce((sum, y) => sum + (y.totalValue || 0), 0) || 0).toFixed(2)}</div>
+                      <div><strong>Revenue:</strong> KSH {(crop.yieldRecords?.reduce((sum, y) => sum + (y.totalValue || 0), 0) || 0).toLocaleString()}</div>
                       <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: '8px', marginTop: '8px', fontWeight: 'bold' }}>
-                        <strong>Net Profit:</strong> ${calculateProfit(crop).toFixed(2)}
+                        <strong>Net Profit:</strong> KSH {calculateProfit(crop).toLocaleString()}
                       </div>
-                      <div><strong>Profit per Acre:</strong> ${(calculateProfit(crop) / crop.area).toFixed(2)}</div>
+                      <div><strong>Profit per Acre:</strong> KSH {(calculateProfit(crop) / crop.area).toLocaleString()}</div>
                     </div>
                   </div>
 

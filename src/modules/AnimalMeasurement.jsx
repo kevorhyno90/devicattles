@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { exportToCSV, exportToExcel, exportToJSON, exportToPDF } from '../lib/exportImport'
 
 const SAMPLE = [
   { id: 'MEAS-001', animalId: 'A-001', date: '2025-06-02', timestamp: '2025-06-02T10:00:00', type: 'Weight', value: 450, unit: 'kg', bcs: 3.5, height: null, length: null, girth: null, condition: 'Good', measuredBy: 'Farm Staff', notes: 'Regular check' },
@@ -36,6 +37,7 @@ export default function AnimalMeasurement({ animals }){
   const [filterAnimal, setFilterAnimal] = useState('all')
   const [filterType, setFilterType] = useState('all')
   const [viewMode, setViewMode] = useState('list')
+  const [editingId, setEditingId] = useState(null)
 
   useEffect(()=>{
     const raw = localStorage.getItem(KEY)
@@ -50,24 +52,50 @@ export default function AnimalMeasurement({ animals }){
       alert('Please select animal and enter at least one measurement')
       return
     }
-    const id = 'MEAS-' + Math.floor(1000 + Math.random()*9000)
-    const newItem = {
-      id,
-      animalId,
-      date: new Date().toISOString().slice(0,10),
-      timestamp: new Date().toISOString(),
-      type,
-      value: parseFloat(value) || null,
-      unit,
-      bcs: parseFloat(bcs) || null,
-      height: parseFloat(height) || null,
-      length: parseFloat(length) || null,
-      girth: parseFloat(girth) || null,
-      condition,
-      measuredBy: measuredBy.trim(),
-      notes: notes.trim()
+    
+    if(editingId) {
+      // Update existing record
+      setItems(items.map(item => 
+        item.id === editingId 
+          ? {
+              ...item,
+              animalId,
+              type,
+              value: parseFloat(value) || null,
+              unit,
+              bcs: parseFloat(bcs) || null,
+              height: parseFloat(height) || null,
+              length: parseFloat(length) || null,
+              girth: parseFloat(girth) || null,
+              condition,
+              measuredBy: measuredBy.trim(),
+              notes: notes.trim()
+            }
+          : item
+      ))
+      setEditingId(null)
+    } else {
+      // Create new record
+      const id = 'MEAS-' + Math.floor(1000 + Math.random()*9000)
+      const newItem = {
+        id,
+        animalId,
+        date: new Date().toISOString().slice(0,10),
+        timestamp: new Date().toISOString(),
+        type,
+        value: parseFloat(value) || null,
+        unit,
+        bcs: parseFloat(bcs) || null,
+        height: parseFloat(height) || null,
+        length: parseFloat(length) || null,
+        girth: parseFloat(girth) || null,
+        condition,
+        measuredBy: measuredBy.trim(),
+        notes: notes.trim()
+      }
+      setItems([...items, newItem])
     }
-    setItems([...items, newItem])
+    
     setValue('')
     setBcs('')
     setHeight('')
@@ -79,6 +107,35 @@ export default function AnimalMeasurement({ animals }){
   }
 
   function remove(id){ if(!confirm('Delete record '+id+'?')) return; setItems(items.filter(i=>i.id!==id)) }
+
+  function startEdit(item){
+    setEditingId(item.id)
+    setAnimalId(item.animalId)
+    setType(item.type)
+    setValue(item.value ? String(item.value) : '')
+    setUnit(item.unit)
+    setBcs(item.bcs ? String(item.bcs) : '')
+    setHeight(item.height ? String(item.height) : '')
+    setLength(item.length ? String(item.length) : '')
+    setGirth(item.girth ? String(item.girth) : '')
+    setCondition(item.condition)
+    setMeasuredBy(item.measuredBy || '')
+    setNotes(item.notes || '')
+    setShowAddForm(true)
+  }
+
+  function cancelEdit(){
+    setEditingId(null)
+    setValue('')
+    setBcs('')
+    setHeight('')
+    setLength('')
+    setGirth('')
+    setMeasuredBy('')
+    setNotes('')
+    setShowAddForm(false)
+    if(animals && animals[0]) setAnimalId(animals[0].id)
+  }
 
   const filteredItems = items.filter(item => {
     if(filterAnimal !== 'all' && item.animalId !== filterAnimal) return false
@@ -122,15 +179,48 @@ export default function AnimalMeasurement({ animals }){
     }
   })
 
+  // Export functions
+  const handleExportCSV = () => {
+    const data = filteredItems.map(item => ({
+      ID: item.id,
+      Date: item.date,
+      Animal: animals?.find(a => a.id === item.animalId)?.name || item.animalId,
+      Type: item.type,
+      Value: item.value || 'N/A',
+      Unit: item.unit || '',
+      BCS: item.bcs || 'N/A',
+      Condition: item.condition,
+      MeasuredBy: item.measuredBy || 'N/A',
+      Notes: item.notes || ''
+    }))
+    exportToCSV(data, 'animal_measurements.csv')
+  }
+
+  const handleExportPDF = () => {
+    const data = filteredItems.map(item => ({
+      Date: item.date,
+      Animal: animals?.find(a => a.id === item.animalId)?.name || item.animalId,
+      Type: item.type,
+      Value: item.value ? `${item.value} ${item.unit}` : 'N/A',
+      BCS: item.bcs || 'N/A',
+      Condition: item.condition
+    }))
+    exportToPDF(data, 'animal_measurements', 'Animal Measurements & Growth')
+  }
+
   return (
     <section>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h3>📏 Animal Measurements & Growth</h3>
         <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={handleExportCSV} title="Export to CSV" style={{ fontSize: 12 }}>📊 CSV</button>
+          <button onClick={() => exportToExcel(filteredItems, 'measurements.csv')} title="Export to Excel" style={{ fontSize: 12 }}>📈 Excel</button>
+          <button onClick={handleExportPDF} title="Export to PDF" style={{ fontSize: 12 }}>📕 PDF</button>
+          <button onClick={() => exportToJSON(filteredItems, 'measurements.json')} title="Export to JSON" style={{ fontSize: 12 }}>📄 JSON</button>
           <button className={viewMode === 'list' ? 'tab-btn active' : 'tab-btn'} onClick={() => setViewMode('list')}>List</button>
           <button className={viewMode === 'growth' ? 'tab-btn active' : 'tab-btn'} onClick={() => setViewMode('growth')}>Growth Tracking</button>
           <button onClick={() => setShowAddForm(!showAddForm)}>
-            {showAddForm ? '✕ Cancel' : '+ Add Measurement'}
+            {showAddForm ? (editingId ? 'Cancel Edit' : '✕ Cancel') : '+ Add Measurement'}
           </button>
         </div>
       </div>
@@ -162,7 +252,7 @@ export default function AnimalMeasurement({ animals }){
       {/* Add Form */}
       {showAddForm && (
         <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-          <h4 style={{ marginTop: 0 }}>Add Measurement Record</h4>
+          <h4 style={{ marginTop: 0 }}>{editingId ? 'Edit Measurement Record' : 'Add Measurement Record'}</h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
             <div>
               <label>Animal *</label>
@@ -239,7 +329,8 @@ export default function AnimalMeasurement({ animals }){
             </div>
           </div>
           <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-            <button onClick={add}>Add Measurement</button>
+            <button onClick={add}>{editingId ? 'Save Changes' : 'Add Measurement'}</button>
+            {editingId && <button onClick={cancelEdit}>Cancel Edit</button>}
             <button onClick={() => setShowAddForm(false)}>Cancel</button>
           </div>
         </div>
@@ -394,7 +485,10 @@ export default function AnimalMeasurement({ animals }){
                         </div>
                       )}
                     </div>
-                    <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => remove(item.id)}>🗑️</button>
+                    <div style={{display:'flex',gap:4}}>
+                      <button className="tab-btn" onClick={() => startEdit(item)}>✏️</button>
+                      <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => remove(item.id)}>🗑️</button>
+                    </div>
                   </div>
                 )
               })}

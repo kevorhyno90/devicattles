@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
+import { exportToCSV, exportToExcel, exportToJSON, exportToPDF, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
+import { getVeterinaryInventory, useInventoryItem, recordExpense } from '../lib/moduleIntegration'
 
 const SAMPLE = [
   { id: 'TREAT-001', animalId: 'A-001', date: '2025-06-01', timestamp: '2025-06-01T10:30:00', treatmentType: 'Hoof Care', treatment: 'Hoof trim', veterinarian: 'Dr. Smith', medication: '', dosage: '', cost: 50, duration: '', nextDue: '', status: 'Completed', severity: 'Routine', notes: 'Regular maintenance' },
@@ -26,14 +27,19 @@ export default function AnimalTreatment({ animals }){
   const [severity, setSeverity] = useState('Routine')
   const [notes, setNotes] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [editingId, setEditingId] = useState(null)
   const [filterAnimal, setFilterAnimal] = useState('all')
   const [filterType, setFilterType] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [vetInventory, setVetInventory] = useState([])
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState('')
 
   useEffect(()=>{
     const raw = localStorage.getItem(KEY)
     if(raw) setItems(JSON.parse(raw))
     else setItems(SAMPLE)
+    // Load vet inventory
+    setVetInventory(getVeterinaryInventory())
   }, [])
 
   useEffect(()=> localStorage.setItem(KEY, JSON.stringify(items)), [items])
@@ -43,7 +49,32 @@ export default function AnimalTreatment({ animals }){
       alert('Please select animal and enter treatment description')
       return
     }
-    const id = 'TREAT-' + Math.floor(1000 + Math.random()*9000)
+    
+    const treatmentCost = parseFloat(cost) || 0
+    const animalName = animals?.find(a => a.id === animalId)?.name || animalId
+    
+    if(editingId) {
+      // Update existing treatment
+      setItems(items.map(i => i.id === editingId ? {
+        ...i,
+        animalId,
+        treatmentType,
+        treatment: treatment.trim(),
+        veterinarian: veterinarian.trim(),
+        medication: medication.trim(),
+        dosage: dosage.trim(),
+        cost: treatmentCost,
+        duration: duration.trim(),
+        nextDue,
+        status,
+        severity,
+        notes: notes.trim()
+      } : i))
+      setEditingId(null)
+    } else {
+      // Add new treatment
+      const id = 'TREAT-' + Math.floor(1000 + Math.random()*9000)
+    
     const newItem = {
       id,
       animalId,
@@ -54,14 +85,40 @@ export default function AnimalTreatment({ animals }){
       veterinarian: veterinarian.trim(),
       medication: medication.trim(),
       dosage: dosage.trim(),
-      cost: parseFloat(cost) || 0,
+      cost: treatmentCost,
       duration: duration.trim(),
       nextDue,
       status,
       severity,
       notes: notes.trim()
     }
+    
+    // Use inventory item if selected
+    if(selectedInventoryItem) {
+      const doseQty = parseFloat(dosage) || 1
+      const success = useInventoryItem(selectedInventoryItem, doseQty, animalName, `Treatment: ${treatment}`)
+      if(!success) {
+        alert('Failed to deduct from inventory. Please check stock levels.')
+        return
+      }
+    }
+    
+    // Auto-record treatment expense
+    if(treatmentCost > 0) {
+      recordExpense({
+        amount: treatmentCost,
+        category: 'Veterinary',
+        subcategory: treatmentType,
+        description: `${treatmentType} for ${animalName}: ${treatment}`,
+        vendor: veterinarian || 'Vet Service',
+        source: 'Animal Treatment',
+        linkedId: id
+      })
+    }
+    
     setItems([...items, newItem])
+    }
+    
     setTreatment('')
     setVeterinarian('')
     setMedication('')
@@ -70,6 +127,41 @@ export default function AnimalTreatment({ animals }){
     setDuration('')
     setNextDue('')
     setNotes('')
+    setSelectedInventoryItem('')
+    setShowAddForm(false)
+    // Refresh inventory
+    setVetInventory(getVeterinaryInventory())
+  }
+
+  function startEdit(item) {
+    setAnimalId(item.animalId)
+    setTreatmentType(item.treatmentType)
+    setTreatment(item.treatment)
+    setVeterinarian(item.veterinarian || '')
+    setMedication(item.medication || '')
+    setDosage(item.dosage || '')
+    setCost(item.cost || '')
+    setDuration(item.duration || '')
+    setNextDue(item.nextDue || '')
+    setStatus(item.status)
+    setSeverity(item.severity)
+    setNotes(item.notes || '')
+    setEditingId(item.id)
+    setShowAddForm(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function cancelEdit() {
+    setTreatment('')
+    setVeterinarian('')
+    setMedication('')
+    setDosage('')
+    setCost('')
+    setDuration('')
+    setNextDue('')
+    setNotes('')
+    setSelectedInventoryItem('')
+    setEditingId(null)
     setShowAddForm(false)
   }
 
@@ -153,6 +245,23 @@ export default function AnimalTreatment({ animals }){
 
   function handleExportJSON() {
     exportToJSON(filteredItems, 'treatment_records.json')
+  }
+
+  function handleExportPDF() {
+    const data = filteredItems.map(item => ({
+      ID: item.id,
+      Date: item.date,
+      Animal: animals?.find(a => a.id === item.animalId)?.name || item.animalId,
+      Type: item.treatmentType,
+      Treatment: item.treatment,
+      Veterinarian: item.veterinarian,
+      Medication: item.medication || 'N/A',
+      Cost: `KES ${item.cost}`,
+      Status: item.status,
+      Severity: item.severity,
+      Notes: item.notes || ''
+    }))
+    exportToPDF(data, 'treatment_records', 'Animal Treatment Records')
   }
 
   function handleImportClick() {
@@ -292,6 +401,7 @@ export default function AnimalTreatment({ animals }){
         <div style={{ display: 'flex', gap: 4 }}>
           <button onClick={handleExportCSV} title="Export to CSV" style={{ fontSize: 12 }}>📊 CSV</button>
           <button onClick={handleExportExcel} title="Export to Excel" style={{ fontSize: 12 }}>📈 Excel</button>
+          <button onClick={handleExportPDF} title="Export to PDF" style={{ fontSize: 12 }}>📕 PDF</button>
           <button onClick={handleExportJSON} title="Export to JSON" style={{ fontSize: 12 }}>📄 JSON</button>
           <button onClick={handleImportClick} title="Import from file" style={{ fontSize: 12 }}>📥 Import</button>
           <button onClick={handleBatchPrint} title="Print all records" style={{ fontSize: 12 }}>🖨️ Print</button>
@@ -303,7 +413,7 @@ export default function AnimalTreatment({ animals }){
             onChange={handleImportFile}
           />
           <button onClick={() => setShowAddForm(!showAddForm)}>
-            {showAddForm ? '✕ Cancel' : '+ Add Treatment Record'}
+            {showAddForm ? (editingId ? 'Cancel Edit' : '✕ Cancel') : '+ Add Treatment Record'}
           </button>
         </div>
       </div>
@@ -369,7 +479,7 @@ export default function AnimalTreatment({ animals }){
       {/* Add Form */}
       {showAddForm && (
         <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-          <h4 style={{ marginTop: 0 }}>Add Treatment Record</h4>
+          <h4 style={{ marginTop: 0 }}>{editingId ? 'Edit Treatment Record' : 'Add Treatment Record'}</h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
             <div>
               <label>Animal *</label>
@@ -409,7 +519,7 @@ export default function AnimalTreatment({ animals }){
               <input value={dosage} onChange={e => setDosage(e.target.value)} placeholder="e.g., 5ml IM" />
             </div>
             <div>
-              <label>Cost ($)</label>
+              <label>Cost (KSH)</label>
               <input type="number" step="0.01" value={cost} onChange={e => setCost(e.target.value)} placeholder="0.00" />
             </div>
             <div>
@@ -432,8 +542,8 @@ export default function AnimalTreatment({ animals }){
             </div>
           </div>
           <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-            <button onClick={add}>Add Treatment Record</button>
-            <button onClick={() => setShowAddForm(false)}>Cancel</button>
+            <button onClick={add}>{editingId ? 'Save Changes' : 'Add Treatment'}</button>
+            <button onClick={cancelEdit} className="secondary">Cancel</button>
           </div>
         </div>
       )}
@@ -506,7 +616,7 @@ export default function AnimalTreatment({ animals }){
                                 item.status === 'In Progress' ? '#0284c7' : '#6b7280'
                         }}>{item.status}</span>
                         <span className="badge" style={{ background: '#fee2e2', color: severityColor }}>{item.severity}</span>
-                        {item.cost > 0 && <span className="badge" style={{ background: '#d1fae5' }}>${item.cost.toFixed(2)}</span>}
+                        {item.cost > 0 && <span className="badge" style={{ background: '#d1fae5' }}>KSH {Number(item.cost).toLocaleString()}</span>}
                       </div>
                       <div style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>
                         <strong>{animal?.name || animal?.tag || item.animalId}</strong> • {new Date(item.timestamp || item.date).toLocaleDateString()}
@@ -533,7 +643,10 @@ export default function AnimalTreatment({ animals }){
                         </div>
                       )}
                     </div>
-                    <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => remove(item.id)}>🗑️</button>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button className="tab-btn" onClick={() => startEdit(item)}>✏️</button>
+                      <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => remove(item.id)}>🗑️</button>
+                    </div>
                   </div>
                 </div>
               )

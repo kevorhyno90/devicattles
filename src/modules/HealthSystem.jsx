@@ -625,7 +625,7 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
     const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     const headerHtml = `
       <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #000; padding-bottom: 15px;">
-        <h1 style="margin: 0; font-size: 28pt; letter-spacing: 2px;">HEADINGJR FARM</h1>
+        <h1 style="margin: 0; font-size: 28pt; letter-spacing: 2px;">JR FARM</h1>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
           <div style="flex: 1;"></div>
           <div style="flex: 2; text-align: center;">
@@ -750,10 +750,10 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
       const doc = new Document({ sections: [] })
       const children = []
 
-      // Header: HEADINGJR FARM
+      // Header: JR FARM
       const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
       children.push(new Paragraph({ 
-        children: [ new TextRun({ text: 'HEADINGJR FARM', bold:true, size: 32 }) ],
+        children: [ new TextRun({ text: 'JR FARM', bold:true, size: 32 }) ],
         alignment: AlignmentType.CENTER
       }))
       children.push(new Paragraph({ 
@@ -800,7 +800,7 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
       let logoBuffer = null
       if(logoSrc) logoBuffer = await fetchImageArrayBuffer(logoSrc)
 
-      // Logo removed since we have HEADINGJR FARM header already added above
+      // Logo removed since we have JR FARM header already added above
 
       patients.forEach(p=>{
         children.push(new Paragraph({ text: `Patient: ${p.name || '(unnamed)'}`, heading: HeadingLevel.HEADING_1 }))

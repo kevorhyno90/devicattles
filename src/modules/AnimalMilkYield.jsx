@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
+import { recordIncome } from '../lib/moduleIntegration'
+import { exportToCSV, exportToExcel, exportToJSON, exportToPDF } from '../lib/exportImport'
 
 const SAMPLE = [
-  { id: 'MILK-001', animalId: 'A-001', date: '2025-06-02', timestamp: '2025-06-02T06:30:00', session: 'Morning', liters: 18.5, fatContent: 3.8, proteinContent: 3.2, scc: 150000, temp: 37.5, quality: 'Grade A', notes: 'Normal milking' },
-  { id: 'MILK-002', animalId: 'A-001', date: '2025-06-02', timestamp: '2025-06-02T18:00:00', session: 'Evening', liters: 16.2, fatContent: 4.0, proteinContent: 3.3, scc: 145000, temp: 37.2, quality: 'Grade A', notes: '' }
+  { id: 'MILK-001', animalId: 'A-001', date: '2025-06-02', timestamp: '2025-06-02T06:30:00', session: 'Morning', liters: 18.5, fatContent: 3.8, proteinContent: 3.2, scc: 150000, temp: 37.5, quality: 'Grade A', pricePerLiter: 45, totalPrice: 832.50, buyer: 'Dairy Co-op', sold: true, notes: 'Normal milking' },
+  { id: 'MILK-002', animalId: 'A-001', date: '2025-06-02', timestamp: '2025-06-02T18:00:00', session: 'Evening', liters: 16.2, fatContent: 4.0, proteinContent: 3.3, scc: 145000, temp: 37.2, quality: 'Grade A', pricePerLiter: 45, totalPrice: 729, buyer: 'Dairy Co-op', sold: true, notes: '' }
 ]
 
 const MILKING_SESSIONS = ['Morning', 'Midday', 'Evening', 'Night']
@@ -19,11 +21,15 @@ export default function AnimalMilkYield({ animals }){
   const [scc, setScc] = useState('')
   const [temp, setTemp] = useState('')
   const [quality, setQuality] = useState('Grade A')
+  const [pricePerLiter, setPricePerLiter] = useState('45')
+  const [buyer, setBuyer] = useState('')
+  const [sold, setSold] = useState(false)
   const [notes, setNotes] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
   const [filterAnimal, setFilterAnimal] = useState('all')
   const [filterDate, setFilterDate] = useState('')
   const [viewMode, setViewMode] = useState('list')
+  const [editingId, setEditingId] = useState(null)
 
   useEffect(()=>{
     const raw = localStorage.getItem(KEY)
@@ -38,32 +44,120 @@ export default function AnimalMilkYield({ animals }){
       alert('Please select animal and enter milk quantity')
       return
     }
-    const id = 'MILK-' + Math.floor(1000 + Math.random()*9000)
-    const newItem = {
-      id,
-      animalId,
-      date: new Date().toISOString().slice(0,10),
-      timestamp: new Date().toISOString(),
-      session,
-      liters: parseFloat(liters),
-      fatContent: parseFloat(fatContent) || null,
-      proteinContent: parseFloat(proteinContent) || null,
-      scc: parseInt(scc) || null,
-      temp: parseFloat(temp) || null,
-      quality,
-      notes: notes.trim()
+    const literAmount = parseFloat(liters)
+    const priceAmount = parseFloat(pricePerLiter) || 0
+    const totalPrice = literAmount * priceAmount
+    const animalName = animals?.find(a => a.id === animalId)?.name || animalId
+    
+    if(editingId) {
+      // Update existing record
+      setItems(items.map(item => 
+        item.id === editingId 
+          ? {
+              ...item,
+              animalId,
+              animalName,
+              session,
+              liters: literAmount,
+              fatContent: parseFloat(fatContent) || null,
+              proteinContent: parseFloat(proteinContent) || null,
+              scc: parseInt(scc) || null,
+              temp: parseFloat(temp) || null,
+              quality,
+              pricePerLiter: priceAmount,
+              totalPrice,
+              buyer: buyer.trim() || 'Not specified',
+              sold,
+              notes: notes.trim()
+            }
+          : item
+      ))
+      setEditingId(null)
+    } else {
+      // Create new record
+      const id = 'MILK-' + Math.floor(1000 + Math.random()*9000)
+      
+      const newItem = {
+        id,
+        animalId,
+        animalName,
+        date: new Date().toISOString().slice(0,10),
+        timestamp: new Date().toISOString(),
+        session,
+        liters: literAmount,
+        fatContent: parseFloat(fatContent) || null,
+        proteinContent: parseFloat(proteinContent) || null,
+        scc: parseInt(scc) || null,
+        temp: parseFloat(temp) || null,
+        quality,
+        pricePerLiter: priceAmount,
+        totalPrice,
+        buyer: buyer.trim() || 'Not specified',
+        sold: sold,
+        notes: notes.trim()
+      }
+      setItems([...items, newItem])
+      
+      // Auto-record income in Finance if sold
+      if(sold && totalPrice > 0) {
+        recordIncome({
+          amount: totalPrice,
+          category: 'Milk Sales',
+          subcategory: buyer ? 'Direct Sales' : 'Wholesale',
+          description: `Milk from ${animalName}: ${literAmount} liters @ ${priceAmount}/liter`,
+          vendor: buyer || 'Dairy Buyer',
+          source: 'Milk Yield',
+          linkedId: id,
+          date: newItem.date
+        })
+      }
     }
-    setItems([...items, newItem])
+    
     setLiters('')
     setFatContent('')
     setProteinContent('')
     setScc('')
     setTemp('')
+    setPricePerLiter('45')
+    setBuyer('')
+    setSold(false)
     setNotes('')
     setShowAddForm(false)
   }
 
   function remove(id){ if(!confirm('Delete record '+id+'?')) return; setItems(items.filter(i=>i.id!==id)) }
+
+  function startEdit(item){
+    setEditingId(item.id)
+    setAnimalId(item.animalId)
+    setSession(item.session)
+    setLiters(String(item.liters))
+    setFatContent(item.fatContent ? String(item.fatContent) : '')
+    setProteinContent(item.proteinContent ? String(item.proteinContent) : '')
+    setScc(item.scc ? String(item.scc) : '')
+    setTemp(item.temp ? String(item.temp) : '')
+    setQuality(item.quality)
+    setPricePerLiter(String(item.pricePerLiter))
+    setBuyer(item.buyer || '')
+    setSold(item.sold)
+    setNotes(item.notes || '')
+    setShowAddForm(true)
+  }
+
+  function cancelEdit(){
+    setEditingId(null)
+    setLiters('')
+    setFatContent('')
+    setProteinContent('')
+    setScc('')
+    setTemp('')
+    setPricePerLiter('45')
+    setBuyer('')
+    setSold(false)
+    setNotes('')
+    setShowAddForm(false)
+    if(animals && animals[0]) setAnimalId(animals[0].id)
+  }
 
   const filteredItems = items.filter(item => {
     if(filterAnimal !== 'all' && item.animalId !== filterAnimal) return false
@@ -73,6 +167,8 @@ export default function AnimalMilkYield({ animals }){
 
   // Calculate statistics
   const totalMilk = filteredItems.reduce((sum, item) => sum + (item.liters || 0), 0)
+  const totalRevenue = filteredItems.reduce((sum, item) => sum + (item.sold ? (item.totalPrice || 0) : 0), 0)
+  const soldMilk = filteredItems.filter(i => i.sold).reduce((sum, item) => sum + (item.liters || 0), 0)
   const avgDaily = filteredItems.length > 0 ? totalMilk / new Set(filteredItems.map(i => i.date)).size : 0
   const avgFat = filteredItems.filter(i => i.fatContent).length > 0 
     ? filteredItems.reduce((sum, i) => sum + (i.fatContent || 0), 0) / filteredItems.filter(i => i.fatContent).length 
@@ -98,15 +194,53 @@ export default function AnimalMilkYield({ animals }){
     animalProduction[item.animalId].sessions[item.session] += item.liters || 0
   })
 
+  // Export functions
+  const handleExportCSV = () => {
+    const data = filteredItems.map(item => ({
+      ID: item.id,
+      Date: item.date,
+      Animal: item.animalName || item.animalId,
+      Session: item.session,
+      Liters: item.liters,
+      Fat: item.fatContent || 'N/A',
+      Protein: item.proteinContent || 'N/A',
+      SCC: item.scc || 'N/A',
+      Quality: item.quality,
+      Price: item.pricePerLiter,
+      Total: item.totalPrice,
+      Sold: item.sold ? 'Yes' : 'No',
+      Buyer: item.buyer || 'N/A'
+    }))
+    exportToCSV(data, 'milk_production.csv')
+  }
+
+  const handleExportPDF = () => {
+    const data = filteredItems.map(item => ({
+      Date: item.date,
+      Animal: item.animalName || item.animalId,
+      Session: item.session,
+      Liters: item.liters,
+      Quality: item.quality,
+      'Price/L': `KES ${item.pricePerLiter}`,
+      Total: `KES ${item.totalPrice}`,
+      Sold: item.sold ? 'Yes' : 'No'
+    }))
+    exportToPDF(data, 'milk_production', 'Milk Production Records')
+  }
+
   return (
     <section>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h3>🥛 Milk Production</h3>
         <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={handleExportCSV} title="Export to CSV" style={{ fontSize: 12 }}>📊 CSV</button>
+          <button onClick={() => exportToExcel(filteredItems, 'milk_production.csv')} title="Export to Excel" style={{ fontSize: 12 }}>📈 Excel</button>
+          <button onClick={handleExportPDF} title="Export to PDF" style={{ fontSize: 12 }}>📕 PDF</button>
+          <button onClick={() => exportToJSON(filteredItems, 'milk_production.json')} title="Export to JSON" style={{ fontSize: 12 }}>📄 JSON</button>
           <button className={viewMode === 'list' ? 'tab-btn active' : 'tab-btn'} onClick={() => setViewMode('list')}>List</button>
           <button className={viewMode === 'summary' ? 'tab-btn active' : 'tab-btn'} onClick={() => setViewMode('summary')}>Summary</button>
           <button onClick={() => setShowAddForm(!showAddForm)}>
-            {showAddForm ? '✕ Cancel' : '+ Add Milk Record'}
+            {showAddForm ? (editingId ? 'Cancel Edit' : '✕ Cancel') : '+ Add Milk Record'}
           </button>
         </div>
       </div>
@@ -116,6 +250,14 @@ export default function AnimalMilkYield({ animals }){
         <div className="card" style={{ padding: 16, background: '#f0fdf4' }}>
           <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Production</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{totalMilk.toFixed(1)} L</div>
+        </div>
+        <div className="card" style={{ padding: 16, background: '#d1fae5' }}>
+          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Revenue</div>
+          <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>KES {totalRevenue.toFixed(2)}</div>
+        </div>
+        <div className="card" style={{ padding: 16, background: '#e0f2fe' }}>
+          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Sold</div>
+          <div style={{ fontSize: 24, fontWeight: 'bold', color: '#0284c7' }}>{soldMilk.toFixed(1)} L</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#eff6ff' }}>
           <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Avg Daily</div>
@@ -142,7 +284,7 @@ export default function AnimalMilkYield({ animals }){
       {/* Add Form */}
       {showAddForm && (
         <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-          <h4 style={{ marginTop: 0 }}>Add Milk Production Record</h4>
+          <h4 style={{ marginTop: 0 }}>{editingId ? 'Edit Milk Production Record' : 'Add Milk Production Record'}</h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
             <div>
               <label>Animal *</label>
@@ -185,13 +327,33 @@ export default function AnimalMilkYield({ animals }){
                 {QUALITY_GRADES.map(q => <option key={q} value={q}>{q}</option>)}
               </select>
             </div>
+            <div>
+              <label>Price per Liter (KES)</label>
+              <input type="number" step="0.01" value={pricePerLiter} onChange={e => setPricePerLiter(e.target.value)} placeholder="45.00" />
+            </div>
+            <div>
+              <label>Buyer</label>
+              <input type="text" value={buyer} onChange={e => setBuyer(e.target.value)} placeholder="e.g., Dairy Co-op" />
+            </div>
+            <div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <input type="checkbox" checked={sold} onChange={e => setSold(e.target.checked)} style={{ width: 20, height: 20 }} />
+                <span>Mark as Sold (Auto-record income)</span>
+              </label>
+              {sold && pricePerLiter && liters && (
+                <div style={{ fontSize: 13, color: '#059669', marginTop: 4, fontWeight: 600 }}>
+                  Total: KES {(parseFloat(liters) * parseFloat(pricePerLiter)).toFixed(2)}
+                </div>
+              )}
+            </div>
             <div style={{ gridColumn: 'span 3' }}>
               <label>Notes</label>
               <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Additional notes about this milking session..." />
             </div>
           </div>
           <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-            <button onClick={add}>Add Milk Record</button>
+            <button onClick={add}>{editingId ? 'Save Changes' : 'Add Milk Record'}</button>
+            {editingId && <button onClick={cancelEdit}>Cancel Edit</button>}
             <button onClick={() => setShowAddForm(false)}>Cancel</button>
           </div>
         </div>
@@ -270,6 +432,8 @@ export default function AnimalMilkYield({ animals }){
                         <span style={{ fontWeight: 600, fontSize: 18, color: '#059669' }}>{item.liters.toFixed(1)} L</span>
                         <span className="badge" style={{ background: '#e0f2fe' }}>{item.session}</span>
                         <span className="badge" style={{ background: '#f3e8ff' }}>{item.quality}</span>
+                        {item.sold && <span className="badge" style={{ background: '#d1fae5', color: '#065f46' }}>✓ Sold</span>}
+                        {item.totalPrice > 0 && <span style={{ fontWeight: 600, color: '#059669' }}>KES {item.totalPrice.toFixed(2)}</span>}
                         {item.fatContent && <span className="badge" style={{ background: '#fef3c7' }}>Fat: {item.fatContent}%</span>}
                         {item.proteinContent && <span className="badge" style={{ background: '#dbeafe' }}>Protein: {item.proteinContent}%</span>}
                         {sccStatus && (
@@ -291,7 +455,10 @@ export default function AnimalMilkYield({ animals }){
                         <div style={{ fontSize: 13, color: '#888', marginTop: 8 }}>{item.notes}</div>
                       )}
                     </div>
-                    <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => remove(item.id)}>🗑️</button>
+                    <div style={{display:'flex',gap:4}}>
+                      <button className="tab-btn" onClick={() => startEdit(item)}>✏️</button>
+                      <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => remove(item.id)}>🗑️</button>
+                    </div>
                   </div>
                 )
               })}

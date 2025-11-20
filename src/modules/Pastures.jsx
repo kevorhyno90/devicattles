@@ -660,7 +660,7 @@ export default function Pastures(){
                                 </div>
                                 {harvest.price > 0 && (
                                   <div style={{ fontWeight: '600', color: '#059669' }}>
-                                    ${(harvest.quantity * harvest.price).toFixed(2)}
+                                    KSH {(harvest.quantity * harvest.price).toLocaleString()}
                                   </div>
                                 )}
                               </div>
@@ -681,7 +681,7 @@ export default function Pastures(){
                         <button onClick={() => {
                           const type = prompt(`Improvement type (${IMPROVEMENT_TYPES.join(', ')}):`)
                           const amount = prompt('Amount/Details:')
-                          const cost = parseFloat(prompt('Cost ($):')) || 0
+                          const cost = parseFloat(prompt('Cost (KSH):')) || 0
                           const appliedBy = prompt('Applied by:') || ''
                           const notes = prompt('Notes:') || ''
                           if(type) {
@@ -704,7 +704,7 @@ export default function Pastures(){
                                     {imp.notes && <div>{imp.notes}</div>}
                                   </div>
                                 </div>
-                                <div style={{ fontWeight: '600', color: '#dc2626' }}>${imp.cost.toFixed(2)}</div>
+                                <div style={{ fontWeight: '600', color: '#dc2626' }}>KSH {Number(imp.cost).toLocaleString()}</div>
                               </div>
                             </div>
                           ))}
@@ -781,11 +781,11 @@ export default function Pastures(){
                                 <div>
                                   <div style={{ fontWeight: '600' }}>{fert.type} - {fert.product}</div>
                                   <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                                    {fert.date} • Rate: {fert.rate}
+                                    Rate: {fert.rate}
                                     {fert.appliedBy && ` • By: ${fert.appliedBy}`}
                                   </div>
                                 </div>
-                                <div style={{ fontWeight: '600', color: '#dc2626' }}>${fert.cost.toFixed(2)}</div>
+                                <div style={{ fontWeight: '600', color: '#dc2626' }}>KSH {Number(fert.cost).toLocaleString()}</div>
                               </div>
                             </div>
                           ))}
@@ -801,10 +801,10 @@ export default function Pastures(){
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                       <h4 style={{ margin: 0 }}>Weed & Pest Control</h4>
                       <button onClick={() => {
-                        const target = prompt('Target pest/weed:')
+                        const target = prompt('Pest/weed target:')
                         const product = prompt('Product used:')
                         const rate = prompt('Application rate:')
-                        const cost = parseFloat(prompt('Cost ($):')) || 0
+                        const cost = parseFloat(prompt('Cost (KSH):')) || 0
                         const effectiveness = prompt('Effectiveness (Poor/Fair/Good/Excellent):') || 'Good'
                         const appliedBy = prompt('Applied by:') || ''
                         if(target && product) {
@@ -827,7 +827,7 @@ export default function Pastures(){
                                   {pest.appliedBy && <div>By: {pest.appliedBy}</div>}
                                 </div>
                               </div>
-                              <div style={{ fontWeight: '600', color: '#dc2626' }}>${pest.cost.toFixed(2)}</div>
+                              <div style={{ fontWeight: '600', color: '#dc2626' }}>KSH {Number(pest.cost).toLocaleString()}</div>
                             </div>
                           </div>
                         ))}

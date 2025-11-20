@@ -1,24 +1,50 @@
-import React, { useState, useEffect } from 'react'
-import Dashboard from './modules/Dashboard'
-import NotificationCenter from './modules/NotificationCenter'
-import Animals from './modules/Animals'
-import Tasks from './modules/Tasks'
-import Finance from './modules/Finance'
-import Schedules from './modules/Schedules'
-import Crops from './modules/Crops'
-import Reports from './modules/Reports'
-import Inventory from './modules/Inventory'
-import Groups from './modules/Groups'
-import Pastures from './modules/Pastures'
-import HealthSystem from './modules/HealthSystem'
-import Login from './modules/Login'
-import AuditLog from './modules/AuditLog'
-import BackupRestore from './modules/BackupRestore'
+import React, { useState, useEffect, lazy, Suspense } from 'react'
+
+// Lazy load all modules for code splitting
+const Dashboard = lazy(() => import('./modules/Dashboard'))
+const NotificationCenter = lazy(() => import('./modules/NotificationCenter'))
+const Animals = lazy(() => import('./modules/Animals'))
+const Tasks = lazy(() => import('./modules/Tasks'))
+const Finance = lazy(() => import('./modules/Finance'))
+const Schedules = lazy(() => import('./modules/Schedules'))
+const Crops = lazy(() => import('./modules/CropsWithSubsections'))
+const Reports = lazy(() => import('./modules/Reports'))
+const Inventory = lazy(() => import('./modules/Inventory'))
+const Groups = lazy(() => import('./modules/Groups'))
+const Pastures = lazy(() => import('./modules/Pastures'))
+const HealthSystem = lazy(() => import('./modules/HealthSystem'))
+const Login = lazy(() => import('./modules/Login'))
+const AuditLog = lazy(() => import('./modules/AuditLog'))
+const BackupRestore = lazy(() => import('./modules/BackupRestore'))
+const SyncSettings = lazy(() => import('./modules/SyncSettings'))
+
+// Loading fallback component - faster, smaller
+const LoadingFallback = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '300px',
+    flexDirection: 'column',
+    gap: '12px'
+  }}>
+    <div style={{
+      width: '40px',
+      height: '40px',
+      border: '3px solid #e5e7eb',
+      borderTopColor: '#059669',
+      borderRadius: '50%',
+      animation: 'spin 0.6s linear infinite'
+    }}></div>
+    <div style={{ color: '#9ca3af', fontSize: '13px', fontWeight: '500' }}>Loading module...</div>
+  </div>
+)
 import { isAuthenticated, getCurrentSession, logout, getCurrentUserName, getCurrentUserRole } from './lib/auth'
 import { logAction, ACTIONS, ENTITIES } from './lib/audit'
 import { isAuthRequired, getDefaultUser } from './lib/appSettings'
 import { startReminderChecker, stopReminderChecker, getUnreadCount } from './lib/notifications'
 import { checkAllAutoNotifications } from './lib/autoNotifications'
+import { initSync, setupAutoSync } from './lib/sync'
 
 export default function App() {
   const [authenticated, setAuthenticated] = useState(false)
@@ -67,7 +93,7 @@ export default function App() {
     }
   }, [])
 
-  // Start notification/reminder checker
+  // Start notification/reminder checker and sync
   useEffect(() => {
     if (authenticated) {
       // Run initial check
@@ -88,6 +114,10 @@ export default function App() {
       
       // Listen for new notifications
       window.addEventListener('newNotification', updateUnreadCount)
+      
+      // Initialize sync if configured
+      initSync()
+      setupAutoSync()
       
       return () => {
         stopReminderChecker(intervalId)
@@ -139,7 +169,11 @@ export default function App() {
 
   // Show login if not authenticated
   if (!authenticated) {
-    return <Login onLoginSuccess={handleLoginSuccess} />
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <Login onLoginSuccess={handleLoginSuccess} />
+      </Suspense>
+    )
   }
 
   return (
@@ -155,7 +189,7 @@ export default function App() {
             />
           </div>
           <div>
-            <div className="brand-wordmark">Devins Farm</div>
+            <div className="brand-wordmark">JR FARM</div>
             <div className="brand-tag">Comprehensive Farm Management</div>
           </div>
         </div>
@@ -425,20 +459,21 @@ export default function App() {
         </nav>
 
       <main>
-        {view === 'dashboard' && <Dashboard onNavigate={setView} />}
-        {view === 'notifications' && <NotificationCenter />}
+        <Suspense fallback={<LoadingFallback />}>
+          {view === 'dashboard' && <Dashboard onNavigate={setView} />}
+          {view === 'notifications' && <NotificationCenter />}
 
-        {view === 'animals' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <Animals />
-          </section>
-        )}
+          {view === 'animals' && (
+            <section>
+              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                ← Back to Dashboard
+              </button>
+              <Animals />
+            </section>
+          )}
 
-        {view === 'tasks' && (
-          <section>
+          {view === 'tasks' && (
+            <section>
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
@@ -525,6 +560,43 @@ export default function App() {
               <p style={{ color: 'var(--muted)', margin: 0 }}>Customize your application appearance and preferences</p>
             </div>
             
+            {/* Tabs for Settings */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 20, borderBottom: '2px solid #e5e7eb' }}>
+              <button
+                onClick={() => setSettings(s => ({ ...s, settingsTab: 'appearance' }))}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: (settings.settingsTab || 'appearance') === 'appearance' ? '2px solid #059669' : '2px solid transparent',
+                  padding: '10px 20px',
+                  cursor: 'pointer',
+                  fontWeight: (settings.settingsTab || 'appearance') === 'appearance' ? 600 : 400,
+                  color: (settings.settingsTab || 'appearance') === 'appearance' ? '#059669' : '#6b7280'
+                }}
+              >
+                🎨 Appearance
+              </button>
+              <button
+                onClick={() => setSettings(s => ({ ...s, settingsTab: 'sync' }))}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: settings.settingsTab === 'sync' ? '2px solid #059669' : '2px solid transparent',
+                  padding: '10px 20px',
+                  cursor: 'pointer',
+                  fontWeight: settings.settingsTab === 'sync' ? 600 : 400,
+                  color: settings.settingsTab === 'sync' ? '#059669' : '#6b7280'
+                }}
+              >
+                🔄 Cloud Sync
+              </button>
+            </div>
+
+            {/* Sync Settings Tab */}
+            {settings.settingsTab === 'sync' && <SyncSettings />}
+
+            {/* Appearance Settings Tab */}
+            {(settings.settingsTab || 'appearance') === 'appearance' && (
             <div style={{ display: 'grid', gap: '24px', maxWidth: '800px' }}>
               
               {/* Appearance Section */}
@@ -660,8 +732,10 @@ export default function App() {
               </div>
 
             </div>
+            )}
           </section>
         )}
+        </Suspense>
       </main>
 
       <footer>

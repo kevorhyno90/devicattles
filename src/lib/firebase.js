@@ -1,0 +1,68 @@
+/**
+ * Firebase Configuration and Initialization
+ * 
+ * Setup Instructions:
+ * 1. Go to https://console.firebase.google.com
+ * 2. Create a new project (or use existing)
+ * 3. Add a Web app to your project
+ * 4. Copy the Firebase config object
+ * 5. Replace the placeholder config below with your actual config
+ * 6. Enable Firestore Database in Firebase Console
+ * 7. Enable Authentication > Email/Password in Firebase Console
+ */
+
+import { initializeApp } from 'firebase/app'
+import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore'
+import { getAuth } from 'firebase/auth'
+
+// Firebase configuration - REPLACE WITH YOUR CONFIG
+// Get this from Firebase Console > Project Settings > General > Your apps > Web app
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+}
+
+// Check if Firebase is configured
+export function isFirebaseConfigured() {
+  return firebaseConfig.apiKey !== "YOUR_API_KEY" && 
+         firebaseConfig.projectId !== "YOUR_PROJECT_ID"
+}
+
+// Initialize Firebase
+let app = null
+let db = null
+let auth = null
+
+try {
+  if (isFirebaseConfigured()) {
+    app = initializeApp(firebaseConfig)
+    db = getFirestore(app)
+    auth = getAuth(app)
+    
+    // Enable offline persistence
+    enableIndexedDbPersistence(db).catch((err) => {
+      if (err.code === 'failed-precondition') {
+        console.warn('Firebase persistence failed: Multiple tabs open')
+      } else if (err.code === 'unimplemented') {
+        console.warn('Firebase persistence not available in this browser')
+      }
+    })
+    
+    console.log('✅ Firebase initialized successfully')
+  } else {
+    // Log once on first check - not a warning since it's expected in local/demo mode
+    if (!window.__firebaseConfigLogged) {
+      console.info('ℹ️ Firebase not configured. Running in local-only mode.');
+      window.__firebaseConfigLogged = true;
+    }
+  }
+} catch (error) {
+  console.error('❌ Firebase initialization error:', error)
+}
+
+export { app, db, auth }
+export default { app, db, auth, isConfigured: isFirebaseConfigured }

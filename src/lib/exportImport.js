@@ -367,3 +367,102 @@ export function batchPrint(items, renderItem, title = 'Batch Print', reportType 
   `)
   printWindow.document.close()
 }
+
+// Export to PDF (using browser print-to-PDF)
+export function exportToPDF(data, filename = 'export', title = 'Export Report', headers = null) {
+  try {
+    if (!data || data.length === 0) {
+      alert('No data to export')
+      return
+    }
+
+    const csvHeaders = headers || Object.keys(data[0])
+    
+    // Build HTML table
+    const tableRows = data.map(item => 
+      '<tr>' + csvHeaders.map(header => `<td>${escapeHtml(item[header] || '')}</td>`).join('') + '</tr>'
+    ).join('')
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${escapeHtml(title)}</title>
+        <style>
+          @page { margin: 15mm; size: A4; }
+          body { 
+            font-family: Arial, sans-serif; 
+            font-size: 10pt;
+            line-height: 1.3;
+            color: #000;
+          }
+          h1 { 
+            font-size: 18pt; 
+            margin-bottom: 10px;
+            text-align: center;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px;
+          }
+          th, td { 
+            border: 1px solid #333; 
+            padding: 6px 8px; 
+            text-align: left;
+            font-size: 9pt;
+          }
+          th { 
+            background: #e0e0e0; 
+            font-weight: bold;
+          }
+          tr:nth-child(even) { background: #f9f9f9; }
+          .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 8pt;
+            color: #666;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>${escapeHtml(title)}</h1>
+        <table>
+          <thead>
+            <tr>${csvHeaders.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+        <div class="footer">
+          Generated on ${new Date().toLocaleString()} | Total Records: ${data.length}
+        </div>
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 500);
+          };
+        </script>
+      </body>
+      </html>
+    `
+
+    const printWindow = window.open('', '_blank', 'width=800,height=600')
+    printWindow.document.write(html)
+    printWindow.document.close()
+  } catch (error) {
+    console.error('PDF export failed:', error)
+    alert('Export failed: ' + error.message)
+  }
+}
+
+function escapeHtml(text) {
+  if (text === null || text === undefined) return ''
+  const str = String(text)
+  const div = document.createElement('div')
+  div.textContent = str
+  return div.innerHTML
+}
+
