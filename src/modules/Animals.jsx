@@ -10,8 +10,10 @@ import CalfManagement from './CalfManagement'
 import BSFFarming from './BSFFarming'
 import AzollaFarming from './AzollaFarming'
 import PoultryManagement from './PoultryManagement'
+import PhotoGallery from '../components/PhotoGallery'
 import { fileToDataUrl, estimateDataUrlSize, uid } from '../lib/image'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
+import { generateQRCodeDataURL, printQRTag, batchPrintQRTags } from '../lib/qrcode'
 
 // Realized Animals component: HTML5 controls, inline validation, unique tag checks,
 // realistic sample data, and non-placeholder behavior.
@@ -136,11 +138,33 @@ export default function Animals() {
     if (Object.keys(eobj).length) return
 
     if (editingId) {
-      setAnimals(animals.map(a => a.id === editingId ? { ...a, ...candidate } : a))
+      // Update existing animal - regenerate QR code with updated data
+      const updatedAnimal = { ...candidate }
+      const qrData = {
+        type: 'animal',
+        id: editingId,
+        name: updatedAnimal.name,
+        tag: updatedAnimal.tag,
+        breed: updatedAnimal.breed
+      }
+      updatedAnimal.qrCode = generateQRCodeDataURL(JSON.stringify(qrData))
+      setAnimals(animals.map(a => a.id === editingId ? { ...a, ...updatedAnimal } : a))
     } else {
+      // Create new animal - generate ID and QR code
       const id = 'A-' + (1000 + Math.floor(Math.random() * 900000))
       // normalize tags: accept comma-separated string or array
       if (candidate.tags && typeof candidate.tags === 'string') candidate.tags = candidate.tags.split(',').map(t => t.trim()).filter(Boolean)
+      
+      // Generate QR code automatically
+      const qrData = {
+        type: 'animal',
+        id: id,
+        name: candidate.name,
+        tag: candidate.tag,
+        breed: candidate.breed
+      }
+      candidate.qrCode = generateQRCodeDataURL(JSON.stringify(qrData))
+      
       setAnimals([...animals, { ...candidate, id }])
     }
     resetForm()
@@ -641,6 +665,7 @@ export default function Animals() {
               <button onClick={handleExportJSON} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📄 JSON</button>
               <button onClick={handleImportClick} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📥 Import</button>
               <button onClick={handleBatchPrint} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>🖨️ Print</button>
+              <button onClick={() => batchPrintQRTags(sortedAnimals, 'animal')} style={{ padding: '8px 16px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>📱 Print QR Tags</button>
               <input 
                 ref={fileInputRef}
                 type="file" 
@@ -720,7 +745,10 @@ export default function Animals() {
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                         <div>
-                          <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>{a.name}</h4>
+                          <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>
+                            {a.name}
+                            {a.qrCode && <span style={{ marginLeft: 8, fontSize: '0.8rem', color: '#8b5cf6' }} title="QR Code generated">📱</span>}
+                          </h4>
                           <div style={{ fontSize: '0.9rem', color: '#666', marginTop: 4 }}>
                             {a.tag && <span style={{ marginRight: 12 }}>🏷️ {a.tag}</span>}
                             <span style={{ marginRight: 12 }}>{a.sex === 'F' ? '♀' : '♂'} {a.breed}</span>
@@ -770,6 +798,49 @@ export default function Animals() {
                               </div>
                             </div>
                           )}
+                          
+                          {/* Photo Gallery with IndexedDB storage */}
+                          <PhotoGallery 
+                            entityType="animal" 
+                            entityId={a.id} 
+                            entityName={a.name}
+                          />
+                          
+                          {/* QR Code Display and Print */}
+                          <div style={{ marginTop: 16, padding: 12, background: '#f9fafb', borderRadius: 8, border: '1px solid #e5e7eb' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                              <div>
+                                <img 
+                                  src={a.qrCode || generateQRCodeDataURL(JSON.stringify({ type: 'animal', id: a.id, name: a.name, tag: a.tag, breed: a.breed }))} 
+                                  alt={`QR Code for ${a.name}`}
+                                  style={{ width: 120, height: 120, border: '2px solid #8b5cf6', borderRadius: 8 }}
+                                />
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <h4 style={{ margin: '0 0 8px 0', fontSize: '0.95rem', fontWeight: '600', color: '#8b5cf6' }}>
+                                  📱 QR Tag {a.qrCode && <span style={{ fontSize: '0.75rem', color: '#10b981', marginLeft: 8 }}>✓ Auto-generated</span>}
+                                </h4>
+                                <p style={{ margin: '0 0 12px 0', fontSize: '0.85rem', color: '#666' }}>
+                                  Scan this QR code to quickly access {a.name}'s records
+                                </p>
+                                <button 
+                                  onClick={() => printQRTag({ type: 'animal', id: a.id, name: a.name, tag: a.tag })}
+                                  style={{ 
+                                    padding: '8px 16px', 
+                                    background: '#8b5cf6', 
+                                    color: 'white', 
+                                    border: 'none', 
+                                    borderRadius: '6px', 
+                                    cursor: 'pointer', 
+                                    fontSize: '0.85rem',
+                                    fontWeight: '500'
+                                  }}
+                                >
+                                  🖨️ Print QR Tag
+                                </button>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       )}
                       

@@ -9,6 +9,9 @@
   "background_color": "#f0f7f0",
   "theme_color": "#2b8c3e",
   "categories": ["agriculture", "business", "productivity"],
+  "dir": "ltr",
+  "lang": "en-US",
+  "display_override": ["standalone", "minimal-ui"],
   "icons": [
     { 
       "src": "/icons/icon-72.svg", 

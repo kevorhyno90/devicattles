@@ -1,4 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react'
+import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme.jsx'
 
 // Lazy load all modules for code splitting
 const Dashboard = lazy(() => import('./modules/Dashboard'))
@@ -17,6 +18,7 @@ const Login = lazy(() => import('./modules/Login'))
 const AuditLog = lazy(() => import('./modules/AuditLog'))
 const BackupRestore = lazy(() => import('./modules/BackupRestore'))
 const SyncSettings = lazy(() => import('./modules/SyncSettings'))
+const AdvancedAnalytics = lazy(() => import('./modules/AdvancedAnalytics'))
 
 // Loading fallback component - faster, smaller
 const LoadingFallback = () => (
@@ -46,7 +48,11 @@ import { startReminderChecker, stopReminderChecker, getUnreadCount } from './lib
 import { checkAllAutoNotifications } from './lib/autoNotifications'
 import { initSync, setupAutoSync } from './lib/sync'
 
-export default function App() {
+// App content component that uses theme
+function AppContent() {
+  const { theme, getThemeColors } = useTheme()
+  const colors = getThemeColors()
+  
   const [authenticated, setAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
   const [view, setView] = useState('dashboard')
@@ -177,8 +183,19 @@ export default function App() {
   }
 
   return (
-    <div className={`app ${settings.backgroundOn? 'bg-on' : ''} theme-${settings.theme || 'bold'}`} style={ settings.backgroundOn && settings.background ? { backgroundImage: `url('/assets/${settings.background}')` } : {} }>
-      <header>
+    <div className={`app ${settings.backgroundOn? 'bg-on' : ''} theme-${settings.theme || 'bold'}`} 
+      style={{
+        ...(settings.backgroundOn && settings.background ? { backgroundImage: `url('/assets/${settings.background}')` } : {}),
+        background: colors.bg.primary,
+        color: colors.text.primary,
+        minHeight: '100vh',
+        transition: 'background 0.3s, color 0.3s'
+      }}>
+      <header style={{
+        background: colors.bg.elevated,
+        borderBottom: `2px solid ${colors.border.primary}`,
+        boxShadow: colors.shadow.md
+      }}>
         <div style={{ display:'flex', alignItems:'center', gap:12 }} className="brand">
           <div className="logo-wrap" aria-hidden>
             <img
@@ -264,10 +281,10 @@ export default function App() {
         </div>
       </header>
       <nav style={{ 
-        background: '#ffffff', 
+        background: colors.bg.elevated, 
         padding: '12px 20px', 
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)', 
-        borderBottom: '2px solid #e5e7eb',
+        boxShadow: colors.shadow.sm, 
+        borderBottom: `2px solid ${colors.border.primary}`,
         display: 'flex',
         gap: '8px',
         flexWrap: 'wrap',
@@ -277,22 +294,23 @@ export default function App() {
             className={view==='dashboard'? 'active':''} 
             onClick={()=>setView('dashboard')}
             style={{
-              background: view==='dashboard' ? '#059669' : '#f3f4f6',
-              color: view==='dashboard' ? '#fff' : '#1f2937',
+              background: view==='dashboard' ? colors.action.success : colors.bg.tertiary,
+              color: view==='dashboard' ? colors.text.inverse : colors.text.primary,
               border: 'none',
               padding: '8px 16px',
               borderRadius: '6px',
               cursor: 'pointer',
               fontSize: '14px',
-              fontWeight: '500'
+              fontWeight: '500',
+              transition: 'all 0.2s'
             }}
           >📊 Dashboard</button>
           <button 
             className={view==='notifications'? 'active':''} 
             onClick={()=>setView('notifications')}
             style={{
-              background: view==='notifications' ? '#059669' : '#f3f4f6',
-              color: view==='notifications' ? '#fff' : '#1f2937',
+              background: view==='notifications' ? colors.action.success : colors.bg.tertiary,
+              color: view==='notifications' ? colors.text.inverse : colors.text.primary,
               border: 'none',
               padding: '8px 16px',
               borderRadius: '6px',
@@ -415,6 +433,20 @@ export default function App() {
             }}
           >📊 Reports</button>
           <button 
+            className={view==='analytics'? 'active':''} 
+            onClick={()=>setView('analytics')}
+            style={{
+              background: view==='analytics' ? '#059669' : '#f3f4f6',
+              color: view==='analytics' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >📈 Analytics</button>
+          <button 
             className={view==='audit'? 'active':''} 
             onClick={()=>setView('audit')}
             style={{
@@ -456,6 +488,11 @@ export default function App() {
               fontWeight: '500'
             }}
           >⚙️ Settings</button>
+          
+          {/* Theme Toggle Button */}
+          <div style={{ marginLeft: 'auto' }}>
+            <ThemeToggleButton />
+          </div>
         </nav>
 
       <main>
@@ -523,6 +560,15 @@ export default function App() {
               ← Back to Dashboard
             </button>
             <Reports />
+          </section>
+        )}
+
+        {view === 'analytics' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <AdvancedAnalytics />
           </section>
         )}
 
@@ -738,9 +784,20 @@ export default function App() {
         </Suspense>
       </main>
 
-      <footer>
+      <footer style={{ 
+        background: colors.bg.secondary, 
+        color: colors.text.secondary,
+        padding: '16px',
+        textAlign: 'center',
+        borderTop: `1px solid ${colors.border.primary}`
+      }}>
         <small>© Devins Farm — Comprehensive Farm Management System</small>
       </footer>
     </div>
   )
+}
+
+// Wrapper component (ThemeProvider is in main.jsx)
+export default function App() {
+  return <AppContent />
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import Calendar from '../components/Calendar'
 
 const SCHEDULE_TYPES = {
   ROUTINE: 'Routine Task',
@@ -327,6 +328,7 @@ export default function Schedules() {
   const [schedules, setSchedules] = useState([])
   const [employees, setEmployees] = useState([])
   const [view, setView] = useState('calendar') // calendar, list, employees, timetable
+  const [calendarMode, setCalendarMode] = useState('enhanced') // 'classic' or 'enhanced'
   const [showModal, setShowModal] = useState(false)
   const [showEmployeeModal, setShowEmployeeModal] = useState(false)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
@@ -1010,33 +1012,99 @@ export default function Schedules() {
       {/* Calendar View */}
       {view === 'calendar' && (
         <div style={{ background: 'white', padding: 20, borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <button onClick={() => {
-                const d = new Date(selectedDate)
-                d.setMonth(d.getMonth() - 1)
-                setSelectedDate(d.toISOString().split('T')[0])
-              }}>
-                ← Previous
-              </button>
-              <h3 style={{ margin: 0 }}>
-                {new Date(selectedDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-              </h3>
-              <button onClick={() => {
-                const d = new Date(selectedDate)
-                d.setMonth(d.getMonth() + 1)
-                setSelectedDate(d.toISOString().split('T')[0])
-              }}>
-                Next →
-              </button>
-              <button onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}>
-                Today
-              </button>
-            </div>
-            <button onClick={() => openModal()} style={{ background: '#4CAF50' }}>
-              ➕ New Schedule
+          {/* Calendar Mode Toggle */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16, gap: 8 }}>
+            <button 
+              onClick={() => setCalendarMode('enhanced')}
+              style={{ 
+                padding: '8px 16px',
+                background: calendarMode === 'enhanced' ? '#8b5cf6' : '#f3f4f6',
+                color: calendarMode === 'enhanced' ? 'white' : '#374151',
+                border: 'none',
+                borderRadius: 6,
+                cursor: 'pointer',
+                fontWeight: '500',
+                fontSize: '0.9rem'
+              }}
+            >
+              ✨ Enhanced Calendar
+            </button>
+            <button 
+              onClick={() => setCalendarMode('classic')}
+              style={{ 
+                padding: '8px 16px',
+                background: calendarMode === 'classic' ? '#8b5cf6' : '#f3f4f6',
+                color: calendarMode === 'classic' ? 'white' : '#374151',
+                border: 'none',
+                borderRadius: 6,
+                cursor: 'pointer',
+                fontWeight: '500',
+                fontSize: '0.9rem'
+              }}
+            >
+              📅 Classic View
             </button>
           </div>
+
+          {/* Enhanced Calendar Component */}
+          {calendarMode === 'enhanced' ? (
+            <Calendar
+              events={filteredSchedules.map(sch => ({
+                id: sch.id,
+                title: sch.title,
+                description: sch.description,
+                date: sch.startDate,
+                time: sch.startTime,
+                category: sch.type.toLowerCase().includes('treatment') ? 'treatment' :
+                         sch.type.toLowerCase().includes('breeding') ? 'breeding' :
+                         sch.type.toLowerCase().includes('feeding') ? 'feeding' :
+                         sch.type.toLowerCase().includes('veterinary') ? 'checkup' :
+                         sch.type.toLowerCase().includes('routine') ? 'task' : 'other',
+                animal: sch.location || undefined
+              }))}
+              onEventClick={(event) => {
+                const schedule = schedules.find(s => s.id === event.id);
+                if (schedule) openModal(schedule);
+              }}
+              onAddEvent={(date, time) => {
+                setFormData({
+                  ...formData,
+                  startDate: date.toISOString ? date.toISOString().split('T')[0] : date,
+                  startTime: time || '08:00'
+                });
+                openModal();
+              }}
+            />
+          ) : (
+            <div>
+              {/* Classic Calendar View */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <button onClick={() => {
+                    const d = new Date(selectedDate)
+                    d.setMonth(d.getMonth() - 1)
+                    setSelectedDate(d.toISOString().split('T')[0])
+                  }}>
+                    ← Previous
+                  </button>
+                  <h3 style={{ margin: 0 }}>
+                    {new Date(selectedDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  </h3>
+                  <button onClick={() => {
+                    const d = new Date(selectedDate)
+                    d.setMonth(d.getMonth() + 1)
+                    setSelectedDate(d.toISOString().split('T')[0])
+                  }}>
+                    Next →
+                  </button>
+                  <button onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}>
+                    Today
+                  </button>
+                </div>
+                <button onClick={() => openModal()} style={{ background: '#4CAF50' }}>
+                  ➕ New Schedule
+                </button>
+              </div>
 
           {/* Filters */}
           <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
@@ -1229,6 +1297,8 @@ export default function Schedules() {
                     </div>
                   ))}
               </div>
+            </div>
+          )}
             </div>
           )}
         </div>
