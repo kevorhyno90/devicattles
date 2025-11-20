@@ -18,13 +18,14 @@ import { getAuth } from 'firebase/auth'
 // Firebase configuration - REPLACE WITH YOUR CONFIG
 // Get this from Firebase Console > Project Settings > General > Your apps > Web app
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
-}
+  apiKey: "AIzaSyC3ZH_roI3O4e8O0TEcLbgJCuVI64t8b4c",
+  authDomain: "devinsfarm-2025.firebaseapp.com",
+  projectId: "devinsfarm-2025",
+  storageBucket: "devinsfarm-2025.appspot.com",
+  messagingSenderId: "603947883430",
+  appId: "1:603947883430:web:ac52cd8333bc7603c14d67",
+  measurementId: "G-T8H86QB318"
+};
 
 // Check if Firebase is configured
 export function isFirebaseConfigured() {
