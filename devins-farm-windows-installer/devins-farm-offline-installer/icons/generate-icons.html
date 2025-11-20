@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Generate Icons</title>
+</head>
+<body>
+  <h1>Generating Icons...</h1>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <script>
+    const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    sizes.forEach(size => {
+      canvas.width = size;
+      canvas.height = size;
+      
+      // Green background
+      ctx.fillStyle = '#2b8c3e';
+      ctx.fillRect(0, 0, size, size);
+      
+      // White text
+      ctx.fillStyle = 'white';
+      ctx.font = `bold ${size * 0.3}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🌾', size / 2, size / 2);
+      
+      // Download
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `icon-${size}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    });
+    
+    document.body.innerHTML += '<p>Icons generated! Check your downloads.</p>';
+  </script>
+</body>
+</html>

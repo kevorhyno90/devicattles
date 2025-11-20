@@ -1,0 +1,9 @@
+Devins Farm - Offline Installer
+Version: 1.0.0
+Build Date: Thu Nov 20 14:19:20 UTC 2025
+Package Type: Offline Installer (Complete)
+
+This package contains everything needed to run Devins Farm
+completely offline on any platform (Windows, Mac, Linux, Android).
+
+No internet connection required after installation.
