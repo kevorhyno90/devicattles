@@ -176,38 +176,8 @@ export default function Animals() {
     setTab('list')
   }
 
-  function startEditAnimal(a) { 
-    // Create a deep copy of the animal data
-    const animalCopy = {
-      ...a,
-      tags: Array.isArray(a.tags) ? [...a.tags] : [],
-      photos: Array.isArray(a.photos) ? [...a.photos] : [],
-      // Ensure all fields have values (no undefined)
-      tag: a.tag || '',
-      name: a.name || '',
-      breed: a.breed || '',
-      sex: a.sex || 'F',
-      color: a.color || '',
-      dob: a.dob || '',
-      weight: a.weight || '',
-      sire: a.sire || '',
-      dam: a.dam || '',
-      groupId: a.groupId || '',
-      status: a.status || 'Active',
-      notes: a.notes || '',
-      owner: a.owner || '',
-      registration: a.registration || '',
-      tattoo: a.tattoo || '',
-      purchaseDate: a.purchaseDate || '',
-      purchasePrice: a.purchasePrice || '',
-      vendor: a.vendor || '',
-      photo: a.photo || '',
-      pregnancyStatus: a.pregnancyStatus || 'Unknown',
-      expectedDue: a.expectedDue || '',
-      parity: a.parity || '',
-      lactationStatus: a.lactationStatus || 'NA'
-    }
-    setForm(animalCopy)
+  function startEditAnimal(a) {
+    setForm(a)
     setEditingId(a.id)
     setTab('addAnimal')
   }
