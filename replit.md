@@ -6,6 +6,12 @@ Devins Farm is a comprehensive Progressive Web App (PWA) for dairy and farm mana
 **Current State:** Successfully configured for Replit environment. The application is running on port 5000 and accessible through the web preview.
 
 ## Recent Changes
+- **2024-11-22:** Fixed Header Branding & Text Visibility
+  - Fixed "JR FARM" text visibility in light mode header
+  - Replaced CSS class-based brand styling with h2 element for better rendering
+  - Text now dynamically adapts to theme colors for proper contrast
+  - Logo and branding text now clearly visible across all themes
+  
 - **2024-11-22:** Enhanced Offline Support & Sync Queue
   - Created `offlineSync.js` library: Queue operations while offline, sync when connection returns
   - Created `OfflineIndicator.jsx` component: Visual feedback for offline mode and pending operations

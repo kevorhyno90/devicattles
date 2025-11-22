@@ -13,14 +13,13 @@ body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica
 .app header img.logo{height:44px;border-radius:6px;background:transparent}
 
 /* Brand wordmark next to logo: colorful gradient text */
-.brand{display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:12px;flex:1}
 .logo-wrap{width:68px;height:68px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));box-shadow:0 8px 30px rgba(124,77,255,0.12);border:1px solid rgba(255,255,255,0.12)}
 .logo-wrap .logo{height:56px;width:auto;border-radius:8px;display:block}
-.brand-wordmark{font-weight:800;font-size:1.25rem;line-height:1;color:#fff}
+.brand-wordmark{font-weight:900;font-size:1.5rem;line-height:1.2;color:#fff !important;letter-spacing:0.5px;position:relative;display:inline-block !important;visibility:visible !important;opacity:1 !important;width:auto !important;height:auto !important}
 .brand-tag{font-size:0.78rem;color:rgba(255,255,255,0.9);margin-top:4px;opacity:0.95}
 
 /* Shimmer animation for wordmark */
-.brand-wordmark{position:relative;display:inline-block}
 .brand-wordmark::after{content:'';position:absolute;top:0;left:-120%;width:40%;height:100%;background:linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.28), rgba(255,255,255,0.08));transform:skewX(-20deg);transition:all .6s;opacity:0}
 .brand-wordmark.shimmer::after{left:150%;opacity:1;animation:shimmer 2.2s linear infinite}
 @keyframes shimmer{0%{left:-120%}100%{left:150%}}
@@ -31,7 +30,7 @@ body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica
 
 /* Theme variants */
 .app.theme-light header{background:linear-gradient(90deg,#f8fafc,#eef6ff);color:#123}
-.app.theme-light .brand-wordmark{color:#000;font-weight:800}
+.app.theme-light .brand-wordmark{color:#059669 !important;font-weight:900;font-size:1.5rem;text-shadow:0 2px 4px rgba(0,0,0,0.15) !important;letter-spacing:0.5px;display:inline-block !important;visibility:visible !important;opacity:1 !important}
 
 .app.theme-bold{color:#e6f7ff;--muted:rgba(230,245,255,0.85)}
 .app.theme-bold header{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:inherit}

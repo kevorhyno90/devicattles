@@ -217,13 +217,24 @@ function AppContent() {
             <img
               src={ settings.logo === 'uploaded' && settings.uploadedLogo ? settings.uploadedLogo : `/assets/${settings.logo}` }
               className="logo"
-              alt="Devins Farm - Comprehensive Farm Management"
+              alt="JR FARM - Comprehensive Farm Management"
               onError={()=> setSettings(s=> ({ ...s, logo: '' }))}
             />
           </div>
           <div>
-            <div className="brand-wordmark">JR FARM</div>
-            <div className="brand-tag">Comprehensive Farm Management</div>
+            <h2 style={{
+              margin:'0 0 4px 0', 
+              fontSize:'1.4rem', 
+              fontWeight:'900', 
+              letterSpacing:'0.5px',
+              color: colors.text.primary
+            }}>JR FARM</h2>
+            <p style={{
+              margin:'0', 
+              fontSize:'0.75rem', 
+              opacity:'0.95',
+              color: colors.text.secondary || colors.text.primary
+            }}>Comprehensive Farm Management</p>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
