@@ -10,6 +10,7 @@ import CalfManagement from './CalfManagement'
 import BSFFarming from './BSFFarming'
 import AzollaFarming from './AzollaFarming'
 import PoultryManagement from './PoultryManagement'
+import CanineManagement from './CanineManagement'
 import PhotoGallery from '../components/PhotoGallery'
 import { fileToDataUrl, estimateDataUrlSize, uid } from '../lib/image'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
@@ -22,8 +23,10 @@ export default function Animals() {
   const GKEY = 'cattalytics:groups'
 
   const SAMPLE_GROUPS = [
-    { id: 'G-001', name: 'Herd A', desc: 'Main dairy herd' },
-    { id: 'G-002', name: 'Heifer Pen', desc: 'Young stock' }
+    { id: 'G-001', name: 'Bovine', desc: 'Cattle and dairy herd' },
+    { id: 'G-002', name: 'Porcine', desc: 'Pigs and swine' },
+    { id: 'G-003', name: 'Avians', desc: 'Poultry - chickens, turkeys, ducks' },
+    { id: 'G-004', name: 'Canines', desc: 'Dogs and working canines' }
   ]
 
   const SAMPLE_ANIMALS = [
@@ -632,6 +635,21 @@ export default function Animals() {
             🐔 Poultry
           </button>
           <button
+            onClick={() => setTab('canine')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: tab === 'canine' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'canine' ? '#f0fdf4' : 'transparent',
+              color: tab === 'canine' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'canine' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🐕 Canines
+          </button>
+          <button
             onClick={() => { resetGroupForm(); setTab('addGroup') }}
             style={{
               padding: '12px 20px',
@@ -1238,6 +1256,12 @@ export default function Animals() {
         {tab === 'poultry' && (
           <div style={{ marginBottom: 16 }}>
             <PoultryManagement />
+          </div>
+        )}
+
+        {tab === 'canine' && (
+          <div style={{ marginBottom: 16 }}>
+            <CanineManagement animals={animals} setAnimals={setAnimals} />
           </div>
         )}
       </div>
