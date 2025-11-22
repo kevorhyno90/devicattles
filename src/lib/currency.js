@@ -4,7 +4,7 @@
  * Now integrated with Enhanced Settings
  */
 
-import { getSettingsSection } from './enhancedSettings.js'
+import { getSettingsSection, updateSettingsSection } from './enhancedSettings.js'
 
 const CURRENCY_KEY = 'devinsfarm:currency'
 
@@ -33,7 +33,7 @@ export function getCurrentCurrency() {
     
     return {
       code: code,
-      symbol: regional.currencySymbol || code,
+      symbol: regional.currencySymbol || 'KSh',
       name: code,
       locale: 'en-US'
     }
@@ -48,7 +48,6 @@ export function getCurrentCurrency() {
  */
 export function setCurrency(currencyCode) {
   try {
-    const { updateSettingsSection } = require('./enhancedSettings.js')
     const currency = CURRENCIES[currencyCode]
     if (currency) {
       updateSettingsSection('regional', { 
@@ -66,21 +65,32 @@ export function setCurrency(currencyCode) {
 /**
  * Format amount as currency with proper symbol and formatting
  * Now uses enhanced settings for formatting preferences
+ * Fixed to properly handle distinct thousand and decimal separators
  */
 export function formatCurrency(amount, options = {}) {
   try {
     const regional = getSettingsSection('regional')
     const value = parseFloat(amount) || 0
+    const decimals = options.decimals !== undefined ? options.decimals : 2
     
-    const formatted = value.toFixed(options.decimals !== undefined ? options.decimals : 2)
-      .replace(/\B(?=(\d{3})+(?!\d))/g, regional.thousandSeparator || ',')
-      .replace('.', regional.decimalSeparator || '.')
+    // Split into integer and decimal parts
+    const parts = value.toFixed(decimals).split('.')
+    const integerPart = parts[0]
+    const decimalPart = parts[1]
+    
+    // Add thousand separators to integer part
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, regional.thousandSeparator || ',')
+    
+    // Combine with decimal separator
+    const formatted = decimalPart 
+      ? `${formattedInteger}${regional.decimalSeparator || '.'}${decimalPart}`
+      : formattedInteger
     
     if (options.includeSymbol === false) {
       return formatted
     }
     
-    const symbol = regional.currencySymbol || 'KES'
+    const symbol = regional.currencySymbol || 'KSh'
     return regional.currencyPosition === 'after' 
       ? `${formatted} ${symbol}`
       : `${symbol} ${formatted}`

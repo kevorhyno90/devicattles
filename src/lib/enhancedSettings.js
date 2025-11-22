@@ -24,7 +24,7 @@ const DEFAULT_ENHANCED_SETTINGS = {
   // 2. Regional Preferences
   regional: {
     currency: 'KES',
-    currencySymbol: 'KES',
+    currencySymbol: 'KSh',
     currencyPosition: 'before', // 'before' or 'after'
     decimalSeparator: '.',
     thousandSeparator: ',',
@@ -201,18 +201,31 @@ export function getSettingsSection(section) {
 export function formatCurrency(amount, includeSymbol = true) {
   const regional = getSettingsSection('regional')
   
-  if (amount == null || isNaN(amount)) return includeSymbol ? `${regional.currencySymbol} 0.00` : '0.00'
+  if (amount == null || isNaN(amount)) {
+    const zero = includeSymbol ? `${regional.currencySymbol || 'KSh'} 0.00` : '0.00'
+    return zero.replace('.', regional.decimalSeparator || '.')
+  }
   
   const num = parseFloat(amount)
-  const formatted = num.toFixed(2)
-    .replace(/\B(?=(\d{3})+(?!\d))/g, regional.thousandSeparator)
-    .replace('.', regional.decimalSeparator)
+  
+  // Split into integer and decimal parts
+  const parts = num.toFixed(2).split('.')
+  const integerPart = parts[0]
+  const decimalPart = parts[1]
+  
+  // Add thousand separators to integer part
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, regional.thousandSeparator || ',')
+  
+  // Combine with decimal separator
+  const formatted = decimalPart 
+    ? `${formattedInteger}${regional.decimalSeparator || '.'}${decimalPart}`
+    : formattedInteger
   
   if (!includeSymbol) return formatted
   
   return regional.currencyPosition === 'before' 
-    ? `${regional.currencySymbol} ${formatted}`
-    : `${formatted} ${regional.currencySymbol}`
+    ? `${regional.currencySymbol || 'KSh'} ${formatted}`
+    : `${formatted} ${regional.currencySymbol || 'KSh'}`
 }
 
 // Format date based on settings
