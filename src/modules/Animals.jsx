@@ -171,7 +171,17 @@ export default function Animals() {
     setTab('list')
   }
 
-  function startEditAnimal(a) { setForm(a); setEditingId(a.id); setTab('addAnimal') }
+  function startEditAnimal(a) { 
+    // Create a copy of the animal data
+    const animalCopy = { ...a }
+    // Ensure arrays exist
+    if (!animalCopy.tags) animalCopy.tags = []
+    if (!animalCopy.photos) animalCopy.photos = []
+    // Set form with animal data
+    setForm(animalCopy)
+    setEditingId(a.id)
+    setTab('addAnimal')
+  }
   function deleteAnimal(id) { if (!window.confirm('Delete animal ' + id + '?')) return; setAnimals(animals.filter(a => a.id !== id)) }
 
   function resetGroupForm() { setGroupName(''); setGroupDesc(''); setEditingGroupId(null) }

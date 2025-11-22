@@ -335,36 +335,44 @@ export function getFinancialSummary() {
   try {
     const finances = JSON.parse(localStorage.getItem('cattalytics:finance') || '[]')
     
-    const summary = {
-      bySource: {},
-      totalIncome: 0,
-      totalExpenses: 0,
-      netProfit: 0
-    }
+    const bySource = {}
+    let totalIncome = 0
+    let totalExpenses = 0
     
     finances.forEach(f => {
       const source = f.source || 'Manual'
-      if (!summary.bySource[source]) {
-        summary.bySource[source] = { income: 0, expenses: 0, net: 0 }
+      if (!bySource[source]) {
+        bySource[source] = { income: 0, expenses: 0, net: 0 }
       }
       
       if (f.type === 'income') {
-        summary.bySource[source].income += f.amount
-        summary.totalIncome += f.amount
+        bySource[source].income += f.amount
+        totalIncome += f.amount
       } else {
-        summary.bySource[source].expenses += Math.abs(f.amount)
-        summary.totalExpenses += Math.abs(f.amount)
+        bySource[source].expenses += Math.abs(f.amount)
+        totalExpenses += Math.abs(f.amount)
       }
       
-      summary.bySource[source].net = summary.bySource[source].income - summary.bySource[source].expenses
+      bySource[source].net = bySource[source].income - bySource[source].expenses
     })
     
-    summary.netProfit = summary.totalIncome - summary.totalExpenses
+    // Convert bySource object to sources array
+    const sources = Object.keys(bySource).map(source => ({
+      source,
+      income: bySource[source].income,
+      expenses: bySource[source].expenses,
+      net: bySource[source].net
+    }))
     
-    return summary
+    return {
+      sources,
+      totalIncome,
+      totalExpenses,
+      netProfit: totalIncome - totalExpenses
+    }
   } catch (e) {
     console.error('Failed to get financial summary:', e)
-    return { bySource: {}, totalIncome: 0, totalExpenses: 0, netProfit: 0 }
+    return { sources: [], totalIncome: 0, totalExpenses: 0, netProfit: 0 }
   }
 }
 
