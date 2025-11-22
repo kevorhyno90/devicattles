@@ -1,11 +1,14 @@
 /**
  * Currency Localization System
  * Centralized currency formatting for the entire application
+ * Now integrated with Enhanced Settings
  */
+
+import { getSettingsSection } from './enhancedSettings.js'
 
 const CURRENCY_KEY = 'devinsfarm:currency'
 
-// Supported currencies
+// Supported currencies (kept for backwards compatibility)
 export const CURRENCIES = {
   KES: { code: 'KES', symbol: 'KSh', name: 'Kenya Shillings', locale: 'en-KE' },
   USD: { code: 'USD', symbol: '$', name: 'US Dollar', locale: 'en-US' },
@@ -17,27 +20,41 @@ export const CURRENCIES = {
 }
 
 /**
- * Get current currency setting
+ * Get current currency setting from enhanced settings
  */
 export function getCurrentCurrency() {
   try {
-    const stored = localStorage.getItem(CURRENCY_KEY)
-    if (stored && CURRENCIES[stored]) {
-      return CURRENCIES[stored]
+    const regional = getSettingsSection('regional')
+    const code = regional.currency || 'KES'
+    
+    if (CURRENCIES[code]) {
+      return CURRENCIES[code]
+    }
+    
+    return {
+      code: code,
+      symbol: regional.currencySymbol || code,
+      name: code,
+      locale: 'en-US'
     }
   } catch (error) {
     console.error('Error loading currency:', error)
+    return CURRENCIES.KES
   }
-  return CURRENCIES.KES // Default to Kenya Shillings
 }
 
 /**
- * Set currency preference
+ * Set currency preference (updates enhanced settings)
  */
 export function setCurrency(currencyCode) {
   try {
-    if (CURRENCIES[currencyCode]) {
-      localStorage.setItem(CURRENCY_KEY, currencyCode)
+    const { updateSettingsSection } = require('./enhancedSettings.js')
+    const currency = CURRENCIES[currencyCode]
+    if (currency) {
+      updateSettingsSection('regional', { 
+        currency: currencyCode,
+        currencySymbol: currency.symbol 
+      })
       return true
     }
   } catch (error) {
@@ -48,23 +65,28 @@ export function setCurrency(currencyCode) {
 
 /**
  * Format amount as currency with proper symbol and formatting
+ * Now uses enhanced settings for formatting preferences
  */
 export function formatCurrency(amount, options = {}) {
-  const currency = options.currency || getCurrentCurrency()
-  const value = parseFloat(amount) || 0
-  
   try {
-    // Use Intl.NumberFormat for proper localization
-    const formatter = new Intl.NumberFormat(currency.locale, {
-      style: 'currency',
-      currency: currency.code,
-      minimumFractionDigits: options.decimals !== undefined ? options.decimals : 2,
-      maximumFractionDigits: options.decimals !== undefined ? options.decimals : 2
-    })
+    const regional = getSettingsSection('regional')
+    const value = parseFloat(amount) || 0
     
-    return formatter.format(value)
+    const formatted = value.toFixed(options.decimals !== undefined ? options.decimals : 2)
+      .replace(/\B(?=(\d{3})+(?!\d))/g, regional.thousandSeparator || ',')
+      .replace('.', regional.decimalSeparator || '.')
+    
+    if (options.includeSymbol === false) {
+      return formatted
+    }
+    
+    const symbol = regional.currencySymbol || 'KES'
+    return regional.currencyPosition === 'after' 
+      ? `${formatted} ${symbol}`
+      : `${symbol} ${formatted}`
   } catch (error) {
-    // Fallback to manual formatting
+    const currency = getCurrentCurrency()
+    const value = parseFloat(amount) || 0
     const formatted = value.toFixed(options.decimals !== undefined ? options.decimals : 2)
     return `${currency.symbol} ${formatted.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`
   }
