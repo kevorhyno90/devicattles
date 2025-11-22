@@ -20,6 +20,8 @@ const BackupRestore = lazy(() => import('./modules/BackupRestore'))
 const SyncSettings = lazy(() => import('./modules/SyncSettings'))
 const AdvancedAnalytics = lazy(() => import('./modules/AdvancedAnalytics'))
 const EnhancedSettings = lazy(() => import('./modules/EnhancedSettings'))
+const BulkOperations = lazy(() => import('./modules/BulkOperations'))
+const AdditionalReports = lazy(() => import('./modules/AdditionalReports'))
 
 // Loading fallback component - faster, smaller
 const LoadingFallback = () => (
@@ -448,6 +450,34 @@ function AppContent() {
             }}
           >📈 Analytics</button>
           <button 
+            className={view==='additionalReports'? 'active':''} 
+            onClick={()=>setView('additionalReports')}
+            style={{
+              background: view==='additionalReports' ? '#059669' : '#f3f4f6',
+              color: view==='additionalReports' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >🏥 Health Reports</button>
+          <button 
+            className={view==='bulk'? 'active':''} 
+            onClick={()=>setView('bulk')}
+            style={{
+              background: view==='bulk' ? '#059669' : '#f3f4f6',
+              color: view==='bulk' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >⚡ Bulk Ops</button>
+          <button 
             className={view==='audit'? 'active':''} 
             onClick={()=>setView('audit')}
             style={{
@@ -570,6 +600,24 @@ function AppContent() {
               ← Back to Dashboard
             </button>
             <AdvancedAnalytics />
+          </section>
+        )}
+
+        {view === 'additionalReports' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <AdditionalReports />
+          </section>
+        )}
+
+        {view === 'bulk' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <BulkOperations />
           </section>
         )}
 

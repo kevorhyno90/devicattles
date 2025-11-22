@@ -1,11 +1,11 @@
 :root{
-	--accent1:#ff8a00;
-	--accent2:#ff2d55;
-	--accent3:#7c4dff;
-	--green:#2b8c3e;
-	--bg:#f6fbff;
-	--muted:#555;
-	--card-bg: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,255,250,0.95));
+        --accent1:#ff8a00;
+        --accent2:#ff2d55;
+        --accent3:#7c4dff;
+        --green:#2b8c3e;
+        --bg:#f6fbff;
+        --muted:#555;
+        --card-bg: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,255,250,0.95));
 }
 body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin:0;background-color:var(--bg);color:#111;background-image:none;line-height:1.5}
 .app header{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 18px rgba(0,0,0,0.08)}
@@ -1997,5 +1997,98 @@ body {
   
   .logo-wrap .logo {
     height: 32px;
+  }
+}
+
+/* Extra mobile improvements for small screens */
+@media (max-width: 480px) {
+  .app header {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  
+  nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  nav button {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+  
+  .dashboard-header h1,
+  .notifications-header h1 {
+    font-size: 1.3rem;
+  }
+  
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .kpi-card {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  /* Make modals full screen on mobile */
+  .modal {
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Improve form readability */
+  input, select, textarea {
+    max-width: 100%;
+  }
+  
+  /* Better spacing for forms */
+  form {
+    padding: 12px;
+  }
+  
+  /* Responsive grid for smaller screens */
+  .card {
+    padding: 12px;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) and (max-width: 1024px) {
+  nav {
+    justify-content: flex-start;
+    gap: 4px;
+  }
+  
+  nav button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Responsive modal and overlays */
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+  
+  .modal {
+    max-height: 90vh;
+  }
+  
+  /* Better spacing in modals */
+  .modal-content {
+    padding: 16px;
+  }
+  
+  /* Responsive tabs */
+  [role="tablist"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
