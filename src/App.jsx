@@ -66,7 +66,7 @@ function AppContent() {
   
   // UI branding/settings - must be declared before any conditional returns
   const SETTINGS_KEY = 'devinsfarm:ui:settings'
-  const defaultSettings = { backgroundOn: false, background: 'bg-farm.svg', logo: 'logo-badge.svg', uploadedLogo: '', theme: 'catalytics' }
+  const defaultSettings = { backgroundOn: false, background: 'bg-farm.svg', logo: 'jr-farm-logo.svg', uploadedLogo: '', theme: 'catalytics' }
   const [settings, setSettings] = useState(defaultSettings)
 
   // PWA Install Prompt Handler
