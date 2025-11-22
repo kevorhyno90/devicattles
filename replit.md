@@ -9,11 +9,13 @@ Devins Farm is a comprehensive Progressive Web App (PWA) for dairy and farm mana
 - **2024-11-22:** Added Comprehensive Canine Management Module
   - Added 4 main livestock groups: Bovine, Porcine, Avians, Canines
   - Created CanineManagement.jsx: comprehensive dog and working canine tracking
-  - Canine features: Roles, work types, training levels, vaccination tracking, health status
-  - Roles: Guard Dog, Herding Dog, Working Dog, Family Dog, Breeding Female, Breeding Male
-  - Work types: Herding, Protection, Tracking, Patrol, Farm Work
-  - Full canine management integrated into Livestock module
-  - Canine data persists automatically with other farm animals
+  - **Canine Roles:** Guard Dog, Herding Dog, Working Dog, Family Dog, Breeding Female, Breeding Male
+  - **Work Types:** Herding, Protection, Tracking, Patrol, Farm Work
+  - **Health Tracking:** Condition/illness records, severity levels, veterinarian info, treatment notes
+  - **Vaccination System:** Vaccine type, date, veterinarian, booster due dates, complete vaccine history
+  - **Husbandry Management:** Feed type/quantity/frequency, housing, exercise levels, grooming schedule, supplements
+  - **Organized Tabs:** Info, Health, Vaccines, Husbandry for easy navigation
+  - **Full data persistence:** All canine records saved automatically with other farm animals
 
 - **2024-11-22:** Fixed Header Branding & Text Visibility
   - Fixed "JR FARM" text visibility in light mode header
