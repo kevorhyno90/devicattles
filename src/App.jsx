@@ -19,6 +19,7 @@ const AuditLog = lazy(() => import('./modules/AuditLog'))
 const BackupRestore = lazy(() => import('./modules/BackupRestore'))
 const SyncSettings = lazy(() => import('./modules/SyncSettings'))
 const AdvancedAnalytics = lazy(() => import('./modules/AdvancedAnalytics'))
+const EnhancedSettings = lazy(() => import('./modules/EnhancedSettings'))
 
 // Loading fallback component - faster, smaller
 const LoadingFallback = () => (
@@ -607,17 +608,33 @@ function AppContent() {
             </div>
             
             {/* Tabs for Settings */}
-            <div style={{ display: 'flex', gap: 10, marginBottom: 20, borderBottom: '2px solid #e5e7eb' }}>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 20, borderBottom: '2px solid #e5e7eb', overflowX: 'auto' }}>
+              <button
+                onClick={() => setSettings(s => ({ ...s, settingsTab: 'enhanced' }))}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: (settings.settingsTab || 'enhanced') === 'enhanced' ? '2px solid #059669' : '2px solid transparent',
+                  padding: '10px 20px',
+                  cursor: 'pointer',
+                  fontWeight: (settings.settingsTab || 'enhanced') === 'enhanced' ? 600 : 400,
+                  color: (settings.settingsTab || 'enhanced') === 'enhanced' ? '#059669' : '#6b7280',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                ⚙️ Settings
+              </button>
               <button
                 onClick={() => setSettings(s => ({ ...s, settingsTab: 'appearance' }))}
                 style={{
                   background: 'none',
                   border: 'none',
-                  borderBottom: (settings.settingsTab || 'appearance') === 'appearance' ? '2px solid #059669' : '2px solid transparent',
+                  borderBottom: settings.settingsTab === 'appearance' ? '2px solid #059669' : '2px solid transparent',
                   padding: '10px 20px',
                   cursor: 'pointer',
-                  fontWeight: (settings.settingsTab || 'appearance') === 'appearance' ? 600 : 400,
-                  color: (settings.settingsTab || 'appearance') === 'appearance' ? '#059669' : '#6b7280'
+                  fontWeight: settings.settingsTab === 'appearance' ? 600 : 400,
+                  color: settings.settingsTab === 'appearance' ? '#059669' : '#6b7280',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 🎨 Appearance
@@ -631,12 +648,16 @@ function AppContent() {
                   padding: '10px 20px',
                   cursor: 'pointer',
                   fontWeight: settings.settingsTab === 'sync' ? 600 : 400,
-                  color: settings.settingsTab === 'sync' ? '#059669' : '#6b7280'
+                  color: settings.settingsTab === 'sync' ? '#059669' : '#6b7280',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 🔄 Cloud Sync
               </button>
             </div>
+
+            {/* Enhanced Settings Tab */}
+            {(settings.settingsTab || 'enhanced') === 'enhanced' && <EnhancedSettings />}
 
             {/* Sync Settings Tab */}
             {settings.settingsTab === 'sync' && <SyncSettings />}
