@@ -766,7 +766,7 @@ export default function Animals() {
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <button onClick={() => { editAnimal(a); setTab('addAnimal') }} style={{ padding: '6px 12px', fontSize: '0.85rem' }}>✏️ Edit</button>
+                          <button onClick={() => startEditAnimal(a)} style={{ padding: '6px 12px', fontSize: '0.85rem' }}>✏️ Edit</button>
                           <button onClick={() => deleteAnimal(a.id)} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee', color: '#c00' }}>🗑️</button>
                         </div>
                       </div>
