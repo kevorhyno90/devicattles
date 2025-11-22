@@ -1,5 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react'
 import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme.jsx'
+import OfflineIndicator from './components/OfflineIndicator'
 
 // Lazy load all modules for code splitting
 const Dashboard = lazy(() => import('./modules/Dashboard'))
@@ -78,6 +79,18 @@ function AppContent() {
     
     return () => {
       window.removeEventListener('pwa-install-available', handleInstallPrompt)
+    }
+  }, [])
+
+  // Upgrade service worker to enhanced version
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        // Check for service worker updates every hour
+        setInterval(() => {
+          reg.update()
+        }, 60 * 60 * 1000)
+      })
     }
   }, [])
 
@@ -862,6 +875,9 @@ function AppContent() {
       }}>
         <small>© Devins Farm — Comprehensive Farm Management System</small>
       </footer>
+      
+      {/* Offline indicator */}
+      <OfflineIndicator />
     </div>
   )
 }

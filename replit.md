@@ -6,6 +6,16 @@ Devins Farm is a comprehensive Progressive Web App (PWA) for dairy and farm mana
 **Current State:** Successfully configured for Replit environment. The application is running on port 5000 and accessible through the web preview.
 
 ## Recent Changes
+- **2024-11-22:** Enhanced Offline Support & Sync Queue
+  - Created `offlineSync.js` library: Queue operations while offline, sync when connection returns
+  - Created `OfflineIndicator.jsx` component: Visual feedback for offline mode and pending operations
+  - Improved Service Worker with Stale-While-Revalidate caching strategy for better offline UX
+  - Added offline state detection and automatic sync queue management
+  - Queue statistics showing pending changes by type (animals, tasks, finance)
+  - Offline indicator appears in bottom-right with detailed status info
+  - App continues working fully while offline - all changes saved locally
+  - GitHub integration complete - all 13 commits pushed successfully
+
 - **2024-11-22:** Mobile Responsive & Bulk Operations & Additional Reports
   - Added enhanced mobile CSS with responsive breakpoints for 480px, tablets (768px-1024px), and modals
   - Created BulkOperations module: bulk import/export (CSV/JSON), bulk edit status/tags, bulk delete with filters
