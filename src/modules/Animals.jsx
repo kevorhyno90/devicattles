@@ -177,7 +177,8 @@ export default function Animals() {
   }
 
   function startEditAnimal(a) {
-    setForm(a)
+    // Merge animal data with emptyAnimal to ensure all fields have values
+    setForm({ ...emptyAnimal, ...a })
     setEditingId(a.id)
     setTab('addAnimal')
   }
