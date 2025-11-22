@@ -71,6 +71,31 @@ body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica
   font-weight: 700;
 }
 
+/* Theme-specific heading colors for dashboard */
+.app.theme-bold .dashboard-header h1,
+.app.theme-bold .notifications-header h1,
+.app.theme-dark .dashboard-header h1,
+.app.theme-dark .notifications-header h1,
+.app.theme-cyberpunk .dashboard-header h1,
+.app.theme-cyberpunk .notifications-header h1 {
+  color: #fff;
+}
+
+.app.theme-calm .dashboard-header h1,
+.app.theme-calm .notifications-header h1 {
+  color: #e8f5e9;
+}
+
+.app.theme-catalytics .dashboard-header h1,
+.app.theme-catalytics .notifications-header h1 {
+  color: #0f766e;
+}
+
+.app.theme-contrast .dashboard-header h1,
+.app.theme-contrast .notifications-header h1 {
+  color: #ffd700;
+}
+
 .header-actions {
   display: flex;
   gap: 10px;
