@@ -139,7 +139,10 @@ export default function Animals() {
 
     if (editingId) {
       // Update existing animal - regenerate QR code with updated data
-      const updatedAnimal = { ...candidate }
+      const updatedAnimal = { 
+        ...candidate,
+        id: editingId  // Preserve the ID
+      }
       const qrData = {
         type: 'animal',
         id: editingId,
@@ -148,6 +151,8 @@ export default function Animals() {
         breed: updatedAnimal.breed
       }
       updatedAnimal.qrCode = generateQRCodeDataURL(JSON.stringify(qrData))
+      
+      // Update the animal in the array, preserving fields not in the form
       setAnimals(animals.map(a => a.id === editingId ? { ...a, ...updatedAnimal } : a))
     } else {
       // Create new animal - generate ID and QR code
@@ -172,12 +177,36 @@ export default function Animals() {
   }
 
   function startEditAnimal(a) { 
-    // Create a copy of the animal data
-    const animalCopy = { ...a }
-    // Ensure arrays exist
-    if (!animalCopy.tags) animalCopy.tags = []
-    if (!animalCopy.photos) animalCopy.photos = []
-    // Set form with animal data
+    // Create a deep copy of the animal data
+    const animalCopy = {
+      ...a,
+      tags: Array.isArray(a.tags) ? [...a.tags] : [],
+      photos: Array.isArray(a.photos) ? [...a.photos] : [],
+      // Ensure all fields have values (no undefined)
+      tag: a.tag || '',
+      name: a.name || '',
+      breed: a.breed || '',
+      sex: a.sex || 'F',
+      color: a.color || '',
+      dob: a.dob || '',
+      weight: a.weight || '',
+      sire: a.sire || '',
+      dam: a.dam || '',
+      groupId: a.groupId || '',
+      status: a.status || 'Active',
+      notes: a.notes || '',
+      owner: a.owner || '',
+      registration: a.registration || '',
+      tattoo: a.tattoo || '',
+      purchaseDate: a.purchaseDate || '',
+      purchasePrice: a.purchasePrice || '',
+      vendor: a.vendor || '',
+      photo: a.photo || '',
+      pregnancyStatus: a.pregnancyStatus || 'Unknown',
+      expectedDue: a.expectedDue || '',
+      parity: a.parity || '',
+      lactationStatus: a.lactationStatus || 'NA'
+    }
     setForm(animalCopy)
     setEditingId(a.id)
     setTab('addAnimal')
