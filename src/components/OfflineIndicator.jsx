@@ -26,10 +26,6 @@ export default function OfflineIndicator() {
     }
   }, [])
 
-  if (!isOffline && queueStats.total === 0) {
-    return null // Don't show when online and no queue
-  }
-
   return (
     <div
       style={{
@@ -76,7 +72,8 @@ export default function OfflineIndicator() {
             color: '#92400e',
             padding: '10px 12px',
             borderRadius: '4px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            marginBottom: '8px'
           }}
           onClick={() => setShowDetails(!showDetails)}
           title="Click for details"
@@ -97,7 +94,31 @@ export default function OfflineIndicator() {
         </div>
       )}
 
-      {showDetails && (queueStats.total > 0 || isOffline) && (
+      {!isOffline && queueStats.total === 0 && (
+        <div
+          style={{
+            backgroundColor: '#e0f2fe',
+            borderLeft: '4px solid #0ea5e9',
+            color: '#0369a1',
+            padding: '8px 12px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '12px'
+          }}
+          onClick={() => setShowDetails(!showDetails)}
+          title="Click for offline status info"
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '14px' }}>✓</span>
+            <div>
+              <div style={{ fontWeight: '600' }}>Connected</div>
+              <div style={{ fontSize: '11px', opacity: 0.8 }}>All data synced</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDetails && (
         <div
           style={{
             backgroundColor: '#f3f4f6',
@@ -109,7 +130,10 @@ export default function OfflineIndicator() {
           }}
         >
           <div style={{ fontWeight: '600', marginBottom: '8px', color: '#374151' }}>
-            Offline Mode Info
+            Status Info
+          </div>
+          <div style={{ marginBottom: '6px', color: '#666' }}>
+            {isOffline ? '🔴 Offline Mode' : '🟢 Online'}
           </div>
           {isOffline && (
             <div style={{ marginBottom: '6px', color: '#666' }}>
@@ -119,18 +143,33 @@ export default function OfflineIndicator() {
           {queueStats.total > 0 && (
             <>
               <div style={{ marginBottom: '6px', color: '#666' }}>
-                Pending: {queueStats.total} operation{queueStats.total !== 1 ? 's' : ''}
+                ⏳ Pending: {queueStats.total} operation{queueStats.total !== 1 ? 's' : ''}
               </div>
+              {queueStats.grouped.animals > 0 && (
+                <div style={{ marginBottom: '3px', color: '#999', fontSize: '11px' }}>
+                  • {queueStats.grouped.animals} animal{queueStats.grouped.animals !== 1 ? 's' : ''}
+                </div>
+              )}
+              {queueStats.grouped.tasks > 0 && (
+                <div style={{ marginBottom: '3px', color: '#999', fontSize: '11px' }}>
+                  • {queueStats.grouped.tasks} task{queueStats.grouped.tasks !== 1 ? 's' : ''}
+                </div>
+              )}
+              {queueStats.grouped.finance > 0 && (
+                <div style={{ marginBottom: '3px', color: '#999', fontSize: '11px' }}>
+                  • {queueStats.grouped.finance} finance transaction{queueStats.grouped.finance !== 1 ? 's' : ''}
+                </div>
+              )}
               {queueStats.oldest && (
-                <div style={{ marginBottom: '6px', color: '#999', fontSize: '11px' }}>
+                <div style={{ marginTop: '6px', color: '#999', fontSize: '11px', borderTop: '1px solid #ddd', paddingTop: '6px' }}>
                   Since: {new Date(queueStats.oldest).toLocaleTimeString()}
                 </div>
               )}
             </>
           )}
-          {!isOffline && (
+          {!isOffline && queueStats.total === 0 && (
             <div style={{ color: '#059669', fontWeight: '500' }}>
-              ✓ Back online - changes syncing
+              ✓ Connected and synced
             </div>
           )}
         </div>
