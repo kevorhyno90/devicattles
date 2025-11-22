@@ -127,11 +127,22 @@ The project includes scripts for various deployment platforms:
 - Vercel: `npm run deploy:vercel`
 - Firebase: `npm run deploy:firebase`
 
-## Data Storage
-- All data is stored in browser localStorage
-- No backend server required
-- Optional Firebase sync available for multi-device access
-- Export/Import features for data backup
+## Data Storage & Persistence
+- **Automatic Persistence**: All data is automatically saved to browser localStorage the moment you add/edit it
+- **Data stays until deleted**: Data persists indefinitely in localStorage until you explicitly delete it
+- **No backend required**: Everything works offline in your browser
+- **Storage backends**:
+  - **IndexedDB**: Used automatically for large datasets (>50 items per category) for better performance
+  - **localStorage**: Used for smaller datasets, with ~5-10 MB total limit per domain
+- **Data sync**: Optional Firebase sync available for multi-device cloud access
+- **Backup/Export**: Export/Import features for data backup as CSV/JSON/DOCX
+- **All modules covered**: Animals, Tasks, Finance, Crops, Inventory, Health, Schedules, etc.
+
+### How Persistence Works
+1. **Load**: Data loads from storage when you open the app
+2. **Save**: Every change is automatically saved to localStorage
+3. **Persist**: Data remains stored until you delete it
+4. **Backup**: Export data anytime for backup (Backup/Restore module)
 
 ## Notes
 - This is a frontend-only application with no backend dependencies
