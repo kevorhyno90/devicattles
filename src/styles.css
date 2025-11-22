@@ -17,7 +17,6 @@ body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica
 .logo-wrap{width:68px;height:68px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));box-shadow:0 8px 30px rgba(124,77,255,0.12);border:1px solid rgba(255,255,255,0.12)}
 .logo-wrap .logo{height:56px;width:auto;border-radius:8px;display:block}
 .brand-wordmark{font-weight:800;font-size:1.25rem;line-height:1;color:#fff}
-.brand-wordmark{background:linear-gradient(90deg,var(--accent1),var(--accent2),var(--accent3));-webkit-background-clip:text;background-clip:text;color:transparent}
 .brand-tag{font-size:0.78rem;color:rgba(255,255,255,0.9);margin-top:4px;opacity:0.95}
 
 /* Shimmer animation for wordmark */
@@ -32,19 +31,19 @@ body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica
 
 /* Theme variants */
 .app.theme-light header{background:linear-gradient(90deg,#f8fafc,#eef6ff);color:#123}
-.app.theme-light .brand-wordmark{background:linear-gradient(90deg,#1f6b33,#1b8f6a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.app.theme-light .brand-wordmark{color:#1f6b33;font-weight:800}
 
 .app.theme-bold{color:#e6f7ff;--muted:rgba(230,245,255,0.85)}
 .app.theme-bold header{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:inherit}
-.app.theme-bold .brand-wordmark{background:linear-gradient(90deg,var(--accent1),var(--accent2),var(--accent3));-webkit-background-clip:text;background-clip:text;color:transparent}
+.app.theme-bold .brand-wordmark{color:#fff;font-weight:800}
 
 .app.theme-calm{color:#06283b;--muted:rgba(6,40,59,0.75)}
 .app.theme-calm header{background:linear-gradient(90deg,#3a8b5a,#2b8c3e);color:inherit}
-.app.theme-calm .brand-wordmark{background:linear-gradient(90deg,#d6f6e0,#2b8c3e);-webkit-background-clip:text;background-clip:text;color:transparent}
+.app.theme-calm .brand-wordmark{color:#fff;font-weight:800}
 
 .app.theme-contrast{background-color:#000;color:#fff;--muted:rgba(255,255,255,0.8)}
 .app.theme-contrast header{background:#000;color:#fff}
-.app.theme-contrast .brand-wordmark{background:linear-gradient(90deg,#fff,#ffd700);-webkit-background-clip:text;background-clip:text;color:transparent}
+.app.theme-contrast .brand-wordmark{color:#ffd700;font-weight:800}
 .app.theme-contrast .panel, .app.theme-contrast .card, .app.theme-contrast section{background:#111;border:1px solid #333;color:#fff}
 .app.theme-contrast input, .app.theme-contrast select, .app.theme-contrast textarea{background:#222;border:1px solid #444;color:#fff}
 .app.theme-contrast th, .app.theme-contrast td{color:#fff;border-bottom:1px solid #333}
@@ -69,10 +68,8 @@ body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica
 .dashboard-header h1, .notifications-header h1 {
   margin: 0;
   font-size: 2rem;
-  background: linear-gradient(90deg, var(--accent1), var(--accent2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--accent1);
+  font-weight: 700;
 }
 
 .header-actions {
@@ -770,7 +767,7 @@ body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica
 /* Catalytics-inspired theme (clean, modern, high contrast) */
 .app.theme-catalytics{background-color:#f8fafc;color:#1e293b;--muted:#64748b;--accent1:#0f766e;--accent2:#059669;--accent3:#0d9488;--green:#059669;--bg:#f8fafc;--card-bg:#ffffff}
 .app.theme-catalytics header{background:linear-gradient(90deg, #0f766e, #059669);color:#ffffff;border-bottom:1px solid rgba(0,0,0,0.1)}
-.app.theme-catalytics .brand-wordmark{background:linear-gradient(90deg,#ffffff,#f0fdfa);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+.app.theme-catalytics .brand-wordmark{color:#ffffff;font-weight:800}
 .app.theme-catalytics .brand-tag{color:rgba(255,255,255,0.95)}
 .app.theme-catalytics .logo-wrap{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
 .app.theme-catalytics nav button{color:#ffffff;font-weight:500}
@@ -807,7 +804,7 @@ body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica
 .app.theme-cyberpunk{background-color:#0a0814;color:#f0f8ff;--muted:rgba(240,248,255,0.8)}
 .app.theme-cyberpunk{--accent1:#00e5ff;--accent2:#ff00c8;--accent3:#7a05ff}
 .app.theme-cyberpunk header{background:linear-gradient(90deg, rgba(10,8,20,0.98), rgba(15,10,25,0.98));border-bottom:1px solid rgba(255,255,255,0.05);box-shadow:0 10px 40px rgba(0,0,0,0.8);color:inherit}
-.app.theme-cyberpunk .brand-wordmark{background:linear-gradient(90deg,#00e5ff,#ff00c8,#7a05ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.app.theme-cyberpunk .brand-wordmark{color:#00e5ff;font-weight:800;text-shadow:0 0 20px rgba(0,229,255,0.5)}
 .app.theme-cyberpunk .brand-tag{color:rgba(240,248,255,0.9)}
 .app.theme-cyberpunk .logo-wrap{background:linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));border:1px solid rgba(0,229,255,0.12);box-shadow:0 12px 36px rgba(122,5,255,0.08);}
 .app.theme-cyberpunk nav button{color:#f0f8ff}
