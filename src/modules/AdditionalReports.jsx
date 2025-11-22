@@ -7,31 +7,7 @@ export default function AdditionalReports() {
   const [reportData, setReportData] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    generateReport(activeReport)
-  }, [activeReport])
-
-  const generateReport = (type) => {
-    setLoading(true)
-    
-    try {
-      const animals = JSON.parse(localStorage.getItem('cattalytics:animals') || '[]')
-      const finance = JSON.parse(localStorage.getItem('cattalytics:finance') || '[]')
-      
-      if (type === 'health') {
-        setReportData(generateHealthReport(animals, finance))
-      } else if (type === 'breeding') {
-        setReportData(generateBreedingReport(animals))
-      } else if (type === 'feed') {
-        setReportData(generateFeedReport(animals, finance))
-      }
-    } catch (error) {
-      console.error('Error generating report:', error)
-    }
-    
-    setLoading(false)
-  }
-
+  // Define all helper functions BEFORE they're used
   const generateHealthReport = (animals) => {
     const healthSummary = {
       totalAnimals: animals.length,
@@ -121,6 +97,31 @@ export default function AdditionalReports() {
       }))
     }
   }
+
+  const generateReport = (type) => {
+    setLoading(true)
+    
+    try {
+      const animals = JSON.parse(localStorage.getItem('cattalytics:animals') || '[]')
+      const finance = JSON.parse(localStorage.getItem('cattalytics:finance') || '[]')
+      
+      if (type === 'health') {
+        setReportData(generateHealthReport(animals))
+      } else if (type === 'breeding') {
+        setReportData(generateBreedingReport(animals))
+      } else if (type === 'feed') {
+        setReportData(generateFeedReport(animals, finance))
+      }
+    } catch (error) {
+      console.error('Error generating report:', error)
+    }
+    
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    generateReport(activeReport)
+  }, [activeReport])
 
   const downloadReport = async () => {
     if (!reportData) return
