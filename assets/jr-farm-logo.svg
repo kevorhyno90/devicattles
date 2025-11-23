@@ -1,0 +1,59 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Define gradient -->
+  <defs>
+    <linearGradient id="farmGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="url(#farmGradient)" stroke="white" stroke-width="3"/>
+  
+  <!-- Barn/Farm building -->
+  <g transform="translate(100, 70)">
+    <!-- Barn body -->
+    <rect x="-25" y="-5" width="50" height="35" fill="#8b4513" rx="2"/>
+    
+    <!-- Barn roof -->
+    <polygon points="0,-20 -35,15 35,15" fill="url(#accentGradient)"/>
+    
+    <!-- Barn door -->
+    <rect x="-12" y="5" width="24" height="20" fill="#6b3410"/>
+    <circle cx="-5" cy="15" r="2" fill="#d4af37"/>
+    
+    <!-- Window -->
+    <rect x="12" y="8" width="8" height="8" fill="#87ceeb"/>
+  </g>
+  
+  <!-- Wheat/Crop elements -->
+  <g transform="translate(65, 110)">
+    <!-- Left wheat -->
+    <line x1="0" y1="0" x2="-3" y2="12" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+    <line x1="-2" y1="4" x2="-6" y2="14" stroke="#f59e0b" stroke-width="1.5"/>
+    <line x1="2" y1="4" x2="-1" y2="14" stroke="#f59e0b" stroke-width="1.5"/>
+    <!-- Grain dots -->
+    <circle cx="-4" cy="2" r="1.5" fill="#f59e0b"/>
+    <circle cx="-3" cy="6" r="1.5" fill="#f59e0b"/>
+  </g>
+  
+  <g transform="translate(135, 110)">
+    <!-- Right wheat -->
+    <line x1="0" y1="0" x2="3" y2="12" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+    <line x1="2" y1="4" x2="6" y2="14" stroke="#f59e0b" stroke-width="1.5"/>
+    <line x1="-2" y1="4" x2="1" y2="14" stroke="#f59e0b" stroke-width="1.5"/>
+    <!-- Grain dots -->
+    <circle cx="4" cy="2" r="1.5" fill="#f59e0b"/>
+    <circle cx="3" cy="6" r="1.5" fill="#f59e0b"/>
+  </g>
+  
+  <!-- Text: JR FARM -->
+  <text x="100" y="160" font-size="24" font-weight="bold" text-anchor="middle" fill="white" font-family="Arial, sans-serif" letter-spacing="2">JR FARM</text>
+  
+  <!-- Decorative line under text -->
+  <line x1="70" y1="170" x2="130" y2="170" stroke="white" stroke-width="2" opacity="0.8"/>
+</svg>
