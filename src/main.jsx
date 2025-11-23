@@ -15,21 +15,6 @@ createRoot(document.getElementById('root')).render(
 // Register service worker for PWA support
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
-    // FORCE CACHE CLEAR - Remove this after users have refreshed
-    try {
-      const registrations = await navigator.serviceWorker.getRegistrations()
-      for (let registration of registrations) {
-        await registration.unregister()
-      }
-      const cacheNames = await caches.keys()
-      for (let name of cacheNames) {
-        await caches.delete(name)
-      }
-      console.log('🧹 Cleared all service workers and caches')
-    } catch (e) {
-      console.warn('Cache clear failed:', e)
-    }
-    
     navigator.serviceWorker.register('/service-worker.js').then(reg => {
       console.log('✅ Service Worker registered successfully')
       

@@ -1,10 +1,13 @@
-// Use a cache name that includes a timestamp so new builds get a fresh cache and old caches are removed
-const CACHE_NAME = 'devinsfarm-static-v' + Date.now()
+// Use a version-based cache name for better control
+const CACHE_VERSION = '1.0.0'
+const CACHE_NAME = 'devinsfarm-static-v' + CACHE_VERSION
+const RUNTIME_CACHE = 'devinsfarm-runtime-v' + CACHE_VERSION
 
-// Keep the pre-cache list minimal (avoid referencing source files that don't exist in production)
+// Pre-cache essential files for offline functionality
 const ASSETS = [
   '/',
-  '/index.html'
+  '/index.html',
+  '/manifest.webmanifest'
 ]
 
 self.addEventListener('install', evt => {
@@ -33,7 +36,13 @@ self.addEventListener('install', evt => {
 
 self.addEventListener('activate', evt => {
   evt.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k))))
+    caches.keys().then(keys => 
+      Promise.all(
+        keys
+          .filter(k => k !== CACHE_NAME && k !== RUNTIME_CACHE)
+          .map(k => caches.delete(k))
+      )
+    )
   )
   self.clients.claim()
 })
@@ -52,38 +61,75 @@ self.addEventListener('message', (evt) => {
 
 self.addEventListener('fetch', evt => {
   if (evt.request.method !== 'GET') return
+  
+  const url = new URL(evt.request.url)
+  const isNavigation = evt.request.mode === 'navigate'
+  const wantsHtml = (evt.request.headers.get('accept') || '').includes('text/html')
+  const isSameOrigin = url.origin === self.location.origin
+  
   evt.respondWith((async () => {
     try {
+      // Try cache first for better offline experience
       const cached = await caches.match(evt.request)
-      if (cached) return cached
-      const fres = await fetch(evt.request)
-      // If the fetch returned HTML but the request is not a navigation/HTML accept, treat as an error
-      const contentType = fres.headers.get('content-type') || ''
-      const isHtmlResp = contentType.includes('text/html')
-      const wantsHtml = evt.request.mode === 'navigate' || ((evt.request.headers.get('accept') || '').includes('text/html'))
-      if (isHtmlResp && !wantsHtml) {
-        // Avoid returning index.html for assets (JS/CSS) which causes corrupted-content errors
-        throw new Error('Unexpected HTML response for non-navigation request')
-      }
-      // Only cache same-origin resources; ignore caching failures
-      try {
-        if (evt.request.url.startsWith(self.location.origin)) {
-          const cache = await caches.open(CACHE_NAME)
-          cache.put(evt.request, fres.clone())
+      
+      // For same-origin requests, try network and update cache
+      if (isSameOrigin) {
+        try {
+          const fres = await fetch(evt.request)
+          const contentType = fres.headers.get('content-type') || ''
+          const isHtmlResp = contentType.includes('text/html')
+          
+          // Prevent HTML being cached as assets
+          if (isHtmlResp && !wantsHtml) {
+            throw new Error('Unexpected HTML response for non-navigation request')
+          }
+          
+          // Cache successful responses
+          if (fres.ok) {
+            const cache = await caches.open(RUNTIME_CACHE)
+            cache.put(evt.request, fres.clone()).catch(e => 
+              console.warn('Cache put failed:', e)
+            )
+          }
+          return fres
+        } catch (networkErr) {
+          // Network failed - return cached version if available
+          if (cached) {
+            console.log('Serving from cache (offline):', evt.request.url)
+            return cached
+          }
+          throw networkErr
         }
-      } catch (e) {
-        console.warn('Runtime cache put failed', e)
       }
-      return fres
+      
+      // For external resources, try network first, then cache
+      if (cached) return cached
+      return await fetch(evt.request)
+      
     } catch (err) {
-      // Network or other failure: for navigation/HTML requests serve cached index.html if available
-      const wantsHtml = evt.request.mode === 'navigate' || ((evt.request.headers.get('accept') || '').includes('text/html'))
-      if (wantsHtml) {
-        const fallback = await caches.match('/index.html')
-        if (fallback) return fallback
+      // Final fallback for navigation requests
+      if (isNavigation || wantsHtml) {
+        const indexFallback = await caches.match('/index.html')
+        if (indexFallback) {
+          console.log('Serving index.html as offline fallback')
+          return indexFallback
+        }
       }
-      // For non-navigation requests (scripts/styles/etc.) return a 503 instead of HTML to avoid corrupted-content errors
-      return new Response('', { status: 503, statusText: 'Service Unavailable' })
+      
+      // For assets/API calls when offline, return proper error
+      console.error('Fetch failed and no cache available:', evt.request.url, err)
+      return new Response(
+        JSON.stringify({ 
+          error: 'Offline', 
+          message: 'You are offline and this resource is not cached',
+          url: evt.request.url 
+        }),
+        { 
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
     }
   })())
 })
