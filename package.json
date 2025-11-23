@@ -11,8 +11,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "vercel-build": "vite build",
-    "deploy": "npm run build && netlify deploy --prod --dir=dist",
-    "deploy:netlify": "./deploy-netlify.sh",
+    "deploy": "npm run build && vercel --prod",
     "deploy:vercel": "npm run build && vercel --prod",
     "deploy:firebase": "npm run build && firebase deploy --only hosting"
   },
