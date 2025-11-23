@@ -12,7 +12,7 @@
  */
 
 import { initializeApp } from 'firebase/app'
-import { initializeFirestore, CACHE_SIZE_UNLIMITED } from 'firebase/firestore'
+import { initializeFirestore, CACHE_SIZE_UNLIMITED, persistentLocalCache } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 
 // Firebase configuration - CONFIGURED
@@ -42,11 +42,11 @@ try {
   if (isFirebaseConfigured()) {
     app = initializeApp(firebaseConfig)
     db = initializeFirestore(app, {
-      cacheSizeBytes: CACHE_SIZE_UNLIMITED
+      localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED })
     })
     auth = getAuth(app)
     
-    console.log('✅ Firebase initialized successfully')
+    console.log('✅ Firebase initialized successfully with persistence')
   } else {
     // Log once on first check - not a warning since it's expected in local/demo mode
     if (!window.__firebaseConfigLogged) {
