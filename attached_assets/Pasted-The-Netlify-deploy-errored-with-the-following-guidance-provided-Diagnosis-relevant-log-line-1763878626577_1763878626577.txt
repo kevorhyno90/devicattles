@@ -1,0 +1,116 @@
+The Netlify deploy errored, with the following guidance provided:
+
+**Diagnosis — relevant log lines**
+- Vite/node version warning: [line 168](#L168) ("You are using Node.js 18.20.8. Vite requires Node.js version 20.19+ or 22.12+...")
+- Build failure and runtime error: [lines 171-174](#L171-L174) ("Build failed" and "[vite:build-html] crypto.hash is not a function", file: index.html)
+
+Error type and cause
+- Type: Environment / Node.js version mismatch causing runtime API error.
+- Cause: The build runs on Node 18.20.8 but Vite v7 requires Node >= 20.19. The crypto.hash API used by Vite is not available on Node 18, causing the "crypto.hash is not a function" error during build ([lines 168](#L168), [172-174](#L172-L174)).
+
+Solution
+1. Upgrade the Node version used during Netlify builds to a supported version (20.19+ or 22.12+). Choose one of these methods (pick at least one and redeploy):
+
+- Quick: Set the NODE_VERSION environment variable in Netlify
+  - In Netlify dashboard: Site > Site settings > Build & deploy > Environment > Add variable
+    - Key: NODE_VERSION
+    - Value: 20.19.0 (or 22.12.0)
+  - Or add to netlify.toml at repo root:
+```toml
+[build.environment]
+  NODE_VERSION = "20.19.0"
+```
+
+- Repo-based: Add a .nvmrc file (so builds automatically use that Node)
+  - Create file .nvmrc at repo root with:
+```text
+20.19.0
+```
+  - Commit and push, then trigger a new deploy.
+
+- Alternative: Add engines in package.json (Netlify will respect this if no explicit NODE_VERSION / .nvmrc):
+```json
+"engines": {
+  "node": ">=20.19.0"
+}
+```
+
+2. Redeploy the site after making one of the above changes.
+
+3. Confirm the build uses the new Node version by checking the deploy logs for the "Now using node v..." message and that the Vite warning is gone.
+
+Reference
+- Netlify docs for changing Node versions: https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript
+
+Why this fixes it
+- Upgrading Node to a version Vite supports (>=20.19) provides the crypto.hash API and other runtime features Vite v7 expects, preventing the "crypto.hash is not a function" error.
+
+The relevant error logs are:
+
+Line 0: build-image version: dffa6e46a3b73a23ca8995efed9259d5d2772478 (noble)
+Line 1: buildbot version: 91fc597bd5d0118ee1f60dbaad1198626ecc887e
+Line 2: Fetching cached dependencies
+Line 3: Failed to fetch cache, continuing with build
+Line 4: Starting to prepare the repo for build
+Line 5: No cached dependencies found. Cloning fresh repo
+Line 6: git clone --filter=blob:none https://github.com/kevorhyno90/devicattles
+Line 7: Preparing Git Reference refs/heads/main
+Line 8: Starting to install dependencies
+Line 9: Downloading and installing node v18.20.8...
+Line 10: Downloading https://nodejs.org/dist/v18.20.8/node-v18.20.8-linux-x64.tar.xz...
+Line 11: Computing checksum with sha256sum
+Line 12: Checksums matched!
+Line 13: Now using node v18.20.8 (npm v10.8.2)
+Line 161: [96m[1m​[22m[39m
+Line 162: [96m[1mbuild.command from netlify.toml                               [22m[39m
+Line 163: [96m[1m────────────────────────────────────────────────────────────────[22m[39m
+Line 164: ​
+Line 165: [36m$ npm run build[39m
+Line 166: > devins-farm@0.1.0 build
+Line 167: > vite build
+Line 168: [33mYou are using Node.js 18.20.8. Vite requires Node.js version 20.19+ or 22.12+. Please upgrade your Node.js version.[39m
+Line 169: [36mvite v7.2.2 [32mbuilding client environment for production...[36m[39m
+Line 170: [32m✓[39m 0 modules transformed.
+Line 171: [31m✗[39m Build failed in 25ms
+Line 172: [31merror during build:
+Line 173: [31m[vite:build-html] crypto.hash is not a function[31m
+Line 174: file: [36m/opt/build/repo/index.html[31m
+Line 175:     at getHash (file:///opt/build/repo/node_modules/vite/dist/node/chunks/config.js:2680:21)
+Line 176:     at file:///opt/build/repo/node_modules/vite/dist/node/chunks/config.js:24611:22
+Line 177:     at traverseNodes (file:///opt/build/repo/node_modules/vite/dist/node/chunks/config.js:24384:2)
+Line 178:     at file:///opt/build/repo/node_modules/vite/dist/node/chunks/config.js:24385:141
+Line 179:     at Array.forEach (<anonymous>)
+Line 180:     at traverseNodes (file:///opt/build/repo/node_modules/vite/dist/node/chunks/config.js:24385:118)
+Line 181:     at file:///opt/build/repo/node_modules/vite/dist/node/chunks/config.js:24385:141
+Line 182:     at Array.forEach (<anonymous>)
+Line 183:     at traverseNodes (file:///opt/build/repo/node_modules/vite/dist/node/chunks/config.js:24385:118)
+Line 184:     at file:///opt/build/repo/node_modules/vite/dist/node/chunks/config.js:24385:141[39m
+Line 185: [91m[1m​[22m[39m
+Line 186: [91m[1m"build.command" failed                                        [22m[39m
+Line 187: [91m[1m────────────────────────────────────────────────────────────────[22m[39m
+Line 188: ​
+Line 189:   [31m[1mError message[22m[39m
+Line 190:   Command failed with exit code 1: npm run build
+Line 191: ​
+Line 192:   [31m[1mError location[22m[39m
+Line 193:   In build.command from netlify.toml:
+Line 194:   npm run build
+Line 195: ​
+Line 196:   [31m[1mResolved config[22m[39m
+Line 197:   build:
+Line 198:     command: npm run build
+Line 199:     commandOrigin: config
+Line 200:     environment:
+Line 201:       - NODE_VERSION
+Line 202:     publish: /opt/build/repo/dist
+Line 203:     publishOrigin: config
+Line 204:   headers:
+Line 205: Failed during stage 'building site': Build script returned non-zero exit code: 2
+Line 206:     - for: /*
+      values:
+        Referrer-Policy: strict-origin-when-cross-origin
+        X-Content-Type-Options: nosniff
+   
+Line 207: Build failed due to a user error: Build script returned non-zero exit code: 2
+Line 208: Failing build: Failed to build site
+Line 209: Finished processing build request in 13.866s
