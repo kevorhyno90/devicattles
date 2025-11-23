@@ -4,16 +4,23 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // Set the base path for deployment to a subdirectory
+  base: '/devicattles/', 
+
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Let the plugin automatically handle the scope based on the 'base' config
+      // This ensures the service worker controls the correct path
       includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
         name: 'Devins Farm',
         short_name: 'DevinsFarm',
         description: 'A modern, offline-first farm management application.',
         theme_color: '#ffffff',
+        display: 'standalone',
+        // The start_url will be automatically prefixed with the 'base' path
         icons: [
           {
             src: 'pwa-192x192.png',
