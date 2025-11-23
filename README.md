@@ -25,3 +25,4 @@ npm run dev
 *   **Financial Tracking:** Record transactions to monitor income and expenses.
 *   **Inventory Control:** Manage stock levels for feed, medicine, and other supplies.
 *   **Progressive Web App (PWA):** Install the app on your device for offline access and a native-like experience.
+
