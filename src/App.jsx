@@ -23,6 +23,8 @@ const AdvancedAnalytics = lazy(() => import('./modules/AdvancedAnalytics'))
 const EnhancedSettings = lazy(() => import('./modules/EnhancedSettings'))
 const BulkOperations = lazy(() => import('./modules/BulkOperations'))
 const AdditionalReports = lazy(() => import('./modules/AdditionalReports'))
+const PetManagement = lazy(() => import('./modules/PetManagement'))
+const CanineManagement = lazy(() => import('./modules/CanineManagement'))
 
 // Loading fallback component - faster, smaller
 const LoadingFallback = () => (
@@ -560,7 +562,39 @@ function AppContent() {
               <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
                 ← Back to Dashboard
               </button>
+              
+              {/* Sub-navigation for Livestock */}
+              <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button onClick={() => setView('animals')} style={{ padding: '8px 16px', background: '#059669', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
+                  🐄 Livestock
+                </button>
+                <button onClick={() => setView('pets')} style={{ padding: '8px 16px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                  🐾 Pets
+                </button>
+                <button onClick={() => setView('canines')} style={{ padding: '8px 16px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                  🐕 Canines
+                </button>
+              </div>
+              
               <Animals />
+            </section>
+          )}
+
+          {view === 'pets' && (
+            <section>
+              <button onClick={() => setView('animals')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                ← Back to Livestock
+              </button>
+              <PetManagement />
+            </section>
+          )}
+
+          {view === 'canines' && (
+            <section>
+              <button onClick={() => setView('animals')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                ← Back to Livestock
+              </button>
+              <CanineManagement animals={animals} setAnimals={setAnimals} />
             </section>
           )}
 
