@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react'
+import { Line } from 'react-chartjs-2'
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js'
 import { exportVaccinationRecords } from '../lib/pdfExport'
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
 
 const VACCINE_TYPES = {
   dog: ['Rabies', 'DHPP (Distemper/Parvo)', 'Bordetella', 'Leptospirosis', 'Lyme Disease', 'Influenza'],
@@ -42,7 +46,7 @@ export default function PetManagement() {
     name: '', species: 'Dog', breed: '', dob: '', sex: 'M', microchip: '',
     weight: '', color: '', status: 'Active', vaccinations: [], healthRecords: [],
     medications: [], feedingSchedule: { food: '', portions: '', frequency: 'Twice Daily' },
-    breedingRecords: [], groomingLog: [], notes: ''
+    breedingRecords: [], groomingLog: [], weightHistory: [], trainingLog: [], notes: ''
   }
 
   const [form, setForm] = useState(emptyPet)
@@ -70,6 +74,15 @@ export default function PetManagement() {
 
   const [groomingForm, setGroomingForm] = useState({
     date: new Date().toISOString().slice(0, 10), service: 'Bath', cost: '', groomer: '', notes: ''
+  })
+
+  const [trainingForm, setTrainingForm] = useState({
+    date: new Date().toISOString().slice(0, 10), session: '', command: '', progress: 'Learning',
+    duration: '', trainer: '', notes: ''
+  })
+
+  const [weightForm, setWeightForm] = useState({
+    date: new Date().toISOString().slice(0, 10), weight: '', unit: 'kg', notes: ''
   })
 
   useEffect(() => {
@@ -144,6 +157,26 @@ export default function PetManagement() {
     setGroomingForm({ date: new Date().toISOString().slice(0, 10), service: 'Bath', cost: '', groomer: '', notes: '' })
   }
 
+  const addTrainingLog = (petId) => {
+    if (!trainingForm.session.trim()) return
+    const newLog = { ...trainingForm, id: 'T' + Date.now() }
+    setPets(pets.map(p => p.id === petId ? {
+      ...p, trainingLog: [...(p.trainingLog || []), newLog]
+    } : p))
+    setTrainingForm({ date: new Date().toISOString().slice(0, 10), session: '', command: '', progress: 'Learning', duration: '', trainer: '', notes: '' })
+  }
+
+  const addWeightRecord = (petId) => {
+    if (!weightForm.weight) return
+    const newRecord = { ...weightForm, id: 'W' + Date.now() }
+    setPets(pets.map(p => p.id === petId ? {
+      ...p, 
+      weightHistory: [...(p.weightHistory || []), newRecord],
+      weight: parseFloat(weightForm.weight) // Update current weight
+    } : p))
+    setWeightForm({ date: new Date().toISOString().slice(0, 10), weight: '', unit: 'kg', notes: '' })
+  }
+
   const deleteRecord = (petId, recordType, recordId) => {
     setPets(pets.map(p => p.id === petId ? {
       ...p, [recordType]: (p[recordType] || []).filter(r => r.id !== recordId)
@@ -192,6 +225,9 @@ export default function PetManagement() {
           </button>
           <button onClick={() => setTab('grooming')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'grooming' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'grooming' ? '#f5f3ff' : 'transparent', color: tab === 'grooming' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'grooming' ? '600' : '400', cursor: 'pointer' }}>
             ✂️ Grooming
+          </button>
+          <button onClick={() => setTab('training')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'training' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'training' ? '#f5f3ff' : 'transparent', color: tab === 'training' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'training' ? '600' : '400', cursor: 'pointer' }}>
+            🎓 Training
           </button>
         </div>
       </div>
@@ -451,6 +487,59 @@ export default function PetManagement() {
         </div>
       )}
 
+      {tab === 'training' && (
+        <div>
+          <h4>Training Sessions</h4>
+          {pets.map(pet => (
+            pet.trainingLog && pet.trainingLog.length > 0 && (
+              <div key={pet.id} style={{ marginBottom: '24px' }}>
+                <h5 style={{ margin: '0 0 12px 0' }}>{pet.species === 'Dog' ? '🐕' : '🐈'} {pet.name}</h5>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '12px' }}>
+                  <div style={{ background: '#dbeafe', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '20px', fontWeight: '700', color: '#1e40af' }}>{pet.trainingLog.length}</div>
+                    <div style={{ fontSize: '11px', color: '#1e3a8a' }}>Sessions</div>
+                  </div>
+                  <div style={{ background: '#d1fae5', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '20px', fontWeight: '700', color: '#065f46' }}>
+                      {pet.trainingLog.filter(t => t.progress === 'Mastered').length}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#064e3b' }}>Mastered</div>
+                  </div>
+                </div>
+                {pet.trainingLog.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map(t => (
+                  <div key={t.id} style={{ background: 'white', padding: '14px', borderRadius: '6px', border: '1px solid #e5e7eb', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'center' }}>
+                      <strong>{t.session}</strong>
+                      <span style={{
+                        padding: '3px 8px',
+                        borderRadius: '10px',
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        background: t.progress === 'Mastered' ? '#d1fae5' : t.progress === 'Improving' ? '#dbeafe' : '#fef3c7',
+                        color: t.progress === 'Mastered' ? '#065f46' : t.progress === 'Improving' ? '#1e40af' : '#92400e'
+                      }}>
+                        {t.progress}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>
+                      <div>📅 {t.date}</div>
+                      {t.command && <div>🎯 Command: {t.command}</div>}
+                      {t.trainer && <div>👤 Trainer: {t.trainer}</div>}
+                    </div>
+                    <button onClick={() => deleteRecord(pet.id, 'trainingLog', t.id)} style={{ marginTop: '8px', padding: '4px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Delete</button>
+                  </div>
+                ))}
+              </div>
+            )
+          ))}
+          {pets.every(p => !p.trainingLog || p.trainingLog.length === 0) && (
+            <div style={{ background: 'white', border: '2px dashed #d1d5db', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
+              <p style={{ margin: 0, color: '#666' }}>No training sessions yet</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Selected Pet Detail View */}
       {selectedPet && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }} onClick={() => setSelectedPet(null)}>
@@ -461,10 +550,10 @@ export default function PetManagement() {
             </div>
 
             {/* Detail Tabs */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '2px solid #e5e7eb' }}>
-              {['info', 'vaccinations', 'health', 'medications', 'breeding', 'grooming'].map(t => (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '2px solid #e5e7eb', flexWrap: 'wrap' }}>
+              {['info', 'vaccinations', 'health', 'medications', 'breeding', 'grooming', 'training', 'weight'].map(t => (
                 <button key={t} onClick={() => setDetailTab(t)} style={{ padding: '10px 16px', border: 'none', borderBottom: detailTab === t ? '3px solid #8b5cf6' : 'none', background: detailTab === t ? '#f5f3ff' : 'transparent', color: detailTab === t ? '#8b5cf6' : '#666', cursor: 'pointer', fontWeight: detailTab === t ? '600' : '400', fontSize: '14px', textTransform: 'capitalize' }}>
-                  {t}
+                  {t === 'weight' ? '⚖️ Weight' : t === 'training' ? '🎓 Training' : t}
                 </button>
               ))}
             </div>
@@ -661,6 +750,182 @@ export default function PetManagement() {
                     </div>
                   ))
                 ) : <p style={{ color: '#666', textAlign: 'center' }}>No grooming logs</p>}
+              </div>
+            )}
+
+            {detailTab === 'training' && (
+              <div>
+                <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
+                  <h5 style={{ marginTop: 0 }}>Add Training Session</h5>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <input type="text" placeholder="Session name" value={trainingForm.session} onChange={e => setTrainingForm({...trainingForm, session: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                    <input type="date" value={trainingForm.date} onChange={e => setTrainingForm({...trainingForm, date: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                    <input type="text" placeholder="Command learned" value={trainingForm.command} onChange={e => setTrainingForm({...trainingForm, command: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                    <select value={trainingForm.progress} onChange={e => setTrainingForm({...trainingForm, progress: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
+                      <option>Learning</option>
+                      <option>Improving</option>
+                      <option>Mastered</option>
+                      <option>Needs Review</option>
+                    </select>
+                    <input type="text" placeholder="Duration (e.g., 30min)" value={trainingForm.duration} onChange={e => setTrainingForm({...trainingForm, duration: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                    <input type="text" placeholder="Trainer" value={trainingForm.trainer} onChange={e => setTrainingForm({...trainingForm, trainer: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                  </div>
+                  <textarea placeholder="Notes & observations" value={trainingForm.notes} onChange={e => setTrainingForm({...trainingForm, notes: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', marginTop: '12px', minHeight: '60px', fontFamily: 'inherit' }} />
+                  <button onClick={() => addTrainingLog(selectedPet.id)} style={{ marginTop: '12px', padding: '10px 16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>Add Session</button>
+                </div>
+
+                {/* Training Summary */}
+                {selectedPet.trainingLog && selectedPet.trainingLog.length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                    <div style={{ background: '#dbeafe', padding: '12px', borderRadius: '6px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#1e40af' }}>{selectedPet.trainingLog.length}</div>
+                      <div style={{ fontSize: '12px', color: '#1e3a8a' }}>Total Sessions</div>
+                    </div>
+                    <div style={{ background: '#d1fae5', padding: '12px', borderRadius: '6px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#065f46' }}>
+                        {selectedPet.trainingLog.filter(t => t.progress === 'Mastered').length}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#064e3b' }}>Commands Mastered</div>
+                    </div>
+                    <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '6px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#92400e' }}>
+                        {selectedPet.trainingLog.filter(t => t.progress === 'Learning').length}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#78350f' }}>In Progress</div>
+                    </div>
+                  </div>
+                )}
+
+                {selectedPet.trainingLog && selectedPet.trainingLog.length > 0 ? (
+                  selectedPet.trainingLog.sort((a, b) => new Date(b.date) - new Date(a.date)).map(t => (
+                    <div key={t.id} style={{ background: '#f9fafb', padding: '14px', borderRadius: '6px', marginBottom: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'start' }}>
+                        <div>
+                          <strong style={{ fontSize: '15px' }}>{t.session}</strong>
+                          <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>{t.date}</div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <span style={{
+                            padding: '4px 10px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            background: t.progress === 'Mastered' ? '#d1fae5' : t.progress === 'Improving' ? '#dbeafe' : t.progress === 'Learning' ? '#fef3c7' : '#fee2e2',
+                            color: t.progress === 'Mastered' ? '#065f46' : t.progress === 'Improving' ? '#1e40af' : t.progress === 'Learning' ? '#92400e' : '#991b1b'
+                          }}>
+                            {t.progress}
+                          </span>
+                          <button onClick={() => deleteRecord(selectedPet.id, 'trainingLog', t.id)} style={{ padding: '4px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Delete</button>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>
+                        {t.command && <div><strong>Command:</strong> {t.command}</div>}
+                        {t.duration && <div><strong>Duration:</strong> {t.duration}</div>}
+                        {t.trainer && <div><strong>Trainer:</strong> {t.trainer}</div>}
+                        {t.notes && <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #e5e7eb' }}>{t.notes}</div>}
+                      </div>
+                    </div>
+                  ))
+                ) : <p style={{ color: '#666', textAlign: 'center' }}>No training sessions recorded</p>}
+              </div>
+            )}
+
+            {detailTab === 'weight' && (
+              <div>
+                <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
+                  <h5 style={{ marginTop: 0 }}>Add Weight Record</h5>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                    <input type="date" value={weightForm.date} onChange={e => setWeightForm({...weightForm, date: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                    <input type="number" step="0.1" placeholder="Weight" value={weightForm.weight} onChange={e => setWeightForm({...weightForm, weight: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                    <select value={weightForm.unit} onChange={e => setWeightForm({...weightForm, unit: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
+                      <option>kg</option>
+                      <option>lbs</option>
+                    </select>
+                  </div>
+                  <textarea placeholder="Notes" value={weightForm.notes} onChange={e => setWeightForm({...weightForm, notes: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', marginTop: '12px', minHeight: '60px', fontFamily: 'inherit' }} />
+                  <button onClick={() => addWeightRecord(selectedPet.id)} style={{ marginTop: '12px', padding: '10px 16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>Add Record</button>
+                </div>
+
+                {/* Weight Chart */}
+                {selectedPet.weightHistory && selectedPet.weightHistory.length > 0 && (
+                  <div style={{ background: 'white', padding: '20px', borderRadius: '8px', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <h5 style={{ marginTop: 0, marginBottom: '16px' }}>Weight Trend</h5>
+                    <Line
+                      data={{
+                        labels: selectedPet.weightHistory.sort((a, b) => new Date(a.date) - new Date(b.date)).map(w => w.date),
+                        datasets: [{
+                          label: `Weight (${selectedPet.weightHistory[0]?.unit || 'kg'})`,
+                          data: selectedPet.weightHistory.sort((a, b) => new Date(a.date) - new Date(b.date)).map(w => parseFloat(w.weight)),
+                          borderColor: '#8b5cf6',
+                          backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                          tension: 0.4,
+                          fill: true,
+                          pointRadius: 5,
+                          pointHoverRadius: 7
+                        }]
+                      }}
+                      options={{
+                        responsive: true,
+                        plugins: {
+                          legend: { display: true, position: 'top' },
+                          tooltip: { mode: 'index', intersect: false }
+                        },
+                        scales: {
+                          y: {
+                            beginAtZero: false,
+                            title: { display: true, text: `Weight (${selectedPet.weightHistory[0]?.unit || 'kg'})` }
+                          },
+                          x: {
+                            title: { display: true, text: 'Date' }
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Weight Statistics */}
+                {selectedPet.weightHistory && selectedPet.weightHistory.length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                    <div style={{ background: '#dbeafe', padding: '12px', borderRadius: '6px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#1e40af' }}>
+                        {selectedPet.weight} {selectedPet.weightHistory[0]?.unit || 'kg'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#1e3a8a' }}>Current Weight</div>
+                    </div>
+                    <div style={{ background: '#d1fae5', padding: '12px', borderRadius: '6px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#065f46' }}>
+                        {Math.max(...selectedPet.weightHistory.map(w => parseFloat(w.weight)))} {selectedPet.weightHistory[0]?.unit || 'kg'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#064e3b' }}>Peak Weight</div>
+                    </div>
+                    <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '6px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#92400e' }}>
+                        {(selectedPet.weightHistory.length > 1 ? (
+                          parseFloat(selectedPet.weightHistory[selectedPet.weightHistory.length - 1].weight) - 
+                          parseFloat(selectedPet.weightHistory[0].weight)
+                        ).toFixed(1) : 0)} {selectedPet.weightHistory[0]?.unit || 'kg'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#78350f' }}>Total Change</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Weight History Table */}
+                {selectedPet.weightHistory && selectedPet.weightHistory.length > 0 ? (
+                  selectedPet.weightHistory.sort((a, b) => new Date(b.date) - new Date(a.date)).map(w => (
+                    <div key={w.id} style={{ background: '#f9fafb', padding: '14px', borderRadius: '6px', marginBottom: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <strong>{w.weight} {w.unit}</strong>
+                        <button onClick={() => deleteRecord(selectedPet.id, 'weightHistory', w.id)} style={{ padding: '4px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Delete</button>
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>
+                        <div>Date: {w.date}</div>
+                        {w.notes && <div>Notes: {w.notes}</div>}
+                      </div>
+                    </div>
+                  ))
+                ) : <p style={{ color: '#666', textAlign: 'center' }}>No weight records</p>}
               </div>
             )}
           </div>
