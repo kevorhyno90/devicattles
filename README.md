@@ -2,7 +2,7 @@
 
 This repository now contains a minimal Progressive Web App scaffold for "Devins Farm" — a starter PWA for dairy & farm management. It is a front-end-only demo that stores data in `localStorage` and is installable as a PWA.
 
-Quick start
+## Quick start
 
 1. Install dependencies:
 
@@ -16,22 +16,12 @@ npm install
 npm run dev
 ```
 
-3. Open the app in your browser at the URL printed by Vite (usually `http://localhost:5173`).
+## Features
 
-Build & preview:
-
-```bash
-npm run build
-npm run preview
-```
-
-Notes & next steps
-
-- The app is a starter shell with Animals list (localStorage-backed), simple navigation, and a basic service worker for offline caching.
-- To connect real data, add a backend API and replace localStorage calls with fetch/XHR and auth.
-- If you want the old compiled Android bundle removed from the repo entirely, confirm and I will delete it (this is destructive).
-
-Potential follow-ups:
-- Add mapping for pastures (Mapbox or Leaflet) and CRUD for pastures.
-- Add finance ledger and export/import.
-- Add authentication and sync (optional).
+*   **Dashboard:** Get a quick overview of your farm's key metrics, including animal status, feed costs, and low stock alerts.
+*   **Animal Management:** Track individual animal details, including breed, date of birth, and health status for various animal types like cattle and poultry.
+*   **Breeding Records:** Monitor pregnancies and due dates.
+*   **Task Management:** Keep track of your daily farm tasks.
+*   **Financial Tracking:** Record transactions to monitor income and expenses.
+*   **Inventory Control:** Manage stock levels for feed, medicine, and other supplies.
+*   **Progressive Web App (PWA):** Install the app on your device for offline access and a native-like experience.
