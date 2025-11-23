@@ -1,14 +1,45 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'Devins Farm',
+        short_name: 'DevinsFarm',
+        description: 'A modern, offline-first farm management application.',
+        theme_color: '#ffffff',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable',
+          },
+        ],
+      },
+    }),
+  ],
   server: {
     host: '0.0.0.0',
     port: 5000,
     strictPort: true,
-    allowedHosts: true
+    allowedHosts: true,
   },
   preview: {
     host: '0.0.0.0',
@@ -19,40 +50,13 @@ export default defineConfig({
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
       'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
       'Cross-Origin-Resource-Policy': 'cross-origin',
-      'Cross-Origin-Embedder-Policy': 'unsafe-none'
-    }
+      'Cross-Origin-Embedder-Policy': 'unsafe-none',
+    },
   },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    rollupOptions: {
-      input: {
-        main: 'index.html',
-        'service-worker': 'public/service-worker.js'
-      },
-      output: {
-        entryFileNames: assetInfo => {
-          return assetInfo.name === 'service-worker'
-            ? '[name].js' // put service worker in root
-            : 'assets/[name]-[hash].js' // others in assets
-        },
-        manualChunks: {
-          // Core React
-          'vendor-react': ['react', 'react-dom'],
-          // Firebase (if large)
-          'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-          // Auth & Core libs
-          'lib-core': ['./src/lib/auth.js', './src/lib/storage.js', './src/lib/analytics.js'],
-          // Export/Import utilities
-          'lib-export': ['./src/lib/exportImport.js', './src/lib/backup.js'],
-          // Notification system
-          'lib-notifications': ['./src/lib/notifications.js', './src/lib/autoNotifications.js'],
-          // Module integration
-          'lib-integration': ['./src/lib/moduleIntegration.js', './src/lib/sync.js'],
-        }
-      }
-    },
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 1000,
   },
-  publicDir: 'public'
-})
+  publicDir: 'public',
+});
