@@ -15,7 +15,7 @@ createRoot(document.getElementById('root')).render(
 // Register service worker for PWA support
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
-    navigator.serviceWorker.register('/service-worker.js').then(reg => {
+    navigator.serviceWorker.register(import.meta.env.BASE_URL + 'service-worker.js').then(reg => {
       console.log('✅ Service Worker registered successfully')
       
       // If there's an already-waiting SW, ask it to activate immediately

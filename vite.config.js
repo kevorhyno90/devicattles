@@ -26,7 +26,16 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     rollupOptions: {
+      input: {
+        main: 'index.html',
+        'service-worker': 'public/service-worker.js'
+      },
       output: {
+        entryFileNames: assetInfo => {
+          return assetInfo.name === 'service-worker'
+            ? '[name].js' // put service worker in root
+            : 'assets/[name]-[hash].js' // others in assets
+        },
         manualChunks: {
           // Core React
           'vendor-react': ['react', 'react-dom'],
