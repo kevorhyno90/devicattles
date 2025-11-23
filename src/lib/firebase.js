@@ -12,7 +12,7 @@
  */
 
 import { initializeApp } from 'firebase/app'
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore'
+import { initializeFirestore, CACHE_SIZE_UNLIMITED } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 
 // Firebase configuration - CONFIGURED
@@ -41,17 +41,10 @@ let auth = null
 try {
   if (isFirebaseConfigured()) {
     app = initializeApp(firebaseConfig)
-    db = getFirestore(app)
-    auth = getAuth(app)
-    
-    // Enable offline persistence
-    enableIndexedDbPersistence(db).catch((err) => {
-      if (err.code === 'failed-precondition') {
-        console.warn('Firebase persistence failed: Multiple tabs open')
-      } else if (err.code === 'unimplemented') {
-        console.warn('Firebase persistence not available in this browser')
-      }
+    db = initializeFirestore(app, {
+      cacheSizeBytes: CACHE_SIZE_UNLIMITED
     })
+    auth = getAuth(app)
     
     console.log('✅ Firebase initialized successfully')
   } else {

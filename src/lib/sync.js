@@ -86,19 +86,26 @@ function getUserPath() {
  */
 export async function syncToFirebase(collectionName, data) {
   if (!isSyncEnabled()) return false
-  
+
   try {
     syncStatus = 'syncing'
     const userPath = getUserPath()
     if (!userPath) return false
-    
-    const docRef = doc(db, userPath, collectionName)
-    await setDoc(docRef, {
-      data: data,
-      updatedAt: serverTimestamp(),
-      version: 1
-    }, { merge: true })
-    
+
+    const batch = writeBatch(db)
+    const collectionRef = collection(db, userPath, collectionName)
+
+    for (const item of data) {
+      if (!item.id) {
+        console.warn(`Skipping item in ${collectionName} without an ID`)
+        continue
+      }
+      const docRef = doc(collectionRef, item.id)
+      batch.set(docRef, { ...item, updatedAt: serverTimestamp() }, { merge: true })
+    }
+
+    await batch.commit()
+
     syncStatus = 'synced'
     console.log(`✅ Synced ${collectionName} to Firebase`)
     return true
@@ -114,21 +121,18 @@ export async function syncToFirebase(collectionName, data) {
  */
 export async function fetchFromFirebase(collectionName) {
   if (!isSyncEnabled()) return null
-  
+
   try {
     const userPath = getUserPath()
     if (!userPath) return null
-    
-    const docRef = doc(db, userPath, collectionName)
-    const docSnap = await getDoc(docRef)
-    
-    if (docSnap.exists()) {
-      const result = docSnap.data()
-      console.log(`✅ Fetched ${collectionName} from Firebase`)
-      return result.data
-    }
-    
-    return null
+
+    const collectionRef = collection(db, userPath, collectionName)
+    const querySnapshot = await getDocs(collectionRef)
+
+    const data = querySnapshot.docs.map(doc => doc.data())
+
+    console.log(`✅ Fetched ${collectionName} from Firebase`)
+    return data
   } catch (error) {
     console.error(`❌ Error fetching ${collectionName}:`, error)
     return null
@@ -140,7 +144,7 @@ export async function fetchFromFirebase(collectionName) {
  */
 export function startRealtimeSync() {
   if (!isSyncEnabled()) return
-  
+
   const collections = [
     'animals',
     'transactions',
@@ -161,47 +165,46 @@ export function startRealtimeSync() {
     'reminders',
     'notifications'
   ]
-  
+
   const userPath = getUserPath()
   if (!userPath) return
-  
+
   // Stop existing listeners
   stopRealtimeSync()
-  
+
   // Create new listeners
   collections.forEach(collectionName => {
-    const docRef = doc(db, userPath, collectionName)
-    
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data()
-        const localKey = `devinsfarm:${collectionName}`
-        
-        // Update localStorage with Firebase data
-        const currentLocal = localStorage.getItem(localKey)
-        const newData = JSON.stringify(data.data)
-        
-        if (currentLocal !== newData) {
-          localStorage.setItem(localKey, newData)
-          console.log(`🔄 Updated ${collectionName} from Firebase`)
-          
-          // Trigger storage event for other tabs/windows
-          window.dispatchEvent(new StorageEvent('storage', {
-            key: localKey,
-            newValue: newData,
-            url: window.location.href
-          }))
-        }
+    const collectionRef = collection(db, userPath, collectionName)
+
+    const unsubscribe = onSnapshot(collectionRef, (querySnapshot) => {
+      const data = querySnapshot.docs.map(doc => doc.data())
+      const localKey = `devinsfarm:${collectionName}`
+
+      // Update localStorage with Firebase data
+      const currentLocal = localStorage.getItem(localKey)
+      const newData = JSON.stringify(data)
+
+      if (currentLocal !== newData) {
+        localStorage.setItem(localKey, newData)
+        console.log(`🔄 Updated ${collectionName} from Firebase`)
+
+        // Trigger storage event for other tabs/windows
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: localKey,
+          newValue: newData,
+          url: window.location.href
+        }))
       }
     }, (error) => {
       console.error(`❌ Error in ${collectionName} listener:`, error)
     })
-    
+
     listeners.push(unsubscribe)
   })
-  
+
   console.log('✅ Real-time sync listeners started')
 }
+
 
 /**
  * Stop all real-time sync listeners
@@ -217,10 +220,10 @@ export function stopRealtimeSync() {
  */
 export async function pushAllToFirebase() {
   if (!isSyncEnabled()) return false
-  
+
   try {
     syncStatus = 'syncing'
-    
+
     const collections = {
       animals: localStorage.getItem('devinsfarm:animals'),
       transactions: localStorage.getItem('devinsfarm:transactions'),
@@ -241,25 +244,26 @@ export async function pushAllToFirebase() {
       reminders: localStorage.getItem('devinsfarm:reminders'),
       notifications: localStorage.getItem('devinsfarm:notifications')
     }
-    
+
     const userPath = getUserPath()
     if (!userPath) return false
-    
+
     const batch = writeBatch(db)
     let count = 0
-    
+
     for (const [name, data] of Object.entries(collections)) {
       if (data) {
-        const docRef = doc(db, userPath, name)
-        batch.set(docRef, {
-          data: JSON.parse(data),
-          updatedAt: serverTimestamp(),
-          version: 1
-        }, { merge: true })
+        const parsedData = JSON.parse(data)
+        const collectionRef = collection(db, userPath, name)
+        for (const item of parsedData) {
+          if (!item.id) continue
+          const docRef = doc(collectionRef, item.id)
+          batch.set(docRef, { ...item, updatedAt: serverTimestamp() }, { merge: true })
+        }
         count++
       }
     }
-    
+
     await batch.commit()
     syncStatus = 'synced'
     console.log(`✅ Pushed ${count} collections to Firebase`)
@@ -276,40 +280,40 @@ export async function pushAllToFirebase() {
  */
 export async function pullAllFromFirebase() {
   if (!isSyncEnabled()) return false
-  
+
   try {
     syncStatus = 'syncing'
-    
+
     const userPath = getUserPath()
     if (!userPath) return false
-    
+
     const collections = [
       'animals', 'transactions', 'inventory', 'tasks', 'crops',
       'treatments', 'feeding', 'breeding', 'measurements', 'milkYield',
       'groups', 'pastures', 'schedules', 'calves', 'azolla', 'bsf',
       'reminders', 'notifications'
     ]
-    
+
     let count = 0
-    
+
     for (const collectionName of collections) {
-      const docRef = doc(db, userPath, collectionName)
-      const docSnap = await getDoc(docRef)
-      
-      if (docSnap.exists()) {
-        const data = docSnap.data()
-        const localKey = collectionName.startsWith('cattalytics:') 
-          ? collectionName 
+      const collectionRef = collection(db, userPath, collectionName)
+      const querySnapshot = await getDocs(collectionRef)
+      const data = querySnapshot.docs.map(doc => doc.data())
+
+      if (data.length > 0) {
+        const localKey = collectionName.startsWith('cattalytics:')
+          ? collectionName
           : `devinsfarm:${collectionName}`
-        
-        localStorage.setItem(localKey, JSON.stringify(data.data))
+
+        localStorage.setItem(localKey, JSON.stringify(data))
         count++
       }
     }
-    
+
     syncStatus = 'synced'
     console.log(`✅ Pulled ${count} collections from Firebase`)
-    
+
     // Reload page to reflect changes
     window.location.reload()
     return true
@@ -320,17 +324,18 @@ export async function pullAllFromFirebase() {
   }
 }
 
+
 /**
  * Auto-sync hook for localStorage changes
  */
 export function setupAutoSync() {
   if (!isSyncEnabled()) return
-  
+
   // Intercept localStorage.setItem
   const originalSetItem = localStorage.setItem
   localStorage.setItem = function(key, value) {
     originalSetItem.call(localStorage, key, value)
-    
+
     // Sync to Firebase if it's a devinsfarm key
     if (key.startsWith('devinsfarm:') || key.startsWith('cattalytics:')) {
       const collectionName = key.replace('devinsfarm:', '').replace('cattalytics:', '')
@@ -351,7 +356,7 @@ export function onSyncStatusChange(callback) {
   const interval = setInterval(() => {
     callback(syncStatus)
   }, 1000)
-  
+
   return () => clearInterval(interval)
 }
 
