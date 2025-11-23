@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel } from 'docx'
 import { calculateFeedEfficiency, calculateAnimalROI, comparePerformanceByPeriod, getTopPerformers } from '../lib/advancedAnalytics'
 import { formatCurrency } from '../lib/currency'
+import { exportAnimalProfitReport, exportVaccinationRecords, exportBreedingRecords, exportCropYieldReport, exportFinancialSummary, exportInventoryReport } from '../lib/pdfExport'
 
 function downloadJson(obj, filename='export.json'){ try{ const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }catch(e){ console.error(e) } }
 
@@ -496,13 +497,14 @@ export default function Reports(){
         
         {section !== 'analytics' && (
         <>
-        <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:12 }}>
-          <select value={section} onChange={e=>setSection(e.target.value)}>
+        <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:12, flexWrap: 'wrap' }}>
+          <select value={section} onChange={e=>setSection(e.target.value)} style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db' }}>
             <option value="animals">Animals</option>
             <option value="crops">Crops</option>
             <option value="pastures">Pastures</option>
             <option value="tasks">Tasks</option>
             <option value="finance">Finance</option>
+            <option value="inventory">Inventory</option>
             <option value="resources">Resources</option>
             <option value="schedules">Schedules</option>
             <option value="groups">Groups</option>
@@ -518,7 +520,42 @@ export default function Reports(){
             setViewTitle(`${section.charAt(0).toUpperCase() + section.slice(1)} - Full Report`)
             setViewFormat('formatted')
           }}>📊 View Full Report ({list.length})</button>
-          <button className="tab-btn" onClick={()=> downloadDocx(list.map(i=> i.data), `${section}-report-${new Date().toISOString().slice(0,10)}.docx`, `${section.charAt(0).toUpperCase() + section.slice(1)} Report`, section)}>📄 Download DOCX Report</button>
+          
+          {/* PDF Export Buttons */}
+          {section === 'animals' && (
+            <button className="tab-btn" style={{ background: '#ef4444', color: 'white' }} onClick={()=> {
+              const today = new Date().toISOString().slice(0, 10)
+              const sixMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString().slice(0, 10)
+              exportAnimalProfitReport(items.animals || [], sixMonthsAgo, today)
+            }}>📕 PDF: Profit Report</button>
+          )}
+          {section === 'breeding' && (
+            <button className="tab-btn" style={{ background: '#ec4899', color: 'white' }} onClick={()=> {
+              const pets = JSON.parse(localStorage.getItem('cattalytics:pets') || '[]')
+              exportBreedingRecords(items.animals || [], pets)
+            }}>📕 PDF: Breeding Records</button>
+          )}
+          {section === 'crops' && (
+            <button className="tab-btn" style={{ background: '#059669', color: 'white' }} onClick={()=> {
+              const today = new Date().toISOString().slice(0, 10)
+              const oneYearAgo = new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().slice(0, 10)
+              exportCropYieldReport(items.crops || [], oneYearAgo, today)
+            }}>📕 PDF: Yield Report</button>
+          )}
+          {section === 'finance' && (
+            <button className="tab-btn" style={{ background: '#3b82f6', color: 'white' }} onClick={()=> {
+              const today = new Date().toISOString().slice(0, 10)
+              const threeMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString().slice(0, 10)
+              exportFinancialSummary(items.finance || [], threeMonthsAgo, today)
+            }}>📕 PDF: Financial Summary</button>
+          )}
+          {section === 'inventory' && (
+            <button className="tab-btn" style={{ background: '#8b5cf6', color: 'white' }} onClick={()=> {
+              exportInventoryReport(items.inventory || [])
+            }}>📕 PDF: Inventory Report</button>
+          )}
+          
+          <button className="tab-btn" onClick={()=> downloadDocx(list.map(i=> i.data), `${section}-report-${new Date().toISOString().slice(0,10)}.docx`, `${section.charAt(0).toUpperCase() + section.slice(1)} Report`, section)}>📄 DOCX Report</button>
           <button className="tab-btn" onClick={()=> downloadJson(list.map(i=> i.data), `${section}-export.json`)}>JSON</button>
           <button className="tab-btn" onClick={()=> downloadXml(list.map(i=> i.data), `${section}-export.xml`)}>XML</button>
         </div>

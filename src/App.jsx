@@ -25,6 +25,7 @@ const BulkOperations = lazy(() => import('./modules/BulkOperations'))
 const AdditionalReports = lazy(() => import('./modules/AdditionalReports'))
 const PetManagement = lazy(() => import('./modules/PetManagement'))
 const CanineManagement = lazy(() => import('./modules/CanineManagement'))
+const CalendarView = lazy(() => import('./modules/CalendarView'))
 
 // Loading fallback component - faster, smaller
 const LoadingFallback = () => (
@@ -420,7 +421,21 @@ function AppContent() {
             }}
           >📅 Schedules</button>
           <button 
-            className={view==='inventory'? 'active':''} 
+            className={view==='calendar'? 'active':''} 
+            onClick={()=>setView('calendar')}
+            style={{
+              background: view==='calendar' ? '#059669' : '#f3f4f6',
+              color: view==='calendar' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >📆 Calendar</button>
+          <button 
+            className={view==='inventory'? 'active':''}
             onClick={()=>setView('inventory')}
             style={{
               background: view==='inventory' ? '#059669' : '#f3f4f6',
@@ -613,6 +628,15 @@ function AppContent() {
               ← Back to Dashboard
             </button>
             <Schedules />
+          </section>
+        )}
+
+        {view === 'calendar' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <CalendarView />
           </section>
         )}
 

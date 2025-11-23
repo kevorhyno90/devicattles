@@ -376,6 +376,315 @@ export function getFinancialSummary() {
   }
 }
 
+/**
+ * Get all pets from PetManagement
+ */
+export function getPets() {
+  try {
+    const data = localStorage.getItem('cattalytics:pets')
+    return data ? JSON.parse(data) : []
+  } catch (e) {
+    return []
+  }
+}
+
+/**
+ * Get pet expenses for Finance module
+ */
+export function getPetExpenses() {
+  try {
+    const pets = getPets()
+    const expenses = []
+    
+    pets.forEach(pet => {
+      // Grooming expenses
+      if (pet.groomingLog && pet.groomingLog.length > 0) {
+        pet.groomingLog.forEach(grooming => {
+          if (grooming.cost && grooming.cost > 0) {
+            expenses.push({
+              date: grooming.date,
+              amount: grooming.cost,
+              category: 'Pet Care',
+              subcategory: 'Grooming',
+              description: `Grooming for ${pet.name}: ${grooming.serviceType}`,
+              vendor: grooming.groomer || 'Groomer',
+              source: 'PetManagement',
+              linkedId: pet.id,
+              petName: pet.name
+            })
+          }
+        })
+      }
+      
+      // Health/Vet expenses
+      if (pet.healthRecords && pet.healthRecords.length > 0) {
+        pet.healthRecords.forEach(record => {
+          if (record.cost && record.cost > 0) {
+            expenses.push({
+              date: record.date,
+              amount: record.cost,
+              category: 'Pet Care',
+              subcategory: 'Veterinary',
+              description: `Vet visit for ${pet.name}: ${record.diagnosis || 'Checkup'}`,
+              vendor: record.veterinarian || 'Veterinarian',
+              source: 'PetManagement',
+              linkedId: pet.id,
+              petName: pet.name
+            })
+          }
+        })
+      }
+      
+      // Vaccination expenses
+      if (pet.vaccinations && pet.vaccinations.length > 0) {
+        pet.vaccinations.forEach(vac => {
+          if (vac.cost && vac.cost > 0) {
+            expenses.push({
+              date: vac.dateGiven,
+              amount: vac.cost,
+              category: 'Pet Care',
+              subcategory: 'Vaccination',
+              description: `${vac.vaccineName} vaccination for ${pet.name}`,
+              vendor: vac.veterinarian || 'Veterinary Clinic',
+              source: 'PetManagement',
+              linkedId: pet.id,
+              petName: pet.name
+            })
+          }
+        })
+      }
+      
+      // Feeding expenses (if tracked)
+      if (pet.feedingSchedule && pet.feedingSchedule.cost) {
+        const monthlyCost = parseFloat(pet.feedingSchedule.cost) || 0
+        if (monthlyCost > 0) {
+          expenses.push({
+            date: new Date().toISOString().slice(0, 10),
+            amount: monthlyCost,
+            category: 'Pet Care',
+            subcategory: 'Feed',
+            description: `Monthly food for ${pet.name}: ${pet.feedingSchedule.foodType}`,
+            vendor: 'Pet Store',
+            source: 'PetManagement',
+            linkedId: pet.id,
+            petName: pet.name,
+            recurring: 'monthly'
+          })
+        }
+      }
+    })
+    
+    return expenses
+  } catch (e) {
+    console.error('Failed to get pet expenses:', e)
+    return []
+  }
+}
+
+/**
+ * Get pet tasks/reminders for Tasks module
+ */
+export function getPetTasks() {
+  try {
+    const pets = getPets()
+    const tasks = []
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    pets.forEach(pet => {
+      // Vaccination reminders
+      if (pet.vaccinations && pet.vaccinations.length > 0) {
+        pet.vaccinations.forEach(vac => {
+          if (vac.nextDue) {
+            const dueDate = new Date(vac.nextDue)
+            dueDate.setHours(0, 0, 0, 0)
+            const daysUntil = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24))
+            
+            if (daysUntil >= 0 && daysUntil <= 30) {
+              tasks.push({
+                id: `pet-vac-${pet.id}-${vac.vaccineName}`,
+                title: `${vac.vaccineName} vaccination due for ${pet.name}`,
+                description: `${pet.species} vaccination due on ${vac.nextDue}`,
+                dueDate: vac.nextDue,
+                priority: daysUntil <= 7 ? 'HIGH' : 'MEDIUM',
+                category: 'Pet Care',
+                subcategory: 'Vaccination',
+                status: 'pending',
+                source: 'PetManagement',
+                linkedId: pet.id,
+                petName: pet.name
+              })
+            }
+          }
+        })
+      }
+      
+      // Medication reminders
+      if (pet.medications && pet.medications.length > 0) {
+        pet.medications.forEach(med => {
+          const endDate = new Date(med.endDate)
+          endDate.setHours(0, 0, 0, 0)
+          
+          if (endDate >= today) {
+            tasks.push({
+              id: `pet-med-${pet.id}-${med.name}`,
+              title: `Give ${med.name} to ${pet.name}`,
+              description: `Dosage: ${med.dosage}, Frequency: ${med.frequency}`,
+              dueDate: new Date().toISOString().slice(0, 10),
+              priority: 'HIGH',
+              category: 'Pet Care',
+              subcategory: 'Medication',
+              status: 'pending',
+              recurring: med.frequency,
+              source: 'PetManagement',
+              linkedId: pet.id,
+              petName: pet.name
+            })
+          }
+        })
+      }
+      
+      // Grooming reminders (if last grooming was >60 days ago)
+      if (pet.groomingLog && pet.groomingLog.length > 0) {
+        const lastGrooming = pet.groomingLog.sort((a, b) => 
+          new Date(b.date) - new Date(a.date)
+        )[0]
+        const lastGroomDate = new Date(lastGrooming.date)
+        const daysSince = Math.ceil((today - lastGroomDate) / (1000 * 60 * 60 * 24))
+        
+        if (daysSince >= 60) {
+          tasks.push({
+            id: `pet-groom-${pet.id}`,
+            title: `Grooming due for ${pet.name}`,
+            description: `Last groomed ${daysSince} days ago`,
+            dueDate: new Date().toISOString().slice(0, 10),
+            priority: 'LOW',
+            category: 'Pet Care',
+            subcategory: 'Grooming',
+            status: 'pending',
+            source: 'PetManagement',
+            linkedId: pet.id,
+            petName: pet.name
+          })
+        }
+      }
+    })
+    
+    return tasks
+  } catch (e) {
+    console.error('Failed to get pet tasks:', e)
+    return []
+  }
+}
+
+/**
+ * Get pet schedules for Schedules module
+ */
+export function getPetSchedules() {
+  try {
+    const pets = getPets()
+    const schedules = []
+    
+    pets.forEach(pet => {
+      // Feeding schedules
+      if (pet.feedingSchedule && pet.feedingSchedule.times) {
+        const times = pet.feedingSchedule.times.split(',').map(t => t.trim())
+        times.forEach(time => {
+          schedules.push({
+            id: `pet-feed-${pet.id}-${time}`,
+            title: `Feed ${pet.name}`,
+            description: `${pet.feedingSchedule.foodType}, ${pet.feedingSchedule.portion}`,
+            time: time,
+            frequency: 'daily',
+            category: 'Pet Care',
+            subcategory: 'Feeding',
+            source: 'PetManagement',
+            linkedId: pet.id,
+            petName: pet.name
+          })
+        })
+      }
+      
+      // Upcoming vet appointments (from health records with follow-up dates)
+      if (pet.healthRecords && pet.healthRecords.length > 0) {
+        pet.healthRecords.forEach(record => {
+          if (record.followUpDate) {
+            const followUp = new Date(record.followUpDate)
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            
+            if (followUp >= today) {
+              schedules.push({
+                id: `pet-vet-${pet.id}-${record.date}`,
+                title: `Vet follow-up for ${pet.name}`,
+                description: `Follow-up: ${record.diagnosis || 'Checkup'}`,
+                date: record.followUpDate,
+                time: '09:00',
+                category: 'Pet Care',
+                subcategory: 'Veterinary',
+                source: 'PetManagement',
+                linkedId: pet.id,
+                petName: pet.name
+              })
+            }
+          }
+        })
+      }
+      
+      // Breeding schedules (heat cycles, expected births)
+      if (pet.breedingRecords && pet.breedingRecords.length > 0) {
+        pet.breedingRecords.forEach(breeding => {
+          if (breeding.expectedBirthDate) {
+            const birthDate = new Date(breeding.expectedBirthDate)
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            
+            if (birthDate >= today) {
+              schedules.push({
+                id: `pet-birth-${pet.id}-${breeding.breedingDate}`,
+                title: `Expected birth for ${pet.name}`,
+                description: `Partner: ${breeding.partner || 'Unknown'}`,
+                date: breeding.expectedBirthDate,
+                category: 'Pet Care',
+                subcategory: 'Breeding',
+                source: 'PetManagement',
+                linkedId: pet.id,
+                petName: pet.name
+              })
+            }
+          }
+        })
+      }
+    })
+    
+    return schedules
+  } catch (e) {
+    console.error('Failed to get pet schedules:', e)
+    return []
+  }
+}
+
+/**
+ * Record pet expense
+ */
+export function recordPetExpense(data) {
+  try {
+    return recordExpense({
+      amount: data.amount,
+      category: 'Pet Care',
+      subcategory: data.subcategory || 'Other',
+      description: data.description,
+      vendor: data.vendor || '',
+      source: 'PetManagement',
+      linkedId: data.petId,
+      date: data.date
+    })
+  } catch (e) {
+    console.error('Failed to record pet expense:', e)
+    return { success: false, error: e.message }
+  }
+}
+
 export default {
   getMainInventory,
   getVeterinaryInventory,
@@ -389,5 +698,10 @@ export default {
   recordAnimalSale,
   getExpensesBySource,
   getIncomeBySource,
-  getFinancialSummary
+  getFinancialSummary,
+  getPets,
+  getPetExpenses,
+  getPetTasks,
+  getPetSchedules,
+  recordPetExpense
 }

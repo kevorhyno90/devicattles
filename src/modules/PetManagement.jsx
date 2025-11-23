@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { exportVaccinationRecords } from '../lib/pdfExport'
 
 const VACCINE_TYPES = {
   dog: ['Rabies', 'DHPP (Distemper/Parvo)', 'Bordetella', 'Leptospirosis', 'Lyme Disease', 'Influenza'],
@@ -292,6 +293,13 @@ export default function PetManagement() {
 
       {tab === 'vaccinations' && (
         <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ margin: 0 }}>Vaccination Records</h3>
+            <button onClick={() => exportVaccinationRecords(pets)} style={{ padding: '8px 16px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
+              📕 Export PDF
+            </button>
+          </div>
+          
           {upcomingVaccines.length > 0 && (
             <div style={{ background: '#fef3c7', border: '1px solid #fbbf24', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
               <h4 style={{ margin: '0 0 12px 0', color: '#92400e' }}>⚠️ Upcoming Vaccinations (Next 30 Days)</h4>
