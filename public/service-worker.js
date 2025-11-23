@@ -1,14 +1,52 @@
 // Use a version-based cache name for better control
-const CACHE_VERSION = '1.0.1';
+const CACHE_VERSION = '1.0.2'; // Updated version
 const CACHE_NAME = 'devinsfarm-static-v' + CACHE_VERSION;
 const RUNTIME_CACHE = 'devinsfarm-runtime-v' + CACHE_VERSION;
 
-// Pre-cache essential files for offline functionality
+// Pre-cache all essential files for offline functionality
 const ASSETS = [
   '/',
   '/index.html',
   '/offline.html',
-  '/manifest.webmanifest'
+  '/manifest.webmanifest',
+  '/assets/index-BU7lPFmw.css',
+  '/assets/currency-EbIO-V_7.js',
+  '/assets/Login-DQO81TT9.js',
+  '/assets/enhancedSettings-Cd0HS9If.js',
+  '/assets/BackupRestore-Cbj1WTTA.js',
+  '/assets/NotificationCenter-az6uB2Sy.js',
+  '/assets/AuditLog-BpEl47SB.js',
+  '/assets/AdditionalReports-CLquNcpX.js',
+  '/assets/lib-notifications-DRlqN2Ug.js',
+  '/assets/BulkOperations-Btel7aiS.js',
+  '/assets/SyncSettings-BwMmtW2r.js',
+  '/assets/lib-core-XQuPJE47.js',
+  '/assets/AdvancedAnalytics-BJjd4tCi.js',
+  '/assets/lib-integration-BbDxlnyI.js',
+  '/assets/CalendarView-CcEIfWtq.js',
+  '/assets/Tasks-D972bcJ9.js',
+  '/assets/EnhancedSettings-CaQtDSPq.js',
+  '/assets/lib-export-Dp5-osfT.js',
+  '/assets/Groups-5Igy3eDL.js',
+  '/assets/Dashboard-DBxw2bUp.js',
+  '/assets/Finance-DcY7Sl24.js',
+  '/assets/purify.es-C65SP4u9.js',
+  '/assets/CanineManagement-CZ5OCT6_.js',
+  '/assets/Pastures-DlNkE8D2.js',
+  '/assets/CropsWithSubsections-B9ExXBHt.js',
+  '/assets/HealthSystem-DNTtD4Lw.js',
+  '/assets/index-B8h0ewlP.js',
+  '/assets/Inventory-6nDiqI35.js',
+  '/assets/Reports-Bloya2MF.js',
+  '/assets/Schedules-B1WemSV9.js',
+  '/assets/vendor-react-C41AW3-e.js',
+  '/assets/index.es-DghfK7ub.js',
+  '/assets/html2canvas.esm-Ge7aVWlp.js',
+  '/assets/PetManagement-Bfic21Gb.js',
+  '/assets/Animals-DjlQzlBd.js',
+  '/assets/index-CMzQl4t4.js',
+  '/assets/vendor-firebase-DPzZ0AXH.js',
+  '/assets/pdfExport-Bg-bYHF1.js'
 ];
 
 self.addEventListener('install', evt => {
@@ -53,7 +91,7 @@ self.addEventListener('message', (evt) => {
   try {
     if (!evt.data) return;
     if (evt.data.type === 'SKIP_WAITING') {
-      try { self.skipWaiting(); } catch(e){}
+      try { self.skipWaiting(); } catch(e){/* empty */}
     }
   } catch (e) {
     /* ignore */
