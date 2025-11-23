@@ -4,8 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  // Set the base path for deployment to a subdirectory
-  base: '/devicattles/', 
+  // Set the base path for deployment to a subdirectory (GitHub Pages)
+  // For Vercel, use root path
+  base: process.env.VERCEL ? '/' : '/devicattles/', 
 
   plugins: [
     react(),
