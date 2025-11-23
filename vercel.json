@@ -9,7 +9,7 @@
       "use": "@vercel/static-build",
       "config": {
         "installCommand": "npm install",
-        "buildCommand": "npm run build",
+        "buildCommand": "node -v && npm -v && npm run build",
         "outputDirectory": "dist"
       }
     }
