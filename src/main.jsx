@@ -47,33 +47,42 @@ if ('serviceWorker' in navigator) {
 }
 
 // PWA Install Prompt Handler
-let deferredPrompt = null
+window.deferredInstallPrompt = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('💾 PWA install prompt available')
-  e.preventDefault()
-  deferredPrompt = e
-  
-  // Show install button in the UI
-  const installEvent = new CustomEvent('pwa-install-available', { detail: e })
-  window.dispatchEvent(installEvent)
-})
+  console.log('💾 PWA install prompt available');
+  e.preventDefault();
+  window.deferredInstallPrompt = e;
+  // Dispatch event for any active listeners to update UI
+  window.dispatchEvent(new CustomEvent('pwa-install-available'));
+});
 
 window.addEventListener('appinstalled', () => {
-  console.log('✅ PWA installed successfully')
-  deferredPrompt = null
-})
+  console.log('✅ PWA installed successfully');
+  // Clear the prompt once installed
+  window.deferredInstallPrompt = null;
+  // Dispatch event to hide the install button
+  window.dispatchEvent(new CustomEvent('pwa-install-hidden'));
+});
 
 // Expose install function globally
 window.installPWA = async () => {
-  if (!deferredPrompt) {
-    console.warn('⚠️ PWA install prompt not available')
-    return false
+  if (!window.deferredInstallPrompt) {
+    console.warn('⚠️ PWA install prompt not available');
+    return false;
   }
   
-  deferredPrompt.prompt()
-  const { outcome } = await deferredPrompt.userChoice
-  console.log(`PWA install outcome: ${outcome}`)
-  deferredPrompt = null
-  return outcome === 'accepted'
-}
+  const prompt = window.deferredInstallPrompt;
+  prompt.prompt();
+  const { outcome } = await prompt.userChoice;
+  
+  console.log(`PWA install outcome: ${outcome}`);
+  
+  // The prompt can only be used once, so clear it.
+  window.deferredInstallPrompt = null;
+  
+  // Dispatch event to hide the button
+  window.dispatchEvent(new CustomEvent('pwa-install-hidden'));
+  
+  return outcome === 'accepted';
+};
