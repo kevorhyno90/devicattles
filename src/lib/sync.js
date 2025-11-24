@@ -58,9 +58,11 @@ export function setSyncEnabled(enabled) {
   syncEnabled = enabled
   localStorage.setItem('devinsfarm:sync:enabled', enabled.toString())
   
-  if (enabled && auth.currentUser) {
+  if (enabled && auth && auth.currentUser) {
+    syncStatus = 'synced'
     startRealtimeSync()
   } else {
+    syncStatus = 'offline'
     stopRealtimeSync()
   }
 }
@@ -80,6 +82,18 @@ export function isSyncEnabled() {
  * Get current sync status
  */
 export function getSyncStatus() {
+  if (!isFirebaseConfigured()) {
+    return 'disabled'
+  }
+  
+  if (!auth || !auth.currentUser) {
+    return 'offline'
+  }
+  
+  if (!syncEnabled) {
+    return 'offline'
+  }
+  
   return syncStatus
 }
 
