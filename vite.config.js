@@ -64,60 +64,6 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          // Core React - keep together
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-            return 'vendor-react'
-          }
-          
-          // Chart.js - only loaded when needed
-          if (id.includes('node_modules/chart.js') || id.includes('node_modules/react-chartjs-2')) {
-            return 'vendor-charts'
-          }
-          
-          // Firebase - lazy load
-          if (id.includes('node_modules/firebase') || id.includes('@firebase')) {
-            return 'vendor-firebase'
-          }
-          
-          // PDF Export - heavy, lazy load
-          if (id.includes('node_modules/jspdf') || id.includes('node_modules/jspdf-autotable')) {
-            return 'vendor-pdf'
-          }
-          
-          // DOCX - heavy, lazy load
-          if (id.includes('node_modules/docx')) {
-            return 'vendor-docx'
-          }
-          
-          // Group heavy libraries
-          if (id.includes('src/lib/pdfExport')) {
-            return 'lib-pdf'
-          }
-          
-          if (id.includes('src/lib/firebase') || id.includes('src/lib/firebaseAuth') || id.includes('src/lib/sync')) {
-            return 'lib-firebase'
-          }
-          
-          // Core utilities used everywhere
-          if (id.includes('src/lib/auth') || id.includes('src/lib/storage') || id.includes('src/lib/analytics')) {
-            return 'lib-core'
-          }
-          
-          // Export/Import utilities
-          if (id.includes('src/lib/exportImport') || id.includes('src/lib/backup')) {
-            return 'lib-export'
-          }
-          
-          // Notification system
-          if (id.includes('src/lib/notifications') || id.includes('src/lib/autoNotifications')) {
-            return 'lib-notifications'
-          }
-        }
-      }
-    },
     chunkSizeWarningLimit: 1000,
     // Minification settings
     minify: 'terser',
