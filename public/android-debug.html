@@ -113,9 +113,10 @@
 
     try {
       // Test ES6 imports
-      tests.push({ name: 'Dynamic Import', result: typeof import === 'function' ? 'OK' : 'NOT SUPPORTED' })
+      const supportsImport = (typeof window.importFunction !== 'undefined' || 'import' in window)
+      tests.push({ name: 'Dynamic Import', result: supportsImport ? 'SUPPORTED' : 'NOT SUPPORTED' })
     } catch (e) {
-      tests.push({ name: 'Dynamic Import', result: 'FAIL: ' + e.message })
+      tests.push({ name: 'Dynamic Import', result: 'UNKNOWN' })
     }
 
     try {
