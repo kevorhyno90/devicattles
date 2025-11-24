@@ -3,51 +3,86 @@ import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme.jsx'
 import OfflineIndicator from './components/OfflineIndicator'
 import ErrorBoundary from './components/ErrorBoundary'
 
-// Lazy load all modules for code splitting
-const Dashboard = lazy(() => import('./modules/Dashboard'))
-const NotificationCenter = lazy(() => import('./modules/NotificationCenter'))
-const Animals = lazy(() => import('./modules/Animals'))
-const Tasks = lazy(() => import('./modules/Tasks'))
-const Finance = lazy(() => import('./modules/Finance'))
-const Schedules = lazy(() => import('./modules/Schedules'))
-const Crops = lazy(() => import('./modules/CropsWithSubsections'))
-const Reports = lazy(() => import('./modules/Reports'))
-const Inventory = lazy(() => import('./modules/Inventory'))
-const Groups = lazy(() => import('./modules/Groups'))
-const Pastures = lazy(() => import('./modules/Pastures'))
-const HealthSystem = lazy(() => import('./modules/HealthSystem'))
-const Login = lazy(() => import('./modules/Login'))
-const AuditLog = lazy(() => import('./modules/AuditLog'))
-const BackupRestore = lazy(() => import('./modules/BackupRestore'))
-const SyncSettings = lazy(() => import('./modules/SyncSettings'))
-const AdvancedAnalytics = lazy(() => import('./modules/AdvancedAnalytics'))
-const EnhancedSettings = lazy(() => import('./modules/EnhancedSettings'))
-const BulkOperations = lazy(() => import('./modules/BulkOperations'))
-const AdditionalReports = lazy(() => import('./modules/AdditionalReports'))
-const PetManagement = lazy(() => import('./modules/PetManagement'))
-const CanineManagement = lazy(() => import('./modules/CanineManagement'))
-const CalendarView = lazy(() => import('./modules/CalendarView'))
-const FarmMap = lazy(() => import('./modules/FarmMap'))
+// Helper function to retry failed lazy loads (important for slow/flaky mobile connections)
+const lazyWithRetry = (importFunc, retries = 3) => {
+  return lazy(() => {
+    return new Promise((resolve, reject) => {
+      importFunc()
+        .then(resolve)
+        .catch((error) => {
+          // Retry on failure
+          if (retries > 0) {
+            console.log(`Module load failed, retrying... (${retries} attempts left)`)
+            setTimeout(() => {
+              lazyWithRetry(importFunc, retries - 1).type.preload = importFunc
+              resolve(importFunc())
+            }, 1000)
+          } else {
+            console.error('Module load failed after retries:', error)
+            reject(error)
+          }
+        })
+    })
+  })
+}
 
-// Loading fallback component - faster, smaller
+// Lazy load all modules for code splitting with retry logic for Android
+const Dashboard = lazyWithRetry(() => import('./modules/Dashboard'))
+const NotificationCenter = lazyWithRetry(() => import('./modules/NotificationCenter'))
+const Animals = lazyWithRetry(() => import('./modules/Animals'))
+const Tasks = lazyWithRetry(() => import('./modules/Tasks'))
+const Finance = lazyWithRetry(() => import('./modules/Finance'))
+const Schedules = lazyWithRetry(() => import('./modules/Schedules'))
+const Crops = lazyWithRetry(() => import('./modules/CropsWithSubsections'))
+const Reports = lazyWithRetry(() => import('./modules/Reports'))
+const Inventory = lazyWithRetry(() => import('./modules/Inventory'))
+const Groups = lazyWithRetry(() => import('./modules/Groups'))
+const Pastures = lazyWithRetry(() => import('./modules/Pastures'))
+const HealthSystem = lazyWithRetry(() => import('./modules/HealthSystem'))
+const Login = lazyWithRetry(() => import('./modules/Login'))
+const AuditLog = lazyWithRetry(() => import('./modules/AuditLog'))
+const BackupRestore = lazyWithRetry(() => import('./modules/BackupRestore'))
+const SyncSettings = lazyWithRetry(() => import('./modules/SyncSettings'))
+const AdvancedAnalytics = lazyWithRetry(() => import('./modules/AdvancedAnalytics'))
+const EnhancedSettings = lazyWithRetry(() => import('./modules/EnhancedSettings'))
+const BulkOperations = lazyWithRetry(() => import('./modules/BulkOperations'))
+const AdditionalReports = lazyWithRetry(() => import('./modules/AdditionalReports'))
+const PetManagement = lazyWithRetry(() => import('./modules/PetManagement'))
+const CanineManagement = lazyWithRetry(() => import('./modules/CanineManagement'))
+const CalendarView = lazyWithRetry(() => import('./modules/CalendarView'))
+const FarmMap = lazyWithRetry(() => import('./modules/FarmMap'))
+
+// Loading fallback component - more visible on mobile
 const LoadingFallback = () => (
   <div style={{
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: '300px',
+    minHeight: '50vh',
     flexDirection: 'column',
-    gap: '12px'
+    gap: '16px',
+    padding: '40px 20px'
   }}>
     <div style={{
-      width: '40px',
-      height: '40px',
-      border: '3px solid #e5e7eb',
+      width: '50px',
+      height: '50px',
+      border: '4px solid #e5e7eb',
       borderTopColor: '#059669',
       borderRadius: '50%',
-      animation: 'spin 0.6s linear infinite'
+      animation: 'spin 0.8s linear infinite'
     }}></div>
-    <div style={{ color: '#9ca3af', fontSize: '13px', fontWeight: '500' }}>Loading module...</div>
+    <div style={{ 
+      color: '#059669', 
+      fontSize: '16px', 
+      fontWeight: '600',
+      textAlign: 'center'
+    }}>Loading module...</div>
+    <div style={{ 
+      color: '#9ca3af', 
+      fontSize: '13px',
+      textAlign: 'center',
+      maxWidth: '300px'
+    }}>If this takes more than 5 seconds, try refreshing the page</div>
   </div>
 )
 import { isAuthenticated, getCurrentSession, logout, getCurrentUserName, getCurrentUserRole } from './lib/auth'
