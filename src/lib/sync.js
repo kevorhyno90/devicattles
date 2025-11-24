@@ -243,6 +243,10 @@ export function stopRealtimeSync() {
  * Sync all local data to Firebase (one-time push)
  */
 export async function pushAllToFirebase() {
+  console.log('🔍 Push Debug - Auth current user:', auth?.currentUser?.uid)
+  console.log('🔍 Push Debug - Sync enabled:', syncEnabled)
+  console.log('🔍 Push Debug - Firebase configured:', isFirebaseConfigured())
+  
   if (!isSyncEnabled()) {
     throw new Error('Sync is not enabled. Please login and enable sync first.')
   }
@@ -267,6 +271,7 @@ export async function pushAllToFirebase() {
     }
 
     const userPath = getUserPath()
+    console.log('🔍 Push Debug - User path:', userPath)
     if (!userPath) {
       throw new Error('No user logged in')
     }
@@ -278,10 +283,12 @@ export async function pushAllToFirebase() {
     for (const [collectionName, localKey] of Object.entries(collectionMappings)) {
       try {
         const data = localStorage.getItem(localKey)
+        console.log(`🔍 Checking ${collectionName} (key: ${localKey}):`, data ? `${JSON.parse(data).length} items` : 'empty')
         if (data) {
           const parsedData = JSON.parse(data)
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             const collectionRef = collection(db, userPath, collectionName)
+            console.log(`📤 Writing to: ${userPath}/${collectionName}`)
             for (const item of parsedData) {
               if (!item.id) continue
               const docRef = doc(collectionRef, item.id)
@@ -298,6 +305,7 @@ export async function pushAllToFirebase() {
     }
 
     if (itemCount > 0) {
+      console.log(`🚀 Committing batch write with ${itemCount} items...`)
       await batch.commit()
       syncStatus = 'synced'
       console.log(`✅ Successfully pushed ${count} collections (${itemCount} items) to Firebase`)
