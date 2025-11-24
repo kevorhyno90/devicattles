@@ -4,9 +4,9 @@
  * Fully offline-capable with localStorage persistence
  */
 
-const NOTIFICATIONS_KEY = 'devinsfarm:notifications'
-const SETTINGS_KEY = 'devinsfarm:notification:settings'
-const REMINDERS_KEY = 'devinsfarm:reminders'
+const NOTIFICATIONS_KEY = \'devinsfarm:notifications\'
+const SETTINGS_KEY = \'devinsfarm:notification:settings\'
+const REMINDERS_KEY = \'devinsfarm:reminders\'
 
 // Default notification settings
 const DEFAULT_SETTINGS = {
@@ -22,40 +22,75 @@ const DEFAULT_SETTINGS = {
   soundEnabled: true
 }
 
+// --- Web Audio API Management ---
+let audioContext = null;
+let isAudioInitialized = false;
+
+function getAudioContext() {
+  if (!audioContext && typeof window !== \'undefined\' && (window.AudioContext || window.webkitAudioContext)) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return audioContext;
+}
+
+function resumeAudio() {
+  const context = getAudioContext();
+  if (context && context.state === \'suspended\') {
+    context.resume().catch(err => console.error("Error resuming AudioContext:", err));
+  }
+}
+
+export function initializeAudio() {
+  if (isAudioInitialized || typeof window === \'undefined\') {
+    return;
+  }
+  const events = [\'click\', \'touchend\', \'keydown\', \'mousedown\'];
+  const resumeHandler = () => {
+    resumeAudio();
+    events.forEach(event => document.body.removeEventListener(event, resumeHandler));
+    isAudioInitialized = true;
+  };
+  events.forEach(event => {
+    document.body.addEventListener(event, resumeHandler, { once: true, capture: true });
+  });
+}
+// --- End Audio API Management ---
+
+
 // Notification types
 export const NOTIFICATION_TYPES = {
-  TREATMENT: 'treatment',
-  BREEDING: 'breeding',
-  TASK: 'task',
-  INVENTORY: 'inventory',
-  HEALTH: 'health',
-  GENERAL: 'general'
+  TREATMENT: \'treatment\',
+  BREEDING: \'breeding\',
+  TASK: \'task\',
+  INVENTORY: \'inventory\',
+  HEALTH: \'health\',
+  GENERAL: \'general\'
 }
 
 // Notification priorities
 export const PRIORITIES = {
-  LOW: 'low',
-  MEDIUM: 'medium',
-  HIGH: 'high',
-  URGENT: 'urgent'
+  LOW: \'low\',
+  MEDIUM: \'medium\',
+  HIGH: \'high\',
+  URGENT: \'urgent\'
 }
 
 /**
  * Request notification permission from browser
  */
 export async function requestNotificationPermission() {
-  if (!('Notification' in window)) {
-    console.warn('Browser does not support notifications')
+  if (!(\'Notification\' in window)) {
+    console.warn(\'Browser does not support notifications\')
     return false
   }
 
-  if (Notification.permission === 'granted') {
+  if (Notification.permission === \'granted\') {
     return true
   }
 
-  if (Notification.permission !== 'denied') {
+  if (Notification.permission !== \'denied\') {
     const permission = await Notification.requestPermission()
-    return permission === 'granted'
+    return permission === \'granted\'
   }
 
   return false
@@ -65,7 +100,7 @@ export async function requestNotificationPermission() {
  * Check if notifications are supported and permitted
  */
 export function canShowNotifications() {
-  return 'Notification' in window && Notification.permission === 'granted'
+  return \'Notification\' in window && Notification.permission === \'granted\'
 }
 
 /**
@@ -76,7 +111,7 @@ export function getNotificationSettings() {
     const stored = localStorage.getItem(SETTINGS_KEY)
     return stored ? { ...DEFAULT_SETTINGS, ...JSON.parse(stored) } : DEFAULT_SETTINGS
   } catch (error) {
-    console.error('Error loading notification settings:', error)
+    console.error(\'Error loading notification settings:\', error)
     return DEFAULT_SETTINGS
   }
 }
@@ -91,7 +126,7 @@ export function saveNotificationSettings(settings) {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated))
     return updated
   } catch (error) {
-    console.error('Error saving notification settings:', error)
+    console.error(\'Error saving notification settings:\', error)
     return settings
   }
 }
@@ -109,8 +144,8 @@ export function showNotification(title, options = {}) {
   }
 
   const notification = new Notification(title, {
-    icon: '/icon-192x192.png',
-    badge: '/icon-192x192.png',
+    icon: \'/icon-192x192.png\',
+    badge: \'/icon-192x192.png\',
     vibrate: [200, 100, 200],
     requireInteraction: options.priority === PRIORITIES.URGENT,
     ...options
@@ -136,12 +171,12 @@ export function addInAppNotification(title, options = {}) {
     const notification = {
       id: Date.now() + Math.random(),
       title,
-      body: options.body || '',
+      body: options.body || \'\',
       type: options.type || NOTIFICATION_TYPES.GENERAL,
       priority: options.priority || PRIORITIES.MEDIUM,
       timestamp: new Date().toISOString(),
       read: false,
-      data: options.data || {}
+      data: options.data || {}\
     }
     
     notifications.unshift(notification)
@@ -154,11 +189,11 @@ export function addInAppNotification(title, options = {}) {
     localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications))
     
     // Dispatch custom event for UI updates
-    window.dispatchEvent(new CustomEvent('newNotification', { detail: notification }))
+    window.dispatchEvent(new CustomEvent(\'newNotification\', { detail: notification }))
     
     return notification
   } catch (error) {
-    console.error('Error adding notification:', error)
+    console.error(\'Error adding notification:\', error)
     return null
   }
 }
@@ -171,7 +206,7 @@ export function getInAppNotifications() {
     const stored = localStorage.getItem(NOTIFICATIONS_KEY)
     return stored ? JSON.parse(stored) : []
   } catch (error) {
-    console.error('Error loading notifications:', error)
+    console.error(\'Error loading notifications:\', error)
     return []
   }
 }
@@ -197,7 +232,7 @@ export function markAsRead(notificationId) {
     }
     return notification
   } catch (error) {
-    console.error('Error marking notification as read:', error)
+    console.error(\'Error marking notification as read:\', error)
     return null
   }
 }
@@ -212,7 +247,7 @@ export function markAllAsRead() {
     localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications))
     return true
   } catch (error) {
-    console.error('Error marking all as read:', error)
+    console.error(\'Error marking all as read:\', error)
     return false
   }
 }
@@ -225,7 +260,7 @@ export function clearAllNotifications() {
     localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify([]))
     return true
   } catch (error) {
-    console.error('Error clearing notifications:', error)
+    console.error(\'Error clearing notifications:\', error)
     return false
   }
 }
@@ -240,7 +275,7 @@ export function deleteNotification(notificationId) {
     localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(filtered))
     return true
   } catch (error) {
-    console.error('Error deleting notification:', error)
+    console.error(\'Error deleting notification:\', error)
     return false
   }
 }
@@ -249,27 +284,34 @@ export function deleteNotification(notificationId) {
  * Play notification sound
  */
 function playNotificationSound() {
-  try {
-    // Use Web Audio API for better compatibility
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)()
-    const oscillator = audioContext.createOscillator()
-    const gainNode = audioContext.createGain()
-    
-    oscillator.connect(gainNode)
-    gainNode.connect(audioContext.destination)
-    
-    oscillator.frequency.value = 800
-    oscillator.type = 'sine'
-    
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5)
-    
-    oscillator.start(audioContext.currentTime)
-    oscillator.stop(audioContext.currentTime + 0.5)
-  } catch (error) {
-    console.error('Error playing notification sound:', error)
-  }
+    const context = getAudioContext();
+    if (!context || context.state !== \'running\') {
+        if (context && context.state === \'suspended\') {
+            console.warn(\'AudioContext is suspended. User interaction needed.\');
+        }
+        return;
+    }
+
+    try {
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(context.destination);
+
+        oscillator.frequency.value = 800;
+        oscillator.type = \'sine\';
+
+        gainNode.gain.setValueAtTime(0.3, context.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.5);
+
+        oscillator.start(context.currentTime);
+        oscillator.stop(context.currentTime + 0.5);
+    } catch (error) {
+        console.error(\'Error playing notification sound:\', error);
+    }
 }
+
 
 // ============================================
 // SCHEDULED REMINDERS
@@ -283,7 +325,7 @@ export function getReminders() {
     const stored = localStorage.getItem(REMINDERS_KEY)
     return stored ? JSON.parse(stored) : []
   } catch (error) {
-    console.error('Error loading reminders:', error)
+    console.error(\'Error loading reminders:\', error)
     return []
   }
 }
@@ -298,7 +340,7 @@ export function scheduleReminder(reminder) {
       id: Date.now() + Math.random(),
       type: reminder.type,
       title: reminder.title,
-      body: reminder.body || '',
+      body: reminder.body || \'\',
       dueDate: reminder.dueDate,
       entityId: reminder.entityId || null,
       entityType: reminder.entityType || null,
@@ -313,7 +355,7 @@ export function scheduleReminder(reminder) {
     
     return newReminder
   } catch (error) {
-    console.error('Error scheduling reminder:', error)
+    console.error(\'Error scheduling reminder:\', error)
     return null
   }
 }
@@ -331,7 +373,7 @@ export function dismissReminder(reminderId) {
     }
     return reminder
   } catch (error) {
-    console.error('Error dismissing reminder:', error)
+    console.error(\'Error dismissing reminder:\', error)
     return null
   }
 }
@@ -346,7 +388,7 @@ export function deleteReminder(reminderId) {
     localStorage.setItem(REMINDERS_KEY, JSON.stringify(filtered))
     return true
   } catch (error) {
-    console.error('Error deleting reminder:', error)
+    console.error(\'Error deleting reminder:\', error)
     return false
   }
 }
