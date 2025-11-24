@@ -3,30 +3,31 @@ import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme.jsx'
 import OfflineIndicator from './components/OfflineIndicator'
 import ErrorBoundary from './components/ErrorBoundary'
 
-// Lazy load all modules for code splitting
-const Dashboard = lazy(() => import('./modules/Dashboard'))
-const NotificationCenter = lazy(() => import('./modules/NotificationCenter'))
-const Animals = lazy(() => import('./modules/Animals'))
-const Tasks = lazy(() => import('./modules/Tasks'))
-const Finance = lazy(() => import('./modules/Finance'))
-const Schedules = lazy(() => import('./modules/Schedules'))
-const Crops = lazy(() => import('./modules/CropsWithSubsections'))
-const Reports = lazy(() => import('./modules/Reports'))
-const Inventory = lazy(() => import('./modules/Inventory'))
-const Groups = lazy(() => import('./modules/Groups'))
-const Pastures = lazy(() => import('./modules/Pastures'))
-const HealthSystem = lazy(() => import('./modules/HealthSystem'))
-const Login = lazy(() => import('./modules/Login'))
-const AuditLog = lazy(() => import('./modules/AuditLog'))
-const BackupRestore = lazy(() => import('./modules/BackupRestore'))
-const SyncSettings = lazy(() => import('./modules/SyncSettings'))
-const AdvancedAnalytics = lazy(() => import('./modules/AdvancedAnalytics'))
-const EnhancedSettings = lazy(() => import('./modules/EnhancedSettings'))
-const BulkOperations = lazy(() => import('./modules/BulkOperations'))
-const AdditionalReports = lazy(() => import('./modules/AdditionalReports'))
-const PetManagement = lazy(() => import('./modules/PetManagement'))
-const CanineManagement = lazy(() => import('./modules/CanineManagement'))
-const CalendarView = lazy(() => import('./modules/CalendarView'))
+// Lazy load all modules for code splitting with error handling
+const Dashboard = lazy(() => import('./modules/Dashboard').catch(() => ({ default: () => <div>Error loading Dashboard</div> })))
+const NotificationCenter = lazy(() => import('./modules/NotificationCenter').catch(() => ({ default: () => <div>Error loading Notifications</div> })))
+const Animals = lazy(() => import('./modules/Animals').catch(() => ({ default: () => <div>Error loading Animals</div> })))
+const Tasks = lazy(() => import('./modules/Tasks').catch(() => ({ default: () => <div>Error loading Tasks</div> })))
+const Finance = lazy(() => import('./modules/Finance').catch(() => ({ default: () => <div>Error loading Finance</div> })))
+const Schedules = lazy(() => import('./modules/Schedules').catch(() => ({ default: () => <div>Error loading Schedules</div> })))
+const Crops = lazy(() => import('./modules/CropsWithSubsections').catch(() => ({ default: () => <div>Error loading Crops</div> })))
+const Reports = lazy(() => import('./modules/Reports').catch(() => ({ default: () => <div>Error loading Reports</div> })))
+const Inventory = lazy(() => import('./modules/Inventory').catch(() => ({ default: () => <div>Error loading Inventory</div> })))
+const Groups = lazy(() => import('./modules/Groups').catch(() => ({ default: () => <div>Error loading Groups</div> })))
+const Pastures = lazy(() => import('./modules/Pastures').catch(() => ({ default: () => <div>Error loading Pastures</div> })))
+const HealthSystem = lazy(() => import('./modules/HealthSystem').catch(() => ({ default: () => <div>Error loading Health System</div> })))
+const Login = lazy(() => import('./modules/Login').catch(() => ({ default: () => <div>Error loading Login</div> })))
+const AuditLog = lazy(() => import('./modules/AuditLog').catch(() => ({ default: () => <div>Error loading Audit Log</div> })))
+const BackupRestore = lazy(() => import('./modules/BackupRestore').catch(() => ({ default: () => <div>Error loading Backup</div> })))
+const SyncSettings = lazy(() => import('./modules/SyncSettings').catch(() => ({ default: () => <div>Error loading Sync Settings</div> })))
+const AdvancedAnalytics = lazy(() => import('./modules/AdvancedAnalytics').catch(() => ({ default: () => <div>Error loading Analytics</div> })))
+const EnhancedSettings = lazy(() => import('./modules/EnhancedSettings').catch(() => ({ default: () => <div>Error loading Settings</div> })))
+const BulkOperations = lazy(() => import('./modules/BulkOperations').catch(() => ({ default: () => <div>Error loading Bulk Operations</div> })))
+const AdditionalReports = lazy(() => import('./modules/AdditionalReports').catch(() => ({ default: () => <div>Error loading Additional Reports</div> })))
+const PetManagement = lazy(() => import('./modules/PetManagement').catch(() => ({ default: () => <div>Error loading Pet Management</div> })))
+const CanineManagement = lazy(() => import('./modules/CanineManagement').catch(() => ({ default: () => <div>Error loading Canine Management</div> })))
+const CalendarView = lazy(() => import('./modules/CalendarView').catch(() => ({ default: () => <div>Error loading Calendar</div> })))
+const FarmMap = lazy(() => import('./modules/FarmMap').catch(() => ({ default: () => <div>Error loading Farm Map</div> })))
 
 // Loading fallback component - faster, smaller
 const LoadingFallback = () => (
@@ -668,7 +669,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <FarmMap />
+            <ErrorBoundary><FarmMap /></ErrorBoundary>
           </section>
         )}
 
