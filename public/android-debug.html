@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Android Debug - Devins Farm</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      padding: 20px;
+      background: #f3f4f6;
+    }
+    .card {
+      background: white;
+      padding: 16px;
+      margin: 12px 0;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .success { color: #059669; }
+    .error { color: #dc2626; }
+    pre {
+      background: #1f2937;
+      color: #f3f4f6;
+      padding: 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 11px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Android Debug Page</h1>
+  
+  <div class="card">
+    <h3>Browser Info</h3>
+    <div id="browserInfo"></div>
+  </div>
+
+  <div class="card">
+    <h3>JavaScript Tests</h3>
+    <div id="jsTests"></div>
+  </div>
+
+  <div class="card">
+    <h3>Console Errors</h3>
+    <pre id="errors">No errors captured yet...</pre>
+  </div>
+
+  <div class="card">
+    <h3>App Load Test</h3>
+    <button onclick="testAppLoad()" style="padding: 10px 20px; background: #059669; color: white; border: none; border-radius: 6px; cursor: pointer;">
+      Test Main App Load
+    </button>
+    <div id="appTest" style="margin-top: 12px;"></div>
+  </div>
+
+  <script>
+    const errors = []
+    
+    // Capture all errors
+    window.onerror = function(msg, url, line, col, error) {
+      const err = { type: 'error', msg, url, line, col, stack: error ? error.stack : 'no stack' }
+      errors.push(err)
+      document.getElementById('errors').textContent = JSON.stringify(errors, null, 2)
+      return false
+    }
+
+    window.addEventListener('unhandledrejection', function(event) {
+      errors.push({ type: 'promise', reason: String(event.reason) })
+      document.getElementById('errors').textContent = JSON.stringify(errors, null, 2)
+    })
+
+    // Browser info
+    document.getElementById('browserInfo').innerHTML = `
+      <p><strong>User Agent:</strong> ${navigator.userAgent}</p>
+      <p><strong>Platform:</strong> ${navigator.platform}</p>
+      <p><strong>Language:</strong> ${navigator.language}</p>
+      <p><strong>Memory:</strong> ${navigator.deviceMemory || 'unknown'} GB</p>
+      <p><strong>CPU Cores:</strong> ${navigator.hardwareConcurrency || 'unknown'}</p>
+      <p><strong>Screen:</strong> ${window.screen.width}x${window.screen.height}</p>
+      <p><strong>Viewport:</strong> ${window.innerWidth}x${window.innerHeight}</p>
+    `
+
+    // JS feature tests
+    const tests = []
+    
+    try {
+      // Test optional chaining
+      const obj = {}
+      const test = obj?.prop?.nested
+      tests.push({ name: 'Optional Chaining (?.)', result: 'OK' })
+    } catch (e) {
+      tests.push({ name: 'Optional Chaining (?.)', result: 'FAIL: ' + e.message })
+    }
+
+    try {
+      // Test nullish coalescing
+      const test = null ?? 'default'
+      tests.push({ name: 'Nullish Coalescing (??)', result: 'OK' })
+    } catch (e) {
+      tests.push({ name: 'Nullish Coalescing (??)', result: 'FAIL: ' + e.message })
+    }
+
+    try {
+      // Test async/await
+      (async () => {})()
+      tests.push({ name: 'Async/Await', result: 'OK' })
+    } catch (e) {
+      tests.push({ name: 'Async/Await', result: 'FAIL: ' + e.message })
+    }
+
+    try {
+      // Test ES6 imports
+      tests.push({ name: 'Dynamic Import', result: typeof import === 'function' ? 'OK' : 'NOT SUPPORTED' })
+    } catch (e) {
+      tests.push({ name: 'Dynamic Import', result: 'FAIL: ' + e.message })
+    }
+
+    try {
+      // Test localStorage
+      localStorage.setItem('__test__', 'test')
+      localStorage.removeItem('__test__')
+      tests.push({ name: 'localStorage', result: 'OK' })
+    } catch (e) {
+      tests.push({ name: 'localStorage', result: 'FAIL: ' + e.message })
+    }
+
+    try {
+      // Test sessionStorage
+      sessionStorage.setItem('__test__', 'test')
+      sessionStorage.removeItem('__test__')
+      tests.push({ name: 'sessionStorage', result: 'OK' })
+    } catch (e) {
+      tests.push({ name: 'sessionStorage', result: 'FAIL: ' + e.message })
+    }
+
+    document.getElementById('jsTests').innerHTML = tests.map(t => 
+      `<p class="${t.result === 'OK' ? 'success' : 'error'}">
+        ${t.result === 'OK' ? '✓' : '✗'} ${t.name}: ${t.result}
+      </p>`
+    ).join('')
+
+    // Test main app load
+    async function testAppLoad() {
+      const el = document.getElementById('appTest')
+      el.innerHTML = '<p>Testing main app...</p>'
+      
+      try {
+        const response = await fetch('/index.html')
+        const html = await response.text()
+        
+        if (html.includes('<!DOCTYPE html>')) {
+          el.innerHTML = '<p class="success">✓ Main HTML loads OK</p>'
+        } else {
+          el.innerHTML = '<p class="error">✗ Invalid HTML response</p>'
+        }
+
+        // Try to load the main script
+        const scriptMatch = html.match(/<script[^>]+src="([^"]+)"/)
+        if (scriptMatch) {
+          const scriptSrc = scriptMatch[1]
+          el.innerHTML += '<p>Loading script: ' + scriptSrc + '</p>'
+          
+          const scriptResponse = await fetch(scriptSrc)
+          if (scriptResponse.ok) {
+            el.innerHTML += '<p class="success">✓ Main script loads OK</p>'
+          } else {
+            el.innerHTML += '<p class="error">✗ Script load failed: ' + scriptResponse.status + '</p>'
+          }
+        }
+        
+      } catch (e) {
+        el.innerHTML = '<p class="error">✗ Failed: ' + e.message + '</p>'
+      }
+    }
+  </script>
+</body>
+</html>
