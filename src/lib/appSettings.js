@@ -2,7 +2,7 @@
 const SETTINGS_KEY = 'devinsfarm:app:settings'
 
 const DEFAULT_SETTINGS = {
-  requireAuth: false, // Set to true if you want login protection
+  requireAuth: false, // Set to true if you want login protection - Default: false for easy access
   autoBackup: true, // Auto-export data periodically
   backupFrequency: 7, // Days between auto-backups
   defaultUser: {

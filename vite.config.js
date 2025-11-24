@@ -6,14 +6,29 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   // Set the base path for deployment to a subdirectory (GitHub Pages)
   // For Vercel, use root path
-  base: '/', 
+  base: '/',
+  
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', 'chart.js', 'react-chartjs-2'],
+    exclude: ['@vite-pwa/assets-generator']
+  },
 
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      // Let the plugin automatically handle the scope based on the 'base' config
-      // This ensures the service worker controls the correct path
+      injectRegister: null, // Don't auto-inject - we handle it manually
+      strategies: 'generateSW',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true
+      },
+      devOptions: {
+        enabled: false, // Disable in dev to avoid MIME type errors
+        type: 'module'
+      },
       includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png', 'icons/icon-192.svg', 'icons/icon-512.svg'],
       manifest: {
         name: 'Devins Farm',
@@ -48,6 +63,13 @@ export default defineConfig({
     port: 5000,
     strictPort: true,
     allowedHosts: true,
+    hmr: {
+      overlay: true
+    },
+    watch: {
+      usePolling: false,
+      interval: 100
+    }
   },
   preview: {
     host: '0.0.0.0',

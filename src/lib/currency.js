@@ -137,7 +137,6 @@ export function getCurrencySymbol(currencyCode) {
  */
 export function convertCurrency(amount, fromCode, toCode) {
   // Placeholder - in a real app, you'd fetch exchange rates
-  // For now, just return the amount as-is
-  console.warn('Currency conversion not implemented - showing original amount')
+  // For now, just return the amount as-is (conversion not implemented)
   return parseFloat(amount) || 0
 }

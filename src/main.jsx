@@ -17,9 +17,17 @@ createRoot(document.getElementById('root')).render(
 )
 
 // Register service worker for PWA support
-if ('serviceWorker' in navigator) {
+// Only in production or when explicitly enabled
+const isDev = import.meta.env.DEV
+const isCodespaces = window.location.hostname.includes('github.dev') || window.location.hostname.includes('githubpreview.dev')
+
+if ('serviceWorker' in navigator && !isDev && !isCodespaces) {
   window.addEventListener('load', async () => {
-    navigator.serviceWorker.register(import.meta.env.BASE_URL + 'service-worker.js').then(reg => {
+    try {
+      const reg = await navigator.serviceWorker.register(import.meta.env.BASE_URL + 'sw.js', {
+        scope: import.meta.env.BASE_URL
+      })
+      
       console.log('✅ Service Worker registered successfully')
       
       // If there's an already-waiting SW, ask it to activate immediately
@@ -44,21 +52,25 @@ if ('serviceWorker' in navigator) {
         console.log('🔄 Reloading page with new service worker')
         try { window.location.reload() } catch (e) {}
       })
-    }).catch(err => {
-      console.warn('⚠️ Service worker registration failed:', err)
-    })
+    } catch (err) {
+      console.info('ℹ️ Service worker not available in this environment')
+    }
   })
+} else {
+  console.info('ℹ️ Service Worker skipped - development mode or Codespaces environment')
 }
 
 // PWA Install Prompt Handler
 window.deferredInstallPrompt = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('💾 PWA install prompt available');
-  e.preventDefault();
-  window.deferredInstallPrompt = e;
-  // Dispatch event for any active listeners to update UI
-  window.dispatchEvent(new CustomEvent('pwa-install-available'));
+  if (!isDev && !isCodespaces) {
+    console.log('💾 PWA install prompt available');
+    e.preventDefault();
+    window.deferredInstallPrompt = e;
+    // Dispatch event for any active listeners to update UI
+    window.dispatchEvent(new CustomEvent('pwa-install-available'));
+  }
 });
 
 window.addEventListener('appinstalled', () => {
@@ -72,7 +84,9 @@ window.addEventListener('appinstalled', () => {
 // Expose install function globally
 window.installPWA = async () => {
   if (!window.deferredInstallPrompt) {
-    console.warn('⚠️ PWA install prompt not available');
+    if (!isDev && !isCodespaces) {
+      console.info('ℹ️ PWA install prompt not available');
+    }
     return false;
   }
   

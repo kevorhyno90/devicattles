@@ -26,3 +26,23 @@ npm run dev
 *   **Inventory Control:** Manage stock levels for feed, medicine, and other supplies.
 *   **Progressive Web App (PWA):** Install the app on your device for offline access and a native-like experience.
 
+## Deployment
+
+Deploy to Vercel (recommended), Firebase Hosting, or GitHub Pages:
+
+```bash
+# Build production files
+npm run build
+
+# Deploy to Vercel (recommended)
+npm run deploy:vercel
+
+# Or deploy to Firebase Hosting
+npm run deploy:firebase
+
+# Or deploy to GitHub Pages
+npm run deploy:gh-pages
+```
+
+See `DEPLOYMENT_GUIDE.md` for complete instructions and `ARCHITECTURE_EXPLAINED.md` to understand why Firebase is optional.
+

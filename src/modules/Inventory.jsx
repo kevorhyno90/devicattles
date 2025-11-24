@@ -280,7 +280,6 @@ export default function Inventory(){
   }
 
   function add(){
-    console.log('Add function called with formData:', formData)
     if(!formData.name.trim()) {
       alert('Please enter an item name')
       return
@@ -313,7 +312,6 @@ export default function Inventory(){
         lastOrdered: new Date().toISOString().slice(0,10)
       }
       setItems([...items, newItem])
-      console.log('Added new item:', newItem)
     }
     
     setFilterCategory('all')
@@ -382,7 +380,6 @@ export default function Inventory(){
         maintenanceHistory: []
       }
       setEquipment([...equipment, newEquipment])
-      console.log('Added new equipment:', newEquipment)
     }
     
     setFilterCategory('all')

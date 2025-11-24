@@ -37,6 +37,7 @@ export function isFirebaseConfigured() {
 let app = null
 let db = null
 let auth = null
+let isInitialized = false
 
 try {
   if (isFirebaseConfigured()) {
@@ -45,8 +46,7 @@ try {
       localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED })
     })
     auth = getAuth(app)
-    
-    console.log('✅ Firebase initialized successfully with persistence')
+    isInitialized = true
   } else {
     // Log once on first check - not a warning since it's expected in local/demo mode
     if (!window.__firebaseConfigLogged) {
@@ -56,6 +56,11 @@ try {
   }
 } catch (error) {
   console.error('❌ Firebase initialization error:', error)
+  // Ensure variables are set even on error
+  app = null
+  db = null
+  auth = null
+  isInitialized = false
 }
 
 export { app, db, auth }

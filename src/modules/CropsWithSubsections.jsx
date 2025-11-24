@@ -86,7 +86,6 @@ export default function Crops() {
       try {
         setCrops(JSON.parse(raw))
       } catch (e) {
-        console.log('Loading sample data')
         setCrops(SAMPLE)
       }
     } else {

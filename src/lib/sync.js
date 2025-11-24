@@ -34,15 +34,21 @@ export function initSync() {
     return false
   }
   
-  const enabled = localStorage.getItem('devinsfarm:sync:enabled')
-  syncEnabled = enabled === 'true'
-  
-  if (syncEnabled && auth.currentUser) {
-    console.log('✅ Sync initialized for user:', auth.currentUser.uid)
-    startRealtimeSync()
+  try {
+    const enabled = localStorage.getItem('devinsfarm:sync:enabled')
+    syncEnabled = enabled === 'true'
+    
+    if (syncEnabled && auth && auth.currentUser) {
+      console.log('✅ Sync initialized for user:', auth.currentUser.uid)
+      startRealtimeSync()
+    }
+    
+    return syncEnabled
+  } catch (error) {
+    console.error('Sync initialization error:', error)
+    syncStatus = 'error'
+    return false
   }
-  
-  return syncEnabled
 }
 
 /**
@@ -63,7 +69,11 @@ export function setSyncEnabled(enabled) {
  * Check if sync is enabled
  */
 export function isSyncEnabled() {
-  return syncEnabled && isFirebaseConfigured() && auth.currentUser !== null
+  try {
+    return syncEnabled && isFirebaseConfigured() && auth && auth.currentUser !== null
+  } catch (error) {
+    return false
+  }
 }
 
 /**

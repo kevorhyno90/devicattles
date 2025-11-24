@@ -17,7 +17,11 @@ import {
 
 // Check if Firebase Auth is available
 export function isFirebaseAuthAvailable() {
-  return isFirebaseConfigured() && auth !== null
+  try {
+    return isFirebaseConfigured() && auth !== null && auth !== undefined
+  } catch (error) {
+    return false
+  }
 }
 
 /**

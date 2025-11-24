@@ -140,9 +140,13 @@ function AppContent() {
       // Listen for new notifications
       window.addEventListener('newNotification', updateUnreadCount)
       
-      // Initialize sync if configured
-      initSync()
-      setupAutoSync()
+      // Initialize sync if configured - wrapped in try-catch
+      try {
+        initSync()
+        setupAutoSync()
+      } catch (error) {
+        console.warn('Sync initialization failed (optional feature):', error)
+      }
       
       return () => {
         stopReminderChecker(intervalId)

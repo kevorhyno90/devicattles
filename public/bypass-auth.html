@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bypass Auth - Devins Farm</title>
+</head>
+<body>
+    <h1>Setting up app...</h1>
+    <script>
+        // Disable authentication requirement
+        localStorage.setItem('devinsfarm:app:settings', JSON.stringify({
+            requireAuth: false,
+            autoBackup: true,
+            backupFrequency: 7,
+            defaultUser: { name: 'Farm Owner', role: 'MANAGER' }
+        }));
+        
+        // Redirect to main app
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 500);
+    </script>
+</body>
+</html>

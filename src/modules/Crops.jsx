@@ -246,11 +246,9 @@ export default function Crops(){
       try {
         setItems(JSON.parse(saved))
       } catch(e) {
-        console.log('Loading sample data...')
         setItems(SAMPLE)
       }
     } else {
-      console.log('Loading sample data...')
       setItems(SAMPLE)
     }
   }, [])
