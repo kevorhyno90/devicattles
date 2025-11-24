@@ -102,25 +102,31 @@ export default function SyncSettings() {
     if (!confirm('Push all local data to Firebase? This will overwrite cloud data.')) return
     
     setPushing(true)
-    const success = await pushAllToFirebase()
-    setPushing(false)
-    
-    if (success) {
-      alert('✅ All data pushed to Firebase successfully!')
-    } else {
-      alert('❌ Error pushing data. Check console for details.')
+    try {
+      const result = await pushAllToFirebase()
+      setPushing(false)
+      alert(`✅ Success! Pushed ${result.count} collections (${result.itemCount} items) to cloud.`)
+    } catch (error) {
+      setPushing(false)
+      alert(`❌ Push failed: ${error.message}`)
     }
   }
 
   async function handlePullAll() {
-    if (!confirm('Pull all data from Firebase? This will overwrite local data and reload the page.')) return
+    if (!confirm('Pull all data from Firebase? This will overwrite local data.')) return
     
     setPulling(true)
-    const success = await pullAllFromFirebase()
-    // Page will reload automatically after pull
-    if (!success) {
+    try {
+      const result = await pullAllFromFirebase()
       setPulling(false)
-      alert('❌ Error pulling data. Check console for details.')
+      alert(`✅ Success! Pulled ${result.count} collections from cloud. Refresh the page to see changes.`)
+      // Give user option to refresh
+      if (confirm('Refresh page now to see the updated data?')) {
+        window.location.reload()
+      }
+    } catch (error) {
+      setPulling(false)
+      alert(`❌ Pull failed: ${error.message}`)
     }
   }
 

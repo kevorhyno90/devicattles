@@ -243,59 +243,74 @@ export function stopRealtimeSync() {
  * Sync all local data to Firebase (one-time push)
  */
 export async function pushAllToFirebase() {
-  if (!isSyncEnabled()) return false
+  if (!isSyncEnabled()) {
+    throw new Error('Sync is not enabled. Please login and enable sync first.')
+  }
 
   try {
     syncStatus = 'syncing'
 
-    const collections = {
-      animals: localStorage.getItem('devinsfarm:animals'),
-      transactions: localStorage.getItem('devinsfarm:transactions'),
-      inventory: localStorage.getItem('devinsfarm:inventory'),
-      tasks: localStorage.getItem('devinsfarm:tasks'),
-      crops: localStorage.getItem('devinsfarm:crops'),
-      treatments: localStorage.getItem('devinsfarm:treatments'),
-      feeding: localStorage.getItem('devinsfarm:feeding'),
-      breeding: localStorage.getItem('devinsfarm:breeding'),
-      measurements: localStorage.getItem('devinsfarm:measurements'),
-      milkYield: localStorage.getItem('devinsfarm:milkYield'),
-      groups: localStorage.getItem('devinsfarm:groups'),
-      pastures: localStorage.getItem('devinsfarm:pastures'),
-      schedules: localStorage.getItem('devinsfarm:schedules'),
-      calves: localStorage.getItem('cattalytics:calf:management'),
-      azolla: localStorage.getItem('cattalytics:azolla:ponds'),
-      bsf: localStorage.getItem('cattalytics:bsf:colonies'),
-      reminders: localStorage.getItem('devinsfarm:reminders'),
-      notifications: localStorage.getItem('devinsfarm:notifications')
+    const collectionMappings = {
+      'animals': 'cattalytics:animals',
+      'transactions': 'cattalytics:finance',
+      'inventory': 'devinsfarm:resources',
+      'tasks': 'cattalytics:tasks',
+      'crops': 'cattalytics:crops:v2',
+      'groups': 'cattalytics:groups',
+      'pastures': 'cattalytics:pastures',
+      'schedules': 'cattalytics:schedules',
+      'calves': 'cattalytics:calf:management',
+      'azolla': 'cattalytics:azolla:ponds',
+      'bsf': 'cattalytics:bsf:colonies',
+      'reminders': 'devinsfarm:reminders',
+      'notifications': 'devinsfarm:notifications'
     }
 
     const userPath = getUserPath()
-    if (!userPath) return false
+    if (!userPath) {
+      throw new Error('No user logged in')
+    }
 
     const batch = writeBatch(db)
     let count = 0
+    let itemCount = 0
 
-    for (const [name, data] of Object.entries(collections)) {
-      if (data) {
-        const parsedData = JSON.parse(data)
-        const collectionRef = collection(db, userPath, name)
-        for (const item of parsedData) {
-          if (!item.id) continue
-          const docRef = doc(collectionRef, item.id)
-          batch.set(docRef, { ...item, updatedAt: serverTimestamp() }, { merge: true })
+    for (const [collectionName, localKey] of Object.entries(collectionMappings)) {
+      try {
+        const data = localStorage.getItem(localKey)
+        if (data) {
+          const parsedData = JSON.parse(data)
+          if (Array.isArray(parsedData) && parsedData.length > 0) {
+            const collectionRef = collection(db, userPath, collectionName)
+            for (const item of parsedData) {
+              if (!item.id) continue
+              const docRef = doc(collectionRef, item.id)
+              batch.set(docRef, { ...item, updatedAt: serverTimestamp() }, { merge: true })
+              itemCount++
+            }
+            count++
+            console.log(`✓ Queued ${collectionName}: ${parsedData.length} items`)
+          }
         }
-        count++
+      } catch (err) {
+        console.warn(`Failed to queue ${collectionName}:`, err.message)
       }
     }
 
-    await batch.commit()
-    syncStatus = 'synced'
-    console.log(`✅ Pushed ${count} collections to Firebase`)
-    return true
+    if (itemCount > 0) {
+      await batch.commit()
+      syncStatus = 'synced'
+      console.log(`✅ Successfully pushed ${count} collections (${itemCount} items) to Firebase`)
+    } else {
+      syncStatus = 'synced'
+      console.log('ℹ️ No data to push')
+    }
+    
+    return { success: true, count, itemCount }
   } catch (error) {
     console.error('❌ Error pushing to Firebase:', error)
     syncStatus = 'error'
-    return false
+    throw error
   }
 }
 
@@ -303,48 +318,63 @@ export async function pushAllToFirebase() {
  * Pull all data from Firebase to local (one-time pull)
  */
 export async function pullAllFromFirebase() {
-  if (!isSyncEnabled()) return false
+  if (!isSyncEnabled()) {
+    throw new Error('Sync is not enabled. Please login and enable sync first.')
+  }
 
   try {
     syncStatus = 'syncing'
 
     const userPath = getUserPath()
-    if (!userPath) return false
+    if (!userPath) {
+      throw new Error('No user logged in')
+    }
 
-    const collections = [
-      'animals', 'transactions', 'inventory', 'tasks', 'crops',
-      'treatments', 'feeding', 'breeding', 'measurements', 'milkYield',
-      'groups', 'pastures', 'schedules', 'calves', 'azolla', 'bsf',
-      'reminders', 'notifications'
-    ]
+    const collectionMappings = {
+      'animals': 'cattalytics:animals',
+      'transactions': 'cattalytics:finance',
+      'inventory': 'devinsfarm:resources',
+      'tasks': 'cattalytics:tasks',
+      'crops': 'cattalytics:crops:v2',
+      'groups': 'cattalytics:groups',
+      'pastures': 'cattalytics:pastures',
+      'schedules': 'cattalytics:schedules',
+      'calves': 'cattalytics:calf:management',
+      'azolla': 'cattalytics:azolla:ponds',
+      'bsf': 'cattalytics:bsf:colonies',
+      'reminders': 'devinsfarm:reminders',
+      'notifications': 'devinsfarm:notifications'
+    }
 
     let count = 0
 
-    for (const collectionName of collections) {
-      const collectionRef = collection(db, userPath, collectionName)
-      const querySnapshot = await getDocs(collectionRef)
-      const data = querySnapshot.docs.map(doc => doc.data())
+    for (const [collectionName, localKey] of Object.entries(collectionMappings)) {
+      try {
+        const collectionRef = collection(db, userPath, collectionName)
+        const querySnapshot = await getDocs(collectionRef)
+        const data = querySnapshot.docs.map(doc => doc.data())
 
-      if (data.length > 0) {
-        const localKey = collectionName.startsWith('cattalytics:')
-          ? collectionName
-          : `devinsfarm:${collectionName}`
-
-        localStorage.setItem(localKey, JSON.stringify(data))
-        count++
+        if (data.length > 0) {
+          localStorage.setItem(localKey, JSON.stringify(data))
+          count++
+          console.log(`✓ Pulled ${collectionName}: ${data.length} items`)
+        }
+      } catch (err) {
+        console.warn(`Failed to pull ${collectionName}:`, err.message)
       }
     }
 
     syncStatus = 'synced'
-    console.log(`✅ Pulled ${count} collections from Firebase`)
+    console.log(`✅ Successfully pulled ${count} collections from Firebase`)
 
-    // Reload page to reflect changes
-    window.location.reload()
-    return true
+    // Dispatch event instead of reloading page
+    window.dispatchEvent(new Event('dataUpdated'))
+    
+    return { success: true, count }
   } catch (error) {
     console.error('❌ Error pulling from Firebase:', error)
     syncStatus = 'error'
-    return false
+    throw error
   }
 }
 
