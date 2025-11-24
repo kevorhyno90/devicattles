@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module Test - Devins Farm</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 20px;
+      background: #f3f4f6;
+    }
+    .test-card {
+      background: white;
+      padding: 16px;
+      margin: 12px 0;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .success { background: #d1fae5; color: #065f46; }
+    .error { background: #fee2e2; color: #991b1b; }
+    .pending { background: #fef3c7; color: #92400e; }
+    button {
+      background: #059669;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 4px;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #047857;
+    }
+    .info {
+      background: #dbeafe;
+      padding: 12px;
+      border-radius: 6px;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+    pre {
+      background: #1f2937;
+      color: #f3f4f6;
+      padding: 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Module Test Page</h1>
+  <p>Test individual modules to identify which ones work on Android</p>
+
+  <div class="info">
+    <strong>Device Info:</strong><br>
+    User Agent: <code id="userAgent"></code><br>
+    Memory: <span id="memory"></span><br>
+    CPU Cores: <span id="cores"></span><br>
+    Screen: <span id="screen"></span>
+  </div>
+
+  <div class="test-card">
+    <h3>localStorage Test</h3>
+    <div id="storageTest" class="status pending">Testing...</div>
+    <p id="storageInfo"></p>
+  </div>
+
+  <div class="test-card">
+    <h3>Module Loading Test</h3>
+    <button onclick="testAllModules()">Test All Modules</button>
+    <button onclick="clearTests()">Clear Results</button>
+    <div id="moduleTests"></div>
+  </div>
+
+  <div class="test-card">
+    <h3>Error Log</h3>
+    <pre id="errorLog">No errors yet...</pre>
+  </div>
+
+  <script>
+    // Display device info
+    document.getElementById('userAgent').textContent = navigator.userAgent
+    document.getElementById('memory').textContent = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'Unknown'
+    document.getElementById('cores').textContent = navigator.hardwareConcurrency || 'Unknown'
+    document.getElementById('screen').textContent = `${window.screen.width}x${window.screen.height}`
+
+    // Error logging
+    const errors = []
+    window.onerror = function(msg, url, line, col, error) {
+      errors.push({ msg, url, line, col, error: error?.stack })
+      updateErrorLog()
+      return false
+    }
+
+    window.addEventListener('unhandledrejection', function(event) {
+      errors.push({ type: 'Promise rejection', reason: event.reason })
+      updateErrorLog()
+    })
+
+    function updateErrorLog() {
+      document.getElementById('errorLog').textContent = errors.length > 0
+        ? JSON.stringify(errors, null, 2)
+        : 'No errors yet...'
+    }
+
+    // Test localStorage
+    function testStorage() {
+      const el = document.getElementById('storageTest')
+      const info = document.getElementById('storageInfo')
+      
+      try {
+        // Test quota
+        let total = 0
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          const value = localStorage.getItem(key)
+          total += (key.length + value.length) * 2
+        }
+        const usedMB = (total / 1024 / 1024).toFixed(2)
+        
+        // Try to write
+        const testKey = '__test_write__'
+        localStorage.setItem(testKey, 'test')
+        localStorage.removeItem(testKey)
+        
+        el.className = 'status success'
+        el.textContent = '✓ localStorage Working'
+        info.textContent = `Used: ${usedMB} MB | Items: ${localStorage.length}`
+      } catch (error) {
+        el.className = 'status error'
+        el.textContent = '✗ localStorage Failed'
+        info.textContent = error.message
+      }
+    }
+
+    // Test module loading
+    const modules = [
+      'Dashboard', 'Animals', 'Tasks', 'Crops', 'Finance', 'Inventory',
+      'Reports', 'Schedules', 'HealthSystem', 'Groups', 'Pastures'
+    ]
+
+    async function testModule(moduleName) {
+      const container = document.getElementById('moduleTests')
+      const div = document.createElement('div')
+      div.id = `test-${moduleName}`
+      div.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0;">
+          <span class="status pending" id="status-${moduleName}">Testing</span>
+          <span>${moduleName}</span>
+          <span id="time-${moduleName}" style="font-size: 12px; color: #6b7280;"></span>
+        </div>
+      `
+      container.appendChild(div)
+
+      const start = performance.now()
+      
+      try {
+        // Try to import the module
+        const module = await import(`./modules/${moduleName}.jsx`)
+        const loadTime = (performance.now() - start).toFixed(0)
+        
+        document.getElementById(`status-${moduleName}`).className = 'status success'
+        document.getElementById(`status-${moduleName}`).textContent = '✓ OK'
+        document.getElementById(`time-${moduleName}`).textContent = `${loadTime}ms`
+        return true
+      } catch (error) {
+        const loadTime = (performance.now() - start).toFixed(0)
+        document.getElementById(`status-${moduleName}`).className = 'status error'
+        document.getElementById(`status-${moduleName}`).textContent = '✗ FAIL'
+        document.getElementById(`time-${moduleName}`).textContent = `${loadTime}ms - ${error.message}`
+        errors.push({ module: moduleName, error: error.message, stack: error.stack })
+        updateErrorLog()
+        return false
+      }
+    }
+
+    async function testAllModules() {
+      document.getElementById('moduleTests').innerHTML = '<p>Running tests...</p>'
+      
+      for (const module of modules) {
+        await testModule(module)
+        // Small delay between tests
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+    }
+
+    function clearTests() {
+      document.getElementById('moduleTests').innerHTML = ''
+      errors.length = 0
+      updateErrorLog()
+    }
+
+    // Run storage test on load
+    testStorage()
+  </script>
+</body>
+</html>

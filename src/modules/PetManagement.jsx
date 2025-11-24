@@ -1,9 +1,34 @@
 import React, { useState, useEffect } from 'react'
-import { Line } from 'react-chartjs-2'
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js'
 import { exportVaccinationRecords } from '../lib/pdfExport'
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
+// Lazy load Chart.js to prevent blocking module load on mobile
+let Line = null
+let ChartJS = null
+let chartJSInitialized = false
+
+const initChartJS = async () => {
+  if (chartJSInitialized) return true
+  try {
+    const chartModule = await import('react-chartjs-2')
+    const chartJSModule = await import('chart.js')
+    Line = chartModule.Line
+    ChartJS = chartJSModule.Chart
+    ChartJS.register(
+      chartJSModule.CategoryScale,
+      chartJSModule.LinearScale,
+      chartJSModule.PointElement,
+      chartJSModule.LineElement,
+      chartJSModule.Title,
+      chartJSModule.Tooltip,
+      chartJSModule.Legend
+    )
+    chartJSInitialized = true
+    return true
+  } catch (error) {
+    console.error('Failed to load Chart.js:', error)
+    return false
+  }
+}
 
 const VACCINE_TYPES = {
   dog: ['Rabies', 'DHPP (Distemper/Parvo)', 'Bordetella', 'Leptospirosis', 'Lyme Disease', 'Influenza'],
