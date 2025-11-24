@@ -1,5 +1,6 @@
 // Storage utility with IndexedDB fallback to localStorage
 // Automatically uses IndexedDB for large datasets, localStorage for smaller data
+import { safeSetItem, safeGetItem } from './safeStorage'
 
 const DB_NAME = 'devinsfarm'
 const DB_VERSION = 1
@@ -147,7 +148,10 @@ async function loadFromIndexedDB(storeName) {
 function saveToLocalStorage(storeName, data) {
   try {
     const key = `cattalytics:${storeName}`
-    localStorage.setItem(key, JSON.stringify(data))
+    const result = safeSetItem(key, JSON.stringify(data))
+    if (!result.success) {
+      throw new Error(result.error || 'Storage failed')
+    }
     return true
   } catch (err) {
     if (err.name === 'QuotaExceededError') {
@@ -161,7 +165,7 @@ function saveToLocalStorage(storeName, data) {
 function loadFromLocalStorage(storeName, defaultData = []) {
   try {
     const key = `cattalytics:${storeName}`
-    const raw = localStorage.getItem(key)
+    const raw = safeGetItem(key, null)
     if (!raw) return defaultData
     
     const parsed = JSON.parse(raw)

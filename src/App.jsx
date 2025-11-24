@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react'
 import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme.jsx'
 import OfflineIndicator from './components/OfflineIndicator'
+import ErrorBoundary from './components/ErrorBoundary'
 
 // Lazy load all modules for code splitting
 const Dashboard = lazy(() => import('./modules/Dashboard'))
@@ -573,8 +574,8 @@ function AppContent() {
 
       <main>
         <Suspense fallback={<LoadingFallback />}>
-          {view === 'dashboard' && <Dashboard onNavigate={setView} />}
-          {view === 'notifications' && <NotificationCenter />}
+          {view === 'dashboard' && <ErrorBoundary><Dashboard onNavigate={setView} /></ErrorBoundary>}
+          {view === 'notifications' && <ErrorBoundary><NotificationCenter /></ErrorBoundary>}
 
           {view === 'animals' && (
             <section>
@@ -595,7 +596,7 @@ function AppContent() {
                 </button>
               </div>
               
-              <Animals />
+              <ErrorBoundary><Animals /></ErrorBoundary>
             </section>
           )}
 
@@ -604,7 +605,7 @@ function AppContent() {
               <button onClick={() => setView('animals')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
                 ← Back to Livestock
               </button>
-              <PetManagement />
+              <ErrorBoundary><PetManagement /></ErrorBoundary>
             </section>
           )}
 
@@ -613,7 +614,7 @@ function AppContent() {
               <button onClick={() => setView('animals')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
                 ← Back to Livestock
               </button>
-              <CanineManagement animals={animals} setAnimals={setAnimals} />
+              <ErrorBoundary><CanineManagement animals={animals} setAnimals={setAnimals} /></ErrorBoundary>
             </section>
           )}
 
@@ -622,7 +623,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <Tasks />
+            <ErrorBoundary><Tasks /></ErrorBoundary>
           </section>
         )}
 
@@ -631,7 +632,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <Schedules />
+            <ErrorBoundary><Schedules /></ErrorBoundary>
           </section>
         )}
 
@@ -640,7 +641,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <CalendarView />
+            <ErrorBoundary><CalendarView /></ErrorBoundary>
           </section>
         )}
 
@@ -649,7 +650,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <Crops />
+            <ErrorBoundary><Crops /></ErrorBoundary>
           </section>
         )}
 
@@ -658,7 +659,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <Inventory />
+            <ErrorBoundary><Inventory /></ErrorBoundary>
           </section>
         )}
 
@@ -676,7 +677,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <Reports />
+            <ErrorBoundary><Reports /></ErrorBoundary>
           </section>
         )}
 
@@ -685,7 +686,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <AdvancedAnalytics />
+            <ErrorBoundary><AdvancedAnalytics /></ErrorBoundary>
           </section>
         )}
 
@@ -694,7 +695,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <AdditionalReports />
+            <ErrorBoundary><AdditionalReports /></ErrorBoundary>
           </section>
         )}
 
@@ -703,7 +704,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <BulkOperations />
+            <ErrorBoundary><BulkOperations /></ErrorBoundary>
           </section>
         )}
 
@@ -712,7 +713,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <AuditLog />
+            <ErrorBoundary><AuditLog /></ErrorBoundary>
           </section>
         )}
 
@@ -721,7 +722,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <BackupRestore />
+            <ErrorBoundary><BackupRestore /></ErrorBoundary>
           </section>
         )}
 
@@ -730,7 +731,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <Finance />
+            <ErrorBoundary><Finance /></ErrorBoundary>
           </section>
         )}
 
@@ -791,10 +792,10 @@ function AppContent() {
             </div>
 
             {/* Enhanced Settings Tab */}
-            {(settings.settingsTab || 'enhanced') === 'enhanced' && <EnhancedSettings />}
+            {(settings.settingsTab || 'enhanced') === 'enhanced' && <ErrorBoundary><EnhancedSettings /></ErrorBoundary>}
 
             {/* Sync Settings Tab */}
-            {settings.settingsTab === 'sync' && <SyncSettings />}
+            {settings.settingsTab === 'sync' && <ErrorBoundary><SyncSettings /></ErrorBoundary>}
 
             {/* Appearance Settings Tab */}
             {(settings.settingsTab || 'appearance') === 'appearance' && (
