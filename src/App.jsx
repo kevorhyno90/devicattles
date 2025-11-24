@@ -3,30 +3,23 @@ import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme.jsx'
 import OfflineIndicator from './components/OfflineIndicator'
 import ErrorBoundary from './components/ErrorBoundary'
 
-// Helper function to retry failed lazy loads (important for slow/flaky mobile connections)
-const lazyWithRetry = (importFunc, retries = 3) => {
+// Helper function to retry failed lazy loads (important for Android Chrome)
+const lazyWithRetry = (importFunc) => {
   return lazy(() => {
-    return new Promise((resolve, reject) => {
-      importFunc()
-        .then(resolve)
-        .catch((error) => {
-          // Retry on failure
-          if (retries > 0) {
-            console.log(`Module load failed, retrying... (${retries} attempts left)`)
-            setTimeout(() => {
-              lazyWithRetry(importFunc, retries - 1).type.preload = importFunc
-              resolve(importFunc())
-            }, 1000)
-          } else {
-            console.error('Module load failed after retries:', error)
-            reject(error)
-          }
-        })
+    return importFunc().catch((error) => {
+      console.error('Module load failed, retrying:', error)
+      // Retry after a short delay
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          console.log('Retrying module load...')
+          resolve(importFunc())
+        }, 1000)
+      })
     })
   })
 }
 
-// Lazy load all modules for code splitting with retry logic for Android
+// Lazy load all modules with retry logic
 const Dashboard = lazyWithRetry(() => import('./modules/Dashboard'))
 const NotificationCenter = lazyWithRetry(() => import('./modules/NotificationCenter'))
 const Animals = lazyWithRetry(() => import('./modules/Animals'))
@@ -52,39 +45,88 @@ const CanineManagement = lazyWithRetry(() => import('./modules/CanineManagement'
 const CalendarView = lazyWithRetry(() => import('./modules/CalendarView'))
 const FarmMap = lazyWithRetry(() => import('./modules/FarmMap'))
 
-// Loading fallback component - more visible on mobile
-const LoadingFallback = () => (
-  <div style={{
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '50vh',
-    flexDirection: 'column',
-    gap: '16px',
-    padding: '40px 20px'
-  }}>
+// Loading fallback component with timeout detection
+const LoadingFallback = () => {
+  const [showError, setShowError] = React.useState(false)
+  
+  React.useEffect(() => {
+    // If loading takes more than 10 seconds, show error
+    const timer = setTimeout(() => {
+      setShowError(true)
+    }, 10000)
+    return () => clearTimeout(timer)
+  }, [])
+  
+  if (showError) {
+    return (
+      <div style={{
+        padding: '40px 20px',
+        textAlign: 'center',
+        maxWidth: '500px',
+        margin: '0 auto'
+      }}>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+        <h3 style={{ color: '#dc2626', marginBottom: '12px' }}>Module Failed to Load</h3>
+        <p style={{ color: '#6b7280', marginBottom: '20px' }}>
+          This module is taking too long to load. This might be due to:
+        </p>
+        <ul style={{ textAlign: 'left', color: '#6b7280', marginBottom: '20px' }}>
+          <li>Slow internet connection</li>
+          <li>Browser compatibility issue</li>
+          <li>Module is too large for mobile device</li>
+        </ul>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            background: '#059669',
+            color: 'white',
+            border: 'none',
+            padding: '12px 24px',
+            borderRadius: '6px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer'
+          }}
+        >
+          Reload Page
+        </button>
+      </div>
+    )
+  }
+  
+  return (
     <div style={{
-      width: '50px',
-      height: '50px',
-      border: '4px solid #e5e7eb',
-      borderTopColor: '#059669',
-      borderRadius: '50%',
-      animation: 'spin 0.8s linear infinite'
-    }}></div>
-    <div style={{ 
-      color: '#059669', 
-      fontSize: '16px', 
-      fontWeight: '600',
-      textAlign: 'center'
-    }}>Loading module...</div>
-    <div style={{ 
-      color: '#9ca3af', 
-      fontSize: '13px',
-      textAlign: 'center',
-      maxWidth: '300px'
-    }}>If this takes more than 5 seconds, try refreshing the page</div>
-  </div>
-)
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '50vh',
+      flexDirection: 'column',
+      gap: '16px',
+      padding: '40px 20px'
+    }}>
+      <div style={{
+        width: '50px',
+        height: '50px',
+        border: '4px solid #e5e7eb',
+        borderTopColor: '#059669',
+        borderRadius: '50%',
+        animation: 'spin 0.8s linear infinite'
+      }}></div>
+      <div style={{ 
+        color: '#059669', 
+        fontSize: '16px', 
+        fontWeight: '600',
+        textAlign: 'center'
+      }}>Loading module...</div>
+      <div style={{ 
+        color: '#9ca3af', 
+        fontSize: '13px',
+        textAlign: 'center',
+        maxWidth: '300px'
+      }}>Please wait, this may take a few seconds</div>
+    </div>
+  )
+}
 import { isAuthenticated, getCurrentSession, logout, getCurrentUserName, getCurrentUserRole } from './lib/auth'
 import { logAction, ACTIONS, ENTITIES } from './lib/audit'
 import { isAuthRequired, getDefaultUser } from './lib/appSettings'
