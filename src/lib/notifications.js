@@ -4,9 +4,9 @@
  * Fully offline-capable with localStorage persistence
  */
 
-const NOTIFICATIONS_KEY = \'devinsfarm:notifications\'
-const SETTINGS_KEY = \'devinsfarm:notification:settings\'
-const REMINDERS_KEY = \'devinsfarm:reminders\'
+const NOTIFICATIONS_KEY = 'devinsfarm:notifications';
+const SETTINGS_KEY = 'devinsfarm:notification:settings';
+const REMINDERS_KEY = 'devinsfarm:reminders';
 
 // Default notification settings
 const DEFAULT_SETTINGS = {
@@ -20,14 +20,14 @@ const DEFAULT_SETTINGS = {
   lowInventoryThreshold: 10, // units
   criticalInventoryThreshold: 5, // units
   soundEnabled: true
-}
+};
 
 // --- Web Audio API Management ---
 let audioContext = null;
 let isAudioInitialized = false;
 
 function getAudioContext() {
-  if (!audioContext && typeof window !== \'undefined\' && (window.AudioContext || window.webkitAudioContext)) {
+  if (!audioContext && typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext)) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
   return audioContext;
@@ -35,16 +35,16 @@ function getAudioContext() {
 
 function resumeAudio() {
   const context = getAudioContext();
-  if (context && context.state === \'suspended\') {
+  if (context && context.state === 'suspended') {
     context.resume().catch(err => console.error("Error resuming AudioContext:", err));
   }
 }
 
 export function initializeAudio() {
-  if (isAudioInitialized || typeof window === \'undefined\') {
+  if (isAudioInitialized || typeof window === 'undefined') {
     return;
   }
-  const events = [\'click\', \'touchend\', \'keydown\', \'mousedown\'];
+  const events = ['click', 'touchend', 'keydown', 'mousedown'];
   const resumeHandler = () => {
     resumeAudio();
     events.forEach(event => document.body.removeEventListener(event, resumeHandler));
@@ -59,48 +59,48 @@ export function initializeAudio() {
 
 // Notification types
 export const NOTIFICATION_TYPES = {
-  TREATMENT: \'treatment\',
-  BREEDING: \'breeding\',
-  TASK: \'task\',
-  INVENTORY: \'inventory\',
-  HEALTH: \'health\',
-  GENERAL: \'general\'
-}
+  TREATMENT: 'treatment',
+  BREEDING: 'breeding',
+  TASK: 'task',
+  INVENTORY: 'inventory',
+  HEALTH: 'health',
+  GENERAL: 'general'
+};
 
 // Notification priorities
 export const PRIORITIES = {
-  LOW: \'low\',
-  MEDIUM: \'medium\',
-  HIGH: \'high\',
-  URGENT: \'urgent\'
-}
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high',
+  URGENT: 'urgent'
+};
 
 /**
  * Request notification permission from browser
  */
 export async function requestNotificationPermission() {
-  if (!(\'Notification\' in window)) {
-    console.warn(\'Browser does not support notifications\')
-    return false
+  if (!('Notification' in window)) {
+    console.warn('Browser does not support notifications');
+    return false;
   }
 
-  if (Notification.permission === \'granted\') {
-    return true
+  if (Notification.permission === 'granted') {
+    return true;
   }
 
-  if (Notification.permission !== \'denied\') {
-    const permission = await Notification.requestPermission()
-    return permission === \'granted\'
+  if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
   }
 
-  return false
+  return false;
 }
 
 /**
  * Check if notifications are supported and permitted
  */
 export function canShowNotifications() {
-  return \'Notification\' in window && Notification.permission === \'granted\'
+  return 'Notification' in window && Notification.permission === 'granted';
 }
 
 /**
@@ -108,11 +108,11 @@ export function canShowNotifications() {
  */
 export function getNotificationSettings() {
   try {
-    const stored = localStorage.getItem(SETTINGS_KEY)
-    return stored ? { ...DEFAULT_SETTINGS, ...JSON.parse(stored) } : DEFAULT_SETTINGS
+    const stored = localStorage.getItem(SETTINGS_KEY);
+    return stored ? { ...DEFAULT_SETTINGS, ...JSON.parse(stored) } : DEFAULT_SETTINGS;
   } catch (error) {
-    console.error(\'Error loading notification settings:\', error)
-    return DEFAULT_SETTINGS
+    console.error('Error loading notification settings:', error);
+    return DEFAULT_SETTINGS;
   }
 }
 
@@ -121,13 +121,13 @@ export function getNotificationSettings() {
  */
 export function saveNotificationSettings(settings) {
   try {
-    const current = getNotificationSettings()
-    const updated = { ...current, ...settings }
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated))
-    return updated
+    const current = getNotificationSettings();
+    const updated = { ...current, ...settings };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated));
+    return updated;
   } catch (error) {
-    console.error(\'Error saving notification settings:\', error)
-    return settings
+    console.error('Error saving notification settings:', error);
+    return settings;
   }
 }
 
@@ -135,31 +135,31 @@ export function saveNotificationSettings(settings) {
  * Show a browser notification
  */
 export function showNotification(title, options = {}) {
-  const settings = getNotificationSettings()
+  const settings = getNotificationSettings();
   
   if (!settings.enabled || !canShowNotifications()) {
     // Store as in-app notification instead
-    addInAppNotification(title, options)
-    return null
+    addInAppNotification(title, options);
+    return null;
   }
 
   const notification = new Notification(title, {
-    icon: \'/icon-192x192.png\',
-    badge: \'/icon-192x192.png\',
+    icon: '/icon-192x192.png',
+    badge: '/icon-192x192.png',
     vibrate: [200, 100, 200],
     requireInteraction: options.priority === PRIORITIES.URGENT,
     ...options
-  })
+  });
 
   // Store in history
-  addInAppNotification(title, options)
+  addInAppNotification(title, options);
 
   // Play sound if enabled
   if (settings.soundEnabled) {
-    playNotificationSound()
+    playNotificationSound();
   }
 
-  return notification
+  return notification;
 }
 
 /**
@@ -167,34 +167,34 @@ export function showNotification(title, options = {}) {
  */
 export function addInAppNotification(title, options = {}) {
   try {
-    const notifications = getInAppNotifications()
+    const notifications = getInAppNotifications();
     const notification = {
       id: Date.now() + Math.random(),
       title,
-      body: options.body || \'\',
+      body: options.body || '',
       type: options.type || NOTIFICATION_TYPES.GENERAL,
       priority: options.priority || PRIORITIES.MEDIUM,
       timestamp: new Date().toISOString(),
       read: false,
-      data: options.data || {}\
-    }
+      data: options.data || {}
+    };
     
-    notifications.unshift(notification)
+    notifications.unshift(notification);
     
     // Keep only last 100 notifications
     if (notifications.length > 100) {
-      notifications.splice(100)
+      notifications.splice(100);
     }
     
-    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications))
+    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
     
     // Dispatch custom event for UI updates
-    window.dispatchEvent(new CustomEvent(\'newNotification\', { detail: notification }))
+    window.dispatchEvent(new CustomEvent('newNotification', { detail: notification }));
     
-    return notification
+    return notification;
   } catch (error) {
-    console.error(\'Error adding notification:\', error)
-    return null
+    console.error('Error adding notification:', error);
+    return null;
   }
 }
 
@@ -203,11 +203,11 @@ export function addInAppNotification(title, options = {}) {
  */
 export function getInAppNotifications() {
   try {
-    const stored = localStorage.getItem(NOTIFICATIONS_KEY)
-    return stored ? JSON.parse(stored) : []
+    const stored = localStorage.getItem(NOTIFICATIONS_KEY);
+    return stored ? JSON.parse(stored) : [];
   } catch (error) {
-    console.error(\'Error loading notifications:\', error)
-    return []
+    console.error('Error loading notifications:', error);
+    return [];
   }
 }
 
@@ -215,8 +215,8 @@ export function getInAppNotifications() {
  * Get unread notification count
  */
 export function getUnreadCount() {
-  const notifications = getInAppNotifications()
-  return notifications.filter(n => !n.read).length
+  const notifications = getInAppNotifications();
+  return notifications.filter(n => !n.read).length;
 }
 
 /**
@@ -224,16 +224,16 @@ export function getUnreadCount() {
  */
 export function markAsRead(notificationId) {
   try {
-    const notifications = getInAppNotifications()
-    const notification = notifications.find(n => n.id === notificationId)
+    const notifications = getInAppNotifications();
+    const notification = notifications.find(n => n.id === notificationId);
     if (notification) {
-      notification.read = true
-      localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications))
+      notification.read = true;
+      localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
     }
-    return notification
+    return notification;
   } catch (error) {
-    console.error(\'Error marking notification as read:\', error)
-    return null
+    console.error('Error marking notification as read:', error);
+    return null;
   }
 }
 
@@ -242,13 +242,13 @@ export function markAsRead(notificationId) {
  */
 export function markAllAsRead() {
   try {
-    const notifications = getInAppNotifications()
-    notifications.forEach(n => n.read = true)
-    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications))
-    return true
+    const notifications = getInAppNotifications();
+    notifications.forEach(n => n.read = true);
+    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
+    return true;
   } catch (error) {
-    console.error(\'Error marking all as read:\', error)
-    return false
+    console.error('Error marking all as read:', error);
+    return false;
   }
 }
 
@@ -257,11 +257,11 @@ export function markAllAsRead() {
  */
 export function clearAllNotifications() {
   try {
-    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify([]))
-    return true
+    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify([]));
+    return true;
   } catch (error) {
-    console.error(\'Error clearing notifications:\', error)
-    return false
+    console.error('Error clearing notifications:', error);
+    return false;
   }
 }
 
@@ -270,13 +270,13 @@ export function clearAllNotifications() {
  */
 export function deleteNotification(notificationId) {
   try {
-    const notifications = getInAppNotifications()
-    const filtered = notifications.filter(n => n.id !== notificationId)
-    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(filtered))
-    return true
+    const notifications = getInAppNotifications();
+    const filtered = notifications.filter(n => n.id !== notificationId);
+    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(filtered));
+    return true;
   } catch (error) {
-    console.error(\'Error deleting notification:\', error)
-    return false
+    console.error('Error deleting notification:', error);
+    return false;
   }
 }
 
@@ -285,9 +285,9 @@ export function deleteNotification(notificationId) {
  */
 function playNotificationSound() {
     const context = getAudioContext();
-    if (!context || context.state !== \'running\') {
-        if (context && context.state === \'suspended\') {
-            console.warn(\'AudioContext is suspended. User interaction needed.\');
+    if (!context || context.state !== 'running') {
+        if (context && context.state === 'suspended') {
+            console.warn('AudioContext is suspended. User interaction needed.');
         }
         return;
     }
@@ -300,7 +300,7 @@ function playNotificationSound() {
         gainNode.connect(context.destination);
 
         oscillator.frequency.value = 800;
-        oscillator.type = \'sine\';
+        oscillator.type = 'sine';
 
         gainNode.gain.setValueAtTime(0.3, context.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.5);
@@ -308,7 +308,7 @@ function playNotificationSound() {
         oscillator.start(context.currentTime);
         oscillator.stop(context.currentTime + 0.5);
     } catch (error) {
-        console.error(\'Error playing notification sound:\', error);
+        console.error('Error playing notification sound:', error);
     }
 }
 
@@ -322,11 +322,11 @@ function playNotificationSound() {
  */
 export function getReminders() {
   try {
-    const stored = localStorage.getItem(REMINDERS_KEY)
-    return stored ? JSON.parse(stored) : []
+    const stored = localStorage.getItem(REMINDERS_KEY);
+    return stored ? JSON.parse(stored) : [];
   } catch (error) {
-    console.error(\'Error loading reminders:\', error)
-    return []
+    console.error('Error loading reminders:', error);
+    return [];
   }
 }
 
@@ -335,12 +335,12 @@ export function getReminders() {
  */
 export function scheduleReminder(reminder) {
   try {
-    const reminders = getReminders()
+    const reminders = getReminders();
     const newReminder = {
       id: Date.now() + Math.random(),
       type: reminder.type,
       title: reminder.title,
-      body: reminder.body || \'\',
+      body: reminder.body || '',
       dueDate: reminder.dueDate,
       entityId: reminder.entityId || null,
       entityType: reminder.entityType || null,
@@ -348,15 +348,15 @@ export function scheduleReminder(reminder) {
       notified: false,
       dismissed: false,
       created: new Date().toISOString()
-    }
+    };
     
-    reminders.push(newReminder)
-    localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders))
+    reminders.push(newReminder);
+    localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
     
-    return newReminder
+    return newReminder;
   } catch (error) {
-    console.error(\'Error scheduling reminder:\', error)
-    return null
+    console.error('Error scheduling reminder:', error);
+    return null;
   }
 }
 
@@ -365,16 +365,16 @@ export function scheduleReminder(reminder) {
  */
 export function dismissReminder(reminderId) {
   try {
-    const reminders = getReminders()
-    const reminder = reminders.find(r => r.id === reminderId)
+    const reminders = getReminders();
+    const reminder = reminders.find(r => r.id === reminderId);
     if (reminder) {
-      reminder.dismissed = true
-      localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders))
+      reminder.dismissed = true;
+      localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
     }
-    return reminder
+    return reminder;
   } catch (error) {
-    console.error(\'Error dismissing reminder:\', error)
-    return null
+    console.error('Error dismissing reminder:', error);
+    return null;
   }
 }
 
@@ -383,13 +383,13 @@ export function dismissReminder(reminderId) {
  */
 export function deleteReminder(reminderId) {
   try {
-    const reminders = getReminders()
-    const filtered = reminders.filter(r => r.id !== reminderId)
-    localStorage.setItem(REMINDERS_KEY, JSON.stringify(filtered))
-    return true
+    const reminders = getReminders();
+    const filtered = reminders.filter(r => r.id !== reminderId);
+    localStorage.setItem(REMINDERS_KEY, JSON.stringify(filtered));
+    return true;
   } catch (error) {
-    console.error(\'Error deleting reminder:\', error)
-    return false
+    console.error('Error deleting reminder:', error);
+    return false;
   }
 }
 
@@ -397,26 +397,26 @@ export function deleteReminder(reminderId) {
  * Check for due reminders and notify
  */
 export function checkDueReminders() {
-  const settings = getNotificationSettings()
-  if (!settings.enabled) return []
+  const settings = getNotificationSettings();
+  if (!settings.enabled) return [];
 
-  const reminders = getReminders()
-  const now = new Date()
-  const leadTime = settings.reminderLeadTime * 60 * 60 * 1000 // convert hours to ms
+  const reminders = getReminders();
+  const now = new Date();
+  const leadTime = settings.reminderLeadTime * 60 * 60 * 1000; // convert hours to ms
   
   const dueReminders = reminders.filter(reminder => {
-    if (reminder.notified || reminder.dismissed) return false
+    if (reminder.notified || reminder.dismissed) return false;
     
-    const dueDate = new Date(reminder.dueDate)
-    const timeDiff = dueDate - now
+    const dueDate = new Date(reminder.dueDate);
+    const timeDiff = dueDate - now;
     
     // Notify if within lead time or overdue
-    return timeDiff <= leadTime
-  })
+    return timeDiff <= leadTime;
+  });
 
   dueReminders.forEach(reminder => {
-    const dueDate = new Date(reminder.dueDate)
-    const isOverdue = dueDate < now
+    const dueDate = new Date(reminder.dueDate);
+    const isOverdue = dueDate < now;
     
     showNotification(
       isOverdue ? `⚠️ OVERDUE: ${reminder.title}` : `🔔 Reminder: ${reminder.title}`,
@@ -426,42 +426,42 @@ export function checkDueReminders() {
         priority: isOverdue ? PRIORITIES.URGENT : reminder.priority,
         data: { reminderId: reminder.id, entityId: reminder.entityId, entityType: reminder.entityType }
       }
-    )
+    );
     
     // Mark as notified
-    reminder.notified = true
-  })
+    reminder.notified = true;
+  });
 
   if (dueReminders.length > 0) {
-    localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders))
+    localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
   }
 
-  return dueReminders
+  return dueReminders;
 }
 
 /**
  * Get upcoming reminders (within next 7 days)
  */
 export function getUpcomingReminders(days = 7) {
-  const reminders = getReminders()
-  const now = new Date()
-  const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000)
+  const reminders = getReminders();
+  const now = new Date();
+  const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
   
   return reminders
     .filter(r => !r.dismissed && new Date(r.dueDate) <= futureDate)
-    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 }
 
 /**
  * Get overdue reminders
  */
 export function getOverdueReminders() {
-  const reminders = getReminders()
-  const now = new Date()
+  const reminders = getReminders();
+  const now = new Date();
   
   return reminders
     .filter(r => !r.dismissed && new Date(r.dueDate) < now)
-    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 }
 
 // ============================================
@@ -474,13 +474,13 @@ export function getOverdueReminders() {
 export function startReminderChecker() {
   // Check every 5 minutes
   const intervalId = setInterval(() => {
-    checkDueReminders()
-  }, 5 * 60 * 1000)
+    checkDueReminders();
+  }, 5 * 60 * 1000);
   
   // Initial check
-  checkDueReminders()
+  checkDueReminders();
   
-  return intervalId
+  return intervalId;
 }
 
 /**
@@ -488,6 +488,6 @@ export function startReminderChecker() {
  */
 export function stopReminderChecker(intervalId) {
   if (intervalId) {
-    clearInterval(intervalId)
+    clearInterval(intervalId);
   }
 }
