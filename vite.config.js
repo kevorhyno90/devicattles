@@ -14,7 +14,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       // Let the plugin automatically handle the scope based on the 'base' config
       // This ensures the service worker controls the correct path
-      includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+      includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png', 'icons/icon-192.svg', 'icons/icon-512.svg'],
       manifest: {
         name: 'Devins Farm',
         short_name: 'DevinsFarm',
@@ -24,25 +24,20 @@ export default defineConfig({
         // The start_url will be automatically prefixed with the 'base' path
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'icons/icon-192.svg',
             sizes: '192x192',
-            type: 'image/png',
+            type: 'image/svg+xml',
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icons/icon-512.svg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml',
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icons/icon-512.svg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'any maskable',
-          },
-          {
-            src: 'icon-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
           },
         ],
       },
