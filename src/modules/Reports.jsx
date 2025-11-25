@@ -380,12 +380,13 @@ export default function Reports(){
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
             <strong>Report Module:</strong>
             <select 
-              value={section} 
+              value={section}
               onChange={(e) => setSection(e.target.value)}
-              style={{ padding: '8px 12px', fontSize: '14px', minWidth: '200px' }}
+              style={{ padding: '8px 12px', fontSize: '14px', minWidth: '220px' }}
             >
               <optgroup label="Livestock">
                 <option value="animals">Animals</option>
+                <option value="canines">Canine Management</option>
                 <option value="breeding">Breeding Records</option>
                 <option value="semen">Semen Inventory</option>
                 <option value="poultry">Poultry</option>
@@ -397,6 +398,10 @@ export default function Reports(){
               </optgroup>
               <optgroup label="Crops & Land">
                 <option value="crops">Crops</option>
+                <option value="cropAdd">Crop Add</option>
+                <option value="cropSales">Crop Sales</option>
+                <option value="cropTreatment">Crop Treatment</option>
+                <option value="cropYield">Crop Yield</option>
                 <option value="pastures">Pastures</option>
               </optgroup>
               <optgroup label="Management">
@@ -405,10 +410,20 @@ export default function Reports(){
                 <option value="tasks">Tasks</option>
                 <option value="schedules">Schedules</option>
                 <option value="groups">Groups</option>
+                <option value="audit">Audit Log</option>
+                <option value="backup">Backup & Restore</option>
+                <option value="bulk">Bulk Operations</option>
               </optgroup>
               <optgroup label="Health & Resources">
                 <option value="health">Health System</option>
                 <option value="resources">Resources</option>
+              </optgroup>
+              <optgroup label="Other Modules">
+                <option value="calendar">Calendar</option>
+                <option value="photoGallery">Photo Gallery</option>
+                <option value="voiceInput">Voice Input</option>
+                <option value="advancedAnalytics">Advanced Analytics</option>
+                <option value="additionalReports">Additional Reports</option>
               </optgroup>
             </select>
           </label>
