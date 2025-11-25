@@ -536,6 +536,7 @@ function AppointmentView({ patients=[], appointments=[], createAppointment }){
       <form onSubmit={e=>{ e.preventDefault(); createAppointment({ patientId, when, reason, createdAt: new Date().toISOString(), status: 'Scheduled' }); setPatientId(''); setWhen(''); setReason('') }}>
         <div style={{ display:'flex', gap:8 }}>
           <select value={patientId} onChange={e=>setPatientId(e.target.value)}><option value=''>Select patient</option>{patients.map(p=>(<option key={p.id} value={p.id}>{p.name}</option>))}</select>
+          <label style={{marginRight:4}}>Appointment Date & Time:</label>
           <input type='datetime-local' value={when} onChange={e=>setWhen(e.target.value)} />
           <input placeholder='Reason' value={reason} onChange={e=>setReason(e.target.value)} />
           <button type='submit'>Create</button>

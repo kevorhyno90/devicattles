@@ -323,7 +323,10 @@ export default function PetManagement() {
                   <option value="Cat">🐈 Cat</option>
                 </select>
                 <input type="text" placeholder="Breed" value={form.breed} onChange={e => setForm({...form, breed: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
-                <input type="date" value={form.dob} onChange={e => setForm({...form, dob: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                <div style={{display:'flex',flexDirection:'column'}}>
+                  <label style={{marginBottom:2}}>Date of Birth:</label>
+                  <input type="date" value={form.dob} onChange={e => setForm({...form, dob: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                </div>
                 <select value={form.sex} onChange={e => setForm({...form, sex: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
                   <option value="M">Male</option>
                   <option value="F">Female</option>

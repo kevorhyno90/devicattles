@@ -295,7 +295,10 @@ export default function Tasks(){
             <select value={formData.priority} onChange={e=>setFormData({...formData, priority: e.target.value})}>
               {PRIORITIES.map(pri => <option key={pri} value={pri}>{pri}</option>)}
             </select>
-            <input type="date" value={formData.due} onChange={e=>setFormData({...formData, due: e.target.value})} />
+            <div style={{display:'flex',flexDirection:'column'}}>
+              <label style={{marginBottom:2}}>Due Date:</label>
+              <input type="date" value={formData.due} onChange={e=>setFormData({...formData, due: e.target.value})} />
+            </div>
             <input type="number" placeholder="Est. Hours" value={formData.estimatedHours} onChange={e=>setFormData({...formData, estimatedHours: Number(e.target.value)})} />
             <input placeholder="Location" value={formData.location} onChange={e=>setFormData({...formData, location: e.target.value})} style={{ gridColumn: '1 / -1' }} />
           </div>

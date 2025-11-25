@@ -185,7 +185,10 @@ export default function CanineManagement({ animals, setAnimals }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                 <input type="text" placeholder="Dog name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
                 <input type="text" placeholder="Breed" value={formData.breed} onChange={e => setFormData({...formData, breed: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                <input type="date" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <label htmlFor="dob" style={{ fontSize: '13px', marginBottom: '4px', fontWeight: '500' }}>Date of Birth</label>
+                  <input id="dob" type="date" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                </div>
                 <input type="number" placeholder="Weight (kg)" value={formData.weight} onChange={e => setFormData({...formData, weight: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
                 <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
                   {roles.map(r => <option key={r} value={r}>{r}</option>)}

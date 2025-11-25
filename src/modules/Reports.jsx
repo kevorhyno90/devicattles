@@ -498,22 +498,33 @@ export default function Reports(){
         {section !== 'analytics' && (
         <>
         <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:12, flexWrap: 'wrap' }}>
-          <select value={section} onChange={e=>setSection(e.target.value)} style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db' }}>
-            <option value="animals">Animals</option>
-            <option value="crops">Crops</option>
-            <option value="pastures">Pastures</option>
-            <option value="tasks">Tasks</option>
-            <option value="finance">Finance</option>
-            <option value="inventory">Inventory</option>
-            <option value="resources">Resources</option>
-            <option value="schedules">Schedules</option>
-            <option value="groups">Groups</option>
-            <option value="health">Health Records</option>
-            <option value="feeding">Feeding Records</option>
-            <option value="measurements">Measurements</option>
-            <option value="breeding">Breeding Records</option>
-            <option value="milkYield">Milk Yield</option>
-            <option value="treatments">Treatments</option>
+          <select value={section} onChange={e=>setSection(e.target.value)} style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', minWidth: '220px' }}>
+            <optgroup label="Livestock">
+              <option value="animals">Animals</option>
+              <option value="breeding">Breeding Records</option>
+              <option value="semen">Semen Inventory</option>
+              <option value="poultry">Poultry</option>
+              <option value="flocks">Flocks</option>
+              <option value="feeding">Feeding</option>
+              <option value="milkYield">Milk Yield</option>
+              <option value="treatments">Treatments</option>
+              <option value="measurements">Measurements</option>
+            </optgroup>
+            <optgroup label="Crops & Land">
+              <option value="crops">Crops</option>
+              <option value="pastures">Pastures</option>
+            </optgroup>
+            <optgroup label="Management">
+              <option value="finance">Finance</option>
+              <option value="inventory">Inventory</option>
+              <option value="tasks">Tasks</option>
+              <option value="schedules">Schedules</option>
+              <option value="groups">Groups</option>
+            </optgroup>
+            <optgroup label="Health & Resources">
+              <option value="health">Health System</option>
+              <option value="resources">Resources</option>
+            </optgroup>
           </select>
           <button className="tab-btn" onClick={()=> {
             setViewingData(list.map(i=> i.data))

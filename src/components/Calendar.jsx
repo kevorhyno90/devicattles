@@ -553,19 +553,22 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
           <div style={{ fontWeight: '600', marginBottom: 8, color: categories[hoveredEvent.category]?.color }}>
             {categories[hoveredEvent.category]?.icon} {hoveredEvent.title}
           </div>
+          <div style={{ fontSize: '0.8rem', color: '#374151', marginBottom: 4 }}>
+            <strong>Event Date:</strong> {hoveredEvent.date}
+          </div>
           {hoveredEvent.description && (
             <div style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: 4 }}>
-              {hoveredEvent.description}
+              <strong>Description:</strong> {hoveredEvent.description}
             </div>
           )}
           {hoveredEvent.time && (
             <div style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
-              🕐 {hoveredEvent.time}
+              <strong>Time:</strong> 🕐 {hoveredEvent.time}
             </div>
           )}
           {hoveredEvent.animal && (
             <div style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
-              🐄 {hoveredEvent.animal}
+              <strong>Animal:</strong> 🐄 {hoveredEvent.animal}
             </div>
           )}
         </div>
