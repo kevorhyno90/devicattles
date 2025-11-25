@@ -331,4 +331,4 @@ export const ThemeToggleButton = ({ style }) => {
   );
 };
 
-export default ThemeProvider;
+// Removed default export. Use only named exports: import { ThemeProvider } from './theme';

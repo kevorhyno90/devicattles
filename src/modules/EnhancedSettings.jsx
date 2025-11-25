@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useTheme } from '../lib/theme.jsx'
+import { useTheme } from '../lib/theme'
 import {
   getEnhancedSettings,
   saveEnhancedSettings,

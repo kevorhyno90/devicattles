@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react'
-import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme.jsx'
+import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme'
 import OfflineIndicator from './components/OfflineIndicator'
 import InAppNotification from './components/InAppNotification'
 import BottomNav from './components/BottomNav'

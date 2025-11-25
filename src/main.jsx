@@ -1,7 +1,8 @@
-import React from 'react'
-import { createRoot } from 'react-dom/client'
-import App from './App'
-import { ThemeProvider } from './lib/theme.jsx'
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
+import { ThemeProvider } from './lib/theme';
 import { initializeAudio } from './lib/notifications.js';
 import './styles.css'
 
@@ -10,11 +11,13 @@ initializeAudio();
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ThemeProvider>
-      <App />
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
+    </BrowserRouter>
   </React.StrictMode>
-)
+);
 
 // Register service worker for PWA support
 // Only in production or when explicitly enabled
