@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTheme } from '../lib/theme.jsx'
 import {
   getEnhancedSettings,
   saveEnhancedSettings,
@@ -75,6 +76,8 @@ export default function EnhancedSettings() {
     { id: 'system', icon: '⚙️', label: 'System' }
   ]
 
+  const { theme, toggleTheme } = useTheme()
+
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -82,7 +85,21 @@ export default function EnhancedSettings() {
           <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '8px' }}>Enhanced Settings</h2>
           <p style={{ color: '#6b7280', margin: 0 }}>Customize your farm management experience</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button
+                      onClick={toggleTheme}
+                      style={{
+                        padding: '8px 16px',
+                        fontSize: '14px',
+                        background: theme === 'dark' ? '#374151' : '#f3f4f6',
+                        color: theme === 'dark' ? '#f9fafb' : '#1f2937',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontWeight: '600'
+                      }}
+                    >
+                      {theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+                    </button>
           <button onClick={handleExport} style={{ padding: '8px 16px', fontSize: '14px' }}>
             📥 Export
           </button>

@@ -1,6 +1,9 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react'
 import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme.jsx'
 import OfflineIndicator from './components/OfflineIndicator'
+import InAppNotification from './components/InAppNotification'
+import BottomNav from './components/BottomNav'
+import SwipeHandler from './components/SwipeHandler'
 import ErrorBoundary from './components/ErrorBoundary'
 
 // Helper function to retry failed lazy loads (important for Android Chrome)
@@ -1027,7 +1030,17 @@ function AppContent() {
       }}>
         <small>© Devins Farm — Comprehensive Farm Management System</small>
       </footer>
-      
+
+
+      {/* In-app notification banner */}
+      <InAppNotification />
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
+
+      {/* Swipe gesture navigation */}
+      <SwipeHandler />
+
       {/* Offline indicator */}
       <OfflineIndicator />
     </div>

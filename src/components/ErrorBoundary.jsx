@@ -89,8 +89,12 @@ class ErrorBoundary extends React.Component {
           }}>
             {this.state.isQuotaError 
               ? 'Your device storage is full. Clear some space or remove cached data to continue.'
-              : 'This module encountered an error and cannot be displayed. Try reloading or switching to another section.'}
+              : 'This module encountered an error and cannot be displayed.'}
           </p>
+          <div style={{ fontSize: '15px', color: '#2563eb', marginBottom: '18px' }}>
+            <a href="https://github.com/kevorhyno90/devicattles#troubleshooting" target="_blank" rel="noopener">Troubleshooting tips</a> &nbsp;|&nbsp; 
+            <a href="mailto:support@devinsfarm.com?subject=App%20Error" target="_blank" rel="noopener">Contact Support</a>
+          </div>
 
           {this.state.isQuotaError && (
             <button

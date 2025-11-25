@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { isFirebaseConfigured } from '../lib/firebase'
 import { isFirebaseAuthAvailable, loginWithFirebase, registerWithFirebase, logoutFromFirebase, getCurrentFirebaseUser } from '../lib/firebaseAuth'
 import { 
@@ -14,6 +14,9 @@ export default function SyncSettings() {
   const [configured, setConfigured] = useState(false)
   const [syncEnabled, setSyncEnabledState] = useState(false)
   const [syncStatus, setSyncStatus] = useState('offline')
+  const [lastSyncTime, setLastSyncTime] = useState(null)
+  const [syncError, setSyncError] = useState('')
+  const retryTimeoutRef = useRef(null)
   const [firebaseUser, setFirebaseUser] = useState(null)
   const [showLogin, setShowLogin] = useState(false)
   const [showRegister, setShowRegister] = useState(false)
@@ -36,11 +39,16 @@ export default function SyncSettings() {
     setConfigured(isFirebaseConfigured())
     setSyncEnabledState(isSyncEnabled())
     setSyncStatus(getSyncStatus())
+    // Get last sync time from localStorage
+    setLastSyncTime(localStorage.getItem('devinsfarm:lastSyncTime'))
+    setSyncError(localStorage.getItem('devinsfarm:lastSyncError') || '')
     setFirebaseUser(getCurrentFirebaseUser())
     
     // Update sync status periodically
     const interval = setInterval(() => {
       setSyncStatus(getSyncStatus())
+      setLastSyncTime(localStorage.getItem('devinsfarm:lastSyncTime'))
+      setSyncError(localStorage.getItem('devinsfarm:lastSyncError') || '')
     }, 2000)
     
     return () => clearInterval(interval)
@@ -98,35 +106,56 @@ export default function SyncSettings() {
     }
   }
 
-  async function handlePushAll() {
+  async function handlePushAll(retryCount = 0) {
     if (!confirm('Push all local data to Firebase? This will overwrite cloud data.')) return
-    
     setPushing(true)
+    setSyncError('')
     try {
       const result = await pushAllToFirebase()
       setPushing(false)
+      const now = new Date().toLocaleString()
+      localStorage.setItem('devinsfarm:lastSyncTime', now)
+      localStorage.removeItem('devinsfarm:lastSyncError')
+      setLastSyncTime(now)
+      setSyncError('')
       alert(`✅ Success! Pushed ${result.count} collections (${result.itemCount} items) to cloud.`)
     } catch (error) {
       setPushing(false)
-      alert(`❌ Push failed: ${error.message}`)
+      localStorage.setItem('devinsfarm:lastSyncError', error.message)
+      setSyncError(error.message)
+      alert(`❌ Push failed: ${error.message}\n\nTroubleshooting tips:\n- Check your internet connection\n- Make sure you are logged in\n- Try again later\n- If on mobile, try a different browser (Chrome may block sync)`)
+      // Auto-retry logic (max 3 attempts)
+      if (retryCount < 2) {
+        retryTimeoutRef.current = setTimeout(() => handlePushAll(retryCount + 1), 10000)
+      }
     }
   }
 
-  async function handlePullAll() {
+  async function handlePullAll(retryCount = 0) {
     if (!confirm('Pull all data from Firebase? This will overwrite local data.')) return
-    
     setPulling(true)
+    setSyncError('')
     try {
       const result = await pullAllFromFirebase()
       setPulling(false)
+      const now = new Date().toLocaleString()
+      localStorage.setItem('devinsfarm:lastSyncTime', now)
+      localStorage.removeItem('devinsfarm:lastSyncError')
+      setLastSyncTime(now)
+      setSyncError('')
       alert(`✅ Success! Pulled ${result.count} collections from cloud. Refresh the page to see changes.`)
-      // Give user option to refresh
       if (confirm('Refresh page now to see the updated data?')) {
         window.location.reload()
       }
     } catch (error) {
       setPulling(false)
-      alert(`❌ Pull failed: ${error.message}`)
+      localStorage.setItem('devinsfarm:lastSyncError', error.message)
+      setSyncError(error.message)
+      alert(`❌ Pull failed: ${error.message}\n\nTroubleshooting tips:\n- Check your internet connection\n- Make sure you are logged in\n- Try again later\n- If on mobile, try a different browser (Chrome may block sync)`)
+      // Auto-retry logic (max 3 attempts)
+      if (retryCount < 2) {
+        retryTimeoutRef.current = setTimeout(() => handlePullAll(retryCount + 1), 10000)
+      }
     }
   }
 
@@ -330,7 +359,7 @@ export default function SyncSettings() {
               </label>
             </div>
 
-            {/* Sync Status */}
+            {/* Sync Status with last sync time and error details */}
             <div style={{ marginTop: 20 }}>
               <strong>Sync Status:</strong>{' '}
               <span style={{
@@ -354,6 +383,16 @@ export default function SyncSettings() {
                 {syncStatus === 'error' && '❌ Error'}
                 {syncStatus === 'offline' && '⏸️ Offline'}
               </span>
+              {lastSyncTime && (
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+                  <span>Last sync: {lastSyncTime}</span>
+                </div>
+              )}
+              {syncError && (
+                <div style={{ fontSize: 12, color: '#991b1b', marginTop: 4 }}>
+                  <span>Error: {syncError}</span>
+                </div>
+              )}
             </div>
 
             {/* Manual Sync Controls */}

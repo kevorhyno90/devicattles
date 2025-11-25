@@ -14,6 +14,7 @@
 import { initializeApp } from 'firebase/app'
 import { initializeFirestore, CACHE_SIZE_UNLIMITED, persistentLocalCache } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
+import { getAnalytics } from 'firebase/analytics'
 
 // Firebase configuration - CONFIGURED
 // Project: devinsfarm-2025
@@ -37,6 +38,7 @@ export function isFirebaseConfigured() {
 let app = null
 let db = null
 let auth = null
+let analytics = null
 let isInitialized = false
 
 try {
@@ -46,6 +48,7 @@ try {
       localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED })
     })
     auth = getAuth(app)
+    analytics = getAnalytics(app)
     isInitialized = true
   } else {
     // Log once on first check - not a warning since it's expected in local/demo mode
@@ -64,4 +67,5 @@ try {
 }
 
 export { app, db, auth }
+export { app, db, auth, analytics }
 export default { app, db, auth, isConfigured: isFirebaseConfigured }
