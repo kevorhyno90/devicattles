@@ -66,6 +66,5 @@ try {
   isInitialized = false
 }
 
-export { app, db, auth }
 export { app, db, auth, analytics }
-export default { app, db, auth, isConfigured: isFirebaseConfigured }
+export default { app, db, auth, analytics, isConfigured: isFirebaseConfigured }
