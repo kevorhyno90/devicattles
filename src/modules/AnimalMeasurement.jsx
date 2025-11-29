@@ -256,7 +256,7 @@ export default function AnimalMeasurement({ animals }){
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
             <div>
               <label>Animal *</label>
-              <select value={animalId} onChange={e => setAnimalId(e.target.value)}>
+              <select id="animal-id" name="animal-id" value={animalId} onChange={e => setAnimalId(e.target.value)}>
                 <option value="">-- Select Animal --</option>
                 {(animals||[]).map(a => (
                   <option key={a.id} value={a.id}>{a.name || a.tag} ({a.breed})</option>
@@ -265,7 +265,7 @@ export default function AnimalMeasurement({ animals }){
             </div>
             <div>
               <label>Measurement Type</label>
-              <select value={type} onChange={e => {
+              <select id="measurement-type" name="measurement-type" value={type} onChange={e => {
                 setType(e.target.value)
                 setUnit(UNITS[e.target.value]?.[0] || '')
               }}>
@@ -274,7 +274,7 @@ export default function AnimalMeasurement({ animals }){
             </div>
             <div>
               <label>Overall Condition</label>
-              <select value={condition} onChange={e => setCondition(e.target.value)}>
+              <select id="condition" name="condition" value={condition} onChange={e => setCondition(e.target.value)}>
                 {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
@@ -282,11 +282,11 @@ export default function AnimalMeasurement({ animals }){
               <>
                 <div>
                   <label>{type} Value</label>
-                  <input type="number" step="0.1" value={value} onChange={e => setValue(e.target.value)} placeholder="0.0" />
+                  <input type="number" step="0.1" id="measurement-value" name="measurement-value" value={value} onChange={e => setValue(e.target.value)} placeholder="0.0" />
                 </div>
                 <div>
                   <label>Unit</label>
-                  <select value={unit} onChange={e => setUnit(e.target.value)}>
+                  <select id="measurement-unit" name="measurement-unit" value={unit} onChange={e => setUnit(e.target.value)}>
                     {(UNITS[type] || ['unit']).map(u => <option key={u} value={u}>{u}</option>)}
                   </select>
                 </div>
@@ -296,25 +296,25 @@ export default function AnimalMeasurement({ animals }){
               <>
                 <div>
                   <label>Weight (kg)</label>
-                  <input type="number" step="0.1" value={value} onChange={e => setValue(e.target.value)} placeholder="0.0" />
+                  <input type="number" step="0.1" id="multi-weight" name="multi-weight" value={value} onChange={e => setValue(e.target.value)} placeholder="0.0" />
                 </div>
                 <div>
                   <label>Height (cm)</label>
-                  <input type="number" step="0.1" value={height} onChange={e => setHeight(e.target.value)} placeholder="0.0" />
+                  <input type="number" step="0.1" id="multi-height" name="multi-height" value={height} onChange={e => setHeight(e.target.value)} placeholder="0.0" />
                 </div>
                 <div>
                   <label>Length (cm)</label>
-                  <input type="number" step="0.1" value={length} onChange={e => setLength(e.target.value)} placeholder="0.0" />
+                  <input type="number" step="0.1" id="multi-length" name="multi-length" value={length} onChange={e => setLength(e.target.value)} placeholder="0.0" />
                 </div>
                 <div>
                   <label>Girth (cm)</label>
-                  <input type="number" step="0.1" value={girth} onChange={e => setGirth(e.target.value)} placeholder="0.0" />
+                  <input type="number" step="0.1" id="multi-girth" name="multi-girth" value={girth} onChange={e => setGirth(e.target.value)} placeholder="0.0" />
                 </div>
               </>
             )}
             <div>
               <label>Body Condition Score (1-5)</label>
-              <select value={bcs} onChange={e => setBcs(e.target.value)}>
+              <select id="bcs" name="bcs" value={bcs} onChange={e => setBcs(e.target.value)}>
                 <option value="">-- Not Scored --</option>
                 {BODY_CONDITIONS.map(b => <option key={b} value={b.split(' -')[0]}>{b}</option>)}
               </select>

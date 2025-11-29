@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { ThemeProvider } from './lib/theme';
+import { AppViewProvider } from './lib/AppViewContext.jsx';
 import { initializeAudio } from './lib/notifications.js';
 import './styles.css'
 
@@ -18,7 +19,9 @@ createRoot(document.getElementById('root')).render(
       }}
     >
       <ThemeProvider>
-        <App />
+        <AppViewProvider>
+          <App />
+        </AppViewProvider>
       </ThemeProvider>
     </BrowserRouter>
   </React.StrictMode>

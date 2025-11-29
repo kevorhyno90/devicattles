@@ -169,6 +169,8 @@ export default function NotificationCenter() {
             <label>
               <input
                 type="checkbox"
+                id="notif-enabled"
+                name="notif-enabled"
                 checked={settings.enabled}
                 onChange={e => handleSettingsChange('enabled', e.target.checked)}
               />
@@ -181,6 +183,8 @@ export default function NotificationCenter() {
             <label>
               <input
                 type="checkbox"
+                id="notif-treatments"
+                name="notif-treatments"
                 checked={settings.treatmentReminders}
                 onChange={e => handleSettingsChange('treatmentReminders', e.target.checked)}
               />
@@ -189,6 +193,8 @@ export default function NotificationCenter() {
             <label>
               <input
                 type="checkbox"
+                id="notif-breeding"
+                name="notif-breeding"
                 checked={settings.breedingReminders}
                 onChange={e => handleSettingsChange('breedingReminders', e.target.checked)}
               />
@@ -197,6 +203,8 @@ export default function NotificationCenter() {
             <label>
               <input
                 type="checkbox"
+                id="notif-tasks"
+                name="notif-tasks"
                 checked={settings.taskReminders}
                 onChange={e => handleSettingsChange('taskReminders', e.target.checked)}
               />
@@ -205,6 +213,8 @@ export default function NotificationCenter() {
             <label>
               <input
                 type="checkbox"
+                id="notif-inventory"
+                name="notif-inventory"
                 checked={settings.inventoryAlerts}
                 onChange={e => handleSettingsChange('inventoryAlerts', e.target.checked)}
               />
@@ -213,6 +223,8 @@ export default function NotificationCenter() {
             <label>
               <input
                 type="checkbox"
+                id="notif-health"
+                name="notif-health"
                 checked={settings.healthAlerts}
                 onChange={e => handleSettingsChange('healthAlerts', e.target.checked)}
               />
@@ -221,10 +233,12 @@ export default function NotificationCenter() {
           </div>
 
           <div className="settings-group">
-            <label>
+            <label htmlFor="notif-leadtime">
               Reminder Lead Time (hours before event):
               <input
                 type="number"
+                id="notif-leadtime"
+                name="notif-leadtime"
                 min="1"
                 max="168"
                 value={settings.reminderLeadTime}
@@ -237,6 +251,8 @@ export default function NotificationCenter() {
             <label>
               <input
                 type="checkbox"
+                id="notif-sound"
+                name="notif-sound"
                 checked={settings.soundEnabled}
                 onChange={e => handleSettingsChange('soundEnabled', e.target.checked)}
               />

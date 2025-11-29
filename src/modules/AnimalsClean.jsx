@@ -26,7 +26,7 @@ export default function Animals(){
     <section>
       <h2>Livestock</h2>
       <div style={{display:'flex',gap:8,alignItems:'center'}}>
-        <input placeholder="Animal name" value={name} onChange={e=>setName(e.target.value)} />
+        <input id="animal-name" name="animal-name" placeholder="Animal name" value={name} onChange={e=>setName(e.target.value)} />
         <button onClick={add}>Add Animal</button>
       </div>
 

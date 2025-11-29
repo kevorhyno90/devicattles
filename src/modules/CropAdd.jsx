@@ -15,10 +15,10 @@ export default function CropAdd({ onAdd }){
   return (
     <div style={{marginBottom:12}}>
       <div style={{display:'flex',gap:8,alignItems:'center'}}>
-        <input placeholder="Crop name" value={name} onChange={e=>setName(e.target.value)} />
-        <label style={{marginRight:4}}>Planted Date:</label>
-        <input type="date" value={planted} onChange={e=>setPlanted(e.target.value)} />
-        <input placeholder="Area (ha)" value={area} onChange={e=>setArea(e.target.value)} style={{width:120}} />
+        <input id="crop-name" name="crop-name" placeholder="Crop name" value={name} onChange={e=>setName(e.target.value)} />
+        <label htmlFor="planted-date" style={{marginRight:4}}>Planted Date:</label>
+        <input id="planted-date" name="planted-date" type="date" value={planted} onChange={e=>setPlanted(e.target.value)} />
+        <input id="area-ha" name="area-ha" placeholder="Area (ha)" value={area} onChange={e=>setArea(e.target.value)} style={{width:120}} />
         <button onClick={save}>Save crop</button>
       </div>
     </div>

@@ -1,16 +1,15 @@
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { AppViewContext } from '../lib/AppViewContext.jsx';
 
 const navItems = [
-  { label: 'Dashboard', icon: '🏠', path: '/' },
-  { label: 'Livestock', icon: '🐄', path: '/livestock' },
-  { label: 'Crops', icon: '🌾', path: '/crops' },
-  { label: 'Settings', icon: '⚙️', path: '/settings' }
+  { label: 'Dashboard', icon: '🏠', view: 'dashboard' },
+  { label: 'Livestock', icon: '🐄', view: 'animals' },
+  { label: 'Crops', icon: '🌾', view: 'crops' },
+  { label: 'Settings', icon: '⚙️', view: 'settings' }
 ];
 
 export default function BottomNav() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const { view, setView } = useContext(AppViewContext);
 
   return (
     <nav style={{
@@ -28,13 +27,13 @@ export default function BottomNav() {
     }}>
       {navItems.map(item => (
         <button
-          key={item.path}
-          onClick={() => navigate(item.path)}
+          key={item.view}
+          onClick={() => setView(item.view)}
           style={{
             background: 'none',
             border: 'none',
             fontSize: 22,
-            color: location.pathname === item.path ? '#2563eb' : '#374151',
+            color: view === item.view ? '#2563eb' : '#374151',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',

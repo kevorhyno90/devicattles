@@ -1,8 +1,11 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react'
+import React, { useState, useEffect, lazy, Suspense, useContext } from 'react'
 import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme'
 import OfflineIndicator from './components/OfflineIndicator'
 import InAppNotification from './components/InAppNotification'
 import BottomNav from './components/BottomNav'
+import Weather from './modules/Weather/Weather'
+import Map from './modules/Map/Map'
+import { AppViewProvider, AppViewContext } from './lib/AppViewContext.jsx';
 import SwipeHandler from './components/SwipeHandler'
 import ErrorBoundary from './components/ErrorBoundary'
 
@@ -11,11 +14,15 @@ const lazyWithRetry = (importFunc) => {
   return lazy(() => {
     return importFunc().catch((error) => {
       console.error('Module load failed, retrying:', error)
+      // Show a visible error for debugging
+      if (window && window.alert) {
+        window.alert('Module failed to load: ' + error.message)
+      }
       // Retry after a short delay
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         setTimeout(() => {
           console.log('Retrying module load...')
-          resolve(importFunc())
+          importFunc().then(resolve).catch(reject)
         }, 1000)
       })
     })
@@ -139,15 +146,15 @@ import { initSync, setupAutoSync } from './lib/sync'
 
 // App content component that uses theme
 function AppContent() {
-  const { theme, getThemeColors } = useTheme()
-  const colors = getThemeColors()
-  
-  const [authenticated, setAuthenticated] = useState(false)
-  const [currentUser, setCurrentUser] = useState(null)
-  const [view, setView] = useState('dashboard')
-  const [animals, setAnimals] = useState([])
-  const [unreadNotifications, setUnreadNotifications] = useState(0)
-  const [showInstallPrompt, setShowInstallPrompt] = useState(false)
+  const { theme, getThemeColors } = useTheme();
+  const colors = getThemeColors();
+
+  const { view, setView } = useContext(AppViewContext);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [animals, setAnimals] = useState([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   
   // UI branding/settings - must be declared before any conditional returns
   const SETTINGS_KEY = 'devinsfarm:ui:settings'
@@ -159,32 +166,11 @@ function AppContent() {
     const handleInstallPrompt = (e) => {
       setShowInstallPrompt(true)
     }
-    
     window.addEventListener('pwa-install-available', handleInstallPrompt)
-    
     return () => {
       window.removeEventListener('pwa-install-available', handleInstallPrompt)
     }
   }, [])
-
-  // Upgrade service worker to enhanced version
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then(reg => {
-        // Check for service worker updates every hour
-        setInterval(() => {
-          reg.update()
-        }, 60 * 60 * 1000)
-      })
-    }
-  }, [])
-
-  const handleInstallClick = async () => {
-    const installed = await window.installPWA?.()
-    if (installed) {
-      setShowInstallPrompt(false)
-    }
-  }
 
   // Check authentication on mount
   useEffect(() => {
@@ -242,12 +228,12 @@ function AppContent() {
   // Load animals for passing to health system and groups
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('cattalytics:animals')
-      if (stored) setAnimals(JSON.parse(stored))
+      const stored = localStorage.getItem('cattalytics:animals');
+      if (stored) setAnimals(JSON.parse(stored));
     } catch (e) {
-      setAnimals([])
+      setAnimals([]);
     }
-  }, [view]) // Reload when view changes to keep animals fresh
+  }, [view]); // Reload when view changes to keep animals fresh
   
   // Load UI settings
   useEffect(()=>{
@@ -444,7 +430,7 @@ function AppContent() {
                 borderRadius: 10,
                 padding: '1px 5px',
                 fontSize: 10,
-                fontWeight: 600
+                fontWeight: '600'
               }}>
                 {unreadNotifications}
               </span>
@@ -647,6 +633,34 @@ function AppContent() {
             }}
           >⚙️ Settings</button>
           
+          <button 
+            className={view==='weather'? 'active':''} 
+            onClick={()=>setView('weather')}
+            style={{
+              background: view==='weather' ? '#059669' : '#f3f4f6',
+              color: view==='weather' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >🌦️ Weather</button>
+          <button 
+            className={view==='map'? 'active':''} 
+            onClick={()=>setView('map')}
+            style={{
+              background: view==='map' ? '#059669' : '#f3f4f6',
+              color: view==='map' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >🗺️ Map</button>
           {/* Theme Toggle Button */}
           <div style={{ marginLeft: 'auto' }}>
             <ThemeToggleButton />
@@ -655,7 +669,27 @@ function AppContent() {
 
       <main>
         <Suspense fallback={<LoadingFallback />}>
-          {view === 'dashboard' && <ErrorBoundary><Dashboard onNavigate={setView} /></ErrorBoundary>}
+          {view === 'dashboard' && (
+            <>
+              <ErrorBoundary><Dashboard onNavigate={setView} /></ErrorBoundary>
+            </>
+          )}
+          {view === 'weather' && (
+            <section>
+              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                ← Back to Dashboard
+              </button>
+              <ErrorBoundary><Weather /></ErrorBoundary>
+            </section>
+          )}
+          {view === 'map' && (
+            <section>
+              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                ← Back to Dashboard
+              </button>
+              <ErrorBoundary><Map /></ErrorBoundary>
+            </section>
+          )}
           {view === 'notifications' && <ErrorBoundary><NotificationCenter /></ErrorBoundary>}
 
           {view === 'animals' && (

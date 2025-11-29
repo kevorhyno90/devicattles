@@ -52,275 +52,6 @@ const LEAVE_TYPES = {
   OTHER: 'Other'
 }
 
-const SAMPLE_EMPLOYEES = [
-  { 
-    id: 'E-001', 
-    name: 'John Smith', 
-    role: 'Farm Manager', 
-    email: 'john@farm.com', 
-    phone: '555-0101',
-    emergencyContact: 'Jane Smith',
-    emergencyPhone: '555-0199',
-    address: '123 Farm Road, Countryside',
-    city: 'Greenville',
-    state: 'CA',
-    zipCode: '12345',
-    dateEmployed: '2020-01-15',
-    dateOfBirth: '1985-03-20',
-    hourlyRate: 25.00,
-    weeklyHours: 40,
-    active: true,
-    leaveBalance: {
-      vacation: 15,
-      sick: 10,
-      personal: 5
-    },
-    leaveHistory: [
-      {
-        id: 'L-001',
-        type: 'VACATION',
-        startDate: '2025-10-15',
-        endDate: '2025-10-19',
-        days: 5,
-        reason: 'Family vacation',
-        status: 'APPROVED',
-        requestedAt: '2025-09-20T10:00:00.000Z',
-        approvedAt: '2025-09-21T14:30:00.000Z'
-      },
-      {
-        id: 'L-002',
-        type: 'SICK',
-        startDate: '2025-09-05',
-        endDate: '2025-09-06',
-        days: 2,
-        reason: 'Flu symptoms',
-        status: 'APPROVED',
-        requestedAt: '2025-09-05T08:00:00.000Z',
-        approvedAt: '2025-09-05T08:15:00.000Z'
-      }
-    ]
-  },
-  { 
-    id: 'E-002', 
-    name: 'Maria Garcia', 
-    role: 'Animal Handler', 
-    email: 'maria@farm.com', 
-    phone: '555-0102',
-    emergencyContact: 'Carlos Garcia',
-    emergencyPhone: '555-0198',
-    address: '456 Oak Avenue, Rural Valley',
-    city: 'Meadowbrook',
-    state: 'CA',
-    zipCode: '12346',
-    dateEmployed: '2021-06-10',
-    dateOfBirth: '1990-07-15',
-    hourlyRate: 18.50,
-    weeklyHours: 40,
-    active: true,
-    leaveBalance: {
-      vacation: 12,
-      sick: 8,
-      personal: 3
-    },
-    leaveHistory: [
-      {
-        id: 'L-003',
-        type: 'PERSONAL',
-        startDate: '2025-11-08',
-        endDate: '2025-11-08',
-        days: 1,
-        reason: 'Personal appointment',
-        status: 'APPROVED',
-        requestedAt: '2025-11-01T10:00:00.000Z',
-        approvedAt: '2025-11-02T09:00:00.000Z'
-      },
-      {
-        id: 'L-004',
-        type: 'SICK',
-        startDate: '2025-10-22',
-        endDate: '2025-10-23',
-        days: 2,
-        reason: 'Back pain',
-        status: 'APPROVED',
-        requestedAt: '2025-10-22T07:30:00.000Z',
-        approvedAt: '2025-10-22T08:00:00.000Z'
-      },
-      {
-        id: 'L-005',
-        type: 'VACATION',
-        startDate: '2025-12-20',
-        endDate: '2025-12-24',
-        days: 5,
-        reason: 'Holiday vacation',
-        status: 'PENDING',
-        requestedAt: '2025-11-10T10:00:00.000Z'
-      }
-    ]
-  },
-  { 
-    id: 'E-003', 
-    name: 'David Chen', 
-    role: 'Crop Specialist', 
-    email: 'david@farm.com', 
-    phone: '555-0103',
-    emergencyContact: 'Linda Chen',
-    emergencyPhone: '555-0197',
-    address: '789 Harvest Lane, Farm District',
-    city: 'Greenville',
-    state: 'CA',
-    zipCode: '12345',
-    dateEmployed: '2019-03-22',
-    dateOfBirth: '1988-11-30',
-    hourlyRate: 22.00,
-    weeklyHours: 40,
-    active: true,
-    leaveBalance: {
-      vacation: 18,
-      sick: 10,
-      personal: 5
-    },
-    leaveHistory: [
-      {
-        id: 'L-006',
-        type: 'SICK',
-        startDate: '2025-08-12',
-        endDate: '2025-08-14',
-        days: 3,
-        reason: 'Cold and fever',
-        status: 'APPROVED',
-        requestedAt: '2025-08-12T07:00:00.000Z',
-        approvedAt: '2025-08-12T07:30:00.000Z'
-      },
-      {
-        id: 'L-007',
-        type: 'PERSONAL',
-        startDate: '2025-07-20',
-        endDate: '2025-07-20',
-        days: 1,
-        reason: 'Family matter',
-        status: 'APPROVED',
-        requestedAt: '2025-07-15T10:00:00.000Z',
-        approvedAt: '2025-07-16T09:00:00.000Z'
-      },
-      {
-        id: 'L-008',
-        type: 'VACATION',
-        startDate: '2025-06-10',
-        endDate: '2025-06-17',
-        days: 8,
-        reason: 'Summer break',
-        status: 'APPROVED',
-        requestedAt: '2025-05-01T10:00:00.000Z',
-        approvedAt: '2025-05-02T14:00:00.000Z'
-      }
-    ]
-  },
-  { 
-    id: 'E-004', 
-    name: 'Sarah Johnson', 
-    role: 'Veterinary Assistant', 
-    email: 'sarah@farm.com', 
-    phone: '555-0104',
-    emergencyContact: 'Michael Johnson',
-    emergencyPhone: '555-0196',
-    address: '321 Pasture Road, County Side',
-    city: 'Farmington',
-    state: 'CA',
-    zipCode: '12347',
-    dateEmployed: '2022-01-05',
-    dateOfBirth: '1992-05-25',
-    hourlyRate: 20.00,
-    weeklyHours: 35,
-    active: true,
-    leaveBalance: {
-      vacation: 10,
-      sick: 8,
-      personal: 3
-    },
-    leaveHistory: [
-      {
-        id: 'L-009',
-        type: 'SICK',
-        startDate: '2025-11-12',
-        endDate: '2025-11-13',
-        days: 2,
-        reason: 'Medical checkup',
-        status: 'APPROVED',
-        requestedAt: '2025-11-10T09:00:00.000Z',
-        approvedAt: '2025-11-10T10:00:00.000Z'
-      },
-      {
-        id: 'L-010',
-        type: 'PERSONAL',
-        startDate: '2025-10-05',
-        endDate: '2025-10-05',
-        days: 1,
-        reason: 'Moving day',
-        status: 'APPROVED',
-        requestedAt: '2025-09-28T10:00:00.000Z',
-        approvedAt: '2025-09-29T09:00:00.000Z'
-      }
-    ]
-  }
-]
-
-const SAMPLE_SCHEDULES = [
-  {
-    id: 'SCH-001',
-    title: 'Morning Milking',
-    description: 'Milk all dairy cows in barn A and B',
-    type: 'ROUTINE',
-    priority: 'HIGH',
-    status: 'PENDING',
-    recurrence: 'DAILY',
-    startDate: new Date().toISOString().split('T')[0],
-    startTime: '05:00',
-    duration: 120,
-    assignedTo: ['E-001', 'E-002'],
-    location: 'Barn A & B',
-    reminderMinutes: 30,
-    notes: 'Ensure equipment is sanitized before starting',
-    createdAt: new Date().toISOString(),
-    completedInstances: []
-  },
-  {
-    id: 'SCH-002',
-    title: 'Pasture Rotation',
-    description: 'Move cattle from north pasture to east pasture',
-    type: 'ROUTINE',
-    priority: 'MEDIUM',
-    status: 'PENDING',
-    recurrence: 'WEEKLY',
-    startDate: new Date().toISOString().split('T')[0],
-    startTime: '08:00',
-    duration: 60,
-    assignedTo: ['E-002'],
-    location: 'North & East Pastures',
-    reminderMinutes: 60,
-    notes: 'Check water supply in east pasture before moving',
-    createdAt: new Date().toISOString(),
-    completedInstances: []
-  },
-  {
-    id: 'SCH-003',
-    title: 'Vet Check - Breeding Cows',
-    description: 'Pregnancy checks for breeding group',
-    type: 'VETERINARY',
-    priority: 'HIGH',
-    status: 'PENDING',
-    recurrence: 'MONTHLY',
-    startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    startTime: '10:00',
-    duration: 180,
-    assignedTo: ['E-004', 'E-001'],
-    location: 'Handling Facility',
-    reminderMinutes: 1440,
-    notes: 'Dr. Wilson scheduled - confirm 24 hours before',
-    createdAt: new Date().toISOString(),
-    completedInstances: []
-  }
-]
-
 export default function Schedules() {
   const SCHEDULES_KEY = 'cattalytics:schedules:v2'
   const EMPLOYEES_KEY = 'cattalytics:employees:v2'
@@ -395,10 +126,10 @@ export default function Schedules() {
     const rawEmployees = localStorage.getItem(EMPLOYEES_KEY)
     
     if (rawSchedules) setSchedules(JSON.parse(rawSchedules))
-    else setSchedules(SAMPLE_SCHEDULES)
+    else setSchedules([]) // Start with no schedules
     
     if (rawEmployees) setEmployees(JSON.parse(rawEmployees))
-    else setEmployees(SAMPLE_EMPLOYEES)
+    else setEmployees([]) // Start with no employees
   }, [])
 
   useEffect(() => {
@@ -2406,6 +2137,64 @@ export default function Schedules() {
                 </div>
               </div>
 
+              {/* Photo Upload */}
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontWeight: 'bold', marginBottom: 4 }}>Photo</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => {
+                    const file = e.target.files[0]
+                    if (file) {
+                      const reader = new FileReader()
+                      reader.onload = ev => {
+                        setEmployeeForm({ ...employeeForm, photo: ev.target.result })
+                      }
+                      reader.readAsDataURL(file)
+                    }
+                  }}
+                />
+                {employeeForm.photo && (
+                  <div style={{ marginTop: 8 }}>
+                    <img src={employeeForm.photo} alt="Employee" style={{ maxWidth: 120, borderRadius: 8 }} />
+                  </div>
+                )}
+              </div>
+
+              {/* Document Upload */}
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontWeight: 'bold', marginBottom: 4 }}>Documents (PDF, images)</label>
+                <input
+                  type="file"
+                  accept=".pdf,image/*"
+                  multiple
+                  onChange={e => {
+                    const files = Array.from(e.target.files)
+                    const docPromises = files.map(file => {
+                      return new Promise(resolve => {
+                        const reader = new FileReader()
+                        reader.onload = ev => {
+                          resolve({ name: file.name, url: ev.target.result })
+                        }
+                        reader.readAsDataURL(file)
+                      })
+                    })
+                    Promise.all(docPromises).then(docs => {
+                      setEmployeeForm({ ...employeeForm, documents: docs })
+                    })
+                  }}
+                />
+                {employeeForm.documents && employeeForm.documents.length > 0 && (
+                  <ul style={{ marginTop: 8 }}>
+                    {employeeForm.documents.map((doc, idx) => (
+                      <li key={idx}>
+                        <a href={doc.url} target="_blank" rel="noopener noreferrer">{doc.name}</a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
               <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 12, background: '#f9f9f9' }}>
                 <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>Leave Balance (Days)</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
@@ -2656,7 +2445,7 @@ export default function Schedules() {
                       fontWeight: 'bold',
                       padding: '4px 12px',
                       borderRadius: 12,
-                      background: detailsEmployee.active ? '#c8e6c9' : '#ffcdd2',
+                      background: detailsEmployee.active ? '#4CAF50' : '#999',
                       display: 'inline-block'
                     }}>
                       {detailsEmployee.active ? 'ACTIVE' : 'INACTIVE'}
@@ -2780,208 +2569,135 @@ export default function Schedules() {
                     <div style={{ fontSize: 12, color: '#666' }}>Personal Days</div>
                   </div>
                 </div>
-
-                {/* Leave Breakdown by Type */}
-                <div style={{ marginTop: 16 }}>
-                  <h4 style={{ fontSize: 14, margin: '0 0 12px 0' }}>Leave Usage by Type</h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                    {/* Vacation Days */}
-                    <div style={{ border: '1px solid #4CAF50', borderRadius: 8, padding: 12, background: '#e8f5e9' }}>
-                      <div style={{ fontSize: 12, fontWeight: 'bold', color: '#4CAF50', marginBottom: 8 }}>
-                        🏖️ VACATION DAYS
-                      </div>
-                      <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>
-                        Taken: {(detailsEmployee.leaveHistory || [])
-                          .filter(l => l.type === 'VACATION' && l.status === 'APPROVED')
-                          .reduce((sum, l) => sum + l.days, 0)} days
-                      </div>
-                      <div style={{ fontSize: 10, color: '#888' }}>
-                        {(detailsEmployee.leaveHistory || [])
-                          .filter(l => l.type === 'VACATION' && l.status === 'APPROVED')
-                          .slice(0, 3)
-                          .map(l => (
-                            <div key={l.id} style={{ marginBottom: 2 }}>
-                              • {new Date(l.startDate).toLocaleDateString()} - {new Date(l.endDate).toLocaleDateString()} ({l.days}d)
-                            </div>
-                          ))}
-                        {(detailsEmployee.leaveHistory || []).filter(l => l.type === 'VACATION' && l.status === 'APPROVED').length > 3 && (
-                          <div>+{(detailsEmployee.leaveHistory || []).filter(l => l.type === 'VACATION' && l.status === 'APPROVED').length - 3} more</div>
-                        )}
-                        {(detailsEmployee.leaveHistory || []).filter(l => l.type === 'VACATION' && l.status === 'APPROVED').length === 0 && (
-                          <div style={{ color: '#999' }}>No vacation days taken</div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Sick Days */}
-                    <div style={{ border: '1px solid #f57c00', borderRadius: 8, padding: 12, background: '#fff3e0' }}>
-                      <div style={{ fontSize: 12, fontWeight: 'bold', color: '#f57c00', marginBottom: 8 }}>
-                        🤒 SICK DAYS
-                      </div>
-                      <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>
-                        Taken: {(detailsEmployee.leaveHistory || [])
-                          .filter(l => l.type === 'SICK' && l.status === 'APPROVED')
-                          .reduce((sum, l) => sum + l.days, 0)} days
-                      </div>
-                      <div style={{ fontSize: 10, color: '#888' }}>
-                        {(detailsEmployee.leaveHistory || [])
-                          .filter(l => l.type === 'SICK' && l.status === 'APPROVED')
-                          .slice(0, 3)
-                          .map(l => (
-                            <div key={l.id} style={{ marginBottom: 2 }}>
-                              • {new Date(l.startDate).toLocaleDateString()} - {new Date(l.endDate).toLocaleDateString()} ({l.days}d)
-                            </div>
-                          ))}
-                        {(detailsEmployee.leaveHistory || []).filter(l => l.type === 'SICK' && l.status === 'APPROVED').length > 3 && (
-                          <div>+{(detailsEmployee.leaveHistory || []).filter(l => l.type === 'SICK' && l.status === 'APPROVED').length - 3} more</div>
-                        )}
-                        {(detailsEmployee.leaveHistory || []).filter(l => l.type === 'SICK' && l.status === 'APPROVED').length === 0 && (
-                          <div style={{ color: '#999' }}>No sick days taken</div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Personal Days */}
-                    <div style={{ border: '1px solid #9c27b0', borderRadius: 8, padding: 12, background: '#f3e5f5' }}>
-                      <div style={{ fontSize: 12, fontWeight: 'bold', color: '#9c27b0', marginBottom: 8 }}>
-                        👤 PERSONAL DAYS
-                      </div>
-                      <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>
-                        Taken: {(detailsEmployee.leaveHistory || [])
-                          .filter(l => l.type === 'PERSONAL' && l.status === 'APPROVED')
-                          .reduce((sum, l) => sum + l.days, 0)} days
-                      </div>
-                      <div style={{ fontSize: 10, color: '#888' }}>
-                        {(detailsEmployee.leaveHistory || [])
-                          .filter(l => l.type === 'PERSONAL' && l.status === 'APPROVED')
-                          .slice(0, 3)
-                          .map(l => (
-                            <div key={l.id} style={{ marginBottom: 2 }}>
-                              • {new Date(l.startDate).toLocaleDateString()} - {new Date(l.endDate).toLocaleDateString()} ({l.days}d)
-                            </div>
-                          ))}
-                        {(detailsEmployee.leaveHistory || []).filter(l => l.type === 'PERSONAL' && l.status === 'APPROVED').length > 3 && (
-                          <div>+{(detailsEmployee.leaveHistory || []).filter(l => l.type === 'PERSONAL' && l.status === 'APPROVED').length - 3} more</div>
-                        )}
-                        {(detailsEmployee.leaveHistory || []).filter(l => l.type === 'PERSONAL' && l.status === 'APPROVED').length === 0 && (
-                          <div style={{ color: '#999' }}>No personal days taken</div>
-                        )}
-                      </div>
-                    </div>
+                
+                {/* Pending Requests */}
+                {pendingLeaves > 0 && (
+                  <div style={{ 
+                    marginTop: 8, 
+                    padding: 6,
+                    background: '#fff9c4',
+                    borderRadius: 4,
+                    fontSize: 11, 
+                    color: '#f57c00',
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    border: '1px solid #fbc02d'
+                  }}>
+                    ⚠️ {pendingLeaves} pending request{pendingLeaves > 1 ? 's' : ''}
                   </div>
-                </div>
+                )}
+              </div>
 
-                {/* Leave History */}
-                <div>
-                  <h4 style={{ fontSize: 14, margin: '0 0 12px 0' }}>Leave History</h4>
-                  {(detailsEmployee.leaveHistory || []).length === 0 ? (
-                    <div style={{ 
-                      textAlign: 'center', 
-                      padding: 20, 
-                      background: '#f5f5f5', 
-                      borderRadius: 8,
-                      color: '#999'
-                    }}>
-                      No leave history
-                    </div>
-                  ) : (
-                    <div style={{ maxHeight: 300, overflow: 'auto' }}>
-                      {(detailsEmployee.leaveHistory || [])
-                        .sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt))
-                        .map(leave => (
-                          <div 
-                            key={leave.id}
-                            style={{
-                              border: '1px solid #ddd',
-                              borderRadius: 8,
-                              padding: 12,
-                              marginBottom: 8,
-                              background: 
-                                leave.status === 'APPROVED' ? '#e8f5e9' :
-                                leave.status === 'REJECTED' ? '#ffebee' :
-                                '#fff9c4'
-                            }}
-                          >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
-                                  {LEAVE_TYPES[leave.type]}
-                                  <span style={{ 
-                                    marginLeft: 8,
-                                    fontSize: 11,
-                                    padding: '2px 8px',
-                                    borderRadius: 12,
-                                    background: 
-                                      leave.status === 'APPROVED' ? '#4CAF50' :
-                                      leave.status === 'REJECTED' ? '#f44336' :
-                                      '#FBC02D',
-                                    color: 'white'
-                                  }}>
-                                    {leave.status}
-                                  </span>
-                                </div>
-                                <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>
-                                  {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()} ({leave.days} days)
-                                </div>
-                                {leave.reason && (
-                                  <div style={{ fontSize: 12, color: '#666', marginTop: 4, fontStyle: 'italic' }}>
-                                    "{leave.reason}"
-                                  </div>
-                                )}
-                                <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
-                                  Requested: {new Date(leave.requestedAt).toLocaleDateString()}
-                                </div>
+              {/* Leave History */}
+              <div>
+                <h4 style={{ fontSize: 14, margin: '0 0 12px 0' }}>Leave History</h4>
+                {(detailsEmployee.leaveHistory || []).length === 0 ? (
+                  <div style={{ 
+                    textAlign: 'center', 
+                    padding: 20, 
+                    background: '#f5f5f5', 
+                    borderRadius: 8,
+                    color: '#999'
+                  }}>
+                    No leave history
+                  </div>
+                ) : (
+                  <div style={{ maxHeight: 300, overflow: 'auto' }}>
+                    {(detailsEmployee.leaveHistory || [])
+                      .sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt))
+                      .map(leave => (
+                        <div 
+                          key={leave.id}
+                          style={{
+                            border: '1px solid #ddd',
+                            borderRadius: 8,
+                            padding: 12,
+                            marginBottom: 8,
+                            background: 
+                              leave.status === 'APPROVED' ? '#e8f5e9' :
+                              leave.status === 'REJECTED' ? '#ffebee' :
+                              '#fff9c4'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                                {LEAVE_TYPES[leave.type]}
+                                <span style={{ 
+                                  marginLeft: 8,
+                                  fontSize: 11,
+                                  padding: '2px 8px',
+                                  borderRadius: 12,
+                                  background: 
+                                    leave.status === 'APPROVED' ? '#4CAF50' :
+                                    leave.status === 'REJECTED' ? '#f44336' :
+                                    '#FBC02D',
+                                  color: 'white'
+                                }}>
+                                  {leave.status}
+                                </span>
                               </div>
-                              <div style={{ display: 'flex', gap: 4 }}>
-                                {leave.status === 'PENDING' && (
-                                  <>
-                                    <button 
-                                      onClick={() => approveLeave(detailsEmployee.id, leave.id)}
-                                      style={{ background: '#4CAF50', fontSize: 11, padding: '4px 8px' }}
-                                    >
-                                      ✓ Approve
-                                    </button>
-                                    <button 
-                                      onClick={() => rejectLeave(detailsEmployee.id, leave.id)}
-                                      style={{ background: '#f44336', fontSize: 11, padding: '4px 8px' }}
-                                    >
-                                      ✗ Reject
-                                    </button>
-                                  </>
-                                )}
-                                <button 
-                                  onClick={() => deleteLeave(detailsEmployee.id, leave.id)}
-                                  style={{ background: '#999', fontSize: 11, padding: '4px 8px' }}
-                                >
-                                  🗑️
-                                </button>
+                              <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>
+                                {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()} ({leave.days} days)
                               </div>
+                              {leave.reason && (
+                                <div style={{ fontSize: 12, color: '#666', marginTop: 4, fontStyle: 'italic' }}>
+                                  "{leave.reason}"
+                                </div>
+                              )}
+                              <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
+                                Requested: {new Date(leave.requestedAt).toLocaleDateString()}
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: 4 }}>
+                              {leave.status === 'PENDING' && (
+                                <>
+                                  <button 
+                                    onClick={() => approveLeave(detailsEmployee.id, leave.id)}
+                                    style={{ background: '#4CAF50', fontSize: 11, padding: '4px 8px' }}
+                                  >
+                                    ✓ Approve
+                                  </button>
+                                  <button 
+                                    onClick={() => rejectLeave(detailsEmployee.id, leave.id)}
+                                    style={{ background: '#f44336', fontSize: 11, padding: '4px 8px' }}
+                                  >
+                                    ✗ Reject
+                                  </button>
+                                </>
+                              )}
+                              <button 
+                                onClick={() => deleteLeave(detailsEmployee.id, leave.id)}
+                                style={{ background: '#999', fontSize: 11, padding: '4px 8px' }}
+                              >
+                                🗑️
+                              </button>
                             </div>
                           </div>
-                        ))}
-                    </div>
-                  )}
-                </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
               </div>
+            </div>
 
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: 12, paddingTop: 16, borderTop: '1px solid #ddd' }}>
-                <button 
-                  onClick={() => {
-                    setShowEmployeeDetailsModal(false)
-                    openEmployeeModal(detailsEmployee)
-                  }}
-                  style={{ flex: 1, background: '#1976d2', padding: 12 }}
-                >
-                  ✏️ Edit Employee
-                </button>
-                <button 
-                  onClick={() => setShowEmployeeDetailsModal(false)}
-                  style={{ flex: 1, background: '#666', padding: 12 }}
-                >
-                  Close
-                </button>
-              </div>
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: 12, paddingTop: 16, borderTop: '1px solid #ddd' }}>
+              <button 
+                onClick={() => {
+                  setShowEmployeeDetailsModal(false)
+                  openEmployeeModal(detailsEmployee)
+                }}
+                style={{ flex: 1, background: '#1976d2', padding: 12 }}
+              >
+                ✏️ Edit Employee
+              </button>
+              <button 
+                onClick={() => setShowEmployeeDetailsModal(false)}
+                style={{ flex: 1, background: '#666', padding: 12 }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

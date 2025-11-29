@@ -264,12 +264,14 @@ export default function PetManagement() {
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <input 
                 type="text" 
+                id="pet-search" 
+                name="pet-search" 
                 placeholder="🔍 Search pets..." 
                 value={filter.search}
                 onChange={e => setFilter({...filter, search: e.target.value})}
                 style={{ flex: 1, minWidth: '200px', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
               />
-              <select value={filter.species} onChange={e => setFilter({...filter, species: e.target.value})} style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+              <select id="pet-filter-species" name="pet-filter-species" value={filter.species} onChange={e => setFilter({...filter, species: e.target.value})} style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
                 <option value="all">All Species</option>
                 <option value="Dog">🐕 Dogs</option>
                 <option value="Cat">🐈 Cats</option>
@@ -317,25 +319,25 @@ export default function PetManagement() {
             <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '20px', marginTop: '20px' }}>
               <h4 style={{ marginTop: 0 }}>{editingId ? 'Edit Pet' : 'Add New Pet'}</h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                <input type="text" placeholder="Pet name *" value={form.name} onChange={e => setForm({...form, name: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
-                <select value={form.species} onChange={e => setForm({...form, species: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+                <input type="text" id="pet-name" name="pet-name" placeholder="Pet name *" value={form.name} onChange={e => setForm({...form, name: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                <select id="pet-species" name="pet-species" value={form.species} onChange={e => setForm({...form, species: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
                   <option value="Dog">🐕 Dog</option>
                   <option value="Cat">🐈 Cat</option>
                 </select>
-                <input type="text" placeholder="Breed" value={form.breed} onChange={e => setForm({...form, breed: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                <input type="text" id="pet-breed" name="pet-breed" placeholder="Breed" value={form.breed} onChange={e => setForm({...form, breed: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
                 <div style={{display:'flex',flexDirection:'column'}}>
                   <label style={{marginBottom:2}}>Date of Birth:</label>
-                  <input type="date" value={form.dob} onChange={e => setForm({...form, dob: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                  <input type="date" id="pet-dob" name="pet-dob" value={form.dob} onChange={e => setForm({...form, dob: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
                 </div>
-                <select value={form.sex} onChange={e => setForm({...form, sex: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+                <select id="pet-sex" name="pet-sex" value={form.sex} onChange={e => setForm({...form, sex: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
                   <option value="M">Male</option>
                   <option value="F">Female</option>
                 </select>
-                <input type="text" placeholder="Microchip #" value={form.microchip} onChange={e => setForm({...form, microchip: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
-                <input type="number" placeholder="Weight (kg)" value={form.weight} onChange={e => setForm({...form, weight: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
-                <input type="text" placeholder="Color" value={form.color} onChange={e => setForm({...form, color: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                <input type="text" id="pet-microchip" name="pet-microchip" placeholder="Microchip #" value={form.microchip} onChange={e => setForm({...form, microchip: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                <input type="number" id="pet-weight" name="pet-weight" placeholder="Weight (kg)" value={form.weight} onChange={e => setForm({...form, weight: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                <input type="text" id="pet-color" name="pet-color" placeholder="Color" value={form.color} onChange={e => setForm({...form, color: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
               </div>
-              <textarea placeholder="Notes" value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', minHeight: '80px', fontFamily: 'inherit', marginBottom: '12px' }} />
+              <textarea id="pet-notes" name="pet-notes" placeholder="Notes" value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', minHeight: '80px', fontFamily: 'inherit', marginBottom: '12px' }} />
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button onClick={savePet} style={{ flex: 1, padding: '12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
                   {editingId ? 'Update' : 'Add'} Pet
