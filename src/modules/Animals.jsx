@@ -424,47 +424,62 @@ export default function Animals() {
     `, 'Animal Records')
   }
 
+  // Responsive styles for mobile
+  const mobileStyle = {
+    '@media (max-width: 600px)': {
+      section: { padding: '8px' },
+      card: { padding: '12px', fontSize: '15px' },
+      tabNav: { fontSize: '16px', minWidth: '120px' },
+      tabBtn: { fontSize: '15px', padding: '14px 10px' },
+      grid: { gridTemplateColumns: '1fr', gap: '12px' },
+      animalList: { flexDirection: 'column' },
+      animalCard: { flexDirection: 'column', alignItems: 'center' },
+      img: { width: '100%', height: 'auto', maxWidth: '180px' },
+    }
+  }
+
   return (
-    <section>
+    <section style={{ padding: '16px', ...mobileStyle.section }}>
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '8px', color: 'inherit' }}>🐄 Livestock Management</h2>
         <p style={{ color: 'var(--muted)', margin: 0 }}>Comprehensive livestock tracking and management system</p>
       </div>
 
-      {/* Statistics Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+      {/* Statistics Cards - stack vertically on mobile */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px', ...(window.innerWidth <= 600 ? { gridTemplateColumns: '1fr', gap: '12px' } : {}) }}>
+        <div className="card" style={{ padding: '16px', textAlign: 'center', ...mobileStyle.card }}>
           <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--green)' }}>{animals.length}</div>
           <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Total Animals</div>
         </div>
-        <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+        <div className="card" style={{ padding: '16px', textAlign: 'center', ...mobileStyle.card }}>
           <div style={{ fontSize: '24px', fontWeight: '700', color: '#3b82f6' }}>{animals.filter(a => a.status === 'Active').length}</div>
           <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Active</div>
         </div>
-        <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+        <div className="card" style={{ padding: '16px', textAlign: 'center', ...mobileStyle.card }}>
           <div style={{ fontSize: '24px', fontWeight: '700', color: '#ec4899' }}>{animals.filter(a => a.sex === 'F').length}</div>
           <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Female</div>
         </div>
-        <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+        <div className="card" style={{ padding: '16px', textAlign: 'center', ...mobileStyle.card }}>
           <div style={{ fontSize: '24px', fontWeight: '700', color: '#6b7280' }}>{groups.length}</div>
           <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Groups</div>
         </div>
       </div>
 
-      {/* Tab Navigation */}
+      {/* Tab Navigation - scrollable, larger touch targets on mobile */}
       <div style={{ borderBottom: '2px solid #e5e7eb', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', overflowX: 'auto' }}>
+        <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap', overflowX: 'auto', scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch' }}>
           <button
             onClick={() => setTab('list')}
             style={{
-              padding: '12px 20px',
+              padding: window.innerWidth <= 600 ? '14px 10px' : '12px 20px',
+              minWidth: window.innerWidth <= 600 ? '120px' : 'auto',
               border: 'none',
               borderBottom: tab === 'list' ? '3px solid var(--green)' : '3px solid transparent',
               background: tab === 'list' ? '#f0fdf4' : 'transparent',
               color: tab === 'list' ? 'var(--green)' : '#6b7280',
               fontWeight: tab === 'list' ? '600' : '400',
               cursor: 'pointer',
-              fontSize: '14px'
+              fontSize: window.innerWidth <= 600 ? '15px' : '14px'
             }}
           >
             📋 Animal List
@@ -671,7 +686,7 @@ export default function Animals() {
       {tab === 'list' && (
         <div>
           {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: window.innerWidth <= 600 ? 'wrap' : 'nowrap', alignItems: 'center' }}>
             <button 
               onClick={() => { resetForm(); setTab('addAnimal') }}
               style={{ 
@@ -757,7 +772,7 @@ export default function Animals() {
             </div>
           </div>
 
-          {/* Animal List */}
+          {/* Animal List - stack vertically, collapsible details on mobile */}
           <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '16px', color: 'inherit' }}>Animals ({sortedAnimals.length})</h3>
           <ul style={{ listStyle: 'none', padding: 0 }}>
             {sortedAnimals.map(a => {
@@ -765,12 +780,12 @@ export default function Animals() {
               const preview = (a.photos && a.photos.length) ? a.photos[0].dataUrl : (a.photo || null)
               const groupName = groups.find(g => g.id === a.groupId)?.name || 'No group'
               return (
-                <li key={a.id} className="card" style={{ marginBottom: 12, padding: 16 }}>
-                  <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                <li key={a.id} className="card" style={{ marginBottom: 12, padding: 16, ...(window.innerWidth <= 600 ? { padding: '12px' } : {}) }}>
+                  <div style={{ display: 'flex', gap: 16, alignItems: window.innerWidth <= 600 ? 'center' : 'flex-start', flexDirection: window.innerWidth <= 600 ? 'column' : 'row' }}>
                     {preview && (
-                      <img src={preview} alt={a.name} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} />
+                      <img src={preview} alt={a.name} style={{ width: window.innerWidth <= 600 ? '100%' : 80, height: window.innerWidth <= 600 ? 'auto' : 80, objectFit: 'cover', borderRadius: 8, flexShrink: 0, maxWidth: window.innerWidth <= 600 ? '180px' : undefined }} />
                     )}
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, width: '100%' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                         <div>
                           <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>
@@ -874,7 +889,7 @@ export default function Animals() {
                       
                       <button 
                         onClick={() => setExpandedIds(prev => isExp ? prev.filter(id => id !== a.id) : [...prev, a.id])}
-                        style={{ marginTop: 12, padding: '6px 12px', fontSize: '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db' }}
+                        style={{ marginTop: 12, padding: window.innerWidth <= 600 ? '10px 16px' : '6px 12px', fontSize: window.innerWidth <= 600 ? '1rem' : '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db', width: window.innerWidth <= 600 ? '100%' : 'auto' }}
                       >
                         {isExp ? '▲ Show Less' : '▼ Show More'}
                       </button>
@@ -887,7 +902,7 @@ export default function Animals() {
         </div>
       )}
 
-      {/* Add/Edit Animal Form */}
+      {/* Add/Edit Animal Form - single column on mobile */}
       {tab === 'addAnimal' && (
         <div>
           <h3 style={{ fontSize: '1.3rem', fontWeight: '600', marginBottom: '20px', color: 'inherit' }}>
@@ -895,7 +910,7 @@ export default function Animals() {
           </h3>
           
           <form onSubmit={saveAnimal} style={{ marginBottom: 16 }} noValidate>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 600 ? '1fr' : '1fr 1fr', gap: window.innerWidth <= 600 ? 12 : 8 }}>
               <label>
                 Tag
                 <input value={form.tag} onChange={e => setForm({ ...form, tag: e.target.value })} />
@@ -1075,17 +1090,17 @@ export default function Animals() {
             <h3>🏷️ Animal Groups</h3>
           </div>
 
-          {/* Summary Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
-            <div className="card" style={{ padding: 16, background: '#f0fdf4' }}>
+          {/* Summary Stats - stack vertically on mobile */}
+          <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 600 ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: window.innerWidth <= 600 ? 12 : 16, marginBottom: 20 }}>
+            <div className="card" style={{ padding: 16, background: '#f0fdf4', ...mobileStyle.card }}>
               <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Groups</div>
               <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{groups.length}</div>
             </div>
-            <div className="card" style={{ padding: 16, background: '#eff6ff' }}>
+            <div className="card" style={{ padding: 16, background: '#eff6ff', ...mobileStyle.card }}>
               <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Animals</div>
               <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>{animals.length}</div>
             </div>
-            <div className="card" style={{ padding: 16, background: '#fef3c7' }}>
+            <div className="card" style={{ padding: 16, background: '#fef3c7', ...mobileStyle.card }}>
               <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Ungrouped</div>
               <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f59e0b' }}>{animals.filter(a => !a.groupId).length}</div>
             </div>
@@ -1115,7 +1130,7 @@ export default function Animals() {
             </form>
           </div>
 
-          {/* Groups List */}
+          {/* Groups List - collapsible on mobile */}
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             <div style={{ padding: 16, borderBottom: '1px solid #eee', background: '#f9fafb' }}>
               <h4 style={{ margin: 0 }}>Existing Groups ({groups.length})</h4>
@@ -1132,10 +1147,11 @@ export default function Animals() {
                   const groupAnimals = animals.filter(a => a.groupId === g.id)
                   const femaleCount = groupAnimals.filter(a => a.sex === 'F').length
                   const maleCount = groupAnimals.filter(a => a.sex === 'M').length
-                  
+                  // Collapsible group details on mobile
+                  const [groupOpen, setGroupOpen] = useState(false)
                   return (
                     <div key={g.id} style={{ padding: 16, borderBottom: '1px solid #eee' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: window.innerWidth <= 600 ? 'center' : 'start', flexDirection: window.innerWidth <= 600 ? 'column' : 'row' }}>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
                             <h4 style={{ margin: 0 }}>{g.name}</h4>
@@ -1148,9 +1164,9 @@ export default function Animals() {
                           {groupAnimals.length > 0 && (
                             <div style={{ marginTop: 12, padding: 12, background: '#f9fafb', borderRadius: 6 }}>
                               <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Animals in this group:</div>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                              <div style={{ display: window.innerWidth <= 600 ? 'block' : 'flex', flexWrap: 'wrap', gap: 6 }}>
                                 {groupAnimals.slice(0, 10).map(a => (
-                                  <span key={a.id} style={{ fontSize: 12, padding: '4px 8px', background: 'white', borderRadius: 4, border: '1px solid #e5e7eb' }}>
+                                  <span key={a.id} style={{ fontSize: 12, padding: '4px 8px', background: 'white', borderRadius: 4, border: '1px solid #e5e7eb', display: window.innerWidth <= 600 ? 'block' : 'inline-block', marginBottom: window.innerWidth <= 600 ? '6px' : '0' }}>
                                     {a.name || a.tag || a.id}
                                   </span>
                                 ))}
@@ -1193,74 +1209,75 @@ export default function Animals() {
       )}
 
       <div>
+        {/* Submodules - single column on mobile */}
         {tab === 'pastures' && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, width: '100%' }}>
             <Pastures />
           </div>
         )}
 
         {tab === 'health' && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, width: '100%' }}>
             <HealthSystem animals={animals} setAnimals={setAnimals} groups={groups} />
           </div>
         )}
 
         {tab === 'feeding' && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, width: '100%' }}>
             <AnimalFeeding animals={animals} />
           </div>
         )}
 
         {tab === 'measurement' && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, width: '100%' }}>
             <AnimalMeasurement animals={animals} />
           </div>
         )}
 
         {tab === 'breeding' && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, width: '100%' }}>
             <AnimalBreeding animals={animals} />
           </div>
         )}
 
         {tab === 'milkyield' && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, width: '100%' }}>
             <AnimalMilkYield animals={animals} />
           </div>
         )}
 
         {tab === 'treatment' && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, width: '100%' }}>
             <AnimalTreatment animals={animals} />
           </div>
         )}
 
         {tab === 'calf' && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, width: '100%' }}>
             <CalfManagement animals={animals} />
           </div>
         )}
 
         {tab === 'bsf' && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, width: '100%' }}>
             <BSFFarming />
           </div>
         )}
 
         {tab === 'azolla' && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, width: '100%' }}>
             <AzollaFarming />
           </div>
         )}
 
         {tab === 'poultry' && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, width: '100%' }}>
             <PoultryManagement />
           </div>
         )}
 
         {tab === 'canine' && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, width: '100%' }}>
             <CanineManagement animals={animals} setAnimals={setAnimals} />
           </div>
         )}
