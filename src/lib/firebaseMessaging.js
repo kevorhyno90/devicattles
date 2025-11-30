@@ -1,13 +1,11 @@
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
-import { app } from "./firebase";
-
-const messaging = getMessaging(app);
+import { messaging } from "./firebase";
+import { getToken, onMessage } from "firebase/messaging";
 
 export async function requestNotificationPermission() {
   try {
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
-      const token = await getToken(messaging, { vapidKey: "YOUR_PUBLIC_VAPID_KEY" });
+      const token = await getToken(messaging, { vapidKey: "BG4uQNeO-WWaHsPHvfFF1m4ojmz6u1HwbYniH4gkKGH1hHYhsPqe_YC-kvLTn6Q-qMbd9VAqvGy7x1hwKLP9roI" });
       console.log("FCM Token:", token);
       return token;
     } else {

@@ -1,3 +1,59 @@
+// Export to Word (docx)
+import { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun } from 'docx'
+
+export async function exportToDocx(data, filename = 'export.docx', title = 'Export Report', headers = null) {
+  try {
+    if (!data || data.length === 0) {
+      alert('No data to export')
+      return
+    }
+
+    const docHeaders = headers || Object.keys(data[0])
+
+    // Table header row
+    const headerRow = new TableRow({
+      children: docHeaders.map(h => new TableCell({
+        children: [new Paragraph({ children: [new TextRun({ text: h, bold: true })] })],
+      }))
+    })
+
+    // Table data rows
+    const dataRows = data.map(item => new TableRow({
+      children: docHeaders.map(h => new TableCell({
+        children: [new Paragraph(String(item[h] ?? ''))],
+      }))
+    }))
+
+    const table = new Table({
+      rows: [headerRow, ...dataRows],
+      width: { size: 100, type: 'pct' }
+    })
+
+    const doc = new Document({
+      sections: [{
+        properties: {},
+        children: [
+          new Paragraph({ text: title, heading: 'Heading1' }),
+          table,
+          new Paragraph({ text: `Generated on ${new Date().toLocaleString()} | Total Records: ${data.length}`, spacing: { before: 240 } })
+        ]
+      }]
+    })
+
+    const blob = await Packer.toBlob(doc)
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Docx export failed:', error)
+    alert('Export failed: ' + error.message)
+  }
+}
 // Shared export/import utilities for all modules
 
 // Export to CSV

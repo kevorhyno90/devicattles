@@ -15,17 +15,18 @@ import { initializeApp } from 'firebase/app'
 import { initializeFirestore, CACHE_SIZE_UNLIMITED, persistentLocalCache } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 import { getAnalytics } from 'firebase/analytics'
+import { getMessaging } from 'firebase/messaging'
 
 // Firebase configuration - CONFIGURED
-// Project: devinsfarm-2025
+// Project: devicattlesgit-35265529-12687
 const firebaseConfig = {
-  apiKey: "AIzaSyC3ZH_roI3O4e8O0TEcLbgJCuVI64t8b4c",
-  authDomain: "devinsfarm-2025.firebaseapp.com",
-  projectId: "devinsfarm-2025",
-  storageBucket: "devinsfarm-2025.firebasestorage.app",
-  messagingSenderId: "603947883430",
-  appId: "1:603947883430:web:ac52cd8333bc7603c14d67",
-  measurementId: "G-T8H86QB318"
+  apiKey: "AIzaSyD9Ll4vI6CTBcMOfREMJ96Drev5OskopKU",
+  authDomain: "devicattlesgit-35265529-12687.firebaseapp.com",
+  projectId: "devicattlesgit-35265529-12687",
+  storageBucket: "devicattlesgit-35265529-12687.firebasestorage.app",
+  messagingSenderId: "454358426628",
+  appId: "1:454358426628:web:a064f71cb25a1474618151",
+  measurementId: "G-09H4N1HQN0"
 }
 
 // Check if Firebase is configured
@@ -39,6 +40,7 @@ let app = null
 let db = null
 let auth = null
 let analytics = null
+let messaging = null
 let isInitialized = false
 
 try {
@@ -49,6 +51,7 @@ try {
     })
     auth = getAuth(app)
     analytics = getAnalytics(app)
+    messaging = getMessaging(app)
     isInitialized = true
   } else {
     // Log once on first check - not a warning since it's expected in local/demo mode
@@ -66,5 +69,5 @@ try {
   isInitialized = false
 }
 
-export { app, db, auth, analytics }
-export default { app, db, auth, analytics, isConfigured: isFirebaseConfigured }
+export { app, db, auth, analytics, messaging }
+export default { app, db, auth, analytics, messaging, isConfigured: isFirebaseConfigured }

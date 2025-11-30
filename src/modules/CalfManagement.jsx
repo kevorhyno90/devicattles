@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { formatCurrency } from '../lib/currency'
+import { addMilkExpense, getMilkTotals } from '../lib/finance'
+import { getMilkExpenses } from '../lib/finance'
 
 const SAMPLE_CALVES = [
   { id: 'CALF-001', tag: 'CALF-101', name: 'Daisy Jr.', damId: 'A-001', damName: 'Bessie', sireId: 'S-101', sireName: 'Premium Bull', dob: '2025-10-15', sex: 'F', breed: 'Holstein', birthWeight: 38, currentWeight: 45, weaningDate: '', weaningWeight: '', healthStatus: 'Healthy', housingType: 'Individual Pen', notes: '', colostrumIntake: 'Adequate', navelTreatment: 'Done', vaccination: [], dehorning: '', castration: 'N/A' },
@@ -39,8 +41,9 @@ export default function CalfManagement({ animals }) {
   // Feeding form
   const [feedingForm, setFeedingForm] = useState({
     calfId: '', date: new Date().toISOString().slice(0, 10),
-    feedType: 'Milk Replacer', quantity: '', method: 'Bottle',
-    temperature: '', notes: ''
+    feedType: 'Milk', quantityKg: '', quantityLiters: '', pricePerKg: '', reason: '', method: 'Bottle',
+    temperature: '', notes: '',
+    isWarm: true, isColostrum: false
   })
   
   // Health form
@@ -110,20 +113,51 @@ export default function CalfManagement({ animals }) {
   }
 
   function addFeeding() {
-    if (!feedingForm.calfId || !feedingForm.quantity) {
-      alert('Please select calf and enter quantity')
+    if (!feedingForm.calfId || (!feedingForm.quantityKg && !feedingForm.quantityLiters)) {
+      alert('Please select calf and enter quantity (kg or liters)')
       return
     }
-    
+    // Best practice validation
+    const calf = calves.find(c => c.id === feedingForm.calfId)
+    const quantityKg = parseFloat(feedingForm.quantityKg) || 0
+    const quantityLiters = parseFloat(feedingForm.quantityLiters) || quantityKg
+    const ageDays = calf ? Math.floor((new Date() - new Date(calf.dob)) / (1000 * 60 * 60 * 24)) : 0
+    let warnings = []
+    if (quantityLiters > 1.5) warnings.push('Recommended max milk per feeding is 1.5L.')
+    if (feedingForm.isWarm !== true) warnings.push('Milk should be warm.')
+    if (feedingForm.isColostrum && ageDays > 2) warnings.push('Colostrum should be fed only in first 36 hours.')
+    if (calf) {
+      if (calf.sex === 'F' && ageDays > 120) warnings.push('Milk feeding for heifers should be gradually withdrawn after 4 months.')
+      if (calf.sex === 'M' && ageDays > 90) warnings.push('Milk feeding for bulls should be gradually withdrawn after 3 months.')
+      if (ageDays < 7 && feedingForm.feedType !== 'Milk' && !feedingForm.isColostrum) warnings.push('Other feeds should be introduced after 1 week, ad libitum.')
+    }
+    if (warnings.length) alert(warnings.join('\n'))
+    // Record to feeding
+    const feedingRecord = {
+      ...feedingForm,
+      quantityKg,
+      quantityLiters,
+      id: editingFeedingId ? editingFeedingId : 'FEED-' + Date.now(),
+      timestamp: new Date().toISOString()
+    }
     if(editingFeedingId) {
-      setFeedingRecords(feedingRecords.map(f => f.id === editingFeedingId ? { ...f, ...feedingForm } : f))
+      setFeedingRecords(feedingRecords.map(f => f.id === editingFeedingId ? feedingRecord : f))
       setEditingFeedingId(null)
     } else {
-      const id = 'FEED-' + Date.now()
-      setFeedingRecords([...feedingRecords, { ...feedingForm, id, timestamp: new Date().toISOString() }])
+      setFeedingRecords([...feedingRecords, feedingRecord])
     }
-    
-    setFeedingForm({ ...feedingForm, quantity: '', notes: '' })
+    // Record to finance if price is set
+    if (feedingForm.pricePerKg && quantityKg > 0) {
+      addMilkExpense({
+        date: feedingForm.date,
+        calfId: feedingForm.calfId,
+        quantityKg,
+        quantityLiters,
+        pricePerKg: parseFloat(feedingForm.pricePerKg),
+        reason: feedingForm.reason || feedingForm.notes || feedingForm.feedType
+      })
+    }
+    setFeedingForm({ ...feedingForm, quantityKg: '', quantityLiters: '', pricePerKg: '', reason: '', notes: '' })
   }
 
   function startEditFeeding(record) {
@@ -406,12 +440,14 @@ export default function CalfManagement({ animals }) {
         <div>
           <div className="card" style={{ padding: 16, marginBottom: 16 }}>
             <h4 style={{ marginTop: 0 }}>Add Feeding Record</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
               <div>
-                <label>Calf *</label>
+                <label>Animal *</label>
                 <select value={feedingForm.calfId} onChange={e => setFeedingForm({ ...feedingForm, calfId: e.target.value })}>
-                  <option value="">-- Select Calf --</option>
-                  {calves.map(c => <option key={c.id} value={c.id}>{c.name || c.tag}</option>)}
+                  <option value="">-- Select Animal --</option>
+                  {(animals || []).map(a => (
+                    <option key={a.id} value={a.id}>{a.name || a.tag} ({a.breed || a.type || ''})</option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -420,11 +456,31 @@ export default function CalfManagement({ animals }) {
               </div>
               <div>
                 <label>Feed Type</label>
-                <input value={feedingForm.feedType} onChange={e => setFeedingForm({ ...feedingForm, feedType: e.target.value })} placeholder="Milk Replacer" />
+                <select value={feedingForm.feedType} onChange={e => setFeedingForm({ ...feedingForm, feedType: e.target.value })}>
+                  <option value="Milk">Milk</option>
+                  <option value="Colostrum">Colostrum (first 36hrs)</option>
+                  <option value="Milk Replacer">Milk Replacer</option>
+                  <option value="Starter Feed">Starter Feed</option>
+                  <option value="Hay">Hay</option>
+                  <option value="Concentrates">Concentrates</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
               <div>
-                <label>Quantity (liters) *</label>
-                <input type="number" step="0.1" value={feedingForm.quantity} onChange={e => setFeedingForm({ ...feedingForm, quantity: e.target.value })} />
+                <label>Quantity (kg)</label>
+                <input type="number" step="0.01" value={feedingForm.quantityKg} onChange={e => setFeedingForm({ ...feedingForm, quantityKg: e.target.value })} min="0" />
+              </div>
+              <div>
+                <label>Quantity (liters)</label>
+                <input type="number" step="0.01" value={feedingForm.quantityLiters} onChange={e => setFeedingForm({ ...feedingForm, quantityLiters: e.target.value })} min="0" />
+              </div>
+              <div>
+                <label>Price per kg (milk)</label>
+                <input type="number" step="0.01" value={feedingForm.pricePerKg} onChange={e => setFeedingForm({ ...feedingForm, pricePerKg: e.target.value })} min="0" />
+              </div>
+              <div>
+                <label>Reason/Use</label>
+                <input value={feedingForm.reason} onChange={e => setFeedingForm({ ...feedingForm, reason: e.target.value })} />
               </div>
               <div>
                 <label>Method</label>
@@ -433,13 +489,24 @@ export default function CalfManagement({ animals }) {
                 </select>
               </div>
               <div>
-                <label>Temperature (°C)</label>
+                <label>Milk Temperature (°C)</label>
                 <input type="number" step="0.1" value={feedingForm.temperature} onChange={e => setFeedingForm({ ...feedingForm, temperature: e.target.value })} />
+                <label style={{ marginLeft: 8 }}>
+                  <input type="checkbox" checked={feedingForm.isWarm} onChange={e => setFeedingForm({ ...feedingForm, isWarm: e.target.checked })} /> Warm Milk
+                </label>
+              </div>
+              <div>
+                <label>Colostrum</label>
+                <input type="checkbox" checked={feedingForm.isColostrum} onChange={e => setFeedingForm({ ...feedingForm, isColostrum: e.target.checked })} />
+                <span style={{ fontSize: 12, color: '#666', marginLeft: 8 }}>(First 36 hours only)</span>
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label>Notes</label>
                 <input value={feedingForm.notes} onChange={e => setFeedingForm({ ...feedingForm, notes: e.target.value })} />
               </div>
+            </div>
+            <div style={{ marginTop: 12, fontSize: 13, color: '#059669', background: '#f0fdf4', padding: 8, borderRadius: 6 }}>
+              <strong>Feeding Guidance:</strong> 1.5L/feeding, every 4hrs/day, warm milk, colostrum in first 36hrs, milk for 4 months (heifers), 3 months (bulls), gradual withdrawal, introduce other feeds at 1 week, ad libitum increase.
             </div>
             <button onClick={addFeeding} style={{ marginTop: 12 }}>Add Feeding Record</button>
           </div>
@@ -447,25 +514,144 @@ export default function CalfManagement({ animals }) {
           <div className="card" style={{ padding: 0 }}>
             {feedingRecords.length === 0 ? (
               <div style={{ padding: 40, textAlign: 'center' }}>
-                <h4>No feeding records yet</h4>
+                <h4>No milk records yet</h4>
               </div>
             ) : (
               <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-                {feedingRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map(record => {
-                  const calf = calves.find(c => c.id === record.calfId)
-                  return (
-                    <div key={record.id} style={{ padding: 12, borderBottom: '1px solid #eee' }}>
-                      <div style={{ fontWeight: 600 }}>{calf?.name || calf?.tag || record.calfId}</div>
-                      <div style={{ fontSize: 13, color: '#666' }}>
-                        {new Date(record.date).toLocaleDateString()} • {record.feedType} • {record.quantity}L • {record.method}
-                        {record.temperature && ` • ${record.temperature}°C`}
-                      </div>
-                      {record.notes && <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>{record.notes}</div>}
-                    </div>
-                  )
-                })}
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#e0f2fe' }}>
+                      <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Date</th>
+                      <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Calf</th>
+                      <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Feed Type</th>
+                      <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Kg</th>
+                      <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Liters</th>
+                      <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Method</th>
+                      <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Price/kg</th>
+                      <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Amount</th>
+                      <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Reason/Use</th>
+                      <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {feedingRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map(record => {
+                      const calf = calves.find(c => c.id === record.calfId)
+                      const amount = record.pricePerKg && record.quantityKg ? parseFloat(record.pricePerKg) * parseFloat(record.quantityKg) : '';
+                      return (
+                        <tr key={record.id}>
+                          <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{new Date(record.date).toLocaleDateString()}</td>
+                          <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{calf?.name || calf?.tag || record.calfId}</td>
+                          <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{record.feedType}</td>
+                          <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{record.quantityKg}</td>
+                          <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{record.quantityLiters}</td>
+                          <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{record.method}</td>
+                          <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{record.pricePerKg ? formatCurrency(record.pricePerKg) : '-'}</td>
+                          <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{amount ? formatCurrency(amount) : '-'}</td>
+                          <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{record.reason || '-'}</td>
+                          <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{record.notes || '-'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
+          </div>
+          {/* Milk Totals */}
+          <div className="card" style={{ marginTop: 16, padding: 16, background: '#f0fdf4' }}>
+            <h4 style={{ marginTop: 0 }}>Milk Consumption Totals</h4>
+            {(() => {
+              const { daily, monthly } = getMilkTotals();
+              return (
+                <div>
+                  <div style={{ marginBottom: 8 }}>
+                    <strong>Daily Totals:</strong>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
+                      <thead>
+                        <tr style={{ background: '#e0f2fe' }}>
+                          <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Date</th>
+                          <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Total Kg</th>
+                          <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Total Liters</th>
+                          <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Total Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(daily).map(([day, t]) => (
+                          <tr key={day}>
+                            <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{day}</td>
+                            <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{t.totalKg.toFixed(2)}</td>
+                            <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{t.totalLiters.toFixed(2)}</td>
+                            <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{formatCurrency(t.totalAmount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style={{ marginBottom: 8 }}>
+                    <strong>Monthly Totals:</strong>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
+                      <thead>
+                        <tr style={{ background: '#e0f2fe' }}>
+                          <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Month</th>
+                          <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Total Kg</th>
+                          <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Total Liters</th>
+                          <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Total Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(monthly).map(([month, t]) => (
+                          <tr key={month}>
+                            <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{month}</td>
+                            <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{t.totalKg.toFixed(2)}</td>
+                            <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{t.totalLiters.toFixed(2)}</td>
+                            <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{formatCurrency(t.totalAmount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>
+                    <strong>All Milk Finance Records:</strong>
+                    {(() => {
+                      // Show all milk records, including owner, workers, loss, etc.
+                      const milkRecords = getMilkExpenses();
+                      if (!milkRecords.length) return <div style={{ color: '#888', marginTop: 8 }}>No milk finance records found.</div>;
+                      return (
+                        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8 }}>
+                          <thead>
+                            <tr style={{ background: '#e0f2fe' }}>
+                              <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Date</th>
+                              <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Calf</th>
+                              <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Kg</th>
+                              <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Liters</th>
+                              <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Price/kg</th>
+                              <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Amount</th>
+                              <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Reason/Use</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {milkRecords.map((rec, idx) => {
+                              const calf = calves.find(c => c.id === rec.calfId);
+                              return (
+                                <tr key={rec.id || idx}>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.date}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{calf?.name || calf?.tag || rec.calfId || '-'}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.quantityKg}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.quantityLiters}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.pricePerKg ? formatCurrency(rec.pricePerKg) : '-'}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.amount ? formatCurrency(rec.amount) : '-'}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.reason || '-'}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      );
+                    })()}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

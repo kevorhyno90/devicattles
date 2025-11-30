@@ -31,6 +31,12 @@ export default function CropSales({ crops, cropId: propCropId }) {
   const KEY = 'cattalytics:crop:sales'
   const [items, setItems] = useState([])
   const [showAddForm, setShowAddForm] = useState(false)
+  // Reject fields integrated into sale form
+  const [hasReject, setHasReject] = useState(false)
+  const [rejectAmount, setRejectAmount] = useState('')
+  const [rejectPrice, setRejectPrice] = useState('')
+  const [rejectReason, setRejectReason] = useState('')
+    // Remove separate reject function, integrate into add()
   
   // Form states
   const [cropId, setCropId] = useState(propCropId || (crops && crops[0] ? crops[0].id : ''))
@@ -39,6 +45,9 @@ export default function CropSales({ crops, cropId: propCropId }) {
   const [pricePerUnit, setPricePerUnit] = useState('0.35')
   const [buyer, setBuyer] = useState('')
   const [buyerContact, setBuyerContact] = useState('')
+  const [buyerAddress, setBuyerAddress] = useState('')
+  const [buyerEmail, setBuyerEmail] = useState('')
+  const [buyerOrg, setBuyerOrg] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('Bank Transfer')
   const [paymentStatus, setPaymentStatus] = useState('Paid')
   const [deliveryDate, setDeliveryDate] = useState(new Date().toISOString().slice(0,10))
@@ -60,13 +69,11 @@ export default function CropSales({ crops, cropId: propCropId }) {
       alert('Please fill in all required fields: Crop, Quantity, Price, and Buyer')
       return
     }
-
     const id = 'CS-' + Math.floor(1000 + Math.random() * 9000)
     const qty = Number(quantity)
     const price = parseFloat(pricePerUnit)
     const totalPrice = qty * price
     const cropName = crops?.find(c => c.id === cropId)?.name || cropId
-
     const newSale = {
       id,
       cropId,
@@ -77,6 +84,9 @@ export default function CropSales({ crops, cropId: propCropId }) {
       totalPrice,
       buyer: buyer.trim(),
       buyerContact: buyerContact.trim(),
+      buyerAddress: buyerAddress.trim(),
+      buyerEmail: buyerEmail.trim(),
+      buyerOrg: buyerOrg.trim(),
       paymentMethod,
       paymentStatus,
       deliveryDate,
@@ -86,7 +96,6 @@ export default function CropSales({ crops, cropId: propCropId }) {
       notes: notes.trim(),
       timestamp: new Date().toISOString()
     }
-
     // Auto-record income to Finance
     if (paymentStatus === 'Paid' || paymentStatus === 'Partial') {
       recordIncome({
@@ -100,17 +109,53 @@ export default function CropSales({ crops, cropId: propCropId }) {
         date: newSale.date
       })
     }
-
-    setItems([...items, newSale])
-    
+    let newItems = [...items, newSale]
+    // If reject is present, add reject record
+    if (hasReject && rejectAmount && rejectPrice && rejectReason) {
+      const rid = 'REJ-' + Math.floor(1000 + Math.random() * 9000)
+      const amount = Number(rejectAmount)
+      const rprice = parseFloat(rejectPrice)
+      const rtotalPrice = amount * rprice
+      const rejectRecord = {
+        id: rid,
+        cropId,
+        date: newSale.date,
+        amount,
+        price: rprice,
+        totalPrice: rtotalPrice,
+        reason: rejectReason,
+        type: 'reject',
+        timestamp: new Date().toISOString()
+      }
+      // Record as income in Finance
+      recordIncome({
+        amount: rtotalPrice,
+        category: 'Crop Rejects',
+        subcategory: cropName,
+        description: `Rejected produce (${cropName}): ${amount} units @ ${rprice}/unit. Reason: ${rejectReason}`,
+        vendor: 'Avocado Reject',
+        source: 'Crop Reject',
+        linkedId: rid,
+        date: newSale.date
+      })
+      newItems.push(rejectRecord)
+    }
+    setItems(newItems)
     // Reset form
     setQuantity('')
     setPricePerUnit('0.35')
     setBuyer('')
     setBuyerContact('')
+    setBuyerAddress('')
+    setBuyerEmail('')
+    setBuyerOrg('')
     setDeliveryDate(new Date().toISOString().slice(0,10))
     setMoisture('')
     setNotes('')
+    setHasReject(false)
+    setRejectAmount('')
+    setRejectPrice('')
+    setRejectReason('')
     setShowAddForm(false)
   }
 
@@ -154,9 +199,11 @@ export default function CropSales({ crops, cropId: propCropId }) {
     <section>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h3>Crop Sales & Revenue</h3>
-        <button onClick={() => setShowAddForm(!showAddForm)} style={{ background: 'var(--green)', color: '#fff', padding: '8px 16px', borderRadius: '6px', border: 'none' }}>
-          {showAddForm ? 'Cancel' : 'Record New Sale'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={() => setShowAddForm(!showAddForm)} style={{ background: 'var(--green)', color: '#fff', padding: '8px 16px', borderRadius: '6px', border: 'none' }}>
+            {showAddForm ? 'Cancel' : 'Record New Sale'}
+          </button>
+        </div>
       </div>
 
       {/* Summary Statistics */}
@@ -183,7 +230,7 @@ export default function CropSales({ crops, cropId: propCropId }) {
         </div>
       </div>
 
-      {/* Add Sale Form */}
+      {/* Add Sale Form (with integrated reject) */}
       {showAddForm && (
         <div className="card" style={{ marginBottom: 20, padding: 20 }}>
           <h4 style={{ marginTop: 0 }}>Record New Sale</h4>
@@ -201,13 +248,7 @@ export default function CropSales({ crops, cropId: propCropId }) {
             )}
             <div>
               <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Quantity *</label>
-              <input
-                type="number"
-                step="0.1"
-                placeholder="0.0"
-                value={quantity}
-                onChange={e => setQuantity(e.target.value)}
-              />
+              <input type="number" step="0.1" placeholder="0.0" value={quantity} onChange={e => setQuantity(e.target.value)} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Unit</label>
@@ -222,38 +263,31 @@ export default function CropSales({ crops, cropId: propCropId }) {
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Price per Unit *</label>
-              <input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={pricePerUnit}
-                onChange={e => setPricePerUnit(e.target.value)}
-              />
+              <input type="number" step="0.01" placeholder="0.00" value={pricePerUnit} onChange={e => setPricePerUnit(e.target.value)} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Total Price</label>
-              <input
-                type="text"
-                readOnly
-                value={quantity && pricePerUnit ? `KES ${(parseFloat(quantity) * parseFloat(pricePerUnit)).toFixed(2)}` : 'KES 0.00'}
-                style={{ background: '#f9fafb', fontWeight: 600 }}
-              />
+              <input type="text" readOnly value={quantity && pricePerUnit ? `KES ${(parseFloat(quantity) * parseFloat(pricePerUnit)).toFixed(2)}` : 'KES 0.00'} style={{ background: '#f9fafb', fontWeight: 600 }} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Buyer Name *</label>
-              <input
-                placeholder="e.g., ABC Dairy Farm"
-                value={buyer}
-                onChange={e => setBuyer(e.target.value)}
-              />
+              <input placeholder="e.g., John Doe" value={buyer} onChange={e => setBuyer(e.target.value)} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Buyer Organization</label>
+              <input placeholder="e.g., ABC Dairy Farm" value={buyerOrg} onChange={e => setBuyerOrg(e.target.value)} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Buyer Contact</label>
-              <input
-                placeholder="+254 712 345 678"
-                value={buyerContact}
-                onChange={e => setBuyerContact(e.target.value)}
-              />
+              <input placeholder="+254 712 345 678" value={buyerContact} onChange={e => setBuyerContact(e.target.value)} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Buyer Email</label>
+              <input type="email" placeholder="buyer@email.com" value={buyerEmail} onChange={e => setBuyerEmail(e.target.value)} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Buyer Address</label>
+              <input placeholder="123 Main St, Nairobi" value={buyerAddress} onChange={e => setBuyerAddress(e.target.value)} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Payment Method</label>
@@ -273,11 +307,7 @@ export default function CropSales({ crops, cropId: propCropId }) {
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Delivery Date</label>
-              <input
-                type="date"
-                value={deliveryDate}
-                onChange={e => setDeliveryDate(e.target.value)}
-              />
+              <input type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Delivery Method</label>
@@ -297,38 +327,44 @@ export default function CropSales({ crops, cropId: propCropId }) {
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Moisture %</label>
-              <input
-                type="number"
-                step="0.1"
-                placeholder="0.0"
-                value={moisture}
-                onChange={e => setMoisture(e.target.value)}
-              />
+              <input type="number" step="0.1" placeholder="0.0" value={moisture} onChange={e => setMoisture(e.target.value)} />
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Notes</label>
-              <textarea
-                placeholder="Additional sale details..."
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                rows={2}
-                style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #d1d5db' }}
-              />
+              <textarea placeholder="Additional sale details..." value={notes} onChange={e => setNotes(e.target.value)} rows={2} style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #d1d5db' }} />
+            </div>
+            {/* Integrated Reject Section */}
+            <div style={{ gridColumn: '1 / -1', marginTop: 24, background: '#fee2e2', borderRadius: 8, padding: 16 }}>
+              <label style={{ display: 'block', marginBottom: 4, fontWeight: 600 }}>Record Reject Produce (Avocado)</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <input type="checkbox" checked={hasReject} onChange={e => setHasReject(e.target.checked)} />
+                <span>Include reject record for this sale</span>
+              </div>
+              {hasReject && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 12 }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Amount *</label>
+                    <input type="number" step="0.1" placeholder="0.0" value={rejectAmount} onChange={e => setRejectAmount(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Price per Unit *</label>
+                    <input type="number" step="0.01" placeholder="0.00" value={rejectPrice} onChange={e => setRejectPrice(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Total Price</label>
+                    <input type="text" readOnly value={rejectAmount && rejectPrice ? `KES ${(parseFloat(rejectAmount) * parseFloat(rejectPrice)).toFixed(2)}` : 'KES 0.00'} style={{ background: '#f9fafb', fontWeight: 600 }} />
+                  </div>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Reason *</label>
+                    <textarea placeholder="Reason for rejection..." value={rejectReason} onChange={e => setRejectReason(e.target.value)} rows={2} style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #d1d5db' }} />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-            <button
-              onClick={add}
-              style={{ background: 'var(--green)', color: '#fff', padding: '10px 20px', border: 'none', borderRadius: 6 }}
-            >
-              Record Sale
-            </button>
-            <button
-              onClick={() => setShowAddForm(false)}
-              style={{ background: '#6b7280', color: '#fff', padding: '10px 20px', border: 'none', borderRadius: 6 }}
-            >
-              Cancel
-            </button>
+            <button onClick={add} style={{ background: 'var(--green)', color: '#fff', padding: '10px 20px', border: 'none', borderRadius: 6 }}>Record Sale</button>
+            <button onClick={() => setShowAddForm(false)} style={{ background: '#6b7280', color: '#fff', padding: '10px 20px', border: 'none', borderRadius: 6 }}>Cancel</button>
           </div>
         </div>
       )}

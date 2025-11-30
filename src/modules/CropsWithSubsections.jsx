@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import CropYield from './CropYield'
 import CropSales from './CropSales'
 import CropTreatment from './CropTreatment'
+// Pest and Disease Management submodules
+import { useEffect as useNotificationEffect } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 
 const SAMPLE = [
@@ -45,7 +47,8 @@ const SAMPLE = [
 
 const CROP_TYPES = ['Grain', 'Forage', 'Vegetable', 'Fruit', 'Cover Crop', 'Other']
 const SOIL_TYPES = ['Clay', 'Clay Loam', 'Loam', 'Sandy Loam', 'Sand', 'Silt', 'Silt Loam']
-const IRRIGATION_TYPES = ['Dryland', 'Sprinkler', 'Drip', 'Center Pivot', 'Flood', 'Furrow']
+const IRRIGATION_TYPES = ['Dryland', 'Sprinkler', 'Drip', 'Center Pivot', 'Flood', 'Furrow', 'Drip Irrigation']
+const VEGETABLE_TYPES = ['Tomato', 'Onion', 'Cabbage', 'Carrot', 'Spinach', 'Pepper', 'Lettuce', 'Other']
 const CROP_STATUS = ['Planned', 'Planted', 'Germinating', 'Growing', 'Flowering', 'Mature', 'Harvested', 'Failed']
 const CERTIFICATION_LEVELS = ['Conventional', 'Certified Organic', 'Transitional Organic', 'Non-GMO']
 
@@ -54,6 +57,14 @@ export default function Crops() {
   const KEY = 'cattalytics:crops'
   
   const [tab, setTab] = useState('list')
+  const [pestRecords, setPestRecords] = useState([])
+  const [diseaseRecords, setDiseaseRecords] = useState([])
+  const [reminders, setReminders] = useState([])
+  const [showPestForm, setShowPestForm] = useState(false)
+  const [showDiseaseForm, setShowDiseaseForm] = useState(false)
+  const [pestForm, setPestForm] = useState({ cropId: '', date: '', pest: '', severity: '', action: '', notes: '' })
+  const [diseaseForm, setDiseaseForm] = useState({ cropId: '', date: '', disease: '', severity: '', action: '', notes: '' })
+  const [reminderForm, setReminderForm] = useState({ cropId: '', date: '', message: '' })
   const [crops, setCrops] = useState([])
   const [filter, setFilter] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -71,6 +82,10 @@ export default function Crops() {
     irrigationType: 'Sprinkler',
     status: 'Planned',
     cropType: 'Grain',
+    vegetableType: '',
+    rowSpacing: '',
+    plantSpacing: '',
+    irrigationReminder: '',
     certificationLevel: 'Conventional',
     marketDestination: '',
     seedCost: '',
@@ -170,6 +185,38 @@ export default function Crops() {
     harvested: crops.filter(c => c.status === 'Harvested').length
   }
 
+  // Notification effect: schedule reminders
+  useNotificationEffect(() => {
+    reminders.forEach(rem => {
+      const now = new Date()
+      const remDate = new Date(rem.date)
+      if (remDate > now) {
+        // Schedule notification (placeholder, integrate with actual notification system)
+        setTimeout(() => {
+          window.alert(`Reminder: ${rem.message} for crop ${rem.cropId} on ${rem.date}`)
+        }, remDate - now)
+      }
+    })
+  }, [reminders])
+
+  function savePestRecord(e) {
+    e.preventDefault()
+    setPestRecords([...pestRecords, { ...pestForm, id: Date.now() }])
+    setShowPestForm(false)
+    setPestForm({ cropId: '', date: '', pest: '', severity: '', action: '', notes: '' })
+  }
+  function saveDiseaseRecord(e) {
+    e.preventDefault()
+    setDiseaseRecords([...diseaseRecords, { ...diseaseForm, id: Date.now() }])
+    setShowDiseaseForm(false)
+    setDiseaseForm({ cropId: '', date: '', disease: '', severity: '', action: '', notes: '' })
+  }
+  function saveReminder(e) {
+    e.preventDefault()
+    setReminders([...reminders, { ...reminderForm, id: Date.now() }])
+    setReminderForm({ cropId: '', date: '', message: '' })
+  }
+
   return (
     <section>
       <div style={{ marginBottom: '24px' }}>
@@ -208,62 +255,13 @@ export default function Crops() {
         {/* Tab Navigation */}
         <div style={{ borderBottom: '2px solid #e5e7eb', marginBottom: '20px' }}>
           <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => setTab('list')}
-              style={{
-                padding: '12px 20px',
-                border: 'none',
-                borderBottom: tab === 'list' ? '3px solid var(--green)' : '3px solid transparent',
-                background: tab === 'list' ? '#f0fdf4' : 'transparent',
-                color: tab === 'list' ? 'var(--green)' : '#6b7280',
-                fontWeight: tab === 'list' ? '600' : '400',
-                cursor: 'pointer'
-              }}
-            >
-              📋 Crop List
-            </button>
-            <button
-              onClick={() => setTab('yields')}
-              style={{
-                padding: '12px 20px',
-                border: 'none',
-                borderBottom: tab === 'yields' ? '3px solid var(--green)' : '3px solid transparent',
-                background: tab === 'yields' ? '#f0fdf4' : 'transparent',
-                color: tab === 'yields' ? 'var(--green)' : '#6b7280',
-                fontWeight: tab === 'yields' ? '600' : '400',
-                cursor: 'pointer'
-              }}
-            >
-              🌾 Yields & Harvest
-            </button>
-            <button
-              onClick={() => setTab('sales')}
-              style={{
-                padding: '12px 20px',
-                border: 'none',
-                borderBottom: tab === 'sales' ? '3px solid var(--green)' : '3px solid transparent',
-                background: tab === 'sales' ? '#f0fdf4' : 'transparent',
-                color: tab === 'sales' ? 'var(--green)' : '#6b7280',
-                fontWeight: tab === 'sales' ? '600' : '400',
-                cursor: 'pointer'
-              }}
-            >
-              💰 Sales & Revenue
-            </button>
-            <button
-              onClick={() => setTab('treatments')}
-              style={{
-                padding: '12px 20px',
-                border: 'none',
-                borderBottom: tab === 'treatments' ? '3px solid var(--green)' : '3px solid transparent',
-                background: tab === 'treatments' ? '#f0fdf4' : 'transparent',
-                color: tab === 'treatments' ? 'var(--green)' : '#6b7280',
-                fontWeight: tab === 'treatments' ? '600' : '400',
-                cursor: 'pointer'
-              }}
-            >
-              🧪 Treatments & Inputs
-            </button>
+            <button onClick={() => setTab('list')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'list' ? '3px solid var(--green)' : '3px solid transparent', background: tab === 'list' ? '#f0fdf4' : 'transparent', color: tab === 'list' ? 'var(--green)' : '#6b7280', fontWeight: tab === 'list' ? '600' : '400', cursor: 'pointer' }}>📋 Crop List</button>
+            <button onClick={() => setTab('yields')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'yields' ? '3px solid var(--green)' : '3px solid transparent', background: tab === 'yields' ? '#f0fdf4' : 'transparent', color: tab === 'yields' ? 'var(--green)' : '#6b7280', fontWeight: tab === 'yields' ? '600' : '400', cursor: 'pointer' }}>🌾 Yields & Harvest</button>
+            <button onClick={() => setTab('sales')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'sales' ? '3px solid var(--green)' : '3px solid transparent', background: tab === 'sales' ? '#f0fdf4' : 'transparent', color: tab === 'sales' ? 'var(--green)' : '#6b7280', fontWeight: tab === 'sales' ? '600' : '400', cursor: 'pointer' }}>💰 Sales & Revenue</button>
+            <button onClick={() => setTab('treatments')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'treatments' ? '3px solid var(--green)' : '3px solid transparent', background: tab === 'treatments' ? '#f0fdf4' : 'transparent', color: tab === 'treatments' ? 'var(--green)' : '#6b7280', fontWeight: tab === 'treatments' ? '600' : '400', cursor: 'pointer' }}>🧪 Treatments & Inputs</button>
+            <button onClick={() => setTab('pests')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'pests' ? '3px solid #f59e0b' : '3px solid transparent', background: tab === 'pests' ? '#fff7ed' : 'transparent', color: tab === 'pests' ? '#f59e0b' : '#6b7280', fontWeight: tab === 'pests' ? '600' : '400', cursor: 'pointer' }}>🐛 Pest Management</button>
+            <button onClick={() => setTab('diseases')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'diseases' ? '3px solid #dc2626' : '3px solid transparent', background: tab === 'diseases' ? '#fef2f2' : 'transparent', color: tab === 'diseases' ? '#dc2626' : '#6b7280', fontWeight: tab === 'diseases' ? '600' : '400', cursor: 'pointer' }}>🦠 Disease Management</button>
+            <button onClick={() => setTab('reminders')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'reminders' ? '3px solid #059669' : '3px solid transparent', background: tab === 'reminders' ? '#f0fdf4' : 'transparent', color: tab === 'reminders' ? '#059669' : '#6b7280', fontWeight: tab === 'reminders' ? '600' : '400', cursor: 'pointer' }}>🔔 Reminders</button>
           </div>
         </div>
       </div>
@@ -438,6 +436,33 @@ export default function Crops() {
                   ))}
                 </select>
               </div>
+              {form.cropType === 'Vegetable' && (
+                <div>
+                  <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Vegetable Type</label>
+                  <select
+                    value={form.vegetableType}
+                    onChange={e => setForm({ ...form, vegetableType: e.target.value })}
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db' }}
+                  >
+                    <option value="">-- select vegetable --</option>
+                    {VEGETABLE_TYPES.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {form.cropType === 'Vegetable' && (
+                <div style={{ display: 'flex', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Row Spacing (cm)</label>
+                    <input type="number" value={form.rowSpacing} onChange={e => setForm({ ...form, rowSpacing: e.target.value })} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Plant Spacing (cm)</label>
+                    <input type="number" value={form.plantSpacing} onChange={e => setForm({ ...form, plantSpacing: e.target.value })} />
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Status</label>
@@ -496,6 +521,16 @@ export default function Crops() {
                     <option key={type} value={type}>{type}</option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Irrigation Reminder</label>
+                <input
+                  type="date"
+                  value={form.irrigationReminder}
+                  onChange={e => setForm({ ...form, irrigationReminder: e.target.value })}
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db' }}
+                />
+                <small>Set a reminder for next irrigation</small>
               </div>
 
               <div>
@@ -580,6 +615,89 @@ export default function Crops() {
       {tab === 'treatments' && (
         <div>
           <CropTreatment crops={crops} />
+        </div>
+      )}
+      {tab === 'pests' && (
+        <div>
+          <h3>Pest Management</h3>
+          <button onClick={() => setShowPestForm(true)} style={{ marginBottom: '12px' }}>Add Pest Record</button>
+          {showPestForm && (
+            <form onSubmit={savePestRecord} style={{ marginBottom: '20px', background: '#fff7ed', padding: '16px', borderRadius: '8px' }}>
+              <label>Crop ID</label>
+              <input type="text" value={pestForm.cropId} onChange={e => setPestForm({ ...pestForm, cropId: e.target.value })} required />
+              <label>Date</label>
+              <input type="date" value={pestForm.date} onChange={e => setPestForm({ ...pestForm, date: e.target.value })} required />
+              <label>Pest</label>
+              <input type="text" value={pestForm.pest} onChange={e => setPestForm({ ...pestForm, pest: e.target.value })} required />
+              <label>Severity</label>
+              <input type="text" value={pestForm.severity} onChange={e => setPestForm({ ...pestForm, severity: e.target.value })} required />
+              <label>Action</label>
+              <input type="text" value={pestForm.action} onChange={e => setPestForm({ ...pestForm, action: e.target.value })} />
+              <label>Notes</label>
+              <textarea value={pestForm.notes} onChange={e => setPestForm({ ...pestForm, notes: e.target.value })} />
+              <button type="submit">Save Pest Record</button>
+              <button type="button" onClick={() => setShowPestForm(false)}>Cancel</button>
+            </form>
+          )}
+          <ul>
+            {pestRecords.map(rec => (
+              <li key={rec.id}>
+                <strong>{rec.cropId}</strong> | {rec.date} | {rec.pest} | Severity: {rec.severity} | Action: {rec.action} | {rec.notes}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {tab === 'diseases' && (
+        <div>
+          <h3>Disease Management</h3>
+          <button onClick={() => setShowDiseaseForm(true)} style={{ marginBottom: '12px' }}>Add Disease Record</button>
+          {showDiseaseForm && (
+            <form onSubmit={saveDiseaseRecord} style={{ marginBottom: '20px', background: '#fef2f2', padding: '16px', borderRadius: '8px' }}>
+              <label>Crop ID</label>
+              <input type="text" value={diseaseForm.cropId} onChange={e => setDiseaseForm({ ...diseaseForm, cropId: e.target.value })} required />
+              <label>Date</label>
+              <input type="date" value={diseaseForm.date} onChange={e => setDiseaseForm({ ...diseaseForm, date: e.target.value })} required />
+              <label>Disease</label>
+              <input type="text" value={diseaseForm.disease} onChange={e => setDiseaseForm({ ...diseaseForm, disease: e.target.value })} required />
+              <label>Severity</label>
+              <input type="text" value={diseaseForm.severity} onChange={e => setDiseaseForm({ ...diseaseForm, severity: e.target.value })} required />
+              <label>Action</label>
+              <input type="text" value={diseaseForm.action} onChange={e => setDiseaseForm({ ...diseaseForm, action: e.target.value })} />
+              <label>Notes</label>
+              <textarea value={diseaseForm.notes} onChange={e => setDiseaseForm({ ...diseaseForm, notes: e.target.value })} />
+              <button type="submit">Save Disease Record</button>
+              <button type="button" onClick={() => setShowDiseaseForm(false)}>Cancel</button>
+            </form>
+          )}
+          <ul>
+            {diseaseRecords.map(rec => (
+              <li key={rec.id}>
+                <strong>{rec.cropId}</strong> | {rec.date} | {rec.disease} | Severity: {rec.severity} | Action: {rec.action} | {rec.notes}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {tab === 'reminders' && (
+        <div>
+          <h3>Reminders & Notifications</h3>
+          <form onSubmit={saveReminder} style={{ marginBottom: '20px', background: '#f0fdf4', padding: '16px', borderRadius: '8px' }}>
+            <label>Crop ID</label>
+            <input type="text" value={reminderForm.cropId} onChange={e => setReminderForm({ ...reminderForm, cropId: e.target.value })} required />
+            <label>Date</label>
+            <input type="date" value={reminderForm.date} onChange={e => setReminderForm({ ...reminderForm, date: e.target.value })} required />
+            <label>Message</label>
+            <input type="text" value={reminderForm.message} onChange={e => setReminderForm({ ...reminderForm, message: e.target.value })} required />
+            <button type="submit">Add Reminder</button>
+          </form>
+          <ul>
+            {reminders.map(rem => (
+              <li key={rem.id}>
+                <strong>{rem.cropId}</strong> | {rem.date} | {rem.message}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
       {/* Azolla ponds tab removed as requested */}

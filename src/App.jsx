@@ -462,6 +462,20 @@ function AppContent() {
             }}
           >🐄 Livestock</button>
           <button 
+            className={view==='pastures'? 'active':''} 
+            onClick={()=>setView('pastures')}
+            style={{
+              background: view==='pastures' ? '#059669' : '#f3f4f6',
+              color: view==='pastures' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >🌱 Pastures</button>
+          <button 
             className={view==='crops'? 'active':''} 
             onClick={()=>setView('crops')}
             style={{
@@ -664,7 +678,6 @@ function AppContent() {
               <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
                 ← Back to Dashboard
               </button>
-              
               {/* Sub-navigation for Livestock */}
               <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                 <button onClick={() => setView('animals')} style={{ padding: '8px 16px', background: '#059669', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
@@ -677,8 +690,15 @@ function AppContent() {
                   🐕 Canines
                 </button>
               </div>
-              
               <ErrorBoundary><Animals /></ErrorBoundary>
+            </section>
+          )}
+          {view === 'pastures' && (
+            <section>
+              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                ← Back to Dashboard
+              </button>
+              <ErrorBoundary><Pastures /></ErrorBoundary>
             </section>
           )}
 

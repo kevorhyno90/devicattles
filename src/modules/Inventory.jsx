@@ -241,13 +241,14 @@ export default function Inventory(){
     year: new Date().getFullYear(), purchaseDate: '', purchasePrice: '', currentValue: '',
     location: '', status: 'Operational', condition: 'Good', hours: '',
     fuelType: '', lastServiceDate: '', nextServiceDate: '', servicePerson: '',
-    serviceContact: '', warrantyExpiry: '', insurancePolicy: '', insuranceExpiry: '', notes: ''
+    serviceContact: '', warrantyExpiry: '', insurancePolicy: '', insuranceExpiry: '', notes: '',
+    personInCare: '', dateGiven: ''
   })
   
   const [formData, setFormData] = useState({
     name: '', category: 'Feed', subcategory: '', quantity: '', unit: 'lbs',
     unitCost: '', location: 'Barn A', supplier: '', reorderPoint: '',
-    reorderQuantity: '', expiryDate: '', batchNumber: '', quality: 'Standard', notes: ''
+    reorderQuantity: '', expiryDate: '', batchNumber: '', quality: 'Standard', notes: '', personInCare: '', serviceReminder: '', usagePerDay: '', usagePerMonth: ''
   })
 
   useEffect(()=>{
@@ -301,7 +302,7 @@ export default function Inventory(){
       setEditingId(null)
     } else {
       const id = 'INV-' + Math.floor(1000 + Math.random()*9000)
-      const newItem = { 
+      const newItem = {
         id,
         ...formData,
         quantity,
@@ -309,6 +310,10 @@ export default function Inventory(){
         totalValue: quantity * unitCost,
         reorderPoint: parseFloat(formData.reorderPoint) || 0,
         reorderQuantity: parseFloat(formData.reorderQuantity) || 0,
+        personInCare: formData.personInCare,
+        serviceReminder: formData.serviceReminder,
+        usagePerDay: parseFloat(formData.usagePerDay) || 0,
+        usagePerMonth: parseFloat(formData.usagePerMonth) || 0,
         lastOrdered: new Date().toISOString().slice(0,10)
       }
       setItems([...items, newItem])
@@ -365,7 +370,9 @@ export default function Inventory(){
         purchasePrice: parseFloat(equipmentForm.purchasePrice) || 0,
         currentValue: parseFloat(equipmentForm.currentValue) || 0,
         hours: parseFloat(equipmentForm.hours) || 0,
-        year: parseInt(equipmentForm.year) || new Date().getFullYear()
+        year: parseInt(equipmentForm.year) || new Date().getFullYear(),
+        personInCare: equipmentForm.personInCare || '',
+        dateGiven: equipmentForm.dateGiven || ''
       } : e))
       setEditingId(null)
     } else {
@@ -377,6 +384,8 @@ export default function Inventory(){
         currentValue: parseFloat(equipmentForm.currentValue) || 0,
         hours: parseFloat(equipmentForm.hours) || 0,
         year: parseInt(equipmentForm.year) || new Date().getFullYear(),
+        personInCare: equipmentForm.personInCare || '',
+        dateGiven: equipmentForm.dateGiven || '',
         maintenanceHistory: []
       }
       setEquipment([...equipment, newEquipment])
@@ -639,6 +648,14 @@ export default function Inventory(){
               <input type="number" step="0.01" value={formData.unitCost} onChange={e => setFormData({...formData, unitCost: e.target.value})} />
             </div>
             <div>
+              <label>Usage Per Day</label>
+              <input type="number" step="0.01" value={formData.usagePerDay || ''} onChange={e => setFormData({...formData, usagePerDay: e.target.value})} placeholder="e.g., 2" />
+            </div>
+            <div>
+              <label>Usage Per Month</label>
+              <input type="number" step="0.01" value={formData.usagePerMonth || ''} onChange={e => setFormData({...formData, usagePerMonth: e.target.value})} placeholder="e.g., 60" />
+            </div>
+            <div>
               <label>Location</label>
               <select value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})}>
                 {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
@@ -733,6 +750,14 @@ export default function Inventory(){
               <input value={equipmentForm.location} onChange={e => setEquipmentForm({...equipmentForm, location: e.target.value})} placeholder="e.g., Main Equipment Barn" />
             </div>
             <div>
+              <label>Person in Care</label>
+              <input value={equipmentForm.personInCare || ''} onChange={e => setEquipmentForm({...equipmentForm, personInCare: e.target.value})} placeholder="e.g., John Doe" />
+            </div>
+            <div>
+              <label>Date Given</label>
+              <input type="date" value={equipmentForm.dateGiven || ''} onChange={e => setEquipmentForm({...equipmentForm, dateGiven: e.target.value})} />
+            </div>
+            <div>
               <label>Status</label>
               <select value={equipmentForm.status} onChange={e => setEquipmentForm({...equipmentForm, status: e.target.value})}>
                 {EQUIPMENT_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -813,6 +838,24 @@ export default function Inventory(){
           {lowStockItems.map(item => (
             <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #fbbf24' }}>
               <strong>{item.name}</strong> - {item.quantity} {item.unit} (Reorder at: {item.reorderPoint})
+               <span style={{ marginLeft: 12, color: '#dc2626', fontWeight: 600 }}>
+                 {item.usagePerDay ? `Daily usage: ${item.usagePerDay} ${item.unit}` : ''}
+                 {item.usagePerMonth ? `, Monthly: ${item.usagePerMonth} ${item.unit}` : ''}
+               </span>
+               <span style={{ marginLeft: 12, color: '#059669', fontWeight: 600 }}>
+                 {item.personInCare ? `In care: ${item.personInCare}` : ''}
+               </span>
+               {item.serviceReminder && (
+                 <span style={{ marginLeft: 12, color: '#f59e0b', fontWeight: 600 }}>
+                   Service due: {new Date(item.serviceReminder).toLocaleDateString()}
+                 </span>
+               )}
+               {/* Notification logic: alert if low and usage predicts next purchase soon */}
+               {item.usagePerDay && item.quantity <= item.usagePerDay * 7 && (
+                 <span style={{ marginLeft: 12, color: '#dc2626', fontWeight: 700 }}>
+                   ⚠️ Predicted to run out in less than a week!
+                 </span>
+               )}
             </div>
           ))}
         </div>
@@ -837,6 +880,7 @@ export default function Inventory(){
             const needsService = eq.nextServiceDate && Math.floor((new Date(eq.nextServiceDate) - new Date()) / (1000 * 60 * 60 * 24)) <= 30
             const warrantyActive = eq.warrantyExpiry && new Date(eq.warrantyExpiry) > new Date()
             
+            // ...existing code...
             return (
               <div key={eq.id} className="card" style={{ 
                 padding: '20px',
@@ -884,8 +928,33 @@ export default function Inventory(){
                     <div style={{ fontWeight: '600', color: 'var(--green)', fontSize: '16px' }}>KES {(eq.currentValue || 0).toLocaleString('en-KE')}</div>
                   </div>
                   <div>
+                    <div className="muted">Purchase Price</div>
+                    <div style={{ fontWeight: '600' }}>KES {(eq.purchasePrice || 0).toLocaleString('en-KE')}</div>
+                  </div>
+                  <div>
+                    <div className="muted">Depreciation Rate</div>
+                    <div style={{ fontWeight: '600', color: '#ef4444' }}>
+                      {(() => {
+                        const years = eq.purchaseDate ? (new Date().getFullYear() - new Date(eq.purchaseDate).getFullYear()) : 0;
+                        if (years > 0 && eq.purchasePrice > 0) {
+                          const rate = ((eq.purchasePrice - eq.currentValue) / eq.purchasePrice) / years * 100;
+                          return rate.toFixed(2) + '%/yr';
+                        }
+                        return 'N/A';
+                      })()}
+                    </div>
+                  </div>
+                  <div>
                     <div className="muted">Location</div>
                     <div style={{ fontWeight: '600' }}>{eq.location || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <div className="muted">Person in Care</div>
+                    <div style={{ fontWeight: '600' }}>{eq.personInCare || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <div className="muted">Date Given</div>
+                    <div style={{ fontWeight: '600' }}>{eq.dateGiven ? new Date(eq.dateGiven).toLocaleDateString() : 'N/A'}</div>
                   </div>
                   <div>
                     <div className="muted">Purchase Date</div>

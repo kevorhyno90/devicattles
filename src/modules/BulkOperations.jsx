@@ -281,6 +281,58 @@ export default function BulkOperations() {
           >
             Export All
           </button>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+              <button
+                onClick={() => {
+                  const storageKey = activeTab === 'animals' ? 'cattalytics:animals' : activeTab === 'expenses' ? 'cattalytics:finance' : 'cattalytics:tasks';
+                  const data = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                  if (!data.length) {
+                    alert('No data to export');
+                    return;
+                  }
+                  import('../lib/exportImport').then(mod => {
+                    mod.exportToPDF(data, `${activeTab}_export`, `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Export Report`);
+                  });
+                }}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  background: '#6366f1',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                Export PDF
+              </button>
+              <button
+                onClick={() => {
+                  const storageKey = activeTab === 'animals' ? 'cattalytics:animals' : activeTab === 'expenses' ? 'cattalytics:finance' : 'cattalytics:tasks';
+                  const data = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                  if (!data.length) {
+                    alert('No data to export');
+                    return;
+                  }
+                  import('../lib/exportImport').then(mod => {
+                    mod.exportToDocx(data, `${activeTab}_export.docx`, `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Export Report`);
+                  });
+                }}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  background: '#0ea5e9',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                Export Word
+              </button>
+            </div>
         </div>
       </div>
 

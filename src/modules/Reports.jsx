@@ -292,29 +292,43 @@ export default function Reports(){
   const [viewFormat, setViewFormat] = useState('json') // json, xml, formatted
 
   // load relevant data from localStorage where available
-  useEffect(()=>{
-    try{
-      const animals = JSON.parse(localStorage.getItem('cattalytics:animals') || '[]')
-      const tasks = JSON.parse(localStorage.getItem('cattalytics:tasks') || '[]')
-      const finance = JSON.parse(localStorage.getItem('cattalytics:finance') || '[]')
-      const crops = JSON.parse(localStorage.getItem('cattalytics:crops:v2') || '[]')
-      const resources = JSON.parse(localStorage.getItem('devinsfarm:resources') || '[]')
-      const schedules = JSON.parse(localStorage.getItem('cattalytics:schedules') || '[]')
-      const groups = JSON.parse(localStorage.getItem('cattalytics:groups') || '[]')
-      const pastures = JSON.parse(localStorage.getItem('cattalytics:pastures') || '[]')
-      const health = JSON.parse(localStorage.getItem('cattalytics:health:patients') || '[]')
-      const feeding = JSON.parse(localStorage.getItem('cattalytics:feeding') || '[]')
-      const measurements = JSON.parse(localStorage.getItem('cattalytics:measurements') || '[]')
-      const breeding = JSON.parse(localStorage.getItem('cattalytics:animal:breeding') || '[]')
-      const milkYield = JSON.parse(localStorage.getItem('cattalytics:milk-yield') || '[]')
-      const treatments = JSON.parse(localStorage.getItem('cattalytics:treatments') || '[]')
-      const semen = JSON.parse(localStorage.getItem('cattalytics:semen:inventory') || '[]')
-      const inventory = JSON.parse(localStorage.getItem('cattalytics:inventory') || '[]')
-      const poultry = JSON.parse(localStorage.getItem('cattalytics:poultry') || '[]')
-      const flocks = JSON.parse(localStorage.getItem('cattalytics:flocks') || '[]')
-      setItems({ animals, tasks, finance, crops, resources, schedules, groups, pastures, health, feeding, measurements, breeding, milkYield, treatments, semen, inventory, poultry, flocks })
-    }catch(e){ setItems({ animals:[], tasks:[], finance:[], crops:[], resources:[], schedules:[], groups:[], pastures:[], health:[], feeding:[], measurements:[], breeding:[], milkYield:[], treatments:[], semen:[], inventory:[], poultry:[], flocks:[] }) }
-  }, [])
+    useEffect(()=>{
+      try{
+        const animals = JSON.parse(localStorage.getItem('cattalytics:animals') || '[]')
+        const tasks = JSON.parse(localStorage.getItem('cattalytics:tasks') || '[]')
+        const finance = JSON.parse(localStorage.getItem('cattalytics:finance') || '[]')
+        const crops = JSON.parse(localStorage.getItem('cattalytics:crops') || '[]')
+        const cropPest = JSON.parse(localStorage.getItem('cattalytics:cropPest') || '[]')
+        const cropDisease = JSON.parse(localStorage.getItem('cattalytics:cropDisease') || '[]')
+        const resources = JSON.parse(localStorage.getItem('devinsfarm:resources') || '[]')
+        const schedules = JSON.parse(localStorage.getItem('cattalytics:schedules') || '[]')
+        const groups = JSON.parse(localStorage.getItem('cattalytics:groups') || '[]')
+        const pastures = JSON.parse(localStorage.getItem('cattalytics:pastures') || '[]')
+        const health = JSON.parse(localStorage.getItem('cattalytics:health:patients') || '[]')
+        const feeding = JSON.parse(localStorage.getItem('cattalytics:feeding') || '[]')
+        const measurements = JSON.parse(localStorage.getItem('cattalytics:measurements') || '[]')
+        const breeding = JSON.parse(localStorage.getItem('cattalytics:animal:breeding') || '[]')
+        const milkYield = JSON.parse(localStorage.getItem('cattalytics:milk-yield') || '[]')
+        const treatments = JSON.parse(localStorage.getItem('cattalytics:treatments') || '[]')
+        const semen = JSON.parse(localStorage.getItem('cattalytics:semen:inventory') || '[]')
+        const inventory = JSON.parse(localStorage.getItem('cattalytics:inventory') || '[]')
+        const poultry = JSON.parse(localStorage.getItem('cattalytics:poultry') || '[]')
+        const flocks = JSON.parse(localStorage.getItem('cattalytics:flocks') || '[]')
+        const azolla = JSON.parse(localStorage.getItem('cattalytics:azolla') || '[]')
+        const bsf = JSON.parse(localStorage.getItem('cattalytics:bsf') || '[]')
+        const additionalReports = JSON.parse(localStorage.getItem('cattalytics:additionalReports') || '[]')
+        const animalBreeding = JSON.parse(localStorage.getItem('cattalytics:animalBreeding') || '[]')
+        const animalFeeding = JSON.parse(localStorage.getItem('cattalytics:animalFeeding') || '[]')
+        const animalMeasurement = JSON.parse(localStorage.getItem('cattalytics:animalMeasurement') || '[]')
+        const animalMilkYield = JSON.parse(localStorage.getItem('cattalytics:animalMilkYield') || '[]')
+        const animalTreatment = JSON.parse(localStorage.getItem('cattalytics:animalTreatment') || '[]')
+        const calfManagement = JSON.parse(localStorage.getItem('cattalytics:calfManagement') || '[]')
+        const canineManagement = JSON.parse(localStorage.getItem('cattalytics:canineManagement') || '[]')
+        const poultryManagement = JSON.parse(localStorage.getItem('cattalytics:poultryManagement') || '[]')
+        const petManagement = JSON.parse(localStorage.getItem('cattalytics:petManagement') || '[]')
+        setItems({ animals, tasks, finance, crops, cropPest, cropDisease, resources, schedules, groups, pastures, health, feeding, measurements, breeding, milkYield, treatments, semen, inventory, poultry, flocks, azolla, bsf, additionalReports, animalBreeding, animalFeeding, animalMeasurement, animalMilkYield, animalTreatment, calfManagement, canineManagement, poultryManagement, petManagement })
+      }catch(e){ setItems({ animals:[], tasks:[], finance:[], crops:[], resources:[], schedules:[], groups:[], pastures:[], health:[], feeding:[], measurements:[], breeding:[], milkYield:[], treatments:[], semen:[], inventory:[], poultry:[], flocks:[], azolla:[], bsf:[], additionalReports:[], animalBreeding:[], animalFeeding:[], animalMeasurement:[], animalMilkYield:[], animalTreatment:[], calfManagement:[], canineManagement:[], poultryManagement:[], petManagement:[] }) }
+    }, [])
 
   function getSectionItems(){
     const m = items || {}
@@ -322,6 +336,8 @@ export default function Reports(){
     if(section === 'tasks') return (m.tasks||[]).map(t=> ({ id: t.id || t.title || Math.random().toString(36).slice(2,8), data: t, type:'task' }))
     if(section === 'finance') return (m.finance||[]).map(f=> ({ id: f.id || Math.random().toString(36).slice(2,8), data: f, type:'finance' }))
     if(section === 'crops') return (m.crops||[]).map(c=> ({ id: c.id || c.name || Math.random().toString(36).slice(2,8), data: c, type:'crop' }))
+    if(section === 'cropPest') return (m.cropPest||[]).map(p=> ({ id: p.id || p.cropId || Math.random().toString(36).slice(2,8), data: p, type:'cropPest' }))
+    if(section === 'cropDisease') return (m.cropDisease||[]).map(d=> ({ id: d.id || d.cropId || Math.random().toString(36).slice(2,8), data: d, type:'cropDisease' }))
     if(section === 'resources') return (m.resources||[]).map(r=> ({ id: r.id || r.name || Math.random().toString(36).slice(2,8), data: r, type:'resource' }))
     if(section === 'schedules') return (m.schedules||[]).map(s=> ({ id: s.id || s.title || Math.random().toString(36).slice(2,8), data: s, type:'schedule' }))
     if(section === 'groups') return (m.groups||[]).map(g=> ({ id: g.id || g.name || Math.random().toString(36).slice(2,8), data: g, type:'group' }))
@@ -336,6 +352,18 @@ export default function Reports(){
     if(section === 'inventory') return (m.inventory||[]).map(i=> ({ id: i.id || Math.random().toString(36).slice(2,8), data: i, type:'inventory' }))
     if(section === 'poultry') return (m.poultry||[]).map(p=> ({ id: p.id || Math.random().toString(36).slice(2,8), data: p, type:'poultry' }))
     if(section === 'flocks') return (m.flocks||[]).map(f=> ({ id: f.id || Math.random().toString(36).slice(2,8), data: f, type:'flock' }))
+    if(section === 'azolla') return (m.azolla||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'azolla' }))
+    if(section === 'bsf') return (m.bsf||[]).map(b=> ({ id: b.id || b.name || Math.random().toString(36).slice(2,8), data: b, type:'bsf' }))
+    if(section === 'additionalReports') return (m.additionalReports||[]).map(r=> ({ id: r.id || r.name || Math.random().toString(36).slice(2,8), data: r, type:'additionalReports' }))
+    if(section === 'animalBreeding') return (m.animalBreeding||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalBreeding' }))
+    if(section === 'animalFeeding') return (m.animalFeeding||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalFeeding' }))
+    if(section === 'animalMeasurement') return (m.animalMeasurement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalMeasurement' }))
+    if(section === 'animalMilkYield') return (m.animalMilkYield||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalMilkYield' }))
+    if(section === 'animalTreatment') return (m.animalTreatment||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalTreatment' }))
+    if(section === 'calfManagement') return (m.calfManagement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'calfManagement' }))
+    if(section === 'canineManagement') return (m.canineManagement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'canineManagement' }))
+    if(section === 'poultryManagement') return (m.poultryManagement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'poultryManagement' }))
+    if(section === 'petManagement') return (m.petManagement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'petManagement' }))
     return []
   }
 
@@ -402,7 +430,11 @@ export default function Reports(){
                 <option value="cropSales">Crop Sales</option>
                 <option value="cropTreatment">Crop Treatment</option>
                 <option value="cropYield">Crop Yield</option>
+                <option value="cropPest">Crop Pest Management</option>
+                <option value="cropDisease">Crop Disease Management</option>
                 <option value="pastures">Pastures</option>
+                <option value="azolla">Azolla Farming</option>
+                <option value="bsf">BSF Farming</option>
               </optgroup>
               <optgroup label="Management">
                 <option value="finance">Finance</option>
@@ -527,6 +559,8 @@ export default function Reports(){
             </optgroup>
             <optgroup label="Crops & Land">
               <option value="crops">Crops</option>
+              <option value="cropPest">Crop Pest Management</option>
+              <option value="cropDisease">Crop Disease Management</option>
               <option value="pastures">Pastures</option>
             </optgroup>
             <optgroup label="Management">
@@ -582,6 +616,12 @@ export default function Reports(){
           )}
           
           <button className="tab-btn" onClick={()=> downloadDocx(list.map(i=> i.data), `${section}-report-${new Date().toISOString().slice(0,10)}.docx`, `${section.charAt(0).toUpperCase() + section.slice(1)} Report`, section)}>📄 DOCX Report</button>
+          <button className="tab-btn" onClick={()=> {
+            import('../lib/exportImport').then(mod => {
+              mod.exportToPDF(list.map(i=> i.data), `${section}-report-${new Date().toISOString().slice(0,10)}`, `${section.charAt(0).toUpperCase() + section.slice(1)} Report`)
+            })
+          }}>📕 PDF Report</button>
+          <button className="tab-btn" onClick={()=> setViewFormat('table')}>📋 Table View</button>
           <button className="tab-btn" onClick={()=> downloadJson(list.map(i=> i.data), `${section}-export.json`)}>JSON</button>
           <button className="tab-btn" onClick={()=> downloadXml(list.map(i=> i.data), `${section}-export.xml`)}>XML</button>
         </div>
@@ -631,8 +671,11 @@ export default function Reports(){
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <select value={viewFormat} onChange={e => setViewFormat(e.target.value)} style={{ padding: '6px 10px' }}>
                   <option value="formatted">Formatted View</option>
+                  <option value="table">Table View</option>
+                  <option value="excel">Excel View</option>
                   <option value="json">JSON</option>
                   <option value="xml">XML</option>
+                  <option value="docx">DOCX Preview</option>
                 </select>
                 <button onClick={() => downloadJson(viewingData, `${viewTitle.replace(/ /g, '-')}.json`)}>JSON</button>
                 <button onClick={() => downloadXml(viewingData, `${viewTitle.replace(/ /g, '-')}.xml`)}>XML</button>
@@ -948,6 +991,143 @@ export default function Reports(){
                   {JSON.stringify(viewingData, null, 2)}
                 </pre>
               )}
+
+              {viewFormat === 'docx' && (
+                <div style={{ margin: '16px 0', padding: '16px', background: '#f3f4f6', borderRadius: '8px', color: '#374151' }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>DOCX Preview (Text Only)</div>
+                  <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '15px', whiteSpace: 'pre-wrap' }}>
+                    {/* Render a text-based preview of the DOCX content */}
+                    {Array.isArray(viewingData)
+                      ? viewingData.map((row, idx) => (
+                          <div key={idx} style={{ marginBottom: '12px', borderBottom: '1px solid #e5e7eb', paddingBottom: '8px' }}>
+                            {Object.entries(row).map(([key, value]) => (
+                              <div key={key} style={{ marginBottom: '4px' }}>
+                                <span style={{ fontWeight: 'bold', color: '#059669' }}>{key}:</span> {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                              </div>
+                            ))}
+                          </div>
+                        ))
+                      : Object.entries(viewingData).map(([key, value]) => (
+                          <div key={key} style={{ marginBottom: '4px' }}>
+                            <span style={{ fontWeight: 'bold', color: '#059669' }}>{key}:</span> {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                          </div>
+                        ))}
+                  </div>
+                  <div style={{ marginTop: '12px' }}>
+                    <button style={{ background: '#059669', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px' }} onClick={() => downloadDocx(viewingData, `${viewTitle.replace(/ /g, '-')}.docx`, viewTitle)}>
+                      Download DOCX
+                    </button>
+                  </div>
+                </div>
+              )}
+
+                {viewFormat === 'table' && Array.isArray(viewingData) && viewingData.length > 0 && (
+                  <div style={{ overflowX: 'auto', marginTop: '16px' }}>
+                    {(() => {
+                      // Collect all unique keys from all records
+                      const allKeys = Array.from(new Set(viewingData.flatMap(obj => Object.keys(obj))));
+                      return (
+                        <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '15px', background: '#fff' }}>
+                          <thead>
+                            <tr>
+                              {allKeys.map(key => (
+                                <th key={key} style={{ border: '1px solid #e5e7eb', padding: '8px', background: '#e0f2fe', color: '#0ea5e9', fontWeight: 'bold' }}>{key}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {viewingData.map((row, idx) => (
+                              <tr key={idx}>
+                                {allKeys.map((key, vidx) => (
+                                  <td key={vidx} style={{ border: '1px solid #e5e7eb', padding: '8px', color: '#374151', background: idx % 2 === 0 ? '#f1f5f9' : '#fff' }}>{typeof row[key] === 'object' ? JSON.stringify(row[key]) : String(row[key] ?? '')}</td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      );
+                    })()}
+                  </div>
+                )}
+              {viewFormat === 'excel' && Array.isArray(viewingData) && viewingData.length > 0 && (
+                <div style={{ overflowX: 'auto', marginTop: '16px' }}>
+                  {(() => {
+                    // Collect all unique keys from all records
+                    const allKeys = Array.from(new Set(viewingData.flatMap(obj => Object.keys(obj))));
+                    return (
+                      <>
+                        <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '15px', background: '#fff' }}>
+                          <thead>
+                            <tr>
+                              {allKeys.map(key => (
+                                <th key={key} style={{ border: '1px solid #e5e7eb', padding: '8px', background: '#e0f2fe', color: '#0ea5e9', fontWeight: 'bold' }}>{key}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {viewingData.map((row, idx) => (
+                              <tr key={idx}>
+                                {allKeys.map((key, vidx) => (
+                                  <td key={vidx} style={{ border: '1px solid #e5e7eb', padding: '8px', color: '#374151', background: idx % 2 === 0 ? '#f1f5f9' : '#fff' }}>{typeof row[key] === 'object' ? JSON.stringify(row[key]) : String(row[key] ?? '')}</td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <button style={{ marginTop: '12px', background: '#0ea5e9', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px' }} onClick={() => {
+                          import('../lib/exportImport').then(mod => {
+                            mod.exportToExcel(viewingData, `${viewTitle.replace(/ /g, '-')}.csv`, allKeys);
+                          });
+                        }}>Download as Excel CSV</button>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+                  <div style={{ overflowX: 'auto', marginTop: '16px' }}>
+                    {(() => {
+                      // Collect all unique keys from all records
+                      const allKeys = Array.from(new Set(viewingData.flatMap(obj => Object.keys(obj))));
+                      return (
+                        <>
+                          <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '15px', background: '#fff' }}>
+                            <thead>
+                              <tr>
+                                {allKeys.map(key => (
+                                  <th key={key} style={{ border: '1px solid #e5e7eb', padding: '8px', background: '#f3f4f6', color: '#059669', fontWeight: 'bold' }}>{key}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {viewingData.map((row, idx) => (
+                                <tr key={idx}>
+                                  {allKeys.map((key, vidx) => (
+                                    <td key={vidx} style={{ border: '1px solid #e5e7eb', padding: '8px', color: '#374151' }}>{typeof row[key] === 'object' ? JSON.stringify(row[key]) : String(row[key] ?? '')}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                          <button style={{ marginTop: '12px', background: '#059669', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px' }} onClick={() => {
+                            const csv = [allKeys.join(','), ...viewingData.map(row => allKeys.map(key => {
+                              const val = row[key];
+                              return typeof val === 'object' ? JSON.stringify(val) : String(val ?? '');
+                            }).join(',') )].join('\n');
+                            const blob = new Blob([csv], { type: 'text/csv' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `${viewTitle.replace(/ /g, '-')}.csv`;
+                            document.body.appendChild(a);
+                            a.click();
+                            a.remove();
+                            URL.revokeObjectURL(url);
+                          }}>Download Table as CSV</button>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
               
               {viewFormat === 'xml' && (
                 <pre style={{ 

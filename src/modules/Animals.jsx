@@ -19,14 +19,23 @@ import { generateQRCodeDataURL, printQRTag, batchPrintQRTags } from '../lib/qrco
 // Realized Animals component: HTML5 controls, inline validation, unique tag checks,
 // realistic sample data, and non-placeholder behavior.
 export default function Animals() {
+  // Track expanded/collapsed state for group details
+  const [expandedGroups, setExpandedGroups] = useState([])
   const AKEY = 'cattalytics:animals'
   const GKEY = 'cattalytics:groups'
 
-  const SAMPLE_GROUPS = [
-    { id: 'G-001', name: 'Bovine', desc: 'Cattle and dairy herd' },
-    { id: 'G-002', name: 'Porcine', desc: 'Pigs and swine' },
-    { id: 'G-003', name: 'Avians', desc: 'Poultry - chickens, turkeys, ducks' },
-    { id: 'G-004', name: 'Canines', desc: 'Dogs and working canines' }
+  // Default groups for first load, but allow adding/removing
+  const DEFAULT_GROUPS = [
+    { id: 'G-001', name: 'Bovine', desc: 'Cattle, dairy cows, beef cattle, and related breeds.' },
+    { id: 'G-002', name: 'Porcine', desc: 'Pigs, hogs, swine, and related breeds.' },
+    { id: 'G-003', name: 'Caprine', desc: 'Goats, dairy goats, meat goats, and related breeds.' },
+    { id: 'G-004', name: 'Ovine', desc: 'Sheep, lambs, wool sheep, and related breeds.' },
+    { id: 'G-005', name: 'Equine', desc: 'Horses, donkeys, mules, ponies, and related breeds.' },
+    { id: 'G-006', name: 'Camelids', desc: 'Camels, alpacas, llamas, and related breeds.' },
+    { id: 'G-007', name: 'Avians', desc: 'Poultry: chickens, turkeys, ducks, geese, quail, and other birds.' },
+    { id: 'G-008', name: 'Canines', desc: 'Dogs, working canines, guard dogs, and related breeds.' },
+    { id: 'G-009', name: 'Aquaculture', desc: 'Fish, shrimp, and other aquatic livestock.' },
+    { id: 'G-010', name: 'Insects', desc: 'Bees, black soldier flies, and other farmed insects.' }
   ]
 
   const SAMPLE_ANIMALS = [
@@ -49,8 +58,22 @@ export default function Animals() {
   const [editingId, setEditingId] = useState(null)
   const [errors, setErrors] = useState({})
 
-  const [groupName, setGroupName] = useState('')
+  const [groupCategory, setGroupCategory] = useState('');
+  const [customGroupName, setCustomGroupName] = useState('');
+  const [groupName, setGroupName] = useState('');
+  // Auto-fill group name when category changes, except for 'Other'
+  useEffect(() => {
+    if (groupCategory && groupCategory !== 'Other') {
+      setGroupName(groupCategory);
+    } else if (groupCategory === 'Other') {
+      setGroupName(customGroupName);
+    }
+  }, [groupCategory, customGroupName]);
   const [groupDesc, setGroupDesc] = useState('')
+  const [groupDateCreated, setGroupDateCreated] = useState('')
+  const [groupDateUpdated, setGroupDateUpdated] = useState('')
+  const [groupStartDate, setGroupStartDate] = useState('')
+  const [groupEndDate, setGroupEndDate] = useState('')
   const [editingGroupId, setEditingGroupId] = useState(null)
 
   useEffect(() => {
@@ -58,11 +81,11 @@ export default function Animals() {
       const rawA = localStorage.getItem(AKEY)
       const rawG = localStorage.getItem(GKEY)
       setAnimals(rawA ? JSON.parse(rawA) : SAMPLE_ANIMALS)
-      setGroups(rawG ? JSON.parse(rawG) : SAMPLE_GROUPS)
+      setGroups(rawG ? JSON.parse(rawG) : DEFAULT_GROUPS)
     } catch (err) {
       console.error('Failed parsing stored data', err)
       setAnimals(SAMPLE_ANIMALS)
-      setGroups(SAMPLE_GROUPS)
+      setGroups(DEFAULT_GROUPS)
     }
   }, [])
 
@@ -187,19 +210,47 @@ export default function Animals() {
   }
   function deleteAnimal(id) { if (!window.confirm('Delete animal ' + id + '?')) return; setAnimals(animals.filter(a => a.id !== id)) }
 
-  function resetGroupForm() { setGroupName(''); setGroupDesc(''); setEditingGroupId(null) }
+  function resetGroupForm() {
+    setGroupCategory('');
+    setCustomGroupName('');
+    setGroupDesc('');
+    setGroupDateCreated(new Date().toISOString().slice(0,10));
+    setGroupDateUpdated('');
+    setGroupStartDate('');
+    setGroupEndDate('');
+    setEditingGroupId(null);
+    setTab('addGroup');
+  }
 
   function saveGroup(e) {
     e && e.preventDefault()
-    if (!groupName.trim()) return
+    let name = groupCategory !== 'Other' ? groupCategory : customGroupName.trim();
+    if (!name) return;
+    const now = new Date().toISOString().slice(0,10);
     if (editingGroupId) {
-      setGroups(groups.map(g => g.id === editingGroupId ? { ...g, name: groupName.trim(), desc: groupDesc } : g))
+      setGroups(groups.map(g => g.id === editingGroupId ? {
+        ...g,
+        name,
+        desc: groupDesc,
+        dateCreated: g.dateCreated || groupDateCreated || now,
+        dateUpdated: now,
+        startDate: groupStartDate,
+        endDate: groupEndDate
+      } : g))
     } else {
-      const id = 'G-' + (1000 + Math.floor(Math.random() * 900000))
-      setGroups([...groups, { id, name: groupName.trim(), desc: groupDesc }])
+      const id = 'G-' + (1000 + Math.floor(Math.random() * 900000));
+      setGroups([...groups, {
+        id,
+        name,
+        desc: groupDesc,
+        dateCreated: groupDateCreated || now,
+        dateUpdated: '',
+        startDate: groupStartDate,
+        endDate: groupEndDate
+      }])
     }
-    resetGroupForm()
-    setTab('list')
+    resetGroupForm();
+    setTab('list');
   }
 
   function startEditGroup(g) { setEditingGroupId(g.id); setGroupName(g.name); setGroupDesc(g.desc); setTab('addGroup') }
@@ -1086,119 +1137,166 @@ export default function Animals() {
 
       {tab === 'addGroup' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h3>🏷️ Animal Groups</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+            <h2 style={{ fontSize: '2rem', fontWeight: '700', color: '#059669', margin: 0 }}>👥 Livestock Groups</h2>
+            <button onClick={() => { resetGroupForm(); setTab('addGroup'); setGroupName(''); setGroupDesc(''); setEditingGroupId(null); }} style={{ background: '#059669', color: '#fff', padding: '10px 20px', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '1rem', cursor: 'pointer' }}>➕ Add Group</button>
           </div>
 
-          {/* Summary Stats - stack vertically on mobile */}
-          <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 600 ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: window.innerWidth <= 600 ? 12 : 16, marginBottom: 20 }}>
-            <div className="card" style={{ padding: 16, background: '#f0fdf4', ...mobileStyle.card }}>
-              <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Groups</div>
-              <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{groups.length}</div>
-            </div>
-            <div className="card" style={{ padding: 16, background: '#eff6ff', ...mobileStyle.card }}>
-              <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Animals</div>
-              <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>{animals.length}</div>
-            </div>
-            <div className="card" style={{ padding: 16, background: '#fef3c7', ...mobileStyle.card }}>
-              <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Ungrouped</div>
-              <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f59e0b' }}>{animals.filter(a => !a.groupId).length}</div>
-            </div>
+          {/* Filter/Search Bar */}
+          <div style={{ marginBottom: 20, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              placeholder="🔍 Search groups..."
+              value={filter}
+              onChange={e => setFilter(e.target.value)}
+              style={{ flex: '1 1 200px', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '1rem' }}
+            />
           </div>
 
-          {/* Add/Edit Form */}
-          <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-            <h4 style={{ marginTop: 0 }}>{editingGroupId ? 'Edit Group' : 'Add New Group'}</h4>
+          {/* Add/Edit Group Modal - always show when tab is 'addGroup' */}
+          <div className="card" style={{ padding: 24, marginBottom: 24, background: '#f0fdf4', border: '2px solid #059669', borderRadius: 8 }}>
+            <h3 style={{ marginTop: 0 }}>{editingGroupId ? 'Edit Group' : 'Add New Group'}</h3>
             <form onSubmit={saveGroup}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16 }}>
                 <div>
-                  <label>Group Name *</label>
-                  <input placeholder="e.g., Dairy Herd A" value={groupName} onChange={e => setGroupName(e.target.value)} required />
+                  <label style={{ fontWeight: 600 }}>Group Name *</label>
+                  <input placeholder="e.g., Dairy Herd A" value={groupName} onChange={e => setGroupName(e.target.value)} required style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: '1rem' }} />
+                  <div style={{ marginTop: 12 }}>
+                    <label style={{ fontWeight: 600 }}>Category *</label>
+                    <select value={groupCategory} onChange={e => setGroupCategory(e.target.value)} required style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: '1rem' }}>
+                      <option value="">Select animal category...</option>
+                      <option value="Bovine">Bovine (Cattle, dairy cows, beef cattle)</option>
+                      <option value="Porcine">Porcine (Pigs, hogs, swine)</option>
+                      <option value="Caprine">Caprine (Goats, dairy goats, meat goats)</option>
+                      <option value="Ovine">Ovine (Sheep, lambs, wool sheep)</option>
+                      <option value="Equine">Equine (Horses, donkeys, mules, ponies)</option>
+                      <option value="Camelids">Camelids (Camels, alpacas, llamas)</option>
+                      <option value="Avians">Avians (Poultry: chickens, turkeys, ducks, geese, quail, other birds)</option>
+                      <option value="Canines">Canines (Dogs, working canines, guard dogs)</option>
+                      <option value="Aquaculture">Aquaculture (Fish, shrimp, aquatic livestock)</option>
+                      <option value="Insects">Insects (Bees, black soldier flies, farmed insects)</option>
+                      <option value="Other">Other (Custom category)</option>
+                    </select>
+                    {groupCategory === 'Other' && (
+                      <input type="text" placeholder="Custom group name" value={customGroupName} onChange={e => setCustomGroupName(e.target.value)} required style={{ width: '100%', marginTop: 8, padding: '8px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: '1rem' }} />
+                    )}
+                  </div>
                 </div>
                 <div>
-                  <label>Description</label>
-                  <input placeholder="Brief description of the group" value={groupDesc} onChange={e => setGroupDesc(e.target.value)} />
+                  <label style={{ fontWeight: 600 }}>Description</label>
+                  <input placeholder="Brief description of the group" value={groupDesc} onChange={e => setGroupDesc(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: '1rem' }} />
+                  <label style={{ fontWeight: 600, marginTop: 12 }}>Date Created</label>
+                  <input type="date" value={groupDateCreated} onChange={e => setGroupDateCreated(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: '1rem' }} />
+                  <label style={{ fontWeight: 600, marginTop: 12 }}>Date Updated</label>
+                  <input type="date" value={groupDateUpdated} onChange={e => setGroupDateUpdated(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: '1rem' }} />
+                  <label style={{ fontWeight: 600, marginTop: 12 }}>Start Date (optional)</label>
+                  <input type="date" value={groupStartDate} onChange={e => setGroupStartDate(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: '1rem' }} />
+                  <label style={{ fontWeight: 600, marginTop: 12 }}>End Date (optional)</label>
+                  <input type="date" value={groupEndDate} onChange={e => setGroupEndDate(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: '1rem' }} />
                 </div>
               </div>
-              <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-                <button type="submit">{editingGroupId ? 'Update Group' : 'Create Group'}</button>
-                <button type="button" onClick={() => { resetGroupForm() }}>Reset</button>
-                {editingGroupId && (
-                  <button type="button" onClick={() => { resetGroupForm() }} style={{ marginLeft: 'auto' }}>Cancel Edit</button>
-                )}
+              <div style={{ marginTop: 20, display: 'flex', gap: 12 }}>
+                <button type="submit" style={{ background: '#059669', color: '#fff', padding: '10px 20px', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '1rem', cursor: 'pointer' }}>{editingGroupId ? 'Update Group' : 'Create Group'}</button>
+                <button type="button" onClick={() => { resetGroupForm(); setTab('addGroup'); }} style={{ padding: '10px 20px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '1rem' }}>Cancel</button>
               </div>
             </form>
           </div>
 
-          {/* Groups List - collapsible on mobile */}
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-            <div style={{ padding: 16, borderBottom: '1px solid #eee', background: '#f9fafb' }}>
-              <h4 style={{ margin: 0 }}>Existing Groups ({groups.length})</h4>
-            </div>
+          {/* Responsive Group Cards Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 600 ? '1fr' : 'repeat(auto-fit, minmax(340px, 1fr))', gap: 24 }}>
             {groups.length === 0 ? (
-              <div style={{ padding: 40, textAlign: 'center' }}>
+              <div style={{ padding: 40, textAlign: 'center', background: '#f0fdf4', borderRadius: 8 }}>
                 <div style={{ fontSize: 48, marginBottom: 16 }}>🏷️</div>
-                <h4>No groups yet</h4>
+                <h3>No groups yet</h3>
                 <p style={{ color: '#666' }}>Create your first group to organize animals</p>
               </div>
             ) : (
-              <div style={{ maxHeight: 500, overflowY: 'auto' }}>
-                {groups.map(g => {
-                  const groupAnimals = animals.filter(a => a.groupId === g.id)
-                  const femaleCount = groupAnimals.filter(a => a.sex === 'F').length
-                  const maleCount = groupAnimals.filter(a => a.sex === 'M').length
-                  // Collapsible group details on mobile
-                  const [groupOpen, setGroupOpen] = useState(false)
-                  return (
-                    <div key={g.id} style={{ padding: 16, borderBottom: '1px solid #eee' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: window.innerWidth <= 600 ? 'center' : 'start', flexDirection: window.innerWidth <= 600 ? 'column' : 'row' }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-                            <h4 style={{ margin: 0 }}>{g.name}</h4>
-                            <span className="badge" style={{ background: '#e0f2fe' }}>{groupAnimals.length} animals</span>
-                            {femaleCount > 0 && <span className="badge" style={{ background: '#fce7f3' }}>{femaleCount} ♀</span>}
-                            {maleCount > 0 && <span className="badge" style={{ background: '#dbeafe' }}>{maleCount} ♂</span>}
-                          </div>
-                          <p style={{ margin: '4px 0 0 0', color: '#666', fontSize: 14 }}>{g.desc || 'No description'}</p>
-                          
-                          {groupAnimals.length > 0 && (
-                            <div style={{ marginTop: 12, padding: 12, background: '#f9fafb', borderRadius: 6 }}>
-                              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Animals in this group:</div>
-                              <div style={{ display: window.innerWidth <= 600 ? 'block' : 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                {groupAnimals.slice(0, 10).map(a => (
-                                  <span key={a.id} style={{ fontSize: 12, padding: '4px 8px', background: 'white', borderRadius: 4, border: '1px solid #e5e7eb', display: window.innerWidth <= 600 ? 'block' : 'inline-block', marginBottom: window.innerWidth <= 600 ? '6px' : '0' }}>
-                                    {a.name || a.tag || a.id}
-                                  </span>
-                                ))}
-                                {groupAnimals.length > 10 && (
-                                  <span style={{ fontSize: 12, padding: '4px 8px', color: '#666' }}>+{groupAnimals.length - 10} more</span>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <div style={{ display: 'flex', gap: 8, marginLeft: 16 }}>
-                          <button className="tab-btn" onClick={() => startEditGroup(g)}>✏️ Edit</button>
-                          <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => deleteGroup(g.id)}>🗑️ Delete</button>
-                        </div>
+              groups.filter(g => g.name.toLowerCase().includes(filter.toLowerCase())).map(g => {
+                const groupAnimals = animals.filter(a => a.groupId === g.id)
+                const femaleCount = groupAnimals.filter(a => a.sex === 'F').length
+                const maleCount = groupAnimals.filter(a => a.sex === 'M').length
+                const breedBreakdown = Object.entries(groupAnimals.reduce((acc, a) => {
+                  acc[a.breed] = (acc[a.breed] || 0) + 1; return acc;
+                }, {})).map(([breed, count]) => `${breed}: ${count}`).join(', ')
+                const avgWeight = groupAnimals.length ? (groupAnimals.reduce((sum, a) => sum + (parseFloat(a.weight) || 0), 0) / groupAnimals.length).toFixed(1) : 'N/A'
+                const ageRange = (() => {
+                  const ages = groupAnimals.map(a => {
+                    if (!a.dob) return null;
+                    const dob = new Date(a.dob);
+                    if (isNaN(dob)) return null;
+                    const age = ((Date.now() - dob.getTime()) / (365.25*24*3600*1000));
+                    return age;
+                  }).filter(Boolean);
+                  if (!ages.length) return 'N/A';
+                  return `${Math.floor(Math.min(...ages))} - ${Math.ceil(Math.max(...ages))} yrs`;
+                })()
+                return (
+                  <div key={g.id} className="card" style={{ padding: 24, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #e5e7eb', border: '2px solid #059669', position: 'relative' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <h3 style={{ margin: 0, fontWeight: '700', color: '#059669' }}>{g.name}</h3>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => startEditGroup(g)} style={{ background: '#f3f4f6', color: '#059669', border: '1px solid #059669', borderRadius: 6, padding: '6px 12px', fontWeight: '600', cursor: 'pointer' }}>✏️ Edit</button>
+                        <button onClick={() => deleteGroup(g.id)} style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #dc2626', borderRadius: 6, padding: '6px 12px', fontWeight: '600', cursor: 'pointer' }}>🗑️ Delete</button>
                       </div>
                     </div>
-                  )
-                })}
-              </div>
+                    <p style={{ color: '#666', fontSize: 15, marginBottom: 12 }}>{g.desc || 'No description'}</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12, marginBottom: 16 }}>
+                      <div style={{ background: '#f0fdf4', borderRadius: 6, padding: 10, textAlign: 'center' }}>
+                        <div style={{ fontSize: 18, fontWeight: '700', color: '#059669' }}>{groupAnimals.length}</div>
+                        <div style={{ fontSize: 13, color: '#666' }}>Total</div>
+                      </div>
+                      <div style={{ background: '#eff6ff', borderRadius: 6, padding: 10, textAlign: 'center' }}>
+                        <div style={{ fontSize: 18, fontWeight: '700', color: '#2563eb' }}>{groupAnimals.filter(a => a.status === 'Active').length}</div>
+                        <div style={{ fontSize: 13, color: '#666' }}>Active</div>
+                      </div>
+                      <div style={{ background: '#fce7f3', borderRadius: 6, padding: 10, textAlign: 'center' }}>
+                        <div style={{ fontSize: 18, fontWeight: '700', color: '#db2777' }}>{femaleCount}</div>
+                        <div style={{ fontSize: 13, color: '#666' }}>Female</div>
+                      </div>
+                      <div style={{ background: '#dbeafe', borderRadius: 6, padding: 10, textAlign: 'center' }}>
+                        <div style={{ fontSize: 18, fontWeight: '700', color: '#2563eb' }}>{maleCount}</div>
+                        <div style={{ fontSize: 13, color: '#666' }}>Male</div>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 14, marginBottom: 10 }}>
+                      <strong>Breed Breakdown:</strong> {breedBreakdown || 'N/A'}<br/>
+                      <strong>Average Weight:</strong> {avgWeight} kg<br/>
+                      <strong>Age Range:</strong> {ageRange}
+                    </div>
+                    <div style={{ fontSize: 14, marginBottom: 10 }}>
+                      <strong>Status:</strong> Active: {groupAnimals.filter(a => a.status === 'Active').length}, Sold: {groupAnimals.filter(a => a.status === 'Sold').length}, Deceased: {groupAnimals.filter(a => a.status === 'Deceased').length}
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>Animals in this group:</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+                      {groupAnimals.length === 0 ? (
+                        <span style={{ color: '#666', fontSize: 13 }}>No animals in this group.</span>
+                      ) : (
+                        groupAnimals.slice(0, 10).map(a => (
+                          <span key={a.id} style={{ fontSize: 13, padding: '6px 12px', background: '#f3f4f6', borderRadius: 6, border: '1px solid #e5e7eb', marginBottom: '4px' }}>
+                            {a.name || a.tag || a.id}
+                          </span>
+                        ))
+                      )}
+                      {groupAnimals.length > 10 && (
+                        <span style={{ fontSize: 13, padding: '6px 12px', color: '#666' }}>+{groupAnimals.length - 10} more</span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })
             )}
           </div>
 
           {/* Ungrouped Animals Warning */}
           {animals.filter(a => !a.groupId).length > 0 && (
-            <div className="card" style={{ padding: 16, marginTop: 16, background: '#fef3c7', borderLeft: '4px solid #f59e0b' }}>
-              <h4 style={{ margin: '0 0 8px 0', color: '#92400e' }}>⚠️ Ungrouped Animals</h4>
-              <p style={{ margin: '0 0 8px 0', color: '#78350f' }}>
+            <div className="card" style={{ padding: 20, marginTop: 24, background: '#fef3c7', borderLeft: '6px solid #f59e0b', borderRadius: 8 }}>
+              <h3 style={{ margin: '0 0 8px 0', color: '#92400e' }}>⚠️ Ungrouped Animals</h3>
+              <p style={{ margin: '0 0 8px 0', color: '#78350f', fontSize: 15 }}>
                 {animals.filter(a => !a.groupId).length} animal(s) are not assigned to any group.
               </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
                 {animals.filter(a => !a.groupId).map(a => (
-                  <span key={a.id} style={{ fontSize: 12, padding: '4px 8px', background: 'white', borderRadius: 4, border: '1px solid #fbbf24' }}>
+                  <span key={a.id} style={{ fontSize: 13, padding: '6px 12px', background: 'white', borderRadius: 6, border: '1px solid #fbbf24' }}>
                     {a.name || a.tag || a.id}
                   </span>
                 ))}
