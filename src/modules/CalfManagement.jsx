@@ -5,7 +5,8 @@ import { getMilkExpenses } from '../lib/finance'
 
 const SAMPLE_CALVES = [
   { id: 'CALF-001', tag: 'CALF-101', name: 'Daisy Jr.', damId: 'A-001', damName: 'Bessie', sireId: 'S-101', sireName: 'Premium Bull', dob: '2025-10-15', sex: 'F', breed: 'Holstein', birthWeight: 38, currentWeight: 45, weaningDate: '', weaningWeight: '', healthStatus: 'Healthy', housingType: 'Individual Pen', notes: '', colostrumIntake: 'Adequate', navelTreatment: 'Done', vaccination: [], dehorning: '', castration: 'N/A' },
-  { id: 'CALF-002', tag: 'CALF-102', name: 'Thunder', damId: 'A-002', damName: 'Molly', sireId: 'S-100', sireName: 'Duke', dob: '2025-09-20', sex: 'M', breed: 'Jersey', birthWeight: 32, currentWeight: 55, weaningDate: '2025-11-20', weaningWeight: 75, healthStatus: 'Healthy', housingType: 'Group Pen', notes: 'Strong calf', colostrumIntake: 'Adequate', navelTreatment: 'Done', vaccination: ['Brucella'], dehorning: '2025-10-05', castration: '2025-10-10' }
+  { id: 'CALF-002', tag: 'CALF-102', name: 'Thunder', damId: 'A-002', damName: 'Molly', sireId: 'S-100', sireName: 'Duke', dob: '2025-09-20', sex: 'M', breed: 'Jersey', birthWeight: 32, currentWeight: 55, weaningDate: '2025-11-20', weaningWeight: 75, healthStatus: 'Healthy', housingType: 'Group Pen', notes: 'Strong calf', colostrumIntake: 'Adequate', navelTreatment: 'Done', vaccination: ['Brucella'], dehorning: '2025-10-05', castration: '2025-10-10' },
+  { id: 'CALF-003', tag: 'CALF-103', name: 'Bella', damId: 'A-003', damName: 'Rosie', sireId: 'S-102', sireName: 'Maximus', dob: '2025-08-10', sex: 'F', breed: 'Guernsey', birthWeight: 36, currentWeight: 50, weaningDate: '', weaningWeight: '', healthStatus: 'Healthy', housingType: 'Individual Pen', notes: 'Very active', colostrumIntake: 'Adequate', navelTreatment: 'Done', vaccination: ['Brucella'], dehorning: '', castration: 'N/A' }
 ]
 
 const HEALTH_STATUS = ['Healthy', 'Sick', 'Under Treatment', 'Quarantine', 'Recovered']
@@ -20,6 +21,18 @@ export default function CalfManagement({ animals }) {
   
   const [calves, setCalves] = useState([])
   const [feedingRecords, setFeedingRecords] = useState([])
+    // Sample feeding records for demo
+    const SAMPLE_FEEDING = [
+      {
+        id: 'FEED-001', calfId: 'CALF-001', date: '2025-11-28', feedType: 'Milk', quantityKg: 1.2, quantityLiters: 1.2, pricePerKg: 50, reason: 'Morning feeding', method: 'Bottle', temperature: 38, isWarm: true, isColostrum: false, notes: 'Fed well', timestamp: '2025-11-28T06:00:00'
+      },
+      {
+        id: 'FEED-002', calfId: 'CALF-002', date: '2025-11-28', feedType: 'Milk', quantityKg: 1.5, quantityLiters: 1.5, pricePerKg: 50, reason: 'Kicked bucket', method: 'Bucket', temperature: 37, isWarm: true, isColostrum: false, notes: 'Lost some milk', timestamp: '2025-11-28T10:00:00'
+      },
+      {
+        id: 'FEED-003', calfId: 'CALF-003', date: '2025-11-28', feedType: 'Milk', quantityKg: 1.0, quantityLiters: 1.0, pricePerKg: 50, reason: 'Fed to worker', method: 'Bottle', temperature: 38, isWarm: true, isColostrum: false, notes: 'Worker requested', timestamp: '2025-11-28T14:00:00'
+      }
+    ]
   const [healthRecords, setHealthRecords] = useState([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [selectedCalf, setSelectedCalf] = useState(null)
@@ -57,9 +70,10 @@ export default function CalfManagement({ animals }) {
     const raw = localStorage.getItem(KEY)
     if (raw) setCalves(JSON.parse(raw))
     else setCalves(SAMPLE_CALVES)
-    
+
     const feedingRaw = localStorage.getItem(FEEDING_KEY)
     if (feedingRaw) setFeedingRecords(JSON.parse(feedingRaw))
+    else setFeedingRecords(SAMPLE_FEEDING)
     
     const healthRaw = localStorage.getItem(HEALTH_KEY)
     if (healthRaw) setHealthRecords(JSON.parse(healthRaw))

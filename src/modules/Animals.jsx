@@ -79,8 +79,13 @@ export default function Animals() {
   useEffect(() => {
     try {
       const rawA = localStorage.getItem(AKEY)
+      let animalsList = rawA ? JSON.parse(rawA) : SAMPLE_ANIMALS;
+      if (!animalsList || animalsList.length === 0) {
+        animalsList = SAMPLE_ANIMALS;
+        localStorage.setItem(AKEY, JSON.stringify(SAMPLE_ANIMALS));
+      }
+      setAnimals(animalsList);
       const rawG = localStorage.getItem(GKEY)
-      setAnimals(rawA ? JSON.parse(rawA) : SAMPLE_ANIMALS)
       setGroups(rawG ? JSON.parse(rawG) : DEFAULT_GROUPS)
     } catch (err) {
       console.error('Failed parsing stored data', err)
