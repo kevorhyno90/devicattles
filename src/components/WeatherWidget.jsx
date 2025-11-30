@@ -3,10 +3,8 @@ import React, { useState, useEffect } from 'react'
 const OPENWEATHER_API_KEY = 'e8b82472e1785fe426645d7d39359924' // User's OpenWeatherMap API key
 const DEFAULT_LOCATION = 'Nyaronde, Matutu, KE'
 
-export default function WeatherWidget({ location = DEFAULT_LOCATION }) {
-  const [weather, setWeather] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+export default function WeatherWidget() {
+  return null;
 
   useEffect(() => {
     async function fetchWeather() {
@@ -41,3 +39,4 @@ export default function WeatherWidget({ location = DEFAULT_LOCATION }) {
     </div>
   )
 }
+

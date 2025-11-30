@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
+import { getCurrentUserName, getAllUsers } from '../lib/auth'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 
 const SAMPLE = [
@@ -9,7 +10,7 @@ const SAMPLE = [
 
 const CATEGORIES = ['Animal Care', 'Maintenance', 'Health', 'Feed & Nutrition', 'Breeding', 'Equipment', 'Administrative', 'Other']
 const PRIORITIES = ['Low', 'Medium', 'High', 'Critical']
-const STAFF = ['Unassigned', 'John Smith', 'Mike Johnson', 'Dr. Sarah Wilson', 'Emma Davis', 'Tom Brown']
+// Dynamically get staff from user list
 
 export default function Tasks(){
   const KEY = 'cattalytics:tasks'
@@ -24,9 +25,15 @@ export default function Tasks(){
   
   // Form states
   const [formData, setFormData] = useState({
-    title: '', description: '', assignedTo: 'Unassigned', due: '', 
+    title: '', description: '', assignedTo: getCurrentUserName(), due: '', 
     priority: 'Medium', category: 'Animal Care', estimatedHours: 1, location: ''
   })
+  const [staff, setStaff] = useState([])
+
+  useEffect(() => {
+    const users = getAllUsers()
+    setStaff(['Unassigned', ...users.map(u => u.name)])
+  }, [])
 
   useEffect(()=>{
     const raw = localStorage.getItem(KEY)
@@ -48,7 +55,7 @@ export default function Tasks(){
       notes: []
     }
     setItems([...items, newTask])
-    setFormData({ title: '', description: '', assignedTo: 'Unassigned', due: '', priority: 'Medium', category: 'Animal Care', estimatedHours: 1, location: '' })
+    setFormData({ title: '', description: '', assignedTo: getCurrentUserName(), due: '', priority: 'Medium', category: 'Animal Care', estimatedHours: 1, location: '' })
     setShowAddForm(false)
   }
 
@@ -86,7 +93,7 @@ export default function Tasks(){
     setFormData({
       title: task.title,
       description: task.description || '',
-      assignedTo: task.assignedTo || 'Unassigned',
+      assignedTo: getCurrentUserName(),
       due: task.due || '',
       priority: task.priority || 'Medium',
       category: task.category || 'Animal Care',
@@ -104,7 +111,7 @@ export default function Tasks(){
       ...formData,
       title: formData.title.trim()
     } : i))
-    setFormData({ title: '', description: '', assignedTo: 'Unassigned', due: '', priority: 'Medium', category: 'Animal Care', estimatedHours: 1, location: '' })
+    setFormData({ title: '', description: '', assignedTo: getCurrentUserName(), due: '', priority: 'Medium', category: 'Animal Care', estimatedHours: 1, location: '' })
     setEditingId(null)
     setShowAddForm(false)
   }
@@ -290,7 +297,7 @@ export default function Tasks(){
             </select>
             <textarea placeholder="Description" value={formData.description} onChange={e=>setFormData({...formData, description: e.target.value})} style={{ gridColumn: '1 / -1', minHeight: '80px' }}></textarea>
             <select value={formData.assignedTo} onChange={e=>setFormData({...formData, assignedTo: e.target.value})}>
-              {STAFF.map(staff => <option key={staff} value={staff}>{staff}</option>)}
+              {staff.map(staffName => <option key={staffName} value={staffName}>{staffName}</option>)}
             </select>
             <select value={formData.priority} onChange={e=>setFormData({...formData, priority: e.target.value})}>
               {PRIORITIES.map(pri => <option key={pri} value={pri}>{pri}</option>)}

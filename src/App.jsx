@@ -1,10 +1,9 @@
 import React, { useState, useEffect, lazy, Suspense, useContext } from 'react'
+import { requestNotificationPermission, listenForMessages } from './lib/firebaseMessaging'
 import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme'
 import OfflineIndicator from './components/OfflineIndicator'
 import InAppNotification from './components/InAppNotification'
 import BottomNav from './components/BottomNav'
-import Weather from './modules/Weather/Weather'
-import Map from './modules/Map/Map'
 import { AppViewProvider, AppViewContext } from './lib/AppViewContext.jsx';
 import SwipeHandler from './components/SwipeHandler'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -171,6 +170,18 @@ function AppContent() {
       window.removeEventListener('pwa-install-available', handleInstallPrompt)
     }
   }, [])
+
+  // Request notification permission and listen for messages on startup
+  useEffect(() => {
+    requestNotificationPermission().then(token => {
+      if (token) {
+        listenForMessages((payload) => {
+          // Optionally handle foreground notifications here
+          console.log('Foreground notification:', payload)
+        });
+      }
+    });
+  }, []);
 
   // Check authentication on mount
   useEffect(() => {
@@ -633,34 +644,6 @@ function AppContent() {
             }}
           >⚙️ Settings</button>
           
-          <button 
-            className={view==='weather'? 'active':''} 
-            onClick={()=>setView('weather')}
-            style={{
-              background: view==='weather' ? '#059669' : '#f3f4f6',
-              color: view==='weather' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >🌦️ Weather</button>
-          <button 
-            className={view==='map'? 'active':''} 
-            onClick={()=>setView('map')}
-            style={{
-              background: view==='map' ? '#059669' : '#f3f4f6',
-              color: view==='map' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >🗺️ Map</button>
           {/* Theme Toggle Button */}
           <div style={{ marginLeft: 'auto' }}>
             <ThemeToggleButton />
@@ -673,22 +656,6 @@ function AppContent() {
             <>
               <ErrorBoundary><Dashboard onNavigate={setView} /></ErrorBoundary>
             </>
-          )}
-          {view === 'weather' && (
-            <section>
-              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                ← Back to Dashboard
-              </button>
-              <ErrorBoundary><Weather /></ErrorBoundary>
-            </section>
-          )}
-          {view === 'map' && (
-            <section>
-              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                ← Back to Dashboard
-              </button>
-              <ErrorBoundary><Map /></ErrorBoundary>
-            </section>
           )}
           {view === 'notifications' && <ErrorBoundary><NotificationCenter /></ErrorBoundary>}
 

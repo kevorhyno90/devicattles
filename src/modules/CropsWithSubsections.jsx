@@ -50,6 +50,7 @@ const CROP_STATUS = ['Planned', 'Planted', 'Germinating', 'Growing', 'Flowering'
 const CERTIFICATION_LEVELS = ['Conventional', 'Certified Organic', 'Transitional Organic', 'Non-GMO']
 
 export default function Crops() {
+  // Azolla state
   const KEY = 'cattalytics:crops'
   
   const [tab, setTab] = useState('list')
@@ -581,6 +582,7 @@ export default function Crops() {
           <CropTreatment crops={crops} />
         </div>
       )}
+      {/* Azolla ponds tab removed as requested */}
     </section>
   )
 }

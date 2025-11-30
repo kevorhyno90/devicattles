@@ -49,6 +49,17 @@
       </style>
     </div>
     <script type="module" src="/src/main.jsx"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDaWQosYNtS0V_S2R7R1xVAPMmpGsXY4Vk" async defer></script>
+    <script>
+      // Recommended async loader for Google Maps JS API
+      window.initMap = function() {
+        // Callback for when Maps API is loaded
+      };
+      (function() {
+        const script = document.createElement('script');
+        script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDaWQosYNtS0V_S2R7R1xVAPMmpGsXY4Vk&callback=initMap&loading=async';
+        script.async = true;
+        document.body.appendChild(script);
+      })();
+    </script>
   </body>
 </html>

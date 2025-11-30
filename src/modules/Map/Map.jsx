@@ -1,5 +1,5 @@
-import MapModule from './MapModule';
 
+// Map module removed
 export default function Map() {
-  return <MapModule />;
+  return null;
 }

@@ -24,7 +24,9 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedView, setSelectedView] = useState(view);
   const [filterCategory, setFilterCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [hoveredEvent, setHoveredEvent] = useState(null);
+  const [modalEvent, setModalEvent] = useState(null);
 
   // Event categories with colors
   const categories = {
@@ -37,11 +39,19 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
     other: { label: 'Other', color: '#6b7280', icon: '📌' }
   };
 
-  // Filter events by category
+  // Filter events by category and search
   const filteredEvents = useMemo(() => {
-    if (filterCategory === 'all') return events;
-    return events.filter(e => e.category === filterCategory);
-  }, [events, filterCategory]);
+    let result = filterCategory === 'all' ? events : events.filter(e => e.category === filterCategory);
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter(e =>
+        (e.title && e.title.toLowerCase().includes(q)) ||
+        (e.description && e.description.toLowerCase().includes(q)) ||
+        (e.animal && e.animal.toLowerCase().includes(q))
+      );
+    }
+    return result;
+  }, [events, filterCategory, searchQuery]);
 
   // Get days in month
   const getDaysInMonth = (date) => {
@@ -136,7 +146,20 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
     return week;
   };
 
-  // Month View
+  // Month View with drag-and-drop
+  const [draggedEvent, setDraggedEvent] = useState(null);
+
+  const handleDragStart = (eventObj) => {
+    setDraggedEvent(eventObj);
+  };
+
+  const handleDrop = (targetDate) => {
+    if (draggedEvent && typeof window.onCalendarMoveEvent === 'function') {
+      window.onCalendarMoveEvent(draggedEvent, targetDate);
+    }
+    setDraggedEvent(null);
+  };
+
   const renderMonthView = () => {
     const days = getDaysInMonth(currentDate);
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -188,6 +211,8 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
                   border: isTodayDate ? '2px solid #3b82f6' : 'none'
                 }}
                 onClick={() => onAddEvent && onAddEvent(day.date)}
+                onDragOver={e => e.preventDefault()}
+                onDrop={() => handleDrop(day.date)}
               >
                 <div style={{ 
                   fontSize: '0.85rem', 
@@ -199,33 +224,52 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
                 </div>
 
                 {/* Event indicators */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {dayEvents.slice(0, 3).map((event, i) => (
                     <div
                       key={i}
+                      draggable
+                      onDragStart={() => handleDragStart(event)}
                       onClick={(e) => {
                         e.stopPropagation();
+                        setModalEvent(event);
                         onEventClick && onEventClick(event);
                       }}
                       onMouseEnter={() => setHoveredEvent(event)}
                       onMouseLeave={() => setHoveredEvent(null)}
                       style={{
-                        padding: '2px 4px',
-                        fontSize: '0.7rem',
-                        borderRadius: 3,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '6px 10px',
+                        fontSize: '0.9rem',
+                        borderRadius: 8,
                         background: categories[event.category]?.color || '#6b7280',
                         color: 'white',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 8px #0001',
+                        marginBottom: 2,
+                        transition: 'background 0.2s, box-shadow 0.2s',
+                        border: '2px solid #fff',
+                        opacity: draggedEvent && draggedEvent === event ? 0.5 : 1
                       }}
                     >
-                      {categories[event.category]?.icon} {event.title}
+                      {/* Avatar/Icon */}
+                      {event.avatarUrl ? (
+                        <img src={event.avatarUrl} alt="avatar" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', background: '#fff', border: '1px solid #e5e7eb' }} />
+                      ) : (
+                        <span style={{ width: 24, height: 24, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: categories[event.category]?.color, border: '1px solid #e5e7eb' }}>
+                          {categories[event.category]?.icon}
+                        </span>
+                      )}
+                      <span style={{ fontWeight: 600 }}>{event.title}</span>
                     </div>
                   ))}
                   {dayEvents.length > 3 && (
-                    <div style={{ fontSize: '0.7rem', color: '#6b7280', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#6b7280', textAlign: 'center', marginTop: 2 }}>
                       +{dayEvents.length - 3} more
                     </div>
                   )}
@@ -407,7 +451,32 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
   };
 
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ padding: 20, position: 'relative', minHeight: 700, background: '#f3f4f6', borderRadius: 16, boxShadow: '0 4px 24px #0001' }}>
+      {/* Floating Action Button for Adding Events */}
+      <button
+        onClick={() => onAddEvent && onAddEvent(currentDate)}
+        style={{
+          position: 'fixed',
+          bottom: 40,
+          right: 40,
+          background: '#3b82f6',
+          color: 'white',
+          border: 'none',
+          borderRadius: '50%',
+          width: 56,
+          height: 56,
+          fontSize: 32,
+          boxShadow: '0 4px 16px #0002',
+          cursor: 'pointer',
+          zIndex: 1001,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'background 0.2s'
+        }}
+        title="Add new event"
+      >+
+      </button>
       {/* Header with navigation */}
       <div style={{ 
         display: 'flex', 
@@ -495,8 +564,22 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
         </div>
       </div>
 
-      {/* Category filter */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+      {/* Search bar and category filter */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search events..."
+          style={{
+            padding: '8px 14px',
+            borderRadius: 6,
+            border: '1px solid #d1d5db',
+            fontSize: '1rem',
+            minWidth: 180,
+            marginRight: 8
+          }}
+        />
         <button
           onClick={() => setFilterCategory('all')}
           style={{
@@ -537,7 +620,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
       {selectedView === 'week' && renderWeekView()}
       {selectedView === 'day' && renderDayView()}
 
-      {/* Event tooltip on hover */}
+      {/* Event tooltip on hover (optional, can keep for quick info) */}
       {hoveredEvent && (
         <div style={{
           position: 'fixed',
@@ -571,6 +654,133 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
               <strong>Animal:</strong> 🐄 {hoveredEvent.animal}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Modal for event details and actions */}
+      {modalEvent && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.35)',
+          zIndex: 2000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+          onClick={() => setModalEvent(null)}
+        >
+          <div
+            style={{
+              background: 'white',
+              borderRadius: 16,
+              boxShadow: '0 8px 32px #0002',
+              padding: 32,
+              minWidth: 320,
+              maxWidth: 400,
+              position: 'relative',
+              animation: 'fadeIn 0.2s',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                background: 'none',
+                border: 'none',
+                fontSize: 22,
+                color: '#6b7280',
+                cursor: 'pointer',
+              }}
+              onClick={() => setModalEvent(null)}
+              title="Close"
+            >×</button>
+            <div style={{ fontWeight: '700', fontSize: '1.2rem', marginBottom: 12, color: categories[modalEvent.category]?.color }}>
+              {categories[modalEvent.category]?.icon} {modalEvent.title}
+            </div>
+            <div style={{ fontSize: '1rem', color: '#374151', marginBottom: 8 }}>
+              <strong>Date:</strong> {modalEvent.date}
+            </div>
+            {modalEvent.time && (
+              <div style={{ fontSize: '0.95rem', color: '#374151', marginBottom: 8 }}>
+                <strong>Time:</strong> 🕐 {modalEvent.time}
+              </div>
+            )}
+            {modalEvent.description && (
+              <div style={{ fontSize: '0.95rem', color: '#6b7280', marginBottom: 8 }}>
+                <strong>Description:</strong> {modalEvent.description}
+              </div>
+            )}
+            {modalEvent.animal && (
+              <div style={{ fontSize: '0.95rem', color: '#6b7280', marginBottom: 8 }}>
+                <strong>Animal:</strong> 🐄 {modalEvent.animal}
+              </div>
+            )}
+            {/* Color customization */}
+            <div style={{ marginTop: 16, marginBottom: 8 }}>
+              <label style={{ fontWeight: '500', color: '#374151', marginRight: 8 }}>Event Color:</label>
+              <input
+                type="color"
+                value={modalEvent.color || categories[modalEvent.category]?.color || '#6b7280'}
+                onChange={e => {
+                  if (typeof window.onCalendarChangeEventColor === 'function') {
+                    window.onCalendarChangeEventColor(modalEvent, e.target.value);
+                  } else {
+                    alert('Color change feature not implemented yet.');
+                  }
+                }}
+                style={{ width: 32, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer', verticalAlign: 'middle' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+              <button
+                style={{
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '1rem',
+                  boxShadow: '0 2px 8px #0001',
+                }}
+                onClick={() => {
+                  if (window.confirm('Delete this event?')) {
+                    if (typeof window.onCalendarDeleteEvent === 'function') {
+                      window.onCalendarDeleteEvent(modalEvent);
+                    }
+                    setModalEvent(null);
+                  }
+                }}
+              >Delete</button>
+              <button
+                style={{
+                  background: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '1rem',
+                  boxShadow: '0 2px 8px #0001',
+                }}
+                onClick={() => {
+                  if (typeof window.onCalendarEditEvent === 'function') {
+                    window.onCalendarEditEvent(modalEvent);
+                  } else {
+                    alert('Edit event feature not implemented yet.');
+                  }
+                }}
+              >Edit</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
