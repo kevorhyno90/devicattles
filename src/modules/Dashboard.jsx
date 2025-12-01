@@ -51,7 +51,13 @@ export default function Dashboard({ onNavigate }) {
     return <div className="loading">Loading dashboard...</div>
   }
 
-  const { animals, breeding, health, tasks, finance, feedCosts, inventory, milkProduction, integratedFinance } = dashboardData
+  const { 
+    animals, breeding, health, tasks, finance, feedCosts, inventory, milkProduction, integratedFinance,
+    crops, cropYield, cropSales, cropTreatments,
+    azolla, bsf, poultry, canines, pets, calves,
+    pastures, groups, schedules, notifications,
+    measurements, treatments, feeding
+  } = dashboardData
   
   // Calculate comprehensive financials
   const totalIncome = integratedFinance.totalIncome + finance.income
@@ -432,6 +438,207 @@ export default function Dashboard({ onNavigate }) {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* All Farm Modules Overview - Comprehensive */}
+      <div className="card" style={{ padding: '20px', marginTop: '24px', background: 'linear-gradient(135deg, #f0fdf4 0%, #dbeafe 100%)' }}>
+        <h3 style={{ margin: '0 0 20px 0', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          🌾 Complete Farm Overview - All Modules & Submodules
+        </h3>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+          {/* Crops Module */}
+          {crops && crops.total > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #86efac', cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => onNavigate && onNavigate('crops')}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🌱</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Crops</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#059669' }}>{crops.total}</div>
+              <div style={{ fontSize: '11px', color: '#059669' }}>
+                {crops.active} active • {crops.totalArea?.toFixed(1) || 0} acres
+              </div>
+            </div>
+          )}
+          
+          {/* Crop Yield */}
+          {cropYield && cropYield.totalRecords > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fcd34d' }}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>📊</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Crop Yield</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#d97706' }}>{cropYield.totalYield?.toFixed(0) || 0}</div>
+              <div style={{ fontSize: '11px', color: '#d97706' }}>
+                Avg: {cropYield.avgYield?.toFixed(1) || 0} per harvest
+              </div>
+            </div>
+          )}
+          
+          {/* Crop Sales */}
+          {cropSales && cropSales.totalSales > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #60a5fa' }}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>💵</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Crop Sales</div>
+              <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px', color: '#2563eb' }}>KES {cropSales.totalRevenue?.toFixed(0) || 0}</div>
+              <div style={{ fontSize: '11px', color: '#2563eb' }}>
+                {cropSales.totalSales} sales
+              </div>
+            </div>
+          )}
+          
+          {/* Azolla Farming */}
+          {azolla && azolla.totalBeds > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #6ee7b7' }}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🌿</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Azolla Beds</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#047857' }}>{azolla.totalBeds}</div>
+              <div style={{ fontSize: '11px', color: '#047857' }}>
+                {azolla.activeBeds} active • {azolla.totalProduction?.toFixed(1) || 0}kg
+              </div>
+            </div>
+          )}
+          
+          {/* BSF Farming */}
+          {bsf && bsf.totalUnits > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #f9a8d4' }}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🪰</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>BSF Units</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#be185d' }}>{bsf.totalUnits}</div>
+              <div style={{ fontSize: '11px', color: '#be185d' }}>
+                {bsf.activeUnits} active • {bsf.totalProduction?.toFixed(1) || 0}kg larvae
+              </div>
+            </div>
+          )}
+          
+          {/* Poultry */}
+          {poultry && poultry.total > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fde047', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('poultry')}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🐔</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Poultry</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#ca8a04' }}>{poultry.total}</div>
+              <div style={{ fontSize: '11px', color: '#ca8a04' }}>
+                {poultry.totalEggs} eggs • {poultry.activeFlocks} flocks
+              </div>
+            </div>
+          )}
+          
+          {/* Canines */}
+          {canines && canines.total > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #c4b5fd', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('canines')}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🐕</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Canines</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#7c3aed' }}>{canines.total}</div>
+              <div style={{ fontSize: '11px', color: '#7c3aed' }}>
+                {canines.active} active dogs
+              </div>
+            </div>
+          )}
+          
+          {/* Pets */}
+          {pets && pets.total > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fdba74', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('pets')}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🐾</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Pets</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#ea580c' }}>{pets.total}</div>
+              <div style={{ fontSize: '11px', color: '#ea580c' }}>
+                {Object.keys(pets.byType).length} species
+              </div>
+            </div>
+          )}
+          
+          {/* Calves */}
+          {calves && calves.total > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fca5a5', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('calves')}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🐮</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Calves</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#dc2626' }}>{calves.total}</div>
+              <div style={{ fontSize: '11px', color: '#dc2626' }}>
+                {calves.byAge?.['0-3m'] || 0} young • {calves.byAge?.['12m+'] || 0} mature
+              </div>
+            </div>
+          )}
+          
+          {/* Pastures */}
+          {pastures && pastures.total > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #86efac', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('pastures')}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🌾</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Pastures</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#16a34a' }}>{pastures.total}</div>
+              <div style={{ fontSize: '11px', color: '#16a34a' }}>
+                {pastures.totalArea?.toFixed(1) || 0} acres • {pastures.available} available
+              </div>
+            </div>
+          )}
+          
+          {/* Groups */}
+          {groups && groups.totalGroups > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #a5b4fc', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('groups')}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>👥</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Groups</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#4f46e5' }}>{groups.totalGroups}</div>
+              <div style={{ fontSize: '11px', color: '#4f46e5' }}>
+                {groups.totalAnimals} animals • Avg {groups.avgGroupSize?.toFixed(1)}
+              </div>
+            </div>
+          )}
+          
+          {/* Schedules */}
+          {schedules && schedules.total > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #f0abfc', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('schedules')}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>📅</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Schedules</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#c026d3' }}>{schedules.today}</div>
+              <div style={{ fontSize: '11px', color: '#c026d3' }}>
+                Today • {schedules.upcoming} upcoming
+              </div>
+            </div>
+          )}
+          
+          {/* Notifications */}
+          {notifications && notifications.total > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fbbf24', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('notifications')}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🔔</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Notifications</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#d97706' }}>{notifications.unread}</div>
+              <div style={{ fontSize: '11px', color: '#d97706' }}>
+                Unread • {notifications.urgent} urgent
+              </div>
+            </div>
+          )}
+          
+          {/* Measurements */}
+          {measurements && measurements.total > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #7dd3fc' }}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>📏</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Measurements</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#0284c7' }}>{measurements.total}</div>
+              <div style={{ fontSize: '11px', color: '#0284c7' }}>
+                Avg weight: {measurements.avgWeight?.toFixed(1) || 0}kg
+              </div>
+            </div>
+          )}
+          
+          {/* Treatments */}
+          {treatments && treatments.total > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fdba74' }}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>💊</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Treatments</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#ea580c' }}>{treatments.total}</div>
+              <div style={{ fontSize: '11px', color: '#ea580c' }}>
+                {treatments.active} active • {treatments.completionRate}% done
+              </div>
+            </div>
+          )}
+          
+          {/* Feeding */}
+          {feeding && feeding.total > 0 && (
+            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fbcfe8' }}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🍽️</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Feeding Records</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#db2777' }}>{feeding.total}</div>
+              <div style={{ fontSize: '11px', color: '#db2777' }}>
+                KES {feeding.totalCost?.toFixed(0) || 0} • {feeding.totalQuantity?.toFixed(0) || 0}kg
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

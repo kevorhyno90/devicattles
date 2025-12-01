@@ -4,9 +4,38 @@ import { addMilkExpense, getMilkTotals } from '../lib/finance'
 import { getMilkExpenses } from '../lib/finance'
 
 const SAMPLE_CALVES = [
-  { id: 'CALF-001', tag: 'CALF-101', name: 'Daisy Jr.', damId: 'A-001', damName: 'Bessie', sireId: 'S-101', sireName: 'Premium Bull', dob: '2025-10-15', sex: 'F', breed: 'Holstein', birthWeight: 38, currentWeight: 45, weaningDate: '', weaningWeight: '', healthStatus: 'Healthy', housingType: 'Individual Pen', notes: '', colostrumIntake: 'Adequate', navelTreatment: 'Done', vaccination: [], dehorning: '', castration: 'N/A' },
-  { id: 'CALF-002', tag: 'CALF-102', name: 'Thunder', damId: 'A-002', damName: 'Molly', sireId: 'S-100', sireName: 'Duke', dob: '2025-09-20', sex: 'M', breed: 'Jersey', birthWeight: 32, currentWeight: 55, weaningDate: '2025-11-20', weaningWeight: 75, healthStatus: 'Healthy', housingType: 'Group Pen', notes: 'Strong calf', colostrumIntake: 'Adequate', navelTreatment: 'Done', vaccination: ['Brucella'], dehorning: '2025-10-05', castration: '2025-10-10' },
-  { id: 'CALF-003', tag: 'CALF-103', name: 'Bella', damId: 'A-003', damName: 'Rosie', sireId: 'S-102', sireName: 'Maximus', dob: '2025-08-10', sex: 'F', breed: 'Guernsey', birthWeight: 36, currentWeight: 50, weaningDate: '', weaningWeight: '', healthStatus: 'Healthy', housingType: 'Individual Pen', notes: 'Very active', colostrumIntake: 'Adequate', navelTreatment: 'Done', vaccination: ['Brucella'], dehorning: '', castration: 'N/A' }
+  // 25 sample dairy cows
+  ...Array.from({ length: 25 }).map((_, i) => {
+    let status = '';
+    if (i < 7) status = 'Incalf';
+    else if (i < 17) status = 'Heifer';
+    else status = 'Dry';
+    return {
+      id: `COW-${(i+1).toString().padStart(3, '0')}`,
+      tag: `COW-${(100+i+1).toString().padStart(3, '0')}`,
+      name: `Sample Cow ${i+1}`,
+      damId: `DAM-${(i+1).toString().padStart(3, '0')}`,
+      damName: `Dam ${i+1}`,
+      sireId: `SIRE-${(i+1).toString().padStart(3, '0')}`,
+      sireName: `Sire ${i+1}`,
+      dob: `2025-${String(Math.floor(Math.random()*12+1)).padStart(2,'0')}-${String(Math.floor(Math.random()*28+1)).padStart(2,'0')}`,
+      sex: 'F',
+      breed: ['Holstein', 'Jersey', 'Guernsey', 'Ayrshire', 'Brown Swiss'][i%5],
+      birthWeight: Math.floor(Math.random()*10+30),
+      currentWeight: Math.floor(Math.random()*100+400),
+      weaningDate: '',
+      weaningWeight: '',
+      healthStatus: 'Healthy',
+      housingType: ['Individual Pen', 'Group Pen', 'Barn'][i%3],
+      notes: '',
+      colostrumIntake: 'Adequate',
+      navelTreatment: 'Done',
+      vaccination: [],
+      dehorning: '',
+      castration: 'N/A',
+      status
+    }
+  })
 ]
 
 const HEALTH_STATUS = ['Healthy', 'Sick', 'Under Treatment', 'Quarantine', 'Recovered']
@@ -56,8 +85,22 @@ export default function CalfManagement({ animals }) {
     calfId: '', date: new Date().toISOString().slice(0, 10),
     feedType: 'Milk', quantityKg: '', quantityLiters: '', pricePerKg: '', reason: '', method: 'Bottle',
     temperature: '', notes: '',
-    isWarm: true, isColostrum: false
+    isWarm: true, isColostrum: false,
+    autoKg: false,
+    buyerName: '', buyerContact: '', buyerType: '', buyerNotes: '',
+    paymentMode: '', amountFedToCalves: '', amountConsumed: ''
   })
+  // Auto-calculate kg from liters (1L ≈ 1.03kg)
+  useEffect(() => {
+    if (feedingForm.quantityLiters && (!feedingForm.quantityKg || feedingForm.autoKg)) {
+      const kg = (parseFloat(feedingForm.quantityLiters) * 1.03).toFixed(2)
+      setFeedingForm(f => ({ ...f, quantityKg: kg, autoKg: true }))
+    }
+    // If user edits kg manually, stop autoKg
+    if (feedingForm.quantityKg && feedingForm.autoKg && feedingForm.quantityLiters === '') {
+      setFeedingForm(f => ({ ...f, autoKg: false }))
+    }
+  }, [feedingForm.quantityLiters])
   
   // Health form
   const [healthForm, setHealthForm] = useState({
@@ -168,10 +211,18 @@ export default function CalfManagement({ animals }) {
         quantityKg,
         quantityLiters,
         pricePerKg: parseFloat(feedingForm.pricePerKg),
-        reason: feedingForm.reason || feedingForm.notes || feedingForm.feedType
+        reason: feedingForm.reason || feedingForm.notes || feedingForm.feedType,
+        buyerName: feedingForm.buyerName,
+        buyerContact: feedingForm.buyerContact,
+        buyerType: feedingForm.buyerType,
+        buyerNotes: feedingForm.buyerNotes
       })
     }
-    setFeedingForm({ ...feedingForm, quantityKg: '', quantityLiters: '', pricePerKg: '', reason: '', notes: '' })
+    setFeedingForm({
+      ...feedingForm,
+      quantityKg: '', quantityLiters: '', pricePerKg: '', reason: '', notes: '',
+      buyerName: '', buyerContact: '', buyerType: '', buyerNotes: ''
+    })
   }
 
   function startEditFeeding(record) {
@@ -452,25 +503,72 @@ export default function CalfManagement({ animals }) {
       {/* Feeding Records Tab */}
       {activeTab === 'feeding' && (
         <div>
-          <div className="card" style={{ padding: 16, marginBottom: 16 }}>
-            <h4 style={{ marginTop: 0 }}>Add Feeding Record</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+          <div className="card" style={{ padding: 20, marginBottom: 18, background: '#f8fafc', borderRadius: 10, boxShadow: '0 2px 8px #e0e7ef' }}>
+            <h3 style={{ marginTop: 0, color: '#2563eb' }}>Add Milk Feeding Record</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
               <div>
-                <label>Animal *</label>
-                <select value={feedingForm.calfId} onChange={e => setFeedingForm({ ...feedingForm, calfId: e.target.value })}>
+                <label><strong>Animal *</strong></label>
+                <select value={feedingForm.calfId} onChange={e => setFeedingForm({ ...feedingForm, calfId: e.target.value })} style={{ width: '100%', padding: 6 }}>
                   <option value="">-- Select Animal --</option>
                   {(animals || []).map(a => (
                     <option key={a.id} value={a.id}>{a.name || a.tag} ({a.breed || a.type || ''})</option>
                   ))}
                 </select>
+              <div>
+                <label><strong>Notes</strong></label>
+                <input value={feedingForm.notes} onChange={e => setFeedingForm({ ...feedingForm, notes: e.target.value })} style={{ width: '100%', padding: 6 }} />
+              </div>
+              <div style={{ gridColumn: '1 / -1', marginTop: 10, background: '#e0f2fe', padding: 10, borderRadius: 8 }}>
+                <label style={{ fontWeight: 600, color: '#2563eb' }}>Milk Buyer & Payment Details</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginTop: 6 }}>
+                  <div>
+                    <label>Name</label>
+                    <input value={feedingForm.buyerName} onChange={e => setFeedingForm({ ...feedingForm, buyerName: e.target.value })} style={{ width: '100%', padding: 6 }} placeholder="Buyer name" />
+                  </div>
+                  <div>
+                    <label>Contact</label>
+                    <input value={feedingForm.buyerContact} onChange={e => setFeedingForm({ ...feedingForm, buyerContact: e.target.value })} style={{ width: '100%', padding: 6 }} placeholder="Phone or email" />
+                  </div>
+                  <div>
+                    <label>Type</label>
+                    <select value={feedingForm.buyerType} onChange={e => setFeedingForm({ ...feedingForm, buyerType: e.target.value })} style={{ width: '100%', padding: 6 }}>
+                      <option value="">-- Select --</option>
+                      <option value="Individual">Individual</option>
+                      <option value="Dairy">Dairy</option>
+                      <option value="Cooperative">Cooperative</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Buyer Notes</label>
+                    <input value={feedingForm.buyerNotes} onChange={e => setFeedingForm({ ...feedingForm, buyerNotes: e.target.value })} style={{ width: '100%', padding: 6 }} placeholder="Special instructions, etc." />
+                  </div>
+                  <div>
+                    <label>Payment Mode</label>
+                    <select value={feedingForm.paymentMode} onChange={e => setFeedingForm({ ...feedingForm, paymentMode: e.target.value })} style={{ width: '100%', padding: 6 }}>
+                      <option value="">-- Select --</option>
+                      <option value="Cash">Cash</option>
+                      <option value="Mpesa">Mpesa</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Amount Fed to Calves</label>
+                    <input type="number" step="0.01" value={feedingForm.amountFedToCalves} onChange={e => setFeedingForm({ ...feedingForm, amountFedToCalves: e.target.value })} style={{ width: '100%', padding: 6 }} placeholder="Amount" />
+                  </div>
+                  <div>
+                    <label>Amount Consumed</label>
+                    <input type="number" step="0.01" value={feedingForm.amountConsumed} onChange={e => setFeedingForm({ ...feedingForm, amountConsumed: e.target.value })} style={{ width: '100%', padding: 6 }} placeholder="Amount" />
+                  </div>
+                  <div>
+                    <label>Reason</label>
+                    <input value={feedingForm.reason} onChange={e => setFeedingForm({ ...feedingForm, reason: e.target.value })} style={{ width: '100%', padding: 6 }} placeholder="Reason for transaction" />
+                  </div>
+                </div>
+              </div>
               </div>
               <div>
-                <label>Date</label>
-                <input type="date" value={feedingForm.date} onChange={e => setFeedingForm({ ...feedingForm, date: e.target.value })} />
-              </div>
-              <div>
-                <label>Feed Type</label>
-                <select value={feedingForm.feedType} onChange={e => setFeedingForm({ ...feedingForm, feedType: e.target.value })}>
+                <label><strong>Feed Type</strong></label>
+                <select value={feedingForm.feedType} onChange={e => setFeedingForm({ ...feedingForm, feedType: e.target.value })} style={{ width: '100%', padding: 6 }}>
                   <option value="Milk">Milk</option>
                   <option value="Colostrum">Colostrum (first 36hrs)</option>
                   <option value="Milk Replacer">Milk Replacer</option>
@@ -481,48 +579,60 @@ export default function CalfManagement({ animals }) {
                 </select>
               </div>
               <div>
-                <label>Quantity (kg)</label>
-                <input type="number" step="0.01" value={feedingForm.quantityKg} onChange={e => setFeedingForm({ ...feedingForm, quantityKg: e.target.value })} min="0" />
+                <label><strong>Quantity (liters)</strong></label>
+                <input type="number" step="0.01" value={feedingForm.quantityLiters} onChange={e => setFeedingForm({ ...feedingForm, quantityLiters: e.target.value })} min="0" style={{ width: '100%', padding: 6 }} />
+                <span style={{ fontSize: 12, color: '#666' }}>Auto-calculates kg</span>
               </div>
               <div>
-                <label>Quantity (liters)</label>
-                <input type="number" step="0.01" value={feedingForm.quantityLiters} onChange={e => setFeedingForm({ ...feedingForm, quantityLiters: e.target.value })} min="0" />
+                <label><strong>Quantity (kg)</strong></label>
+                <input type="number" step="0.01" value={feedingForm.quantityKg} onChange={e => setFeedingForm({ ...feedingForm, quantityKg: e.target.value, autoKg: false })} min="0" style={{ width: '100%', padding: 6, background: feedingForm.autoKg ? '#e0f2fe' : undefined }} />
+                {feedingForm.autoKg && <span style={{ fontSize: 12, color: '#059669' }}>Auto from liters</span>}
               </div>
               <div>
-                <label>Price per kg (milk)</label>
-                <input type="number" step="0.01" value={feedingForm.pricePerKg} onChange={e => setFeedingForm({ ...feedingForm, pricePerKg: e.target.value })} min="0" />
+                <label><strong>Price per kg (milk)</strong></label>
+                <input type="number" step="0.01" value={feedingForm.pricePerKg} onChange={e => setFeedingForm({ ...feedingForm, pricePerKg: e.target.value })} min="0" style={{ width: '100%', padding: 6 }} />
               </div>
               <div>
-                <label>Reason/Use</label>
-                <input value={feedingForm.reason} onChange={e => setFeedingForm({ ...feedingForm, reason: e.target.value })} />
+                <label><strong>Reason/Use</strong></label>
+                <input value={feedingForm.reason} onChange={e => setFeedingForm({ ...feedingForm, reason: e.target.value })} style={{ width: '100%', padding: 6 }} />
               </div>
               <div>
-                <label>Method</label>
-                <select value={feedingForm.method} onChange={e => setFeedingForm({ ...feedingForm, method: e.target.value })}>
+                <label><strong>Method</strong></label>
+                <select value={feedingForm.method} onChange={e => setFeedingForm({ ...feedingForm, method: e.target.value })} style={{ width: '100%', padding: 6 }}>
                   {FEEDING_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
               <div>
-                <label>Milk Temperature (°C)</label>
-                <input type="number" step="0.1" value={feedingForm.temperature} onChange={e => setFeedingForm({ ...feedingForm, temperature: e.target.value })} />
+                <label><strong>Milk Temperature (°C)</strong></label>
+                <input type="number" step="0.1" value={feedingForm.temperature} onChange={e => setFeedingForm({ ...feedingForm, temperature: e.target.value })} style={{ width: '60%', padding: 6 }} />
                 <label style={{ marginLeft: 8 }}>
                   <input type="checkbox" checked={feedingForm.isWarm} onChange={e => setFeedingForm({ ...feedingForm, isWarm: e.target.checked })} /> Warm Milk
                 </label>
               </div>
               <div>
-                <label>Colostrum</label>
+                <label><strong>Colostrum</strong></label>
                 <input type="checkbox" checked={feedingForm.isColostrum} onChange={e => setFeedingForm({ ...feedingForm, isColostrum: e.target.checked })} />
                 <span style={{ fontSize: 12, color: '#666', marginLeft: 8 }}>(First 36 hours only)</span>
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
-                <label>Notes</label>
-                <input value={feedingForm.notes} onChange={e => setFeedingForm({ ...feedingForm, notes: e.target.value })} />
+                <label><strong>Notes</strong></label>
+                <input value={feedingForm.notes} onChange={e => setFeedingForm({ ...feedingForm, notes: e.target.value })} style={{ width: '100%', padding: 6 }} />
               </div>
             </div>
-            <div style={{ marginTop: 12, fontSize: 13, color: '#059669', background: '#f0fdf4', padding: 8, borderRadius: 6 }}>
-              <strong>Feeding Guidance:</strong> 1.5L/feeding, every 4hrs/day, warm milk, colostrum in first 36hrs, milk for 4 months (heifers), 3 months (bulls), gradual withdrawal, introduce other feeds at 1 week, ad libitum increase.
+            <div style={{ marginTop: 14, fontSize: 14, color: '#059669', background: '#f0fdf4', padding: 10, borderRadius: 8, lineHeight: 1.7 }}>
+              <strong>Feeding Guidance:</strong><br />
+              <ul style={{ margin: 0, paddingLeft: 18 }}>
+                <li>1.5L per feeding, every 4 hours</li>
+                <li>Milk should be warm (38°C)</li>
+                <li>Colostrum in first 36 hours</li>
+                <li>Milk for 4 months (heifers), 3 months (bulls)</li>
+                <li>Gradual withdrawal after recommended period</li>
+                <li>Introduce other feeds at 1 week</li>
+                <li>Ad libitum increase as calf grows</li>
+                <li>Track feeding history for each calf</li>
+              </ul>
             </div>
-            <button onClick={addFeeding} style={{ marginTop: 12 }}>Add Feeding Record</button>
+            <button onClick={addFeeding} style={{ marginTop: 16, background: '#2563eb', color: '#fff', padding: '8px 18px', borderRadius: 6, fontWeight: 600, fontSize: 15 }}>Add Feeding Record</button>
           </div>
 
           <div className="card" style={{ padding: 0 }}>
@@ -587,6 +697,9 @@ export default function CalfManagement({ animals }) {
                           <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Total Kg</th>
                           <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Total Liters</th>
                           <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Total Amount</th>
+                          <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Fed to Calves</th>
+                          <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Consumed</th>
+                          <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Loss/Spoiled</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -596,6 +709,9 @@ export default function CalfManagement({ animals }) {
                             <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{t.totalKg.toFixed(2)}</td>
                             <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{t.totalLiters.toFixed(2)}</td>
                             <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{formatCurrency(t.totalAmount)}</td>
+                            <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{t.totalFedToCalves.toFixed(2)}</td>
+                            <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{t.totalConsumed.toFixed(2)}</td>
+                            <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{t.totalLoss.toFixed(2)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -610,6 +726,9 @@ export default function CalfManagement({ animals }) {
                           <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Total Kg</th>
                           <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Total Liters</th>
                           <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Total Amount</th>
+                          <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Fed to Calves</th>
+                          <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Consumed</th>
+                          <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Loss/Spoiled</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -619,6 +738,9 @@ export default function CalfManagement({ animals }) {
                             <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{t.totalKg.toFixed(2)}</td>
                             <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{t.totalLiters.toFixed(2)}</td>
                             <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{formatCurrency(t.totalAmount)}</td>
+                            <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{t.totalFedToCalves.toFixed(2)}</td>
+                            <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{t.totalConsumed.toFixed(2)}</td>
+                            <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{t.totalLoss.toFixed(2)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -627,7 +749,7 @@ export default function CalfManagement({ animals }) {
                   <div>
                     <strong>All Milk Finance Records:</strong>
                     {(() => {
-                      // Show all milk records, including owner, workers, loss, etc.
+                      // Show all milk records, including buyer details
                       const milkRecords = getMilkExpenses();
                       if (!milkRecords.length) return <div style={{ color: '#888', marginTop: 8 }}>No milk finance records found.</div>;
                       return (
@@ -641,6 +763,13 @@ export default function CalfManagement({ animals }) {
                               <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Price/kg</th>
                               <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Amount</th>
                               <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Reason/Use</th>
+                              <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Buyer Name</th>
+                              <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Buyer Contact</th>
+                              <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Buyer Type</th>
+                              <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Buyer Notes</th>
+                              <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Payment Mode</th>
+                              <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Amount Fed to Calves</th>
+                              <th style={{ padding: '6px', border: '1px solid #e5e7eb' }}>Amount Consumed</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -655,9 +784,41 @@ export default function CalfManagement({ animals }) {
                                   <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.pricePerKg ? formatCurrency(rec.pricePerKg) : '-'}</td>
                                   <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.amount ? formatCurrency(rec.amount) : '-'}</td>
                                   <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.reason || '-'}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.buyerName || '-'}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.buyerContact || '-'}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.buyerType || '-'}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.buyerNotes || '-'}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.paymentMode || '-'}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.amountFedToCalves || '-'}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{rec.amountConsumed || '-'}</td>
                                 </tr>
                               );
                             })}
+                            {/* Summary row for totals */}
+                            {milkRecords.length > 0 && (() => {
+                              const totalKg = milkRecords.reduce((sum, r) => sum + (parseFloat(r.quantityKg) || 0), 0);
+                              const totalLiters = milkRecords.reduce((sum, r) => sum + (parseFloat(r.quantityLiters) || 0), 0);
+                              const totalAmount = milkRecords.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+                              const totalFedToCalves = milkRecords.reduce((sum, r) => sum + (parseFloat(r.amountFedToCalves) || 0), 0);
+                              const totalConsumed = milkRecords.reduce((sum, r) => sum + (parseFloat(r.amountConsumed) || 0), 0);
+                              const totalLoss = milkRecords.reduce((sum, r) => sum + (parseFloat(r.amountLoss) || 0), 0);
+                              return (
+                                <tr style={{ background: '#e0f2fe', fontWeight: 600 }}>
+                                  <td colSpan={2} style={{ padding: '6px', border: '1px solid #e5e7eb' }}>TOTAL</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{totalKg.toFixed(2)}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{totalLiters.toFixed(2)}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>-</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{formatCurrency(totalAmount)}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>-</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>-</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>-</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>-</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>-</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{totalFedToCalves.toFixed(2)}</td>
+                                  <td style={{ padding: '6px', border: '1px solid #e5e7eb' }}>{totalConsumed.toFixed(2)}</td>
+                                </tr>
+                              );
+                            })()}
                           </tbody>
                         </table>
                       );

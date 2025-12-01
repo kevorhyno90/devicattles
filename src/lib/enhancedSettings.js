@@ -99,7 +99,10 @@ const DEFAULT_ENHANCED_SETTINGS = {
     defaultTaskSort: 'dueDate',
     showCompletedTasks: false,
     theme: 'catalytics'
-  }
+  },
+  
+  // 7. Custom Fields (user-defined settings)
+  customFields: {}
 }
 
 // Currency options
@@ -163,7 +166,8 @@ export function getEnhancedSettings() {
         notifications: { ...DEFAULT_ENHANCED_SETTINGS.notifications, ...(stored.notifications || {}) },
         dataManagement: { ...DEFAULT_ENHANCED_SETTINGS.dataManagement, ...(stored.dataManagement || {}) },
         security: { ...DEFAULT_ENHANCED_SETTINGS.security, ...(stored.security || {}) },
-        system: { ...DEFAULT_ENHANCED_SETTINGS.system, ...(stored.system || {}) }
+        system: { ...DEFAULT_ENHANCED_SETTINGS.system, ...(stored.system || {}) },
+        customFields: { ...DEFAULT_ENHANCED_SETTINGS.customFields, ...(stored.customFields || {}) }
       }
     }
     return DEFAULT_ENHANCED_SETTINGS
@@ -330,4 +334,243 @@ export function importEnhancedSettings(file) {
     reader.onerror = () => reject(new Error('Failed to read file'))
     reader.readAsText(file)
   })
+}
+
+// Settings History Management
+const SETTINGS_HISTORY_KEY = 'devinsfarm:enhanced:settings:history'
+const MAX_HISTORY_ENTRIES = 20
+
+// Save settings with history tracking
+export function saveEnhancedSettingsWithHistory(settings, comment = '') {
+  try {
+    // Save current settings
+    const saved = saveEnhancedSettings(settings)
+    if (!saved) return false
+
+    // Add to history
+    const history = getSettingsHistory()
+    const entry = {
+      id: 'history-' + Date.now(),
+      timestamp: new Date().toISOString(),
+      settings: JSON.parse(JSON.stringify(settings)), // Deep clone
+      comment: comment || 'Settings updated',
+      user: 'Current User' // Can be enhanced with actual user info
+    }
+
+    history.unshift(entry)
+
+    // Keep only MAX_HISTORY_ENTRIES
+    if (history.length > MAX_HISTORY_ENTRIES) {
+      history.splice(MAX_HISTORY_ENTRIES)
+    }
+
+    localStorage.setItem(SETTINGS_HISTORY_KEY, JSON.stringify(history))
+    return true
+  } catch (err) {
+    console.error('Failed to save settings with history:', err)
+    return false
+  }
+}
+
+// Get settings history
+export function getSettingsHistory() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_HISTORY_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch (err) {
+    console.error('Failed to get settings history:', err)
+    return []
+  }
+}
+
+// Restore settings from history
+export function restoreSettingsFromHistory(historyId) {
+  try {
+    const history = getSettingsHistory()
+    const entry = history.find(h => h.id === historyId)
+    
+    if (!entry) {
+      return { success: false, error: 'History entry not found' }
+    }
+
+    // Save the restored settings
+    if (saveEnhancedSettings(entry.settings)) {
+      // Add a new history entry for the restore action
+      const restoreEntry = {
+        id: 'history-' + Date.now(),
+        timestamp: new Date().toISOString(),
+        settings: JSON.parse(JSON.stringify(entry.settings)),
+        comment: `Restored from ${new Date(entry.timestamp).toLocaleString()}`,
+        user: 'Current User'
+      }
+      
+      history.unshift(restoreEntry)
+      if (history.length > MAX_HISTORY_ENTRIES) {
+        history.splice(MAX_HISTORY_ENTRIES)
+      }
+      localStorage.setItem(SETTINGS_HISTORY_KEY, JSON.stringify(history))
+      
+      return { success: true, settings: entry.settings }
+    }
+    
+    return { success: false, error: 'Failed to save restored settings' }
+  } catch (err) {
+    console.error('Failed to restore settings:', err)
+    return { success: false, error: err.message }
+  }
+}
+
+// Clear settings history
+export function clearSettingsHistory() {
+  try {
+    localStorage.removeItem(SETTINGS_HISTORY_KEY)
+    return true
+  } catch (err) {
+    console.error('Failed to clear settings history:', err)
+    return false
+  }
+}
+
+// Custom Fields Management
+// Add custom field
+export function addCustomField(fieldKey, fieldValue, fieldType = 'text', fieldLabel = '') {
+  try {
+    const settings = getEnhancedSettings()
+    settings.customFields[fieldKey] = {
+      value: fieldValue,
+      type: fieldType, // 'text', 'number', 'boolean', 'date', 'select'
+      label: fieldLabel || fieldKey,
+      createdAt: new Date().toISOString()
+    }
+    return saveEnhancedSettings(settings)
+  } catch (err) {
+    console.error('Failed to add custom field:', err)
+    return false
+  }
+}
+
+// Update custom field
+export function updateCustomField(fieldKey, fieldValue) {
+  try {
+    const settings = getEnhancedSettings()
+    if (!settings.customFields[fieldKey]) {
+      return { success: false, error: 'Field not found' }
+    }
+    settings.customFields[fieldKey].value = fieldValue
+    settings.customFields[fieldKey].updatedAt = new Date().toISOString()
+    return saveEnhancedSettings(settings) ? { success: true } : { success: false, error: 'Failed to save' }
+  } catch (err) {
+    console.error('Failed to update custom field:', err)
+    return { success: false, error: err.message }
+  }
+}
+
+// Delete custom field
+export function deleteCustomField(fieldKey) {
+  try {
+    const settings = getEnhancedSettings()
+    delete settings.customFields[fieldKey]
+    return saveEnhancedSettings(settings)
+  } catch (err) {
+    console.error('Failed to delete custom field:', err)
+    return false
+  }
+}
+
+// Get all custom fields
+export function getCustomFields() {
+  try {
+    const settings = getEnhancedSettings()
+    return settings.customFields || {}
+  } catch (err) {
+    console.error('Failed to get custom fields:', err)
+    return {}
+  }
+}
+
+// Multi-User Preferences
+const USER_SETTINGS_KEY = 'devinsfarm:user:settings'
+
+// Get user-specific settings (if logged in)
+export function getUserSettings(userId) {
+  try {
+    if (!userId) return null
+    const raw = localStorage.getItem(USER_SETTINGS_KEY)
+    const userSettings = raw ? JSON.parse(raw) : {}
+    return userSettings[userId] || null
+  } catch (err) {
+    console.error('Failed to get user settings:', err)
+    return null
+  }
+}
+
+// Save user-specific settings
+export function saveUserSettings(userId, settings) {
+  try {
+    if (!userId) return false
+    const raw = localStorage.getItem(USER_SETTINGS_KEY)
+    const userSettings = raw ? JSON.parse(raw) : {}
+    userSettings[userId] = {
+      ...settings,
+      userId,
+      lastUpdated: new Date().toISOString()
+    }
+    localStorage.setItem(USER_SETTINGS_KEY, JSON.stringify(userSettings))
+    return true
+  } catch (err) {
+    console.error('Failed to save user settings:', err)
+    return false
+  }
+}
+
+// Get effective settings (user-specific if available, otherwise global)
+export function getEffectiveSettings(userId = null) {
+  try {
+    const globalSettings = getEnhancedSettings()
+    if (!userId) return globalSettings
+    
+    const userSettings = getUserSettings(userId)
+    if (!userSettings) return globalSettings
+    
+    // Merge user settings with global settings (user settings take precedence)
+    return {
+      farmInfo: { ...globalSettings.farmInfo, ...(userSettings.farmInfo || {}) },
+      regional: { ...globalSettings.regional, ...(userSettings.regional || {}) },
+      notifications: { ...globalSettings.notifications, ...(userSettings.notifications || {}) },
+      dataManagement: { ...globalSettings.dataManagement, ...(userSettings.dataManagement || {}) },
+      security: { ...globalSettings.security, ...(userSettings.security || {}) },
+      system: { ...globalSettings.system, ...(userSettings.system || {}) },
+      customFields: { ...globalSettings.customFields, ...(userSettings.customFields || {}) }
+    }
+  } catch (err) {
+    console.error('Failed to get effective settings:', err)
+    return getEnhancedSettings()
+  }
+}
+
+// Clear user-specific settings (revert to global)
+export function clearUserSettings(userId) {
+  try {
+    if (!userId) return false
+    const raw = localStorage.getItem(USER_SETTINGS_KEY)
+    const userSettings = raw ? JSON.parse(raw) : {}
+    delete userSettings[userId]
+    localStorage.setItem(USER_SETTINGS_KEY, JSON.stringify(userSettings))
+    return true
+  } catch (err) {
+    console.error('Failed to clear user settings:', err)
+    return false
+  }
+}
+
+// Get all users who have custom settings
+export function getUsersWithCustomSettings() {
+  try {
+    const raw = localStorage.getItem(USER_SETTINGS_KEY)
+    const userSettings = raw ? JSON.parse(raw) : {}
+    return Object.keys(userSettings)
+  } catch (err) {
+    console.error('Failed to get users with custom settings:', err)
+    return []
+  }
 }

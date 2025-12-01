@@ -3,7 +3,19 @@ import { useTheme } from '../lib/theme'
 import {
   getEnhancedSettings,
   saveEnhancedSettings,
+  saveEnhancedSettingsWithHistory,
+  getSettingsHistory,
+  restoreSettingsFromHistory,
+  clearSettingsHistory,
   updateSettingsSection,
+  addCustomField,
+  updateCustomField,
+  deleteCustomField,
+  getCustomFields,
+  getUserSettings,
+  saveUserSettings,
+  getEffectiveSettings,
+  clearUserSettings,
   CURRENCIES,
   LANGUAGES,
   TIMEZONES,
@@ -18,16 +30,143 @@ export default function EnhancedSettings() {
   const [settings, setSettings] = useState(getEnhancedSettings())
   const [activeTab, setActiveTab] = useState('farm')
   const [saved, setSaved] = useState(false)
+  const [settingsHistory, setSettingsHistory] = useState(getSettingsHistory())
+  const [currentUser, setCurrentUser] = useState(null)
+  const [useUserSettings, setUseUserSettings] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
+  const [validationErrors, setValidationErrors] = useState({})
 
   useEffect(() => {
-    setSettings(getEnhancedSettings())
+    // Get current user and load their settings
+    import('../lib/auth').then(({ getCurrentSession }) => {
+      const session = getCurrentSession()
+      if (session) {
+        setCurrentUser(session)
+        const userSettings = getUserSettings(session.userId)
+        if (userSettings) {
+          setUseUserSettings(true)
+          setSettings(getEffectiveSettings(session.userId))
+        } else {
+          setSettings(getEnhancedSettings())
+        }
+      } else {
+        setSettings(getEnhancedSettings())
+      }
+    })
+    setSettingsHistory(getSettingsHistory())
   }, [])
 
   const handleSave = () => {
-    if (saveEnhancedSettings(settings)) {
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
-      window.dispatchEvent(new Event('settingsUpdated'))
+    // Save to user-specific or global settings based on preference
+    if (currentUser && useUserSettings) {
+      if (saveUserSettings(currentUser.userId, settings)) {
+        setSaved(true)
+        setTimeout(() => setSaved(false), 3000)
+        window.dispatchEvent(new Event('settingsUpdated'))
+      }
+    } else {
+      if (saveEnhancedSettingsWithHistory(settings, 'Manual save')) {
+        setSaved(true)
+        setTimeout(() => setSaved(false), 3000)
+        setSettingsHistory(getSettingsHistory())
+        window.dispatchEvent(new Event('settingsUpdated'))
+      }
+    }
+  }
+
+  const handleToggleUserSettings = () => {
+    if (!currentUser) return
+    
+    if (useUserSettings) {
+      // Switch to global settings
+      if (confirm('Switch to global settings? Your personal preferences will be kept but not used.')) {
+        setUseUserSettings(false)
+        setSettings(getEnhancedSettings())
+      }
+    } else {
+      // Switch to user-specific settings
+      if (confirm('Enable personal preferences? You can customize settings just for your account.')) {
+        setUseUserSettings(true)
+        const effectiveSettings = getEffectiveSettings(currentUser.userId)
+        saveUserSettings(currentUser.userId, effectiveSettings)
+        setSettings(effectiveSettings)
+      }
+    }
+  }
+
+  const handleClearUserSettings = () => {
+    if (!currentUser) return
+    if (confirm('Clear your personal settings and revert to global settings?')) {
+      if (clearUserSettings(currentUser.userId)) {
+        setUseUserSettings(false)
+        setSettings(getEnhancedSettings())
+        alert('✅ Personal settings cleared!')
+      }
+    }
+  }
+
+  // Validation for settings fields
+  const validateField = (section, field, value) => {
+    const errors = {}
+    
+    // Email validation
+    if (field === 'email' && value) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(value)) {
+        errors[`${section}.${field}`] = 'Invalid email format'
+      }
+    }
+    
+    // Phone validation
+    if (field === 'phone' && value) {
+      const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/
+      if (!phoneRegex.test(value.replace(/\s/g, ''))) {
+        errors[`${section}.${field}`] = 'Invalid phone format'
+      }
+    }
+    
+    // Number range validation
+    if (field === 'sessionTimeout' && value < 5) {
+      errors[`${section}.${field}`] = 'Session timeout must be at least 5 minutes'
+    }
+    if (field === 'passwordMinLength' && (value < 4 || value > 32)) {
+      errors[`${section}.${field}`] = 'Password length must be between 4 and 32'
+    }
+    if (field === 'itemsPerPage' && (value < 5 || value > 100)) {
+      errors[`${section}.${field}`] = 'Items per page must be between 5 and 100'
+    }
+    if (field === 'refreshInterval' && value < 10) {
+      errors[`${section}.${field}`] = 'Refresh interval must be at least 10 seconds'
+    }
+    if (field === 'backupFrequency' && value < 1) {
+      errors[`${section}.${field}`] = 'Backup frequency must be at least 1 day'
+    }
+    if (field === 'lowStockThreshold' && (value < 0 || value > 100)) {
+      errors[`${section}.${field}`] = 'Threshold must be between 0 and 100'
+    }
+    
+    return errors
+  }
+
+  const handleRestoreHistory = (historyId) => {
+    if (confirm('Are you sure you want to restore settings from this point in history?')) {
+      const result = restoreSettingsFromHistory(historyId)
+      if (result.success) {
+        setSettings(result.settings)
+        setSettingsHistory(getSettingsHistory())
+        window.location.reload()
+      } else {
+        alert('❌ Failed to restore settings: ' + result.error)
+      }
+    }
+  }
+
+  const handleClearHistory = () => {
+    if (confirm('Are you sure you want to clear all settings history? This cannot be undone.')) {
+      if (clearSettingsHistory()) {
+        setSettingsHistory([])
+        alert('✅ History cleared successfully!')
+      }
     }
   }
 
@@ -58,13 +197,44 @@ export default function EnhancedSettings() {
   }
 
   const updateSection = (section, field, value) => {
-    setSettings(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value
+    // Validate the field
+    const fieldErrors = validateField(section, field, value)
+    setValidationErrors(prev => {
+      const newErrors = { ...prev }
+      // Remove old error for this field
+      delete newErrors[`${section}.${field}`]
+      // Add new errors if any
+      return { ...newErrors, ...fieldErrors }
+    })
+    
+    setSettings(prev => {
+      const updated = {
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [field]: value
+        }
       }
-    }))
+      // Advanced audit logging for every settings change
+      try {
+        // Dynamically import logAction from audit.js
+        import('../lib/audit').then(({ logAction, ACTIONS, ENTITIES }) => {
+          logAction(
+            ACTIONS.UPDATE,
+            ENTITIES.SYSTEM,
+            section,
+            {
+              key: field,
+              value,
+              prevValue: prev[section][field]
+            }
+          )
+        })
+      } catch (err) {
+        // Fail silently for audit logging
+      }
+      return updated
+    })
   }
 
   const tabs = [
@@ -73,19 +243,101 @@ export default function EnhancedSettings() {
     { id: 'notifications', icon: '🔔', label: 'Notifications' },
     { id: 'data', icon: '💾', label: 'Data' },
     { id: 'security', icon: '🔐', label: 'Security' },
-    { id: 'system', icon: '⚙️', label: 'System' }
+    { id: 'system', icon: '⚙️', label: 'System' },
+    { id: 'custom', icon: '🎨', label: 'Custom Fields' },
+    { id: 'history', icon: '📜', label: 'History' }
   ]
 
   const { theme, toggleTheme } = useTheme()
+
+  // User access control: Only MANAGER can edit settings, others view-only
+  const [canEdit, setCanEdit] = useState(false);
+  useEffect(() => {
+    import('../lib/auth').then(({ getCurrentSession }) => {
+      const session = getCurrentSession();
+      setCanEdit(session && session.role === 'MANAGER');
+    });
+  }, []);
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '8px' }}>Enhanced Settings</h2>
-          <p style={{ color: '#6b7280', margin: 0 }}>Customize your farm management experience</p>
+          <p style={{ color: '#6b7280', margin: 0 }}>
+            Customize your farm management experience
+            {currentUser && (
+              <span style={{ marginLeft: '8px' }}>
+                • Logged in as <strong>{currentUser.name}</strong>
+                {useUserSettings && (
+                  <span style={{
+                    marginLeft: '8px',
+                    background: '#dbeafe',
+                    color: '#1e40af',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: '600'
+                  }}>
+                    👤 Personal Settings
+                  </span>
+                )}
+              </span>
+            )}
+          </p>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {currentUser && (
+            <button
+              onClick={handleToggleUserSettings}
+              style={{
+                padding: '8px 16px',
+                fontSize: '14px',
+                background: useUserSettings ? '#3b82f6' : '#6b7280',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              {useUserSettings ? '👤 Personal' : '🌍 Global'}
+            </button>
+          )}
+          {currentUser && useUserSettings && (
+            <button
+              onClick={handleClearUserSettings}
+              style={{
+                padding: '8px 16px',
+                fontSize: '14px',
+                background: '#ef4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+              title="Clear personal settings and revert to global"
+            >
+              ↩️ Reset
+            </button>
+          )}
+          <button
+            onClick={() => setShowPreview(!showPreview)}
+            style={{
+              padding: '8px 16px',
+              fontSize: '14px',
+              background: showPreview ? '#8b5cf6' : '#6b7280',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+            title="Toggle visual preview"
+          >
+            {showPreview ? '👁️ Hide Preview' : '👁️ Show Preview'}
+          </button>
                     <button
                       onClick={toggleTheme}
                       style={{
@@ -133,6 +385,28 @@ export default function EnhancedSettings() {
         </div>
       )}
 
+      {Object.keys(validationErrors).length > 0 && (
+        <div style={{
+          background: '#fee2e2',
+          border: '1px solid #ef4444',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          color: '#991b1b'
+        }}>
+          <div style={{ fontWeight: '600', marginBottom: '8px' }}>
+            ⚠️ {Object.keys(validationErrors).length} Validation Error(s):
+          </div>
+          <ul style={{ margin: 0, paddingLeft: '20px' }}>
+            {Object.entries(validationErrors).map(([field, error]) => (
+              <li key={field}>
+                <strong>{field}:</strong> {error}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '2px solid #e5e7eb', overflowX: 'auto' }}>
         {tabs.map(tab => (
           <button
@@ -156,13 +430,68 @@ export default function EnhancedSettings() {
         ))}
       </div>
 
+      {showPreview && (
+        <div style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          padding: '20px',
+          borderRadius: '12px',
+          marginBottom: '24px',
+          color: 'white',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+        }}>
+          <h3 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: '600' }}>
+            👁️ Live Preview
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '14px' }}>
+            <div>
+              <div style={{ opacity: 0.9, marginBottom: '4px' }}>Currency Format:</div>
+              <div style={{ fontWeight: '600', fontSize: '18px' }}>
+                {formatCurrency(12345.67)}
+              </div>
+            </div>
+            <div>
+              <div style={{ opacity: 0.9, marginBottom: '4px' }}>Date Format:</div>
+              <div style={{ fontWeight: '600', fontSize: '18px' }}>
+                {formatDate(new Date(), true)}
+              </div>
+            </div>
+            <div>
+              <div style={{ opacity: 0.9, marginBottom: '4px' }}>Theme:</div>
+              <div style={{ fontWeight: '600', fontSize: '18px' }}>
+                {settings.system?.theme || 'catalytics'}
+              </div>
+            </div>
+            <div>
+              <div style={{ opacity: 0.9, marginBottom: '4px' }}>Items Per Page:</div>
+              <div style={{ fontWeight: '600', fontSize: '18px' }}>
+                {settings.system?.itemsPerPage || 20}
+              </div>
+            </div>
+            <div>
+              <div style={{ opacity: 0.9, marginBottom: '4px' }}>Measurement System:</div>
+              <div style={{ fontWeight: '600', fontSize: '18px' }}>
+                {settings.regional?.measurementSystem === 'metric' ? 'Metric (kg, L)' : 'Imperial (lbs, gal)'}
+              </div>
+            </div>
+            <div>
+              <div style={{ opacity: 0.9, marginBottom: '4px' }}>Language:</div>
+              <div style={{ fontWeight: '600', fontSize: '18px' }}>
+                {settings.regional?.language?.toUpperCase() || 'EN'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        {activeTab === 'farm' && <FarmInfoTab settings={settings.farmInfo} updateSection={updateSection} />}
-        {activeTab === 'regional' && <RegionalTab settings={settings.regional} updateSection={updateSection} />}
-        {activeTab === 'notifications' && <NotificationsTab settings={settings.notifications} updateSection={updateSection} />}
-        {activeTab === 'data' && <DataManagementTab settings={settings.dataManagement} updateSection={updateSection} />}
-        {activeTab === 'security' && <SecurityTab settings={settings.security} updateSection={updateSection} />}
-        {activeTab === 'system' && <SystemTab settings={settings.system} updateSection={updateSection} />}
+        {activeTab === 'farm' && <FarmInfoTab settings={settings.farmInfo} updateSection={updateSection} canEdit={canEdit} />}
+        {activeTab === 'regional' && <RegionalTab settings={settings.regional} updateSection={updateSection} canEdit={canEdit} />}
+        {activeTab === 'notifications' && <NotificationsTab settings={settings.notifications} updateSection={updateSection} canEdit={canEdit} />}
+        {activeTab === 'data' && <DataManagementTab settings={settings.dataManagement} updateSection={updateSection} canEdit={canEdit} />}
+        {activeTab === 'security' && <SecurityTab settings={settings.security} updateSection={updateSection} canEdit={canEdit} />}
+        {activeTab === 'system' && <SystemTab settings={settings.system} updateSection={updateSection} canEdit={canEdit} />}
+        {activeTab === 'custom' && <CustomFieldsTab customFields={settings.customFields} onRefresh={() => setSettings(getEnhancedSettings())} canEdit={canEdit} />}
+        {activeTab === 'history' && <HistoryTab history={settingsHistory} onRestore={handleRestoreHistory} onClear={handleClearHistory} canEdit={canEdit} />}
       </div>
 
       <div style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
@@ -173,8 +502,9 @@ export default function EnhancedSettings() {
           border: 'none',
           borderRadius: '8px',
           fontWeight: '600',
-          cursor: 'pointer'
-        }}>
+          cursor: canEdit ? 'pointer' : 'not-allowed',
+          opacity: canEdit ? 1 : 0.5
+        }} disabled={!canEdit}>
           Reset to Defaults
         </button>
         <button onClick={handleSave} style={{ 
@@ -184,9 +514,10 @@ export default function EnhancedSettings() {
           border: 'none',
           borderRadius: '8px',
           fontWeight: '600',
-          cursor: 'pointer',
-          fontSize: '16px'
-        }}>
+          cursor: canEdit ? 'pointer' : 'not-allowed',
+          fontSize: '16px',
+          opacity: canEdit ? 1 : 0.5
+        }} disabled={!canEdit}>
           💾 Save All Settings
         </button>
       </div>
@@ -687,11 +1018,32 @@ function SystemTab({ settings, updateSection }) {
   )
 }
 
-function InputField({ label, value, onChange, type = 'text' }) {
+function InputField({ label, value, onChange, type = 'text', tooltip, error }) {
   return (
     <div>
       <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px' }}>
         {label}
+        {tooltip && (
+          <span
+            title={tooltip}
+            style={{
+              marginLeft: '6px',
+              cursor: 'help',
+              background: '#3b82f6',
+              color: 'white',
+              borderRadius: '50%',
+              width: '16px',
+              height: '16px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '11px',
+              fontWeight: '700'
+            }}
+          >
+            ?
+          </span>
+        )}
       </label>
       <input
         type={type}
@@ -701,19 +1053,46 @@ function InputField({ label, value, onChange, type = 'text' }) {
           width: '100%',
           padding: '10px 12px',
           borderRadius: '8px',
-          border: '1px solid #d1d5db',
-          fontSize: '14px'
+          border: error ? '2px solid #ef4444' : '1px solid #d1d5db',
+          fontSize: '14px',
+          background: error ? '#fee2e2' : 'white'
         }}
       />
+      {error && (
+        <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', fontWeight: '500' }}>
+          {error}
+        </div>
+      )}
     </div>
   )
 }
 
-function SelectField({ label, value, onChange, options }) {
+function SelectField({ label, value, onChange, options, tooltip }) {
   return (
     <div>
       <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px' }}>
         {label}
+        {tooltip && (
+          <span
+            title={tooltip}
+            style={{
+              marginLeft: '6px',
+              cursor: 'help',
+              background: '#3b82f6',
+              color: 'white',
+              borderRadius: '50%',
+              width: '16px',
+              height: '16px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '11px',
+              fontWeight: '700'
+            }}
+          >
+            ?
+          </span>
+        )}
       </label>
       <select
         value={value}
@@ -734,11 +1113,32 @@ function SelectField({ label, value, onChange, options }) {
   )
 }
 
-function NumberField({ label, value, onChange }) {
+function NumberField({ label, value, onChange, tooltip, error }) {
   return (
     <div>
       <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px' }}>
         {label}
+        {tooltip && (
+          <span
+            title={tooltip}
+            style={{
+              marginLeft: '6px',
+              cursor: 'help',
+              background: '#3b82f6',
+              color: 'white',
+              borderRadius: '50%',
+              width: '16px',
+              height: '16px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '11px',
+              fontWeight: '700'
+            }}
+          >
+            ?
+          </span>
+        )}
       </label>
       <input
         type="number"
@@ -748,15 +1148,21 @@ function NumberField({ label, value, onChange }) {
           width: '100%',
           padding: '10px 12px',
           borderRadius: '8px',
-          border: '1px solid #d1d5db',
-          fontSize: '14px'
+          border: error ? '2px solid #ef4444' : '1px solid #d1d5db',
+          fontSize: '14px',
+          background: error ? '#fee2e2' : 'white'
         }}
       />
+      {error && (
+        <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', fontWeight: '500' }}>
+          {error}
+        </div>
+      )}
     </div>
   )
 }
 
-function CheckboxField({ label, checked, onChange }) {
+function CheckboxField({ label, checked, onChange, tooltip }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
       <input
@@ -767,7 +1173,403 @@ function CheckboxField({ label, checked, onChange }) {
       />
       <label style={{ fontWeight: '500', fontSize: '14px', cursor: 'pointer' }}>
         {label}
+        {tooltip && (
+          <span
+            title={tooltip}
+            style={{
+              marginLeft: '6px',
+              cursor: 'help',
+              background: '#3b82f6',
+              color: 'white',
+              borderRadius: '50%',
+              width: '16px',
+              height: '16px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '11px',
+              fontWeight: '700'
+            }}
+          >
+            ?
+          </span>
+        )}
       </label>
+    </div>
+  )
+}
+
+function CustomFieldsTab({ customFields, onRefresh, canEdit }) {
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newField, setNewField] = useState({ key: '', value: '', type: 'text', label: '' })
+
+  const handleAddField = () => {
+    if (!newField.key || !newField.label) {
+      alert('❌ Please provide both field key and label')
+      return
+    }
+    if (addCustomField(newField.key, newField.value, newField.type, newField.label)) {
+      setShowAddForm(false)
+      setNewField({ key: '', value: '', type: 'text', label: '' })
+      onRefresh()
+      alert('✅ Custom field added successfully!')
+    } else {
+      alert('❌ Failed to add custom field')
+    }
+  }
+
+  const handleDeleteField = (fieldKey) => {
+    if (confirm(`Are you sure you want to delete the custom field "${fieldKey}"?`)) {
+      if (deleteCustomField(fieldKey)) {
+        onRefresh()
+        alert('✅ Custom field deleted successfully!')
+      } else {
+        alert('❌ Failed to delete custom field')
+      }
+    }
+  }
+
+  const handleUpdateField = (fieldKey, newValue) => {
+    const result = updateCustomField(fieldKey, newValue)
+    if (result.success) {
+      onRefresh()
+    } else {
+      alert('❌ Failed to update custom field: ' + result.error)
+    }
+  }
+
+  const fieldKeys = Object.keys(customFields)
+
+  return (
+    <div style={{ display: 'grid', gap: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700' }}>🎨 Custom Fields</h3>
+          <p style={{ margin: '8px 0 0', color: '#6b7280', fontSize: '14px' }}>
+            Add your own custom settings fields to track farm-specific data
+          </p>
+        </div>
+        {canEdit && (
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            style={{
+              padding: '8px 16px',
+              background: '#10b981',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            {showAddForm ? '❌ Cancel' : '➕ Add Field'}
+          </button>
+        )}
+      </div>
+
+      {showAddForm && (
+        <div style={{
+          background: '#f0fdf4',
+          border: '2px solid #10b981',
+          padding: '20px',
+          borderRadius: '8px'
+        }}>
+          <h4 style={{ margin: '0 0 16px', fontSize: '1rem', fontWeight: '600' }}>Add New Custom Field</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <InputField
+              label="Field Key (unique identifier)"
+              value={newField.key}
+              onChange={(v) => setNewField({ ...newField, key: v.toLowerCase().replace(/\s+/g, '_') })}
+            />
+            <InputField
+              label="Field Label (display name)"
+              value={newField.label}
+              onChange={(v) => setNewField({ ...newField, label: v })}
+            />
+            <SelectField
+              label="Field Type"
+              value={newField.type}
+              onChange={(v) => setNewField({ ...newField, type: v })}
+              options={[
+                { value: 'text', label: 'Text' },
+                { value: 'number', label: 'Number' },
+                { value: 'boolean', label: 'Yes/No' },
+                { value: 'date', label: 'Date' }
+              ]}
+            />
+            {newField.type === 'text' && (
+              <InputField
+                label="Default Value"
+                value={newField.value}
+                onChange={(v) => setNewField({ ...newField, value: v })}
+              />
+            )}
+            {newField.type === 'number' && (
+              <NumberField
+                label="Default Value"
+                value={newField.value}
+                onChange={(v) => setNewField({ ...newField, value: v })}
+              />
+            )}
+            {newField.type === 'boolean' && (
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px' }}>Default Value</label>
+                <CheckboxField
+                  label="Enabled"
+                  checked={newField.value}
+                  onChange={(v) => setNewField({ ...newField, value: v })}
+                />
+              </div>
+            )}
+          </div>
+          <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+            <button
+              onClick={handleAddField}
+              style={{
+                padding: '10px 20px',
+                background: '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              ✅ Add Field
+            </button>
+            <button
+              onClick={() => setShowAddForm(false)}
+              style={{
+                padding: '10px 20px',
+                background: '#6b7280',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {fieldKeys.length === 0 ? (
+        <div style={{
+          background: '#f3f4f6',
+          padding: '40px',
+          borderRadius: '8px',
+          textAlign: 'center',
+          color: '#6b7280'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎨</div>
+          <div style={{ fontSize: '16px', fontWeight: '600' }}>No custom fields yet</div>
+          <div style={{ fontSize: '14px', marginTop: '8px' }}>Add custom fields to track farm-specific data</div>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: '16px' }}>
+          {fieldKeys.map(key => {
+            const field = customFields[key]
+            return (
+              <div
+                key={key}
+                style={{
+                  background: '#f9fafb',
+                  border: '1px solid #e5e7eb',
+                  padding: '16px',
+                  borderRadius: '8px'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
+                  <div>
+                    <div style={{ fontWeight: '600', fontSize: '14px', marginBottom: '4px' }}>
+                      {field.label}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                      Key: <code style={{ background: '#e5e7eb', padding: '2px 6px', borderRadius: '4px' }}>{key}</code>
+                      {' • '}
+                      Type: {field.type}
+                    </div>
+                  </div>
+                  {canEdit && (
+                    <button
+                      onClick={() => handleDeleteField(key)}
+                      style={{
+                        padding: '6px 12px',
+                        background: '#ef4444',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      🗑️ Delete
+                    </button>
+                  )}
+                </div>
+                <div>
+                  {field.type === 'text' && (
+                    <InputField
+                      label="Value"
+                      value={field.value}
+                      onChange={(v) => handleUpdateField(key, v)}
+                    />
+                  )}
+                  {field.type === 'number' && (
+                    <NumberField
+                      label="Value"
+                      value={field.value}
+                      onChange={(v) => handleUpdateField(key, v)}
+                    />
+                  )}
+                  {field.type === 'boolean' && (
+                    <CheckboxField
+                      label="Enabled"
+                      checked={field.value}
+                      onChange={(v) => handleUpdateField(key, v)}
+                    />
+                  )}
+                  {field.type === 'date' && (
+                    <InputField
+                      label="Value"
+                      type="date"
+                      value={field.value}
+                      onChange={(v) => handleUpdateField(key, v)}
+                    />
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      <div style={{
+        background: '#eff6ff',
+        border: '1px solid #3b82f6',
+        padding: '12px 16px',
+        borderRadius: '8px',
+        fontSize: '14px',
+        color: '#1e40af'
+      }}>
+        <strong>💡 Tip:</strong> Custom fields let you add any farm-specific settings you need. These are saved with your other settings and can be exported/imported.
+      </div>
+    </div>
+  )
+}
+
+function HistoryTab({ history, onRestore, onClear, canEdit }) {
+  return (
+    <div style={{ display: 'grid', gap: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700' }}>📜 Settings Change History</h3>
+          <p style={{ margin: '8px 0 0', color: '#6b7280', fontSize: '14px' }}>
+            View and restore previous settings versions (last {history.length} changes)
+          </p>
+        </div>
+        {canEdit && history.length > 0 && (
+          <button
+            onClick={onClear}
+            style={{
+              padding: '8px 16px',
+              background: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🗑️ Clear History
+          </button>
+        )}
+      </div>
+
+      {history.length === 0 ? (
+        <div style={{
+          background: '#f3f4f6',
+          padding: '40px',
+          borderRadius: '8px',
+          textAlign: 'center',
+          color: '#6b7280'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📜</div>
+          <div style={{ fontSize: '16px', fontWeight: '600' }}>No history available</div>
+          <div style={{ fontSize: '14px', marginTop: '8px' }}>Settings changes will be tracked here</div>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: '12px' }}>
+          {history.map((entry, index) => (
+            <div
+              key={entry.id}
+              style={{
+                background: index === 0 ? '#f0fdf4' : '#f9fafb',
+                border: index === 0 ? '2px solid #10b981' : '1px solid #e5e7eb',
+                padding: '16px',
+                borderRadius: '8px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{
+                    background: index === 0 ? '#10b981' : '#6b7280',
+                    color: 'white',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: '600'
+                  }}>
+                    {index === 0 ? 'CURRENT' : `${index + 1}`}
+                  </span>
+                  <span style={{ fontWeight: '600', fontSize: '14px' }}>
+                    {entry.comment || 'Settings updated'}
+                  </span>
+                </div>
+                <div style={{ color: '#6b7280', fontSize: '13px' }}>
+                  📅 {formatDate(entry.timestamp, true)} • 👤 {entry.user}
+                </div>
+              </div>
+              {canEdit && index > 0 && (
+                <button
+                  onClick={() => onRestore(entry.id)}
+                  style={{
+                    padding: '8px 16px',
+                    background: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    fontSize: '13px'
+                  }}
+                >
+                  ↩️ Restore
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{
+        background: '#eff6ff',
+        border: '1px solid #3b82f6',
+        padding: '12px 16px',
+        borderRadius: '8px',
+        fontSize: '14px',
+        color: '#1e40af'
+      }}>
+        <strong>💡 Tip:</strong> Settings are automatically saved to history. You can restore any previous version by clicking the Restore button.
+      </div>
     </div>
   )
 }

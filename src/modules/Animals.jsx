@@ -39,12 +39,192 @@ export default function Animals() {
   ]
 
   const SAMPLE_ANIMALS = [
-    { id: 'A-001', tag: 'TAG1001', name: 'Bessie', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2019-05-10', weight: 450, sire: 'S-100', dam: 'D-200', groupId: 'G-001', status: 'Active', notes: 'High producing cow', owner: 'Farm Owner', registration: 'REG-9001', tattoo: 'T-01', purchaseDate: '2019-06-01', purchasePrice: 180000, vendor: 'Local Auction', tags: ['dairy','priority'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 3, lactationStatus: 'Lactating' },
-    { id: 'A-002', tag: 'TAG1002', name: 'Molly', breed: 'Jersey', sex: 'F', color: 'Brown', dob: '2020-03-22', weight: 380, sire: 'S-101', dam: 'D-201', groupId: 'G-001', status: 'Active', notes: '', owner: '', registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', pregnancyStatus: 'Unknown', expectedDue: '', parity: 1, lactationStatus: 'Dry' },
-    { id: 'A-003', tag: 'TAG1003', name: 'Duke', breed: 'Angus', sex: 'M', color: 'Black', dob: '2018-11-02', weight: 620, sire: '', dam: '', groupId: 'G-002', status: 'Sold', notes: 'Sold at market', owner: '', registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' }
+    // 11 Heifers (Young females, never calved, not pregnant)
+    { id: 'A-001', tag: 'TAG1001', name: 'Daisy', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2024-03-15', weight: 320, sire: 'S-100', dam: 'D-200', groupId: 'G-001', status: 'Active', notes: 'Growing well, excellent conformation', owner: 'Farm Owner', registration: 'REG-1001', tattoo: 'H-01', purchaseDate: '2024-03-20', purchasePrice: 85000, vendor: 'Valley Farms', tags: ['heifer','priority','breeding'], photo: '', photos: [], pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 0, lactationStatus: 'Heifer',
+      production: {
+        milk: { totalLifetime: 0, currentLactation: 0, peakYield: 0, averageDaily: 0, lastRecorded: '' },
+        eggs: { totalLifetime: 0, currentYear: 0, averageDaily: 0, lastRecorded: '' },
+        meat: { expectedYield: 0, dressedWeight: 0, gradingScore: '' },
+        wool: { totalLifetime: 0, lastShearing: '', averageYield: 0, quality: '' },
+        work: { hoursWorked: 0, tasksCompleted: 0, efficiency: '' },
+        offspring: { totalBorn: 0, totalWeaned: 0, totalSurvived: 0 }
+      },
+      genetics: { pedigree: 'Holstein-Friesian Elite Line', sireLineage: 'Champion Bull S-100', damLineage: 'High Producer D-200', dnaMarkers: 'A2A2, BB, Polled carrier', breedingValue: '+2850 NM$', geneticDefects: [], inbreedingCoefficient: 0.03, expectedProgenyDifference: { milk: '+1200kg', fat: '+45kg', protein: '+38kg' }, genomicEvaluation: 'TPI: 2750' },
+      location: { barn: 'Heifer Barn 1', pen: 'H-12', pasture: 'North Pasture', stall: '', paddock: 'P-5', lastMoved: '2024-11-15', preferredLocation: 'Shaded area' },
+      health: {
+        vaccinations: [{date: '2024-04-01', vaccine: 'IBR/BVD', veterinarian: 'Dr. Kamau', nextDue: '2025-04-01'}],
+        treatments: [],
+        diagnoses: [],
+        allergies: [],
+        chronicConditions: [],
+        lastVetVisit: '2024-11-20',
+        nextVetVisit: '2025-02-20',
+        bodyConditionScore: 3.5,
+        healthStatus: 'Excellent',
+        quarantineStatus: 'None'
+      },
+      financial: {
+        acquisitionCost: 85000,
+        currentValue: 120000,
+        insuranceValue: 100000,
+        maintenanceCost: 15000,
+        productionRevenue: 0,
+        feedCost: 12000,
+        veterinaryCost: 3000,
+        roi: 0,
+        profitLoss: -15000
+      },
+      documentation: {
+        insurancePolicy: 'POL-2024-H001',
+        insuranceProvider: 'Kenya Livestock Insurance',
+        insuranceExpiry: '2025-03-20',
+        microchipId: 'KE-982-000001234',
+        passportNumber: '',
+        healthCertificate: 'HC-2024-001',
+        importExportPermits: [],
+        birthCertificate: 'BC-VAL-2024-001',
+        registrationPapers: ['Holstein Association of Kenya']
+      },
+      certifications: {
+        organic: false,
+        freeRange: true,
+        grassFed: true,
+        animalWelfare: 'Gold Standard',
+        showAwards: [],
+        breedingCertifications: ['Elite Genetics Program'],
+        qualityGrades: ['Premium']
+      },
+      behavior: {
+        temperament: 'Calm',
+        trainingLevel: 'Basic halter trained',
+        specialNeeds: [],
+        behaviorNotes: 'Very gentle, easy to handle',
+        handlingDifficulty: 'Easy',
+        socialization: 'Excellent with herd'
+      },
+      nutrition: {
+        currentDiet: 'Heifer Grower Ration',
+        feedingSchedule: 'Twice daily',
+        specialDiet: '',
+        supplements: ['Mineral mix', 'Vitamin A/D'],
+        waterIntake: 'Ad libitum',
+        nutritionNotes: 'Good appetite, consistent growth'
+      },
+      performance: {
+        growthRate: 0.85,
+        feedConversionRatio: 6.2,
+        reproductiveEfficiency: 0,
+        productionEfficiency: 0,
+        overallScore: 85
+      },
+      events: [
+        {id: 'E-001', date: '2024-03-20', type: 'Purchase', description: 'Acquired from Valley Farms', cost: 85000},
+        {id: 'E-002', date: '2024-04-01', type: 'Vaccination', description: 'IBR/BVD vaccination', cost: 500},
+        {id: 'E-003', date: '2024-06-15', type: 'Weighing', description: 'Weight: 250kg', cost: 0},
+        {id: 'E-004', date: '2024-09-10', type: 'Weighing', description: 'Weight: 290kg', cost: 0},
+        {id: 'E-005', date: '2024-11-15', type: 'Movement', description: 'Moved to North Pasture', cost: 0},
+        {id: 'E-006', date: '2024-11-20', type: 'Health Check', description: 'Routine vet inspection - healthy', cost: 1500}
+      ]
+    },
+    { id: 'A-002', tag: 'TAG1002', name: 'Bella', breed: 'Jersey', sex: 'F', color: 'Brown', dob: '2024-02-10', weight: 305, sire: 'S-101', dam: 'D-201', groupId: 'G-001', status: 'Active', notes: 'Ready for breeding soon', owner: 'Farm Owner', registration: 'REG-1002', tattoo: 'H-02', purchaseDate: '2024-02-15', purchasePrice: 80000, vendor: 'Green Pastures', tags: ['heifer'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 0, lactationStatus: 'Heifer' },
+    { id: 'A-003', tag: 'TAG1003', name: 'Luna', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2024-04-05', weight: 295, sire: 'S-102', dam: 'D-202', groupId: 'G-001', status: 'Active', notes: '', owner: 'Farm Owner', registration: 'REG-1003', tattoo: 'H-03', purchaseDate: '2024-04-10', purchasePrice: 82000, vendor: 'Valley Farms', tags: ['heifer'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 0, lactationStatus: 'Heifer' },
+    { id: 'A-004', tag: 'TAG1004', name: 'Rose', breed: 'Guernsey', sex: 'F', color: 'Fawn/White', dob: '2024-01-20', weight: 340, sire: 'S-103', dam: 'D-203', groupId: 'G-001', status: 'Active', notes: 'Good conformation', owner: 'Farm Owner', registration: 'REG-1004', tattoo: 'H-04', purchaseDate: '2024-01-25', purchasePrice: 78000, vendor: 'Sunrise Ranch', tags: ['heifer'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 0, lactationStatus: 'Heifer' },
+    { id: 'A-005', tag: 'TAG1005', name: 'Willow', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2024-05-12', weight: 285, sire: 'S-100', dam: 'D-204', groupId: 'G-001', status: 'Active', notes: '', owner: 'Farm Owner', registration: 'REG-1005', tattoo: 'H-05', purchaseDate: '2024-05-15', purchasePrice: 83000, vendor: 'Valley Farms', tags: ['heifer'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 0, lactationStatus: 'Heifer' },
+    { id: 'A-006', tag: 'TAG1006', name: 'Hazel', breed: 'Jersey', sex: 'F', color: 'Brown', dob: '2024-03-28', weight: 310, sire: 'S-101', dam: 'D-205', groupId: 'G-001', status: 'Active', notes: 'Excellent temperament', owner: 'Farm Owner', registration: 'REG-1006', tattoo: 'H-06', purchaseDate: '2024-04-01', purchasePrice: 81000, vendor: 'Green Pastures', tags: ['heifer'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 0, lactationStatus: 'Heifer' },
+    { id: 'A-007', tag: 'TAG1007', name: 'Clover', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2024-02-18', weight: 325, sire: 'S-102', dam: 'D-206', groupId: 'G-001', status: 'Active', notes: '', owner: 'Farm Owner', registration: 'REG-1007', tattoo: 'H-07', purchaseDate: '2024-02-22', purchasePrice: 84000, vendor: 'Valley Farms', tags: ['heifer'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 0, lactationStatus: 'Heifer' },
+    { id: 'A-008', tag: 'TAG1008', name: 'Maple', breed: 'Ayrshire', sex: 'F', color: 'Red/White', dob: '2024-04-22', weight: 300, sire: 'S-104', dam: 'D-207', groupId: 'G-001', status: 'Active', notes: 'Strong build', owner: 'Farm Owner', registration: 'REG-1008', tattoo: 'H-08', purchaseDate: '2024-04-25', purchasePrice: 79000, vendor: 'Highland Dairy', tags: ['heifer'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 0, lactationStatus: 'Heifer' },
+    { id: 'A-009', tag: 'TAG1009', name: 'Ivy', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2024-01-08', weight: 345, sire: 'S-100', dam: 'D-208', groupId: 'G-001', status: 'Active', notes: 'Ready for first breeding', owner: 'Farm Owner', registration: 'REG-1009', tattoo: 'H-09', purchaseDate: '2024-01-12', purchasePrice: 86000, vendor: 'Valley Farms', tags: ['heifer'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 0, lactationStatus: 'Heifer' },
+    { id: 'A-010', tag: 'TAG1010', name: 'Poppy', breed: 'Jersey', sex: 'F', color: 'Brown', dob: '2024-03-05', weight: 315, sire: 'S-101', dam: 'D-209', groupId: 'G-001', status: 'Active', notes: '', owner: 'Farm Owner', registration: 'REG-1010', tattoo: 'H-10', purchaseDate: '2024-03-08', purchasePrice: 80500, vendor: 'Green Pastures', tags: ['heifer'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 0, lactationStatus: 'Heifer' },
+    { id: 'A-011', tag: 'TAG1011', name: 'Sage', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2024-02-25', weight: 318, sire: 'S-102', dam: 'D-210', groupId: 'G-001', status: 'Active', notes: 'Good growth rate', owner: 'Farm Owner', registration: 'REG-1011', tattoo: 'H-11', purchaseDate: '2024-03-01', purchasePrice: 82500, vendor: 'Valley Farms', tags: ['heifer'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 0, lactationStatus: 'Heifer' },
+
+    // 5 In-Calf (Pregnant cows)
+    { id: 'A-012', tag: 'TAG1012', name: 'Bessie', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2021-05-10', weight: 580, sire: 'S-100', dam: 'D-220', groupId: 'G-001', status: 'Active', notes: 'Due in March 2026', owner: 'Farm Owner', registration: 'REG-1012', tattoo: 'C-01', purchaseDate: '2021-06-01', purchasePrice: 150000, vendor: 'Premium Genetics', tags: ['pregnant','priority'], photo: '', pregnancyStatus: 'Pregnant', expectedDue: '2026-03-15', parity: 2, lactationStatus: 'Dry' },
+    { id: 'A-013', tag: 'TAG1013', name: 'Matilda', breed: 'Jersey', sex: 'F', color: 'Brown', dob: '2020-08-22', weight: 480, sire: 'S-101', dam: 'D-221', groupId: 'G-001', status: 'Active', notes: 'Due in February 2026', owner: 'Farm Owner', registration: 'REG-1013', tattoo: 'C-02', purchaseDate: '2020-09-10', purchasePrice: 145000, vendor: 'Green Pastures', tags: ['pregnant'], photo: '', pregnancyStatus: 'Pregnant', expectedDue: '2026-02-20', parity: 3, lactationStatus: 'Dry' },
+    { id: 'A-014', tag: 'TAG1014', name: 'Rosie', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2022-03-15', weight: 545, sire: 'S-102', dam: 'D-222', groupId: 'G-001', status: 'Active', notes: 'Due in April 2026', owner: 'Farm Owner', registration: 'REG-1014', tattoo: 'C-03', purchaseDate: '2022-04-05', purchasePrice: 148000, vendor: 'Valley Farms', tags: ['pregnant'], photo: '', pregnancyStatus: 'Pregnant', expectedDue: '2026-04-10', parity: 1, lactationStatus: 'Dry' },
+    { id: 'A-015', tag: 'TAG1015', name: 'Buttercup', breed: 'Guernsey', sex: 'F', color: 'Fawn/White', dob: '2021-11-08', weight: 510, sire: 'S-103', dam: 'D-223', groupId: 'G-001', status: 'Active', notes: 'Due in January 2026', owner: 'Farm Owner', registration: 'REG-1015', tattoo: 'C-04', purchaseDate: '2021-12-01', purchasePrice: 142000, vendor: 'Sunrise Ranch', tags: ['pregnant'], photo: '', pregnancyStatus: 'Pregnant', expectedDue: '2026-01-25', parity: 2, lactationStatus: 'Dry' },
+    { id: 'A-016', tag: 'TAG1016', name: 'Pearl', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2020-12-18', weight: 595, sire: 'S-100', dam: 'D-224', groupId: 'G-001', status: 'Active', notes: 'Due in March 2026, excellent genetics', owner: 'Farm Owner', registration: 'REG-1016', tattoo: 'C-05', purchaseDate: '2021-01-15', purchasePrice: 155000, vendor: 'Premium Genetics', tags: ['pregnant','priority'], photo: '', pregnancyStatus: 'Pregnant', expectedDue: '2026-03-05', parity: 3, lactationStatus: 'Dry' },
+
+    // 9 Dry Cows (Not pregnant, not lactating)
+    { id: 'A-017', tag: 'TAG1017', name: 'Molly', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2019-06-12', weight: 620, sire: 'S-100', dam: 'D-230', groupId: 'G-001', status: 'Active', notes: 'Recently dried off', owner: 'Farm Owner', registration: 'REG-1017', tattoo: 'D-01', purchaseDate: '2019-07-05', purchasePrice: 165000, vendor: 'Valley Farms', tags: ['dry'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 4, lactationStatus: 'Dry' },
+    { id: 'A-018', tag: 'TAG1018', name: 'Sunshine', breed: 'Jersey', sex: 'F', color: 'Brown', dob: '2020-04-20', weight: 485, sire: 'S-101', dam: 'D-231', groupId: 'G-001', status: 'Active', notes: 'Ready for breeding', owner: 'Farm Owner', registration: 'REG-1018', tattoo: 'D-02', purchaseDate: '2020-05-10', purchasePrice: 138000, vendor: 'Green Pastures', tags: ['dry'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 2, lactationStatus: 'Dry' },
+    { id: 'A-019', tag: 'TAG1019', name: 'Daisy Mae', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2021-02-08', weight: 560, sire: 'S-102', dam: 'D-232', groupId: 'G-001', status: 'Active', notes: '', owner: 'Farm Owner', registration: 'REG-1019', tattoo: 'D-03', purchaseDate: '2021-03-01', purchasePrice: 152000, vendor: 'Valley Farms', tags: ['dry'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 2, lactationStatus: 'Dry' },
+    { id: 'A-020', tag: 'TAG1020', name: 'Clementine', breed: 'Ayrshire', sex: 'F', color: 'Red/White', dob: '2019-09-15', weight: 575, sire: 'S-104', dam: 'D-233', groupId: 'G-001', status: 'Active', notes: 'Resting period', owner: 'Farm Owner', registration: 'REG-1020', tattoo: 'D-04', purchaseDate: '2019-10-05', purchasePrice: 148000, vendor: 'Highland Dairy', tags: ['dry'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 3, lactationStatus: 'Dry' },
+    { id: 'A-021', tag: 'TAG1021', name: 'Violet', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2020-07-25', weight: 590, sire: 'S-100', dam: 'D-234', groupId: 'G-001', status: 'Active', notes: 'Good health', owner: 'Farm Owner', registration: 'REG-1021', tattoo: 'D-05', purchaseDate: '2020-08-15', purchasePrice: 158000, vendor: 'Valley Farms', tags: ['dry'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 3, lactationStatus: 'Dry' },
+    { id: 'A-022', tag: 'TAG1022', name: 'Ginger', breed: 'Jersey', sex: 'F', color: 'Brown', dob: '2021-05-18', weight: 470, sire: 'S-101', dam: 'D-235', groupId: 'G-001', status: 'Active', notes: '', owner: 'Farm Owner', registration: 'REG-1022', tattoo: 'D-06', purchaseDate: '2021-06-08', purchasePrice: 140000, vendor: 'Green Pastures', tags: ['dry'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 2, lactationStatus: 'Dry' },
+    { id: 'A-023', tag: 'TAG1023', name: 'Magnolia', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2019-11-30', weight: 610, sire: 'S-102', dam: 'D-236', groupId: 'G-001', status: 'Active', notes: 'Experienced cow', owner: 'Farm Owner', registration: 'REG-1023', tattoo: 'D-07', purchaseDate: '2020-01-10', purchasePrice: 162000, vendor: 'Valley Farms', tags: ['dry'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 4, lactationStatus: 'Dry' },
+    { id: 'A-024', tag: 'TAG1024', name: 'Honey', breed: 'Guernsey', sex: 'F', color: 'Fawn/White', dob: '2020-10-05', weight: 520, sire: 'S-103', dam: 'D-237', groupId: 'G-001', status: 'Active', notes: 'Sweet temperament', owner: 'Farm Owner', registration: 'REG-1024', tattoo: 'D-08', purchaseDate: '2020-11-01', purchasePrice: 145000, vendor: 'Sunrise Ranch', tags: ['dry'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 3, lactationStatus: 'Dry' },
+    { id: 'A-025', tag: 'TAG1025', name: 'Bluebell', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2021-08-14', weight: 555, sire: 'S-100', dam: 'D-238', groupId: 'G-001', status: 'Active', notes: '', owner: 'Farm Owner', registration: 'REG-1025', tattoo: 'D-09', purchaseDate: '2021-09-05', purchasePrice: 151000, vendor: 'Valley Farms', tags: ['dry'], photo: '', pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 2, lactationStatus: 'Dry' },
+
+    // 20 Chickens - Flock 1
+    { id: 'A-026', tag: 'CHICK-001', name: 'Chicken Flock 1', breed: 'Rhode Island Red', sex: 'F', color: 'Red/Brown', dob: '2024-08-15', weight: 2.5, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Layer hen', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-20', purchasePrice: 800, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', photos: [], pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA',
+      production: { eggs: 0, meat: 0 },
+      genetics: { pedigree: '', dnaMarkers: '' },
+      location: { pen: '', pasture: '' },
+      events: []
+    },
+    { id: 'A-027', tag: 'CHICK-002', name: 'Chicken Flock 2', breed: 'Rhode Island Red', sex: 'F', color: 'Red/Brown', dob: '2024-08-15', weight: 2.4, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Layer hen', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-20', purchasePrice: 800, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-028', tag: 'CHICK-003', name: 'Chicken Flock 3', breed: 'Leghorn', sex: 'F', color: 'White', dob: '2024-08-10', weight: 2.2, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'High egg production', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-15', purchasePrice: 850, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-029', tag: 'CHICK-004', name: 'Chicken Flock 4', breed: 'Leghorn', sex: 'F', color: 'White', dob: '2024-08-10', weight: 2.3, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'High egg production', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-15', purchasePrice: 850, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-030', tag: 'CHICK-005', name: 'Chicken Flock 5', breed: 'Plymouth Rock', sex: 'F', color: 'Barred', dob: '2024-08-18', weight: 2.6, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Dual purpose', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-22', purchasePrice: 900, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-031', tag: 'CHICK-006', name: 'Chicken Flock 6', breed: 'Plymouth Rock', sex: 'F', color: 'Barred', dob: '2024-08-18', weight: 2.5, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Dual purpose', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-22', purchasePrice: 900, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-032', tag: 'CHICK-007', name: 'Chicken Flock 7', breed: 'Sussex', sex: 'F', color: 'Brown', dob: '2024-08-12', weight: 2.7, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Good layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-17', purchasePrice: 820, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-033', tag: 'CHICK-008', name: 'Chicken Flock 8', breed: 'Sussex', sex: 'F', color: 'Brown', dob: '2024-08-12', weight: 2.6, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Good layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-17', purchasePrice: 820, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-034', tag: 'CHICK-009', name: 'Chicken Flock 9', breed: 'Rhode Island Red', sex: 'F', color: 'Red/Brown', dob: '2024-08-15', weight: 2.5, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Layer hen', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-20', purchasePrice: 800, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-035', tag: 'CHICK-010', name: 'Chicken Flock 10', breed: 'Rhode Island Red', sex: 'F', color: 'Red/Brown', dob: '2024-08-15', weight: 2.4, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Layer hen', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-20', purchasePrice: 800, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-036', tag: 'CHICK-011', name: 'Chicken Flock 11', breed: 'Leghorn', sex: 'F', color: 'White', dob: '2024-08-10', weight: 2.3, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'High egg production', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-15', purchasePrice: 850, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-037', tag: 'CHICK-012', name: 'Chicken Flock 12', breed: 'Leghorn', sex: 'F', color: 'White', dob: '2024-08-10', weight: 2.2, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'High egg production', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-15', purchasePrice: 850, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-038', tag: 'CHICK-013', name: 'Chicken Flock 13', breed: 'Plymouth Rock', sex: 'F', color: 'Barred', dob: '2024-08-18', weight: 2.5, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Dual purpose', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-22', purchasePrice: 900, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-039', tag: 'CHICK-014', name: 'Chicken Flock 14', breed: 'Plymouth Rock', sex: 'F', color: 'Barred', dob: '2024-08-18', weight: 2.6, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Dual purpose', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-22', purchasePrice: 900, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-040', tag: 'CHICK-015', name: 'Chicken Flock 15', breed: 'Sussex', sex: 'F', color: 'Brown', dob: '2024-08-12', weight: 2.7, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Good layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-17', purchasePrice: 820, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-041', tag: 'CHICK-016', name: 'Chicken Flock 16', breed: 'Sussex', sex: 'F', color: 'Brown', dob: '2024-08-12', weight: 2.6, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Good layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-17', purchasePrice: 820, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-042', tag: 'CHICK-017', name: 'Chicken Flock 17', breed: 'Rhode Island Red', sex: 'M', color: 'Red/Brown', dob: '2024-08-15', weight: 3.2, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Rooster', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-20', purchasePrice: 900, vendor: 'Poultry Farm', tags: ['flock','rooster'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-043', tag: 'CHICK-018', name: 'Chicken Flock 18', breed: 'Rhode Island Red', sex: 'F', color: 'Red/Brown', dob: '2024-08-15', weight: 2.4, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Layer hen', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-20', purchasePrice: 800, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-044', tag: 'CHICK-019', name: 'Chicken Flock 19', breed: 'Leghorn', sex: 'F', color: 'White', dob: '2024-08-10', weight: 2.3, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'High egg production', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-15', purchasePrice: 850, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-045', tag: 'CHICK-020', name: 'Chicken Flock 20', breed: 'Plymouth Rock', sex: 'F', color: 'Barred', dob: '2024-08-18', weight: 2.5, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Dual purpose', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-08-22', purchasePrice: 900, vendor: 'Poultry Farm', tags: ['flock','layers'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+
+    // 22 Ducks - Flock
+    { id: 'A-046', tag: 'DUCK-001', name: 'Duck Flock 1', breed: 'Pekin', sex: 'F', color: 'White', dob: '2024-07-20', weight: 3.2, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Egg layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-25', purchasePrice: 1200, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', photos: [], pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA',
+      production: { eggs: 0, meat: 0 },
+      genetics: { pedigree: '', dnaMarkers: '' },
+      location: { pen: '', pasture: '' },
+      events: []
+    },
+    { id: 'A-047', tag: 'DUCK-002', name: 'Duck Flock 2', breed: 'Pekin', sex: 'F', color: 'White', dob: '2024-07-20', weight: 3.1, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Egg layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-25', purchasePrice: 1200, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-048', tag: 'DUCK-003', name: 'Duck Flock 3', breed: 'Khaki Campbell', sex: 'F', color: 'Khaki', dob: '2024-07-15', weight: 2.8, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Excellent layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-20', purchasePrice: 1300, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-049', tag: 'DUCK-004', name: 'Duck Flock 4', breed: 'Khaki Campbell', sex: 'F', color: 'Khaki', dob: '2024-07-15', weight: 2.9, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Excellent layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-20', purchasePrice: 1300, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-050', tag: 'DUCK-005', name: 'Duck Flock 5', breed: 'Muscovy', sex: 'F', color: 'Black/White', dob: '2024-07-10', weight: 3.5, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Meat/Egg bird', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-15', purchasePrice: 1400, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-051', tag: 'DUCK-006', name: 'Duck Flock 6', breed: 'Muscovy', sex: 'F', color: 'Black/White', dob: '2024-07-10', weight: 3.4, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Meat/Egg bird', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-15', purchasePrice: 1400, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-052', tag: 'DUCK-007', name: 'Duck Flock 7', breed: 'Pekin', sex: 'F', color: 'White', dob: '2024-07-20', weight: 3.3, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Egg layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-25', purchasePrice: 1200, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-053', tag: 'DUCK-008', name: 'Duck Flock 8', breed: 'Pekin', sex: 'F', color: 'White', dob: '2024-07-20', weight: 3.2, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Egg layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-25', purchasePrice: 1200, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-054', tag: 'DUCK-009', name: 'Duck Flock 9', breed: 'Khaki Campbell', sex: 'F', color: 'Khaki', dob: '2024-07-15', weight: 2.8, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Excellent layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-20', purchasePrice: 1300, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-055', tag: 'DUCK-010', name: 'Duck Flock 10', breed: 'Khaki Campbell', sex: 'F', color: 'Khaki', dob: '2024-07-15', weight: 2.9, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Excellent layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-20', purchasePrice: 1300, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-056', tag: 'DUCK-011', name: 'Duck Flock 11', breed: 'Muscovy', sex: 'M', color: 'Black/White', dob: '2024-07-10', weight: 4.5, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Drake', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-15', purchasePrice: 1500, vendor: 'Waterfowl Farm', tags: ['flock','ducks','drake'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-057', tag: 'DUCK-012', name: 'Duck Flock 12', breed: 'Pekin', sex: 'F', color: 'White', dob: '2024-07-20', weight: 3.1, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Egg layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-25', purchasePrice: 1200, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-058', tag: 'DUCK-013', name: 'Duck Flock 13', breed: 'Pekin', sex: 'F', color: 'White', dob: '2024-07-20', weight: 3.2, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Egg layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-25', purchasePrice: 1200, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-059', tag: 'DUCK-014', name: 'Duck Flock 14', breed: 'Khaki Campbell', sex: 'F', color: 'Khaki', dob: '2024-07-15', weight: 2.9, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Excellent layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-20', purchasePrice: 1300, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-060', tag: 'DUCK-015', name: 'Duck Flock 15', breed: 'Khaki Campbell', sex: 'F', color: 'Khaki', dob: '2024-07-15', weight: 2.8, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Excellent layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-20', purchasePrice: 1300, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-061', tag: 'DUCK-016', name: 'Duck Flock 16', breed: 'Muscovy', sex: 'F', color: 'Black/White', dob: '2024-07-10', weight: 3.6, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Meat/Egg bird', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-15', purchasePrice: 1400, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-062', tag: 'DUCK-017', name: 'Duck Flock 17', breed: 'Muscovy', sex: 'F', color: 'Black/White', dob: '2024-07-10', weight: 3.5, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Meat/Egg bird', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-15', purchasePrice: 1400, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-063', tag: 'DUCK-018', name: 'Duck Flock 18', breed: 'Pekin', sex: 'M', color: 'White', dob: '2024-07-20', weight: 4.2, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Drake', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-25', purchasePrice: 1400, vendor: 'Waterfowl Farm', tags: ['flock','ducks','drake'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-064', tag: 'DUCK-019', name: 'Duck Flock 19', breed: 'Pekin', sex: 'F', color: 'White', dob: '2024-07-20', weight: 3.1, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Egg layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-25', purchasePrice: 1200, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-065', tag: 'DUCK-020', name: 'Duck Flock 20', breed: 'Khaki Campbell', sex: 'F', color: 'Khaki', dob: '2024-07-15', weight: 2.9, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Excellent layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-20', purchasePrice: 1300, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-066', tag: 'DUCK-021', name: 'Duck Flock 21', breed: 'Muscovy', sex: 'F', color: 'Black/White', dob: '2024-07-10', weight: 3.4, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Meat/Egg bird', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-15', purchasePrice: 1400, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-067', tag: 'DUCK-022', name: 'Duck Flock 22', breed: 'Pekin', sex: 'F', color: 'White', dob: '2024-07-20', weight: 3.2, sire: '', dam: '', groupId: 'G-007', status: 'Active', notes: 'Egg layer', owner: 'Farm Owner', registration: '', tattoo: '', purchaseDate: '2024-07-25', purchasePrice: 1200, vendor: 'Waterfowl Farm', tags: ['flock','ducks'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+
+    // 4 Dogs - Canine group
+    { id: 'A-068', tag: 'DOG-001', name: 'Max', breed: 'German Shepherd', sex: 'M', color: 'Black/Tan', dob: '2022-04-15', weight: 38, sire: '', dam: '', groupId: 'G-008', status: 'Active', notes: 'Guardian dog, excellent temperament', owner: 'Farm Owner', registration: 'CAN-2022-001', tattoo: '', purchaseDate: '2022-06-01', purchasePrice: 25000, vendor: 'Working Dogs Kenya', tags: ['guard','trained'], photo: '', photos: [], pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA',
+      production: { work: '', service: '' },
+      genetics: { pedigree: '', dnaMarkers: '' },
+      location: { pen: '', pasture: '' },
+      events: []
+    },
+    { id: 'A-069', tag: 'DOG-002', name: 'Bella', breed: 'Border Collie', sex: 'F', color: 'Black/White', dob: '2023-02-10', weight: 22, sire: '', dam: '', groupId: 'G-008', status: 'Active', notes: 'Herding dog, very intelligent', owner: 'Farm Owner', registration: 'CAN-2023-002', tattoo: '', purchaseDate: '2023-03-15', purchasePrice: 28000, vendor: 'Working Dogs Kenya', tags: ['herding','trained'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-070', tag: 'DOG-003', name: 'Duke', breed: 'Rottweiler', sex: 'M', color: 'Black/Tan', dob: '2021-09-20', weight: 45, sire: '', dam: '', groupId: 'G-008', status: 'Active', notes: 'Security dog, well trained', owner: 'Farm Owner', registration: 'CAN-2021-003', tattoo: '', purchaseDate: '2021-11-05', purchasePrice: 30000, vendor: 'Security Dogs Ltd', tags: ['guard','security'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' },
+    { id: 'A-071', tag: 'DOG-004', name: 'Luna', breed: 'Australian Shepherd', sex: 'F', color: 'Blue Merle', dob: '2023-06-12', weight: 25, sire: '', dam: '', groupId: 'G-008', status: 'Active', notes: 'Herding and companion dog', owner: 'Farm Owner', registration: 'CAN-2023-004', tattoo: '', purchaseDate: '2023-07-20', purchasePrice: 27000, vendor: 'Working Dogs Kenya', tags: ['herding','companion'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA' }
   ]
 
   const [tab, setTab] = useState('list')
+  const [formTab, setFormTab] = useState('basic') // New: for multi-tab animal form
   const [animals, setAnimals] = useState([])
   const [groups, setGroups] = useState([])
   const [filter, setFilter] = useState('')
@@ -53,7 +233,116 @@ export default function Animals() {
   const [filterSex, setFilterSex] = useState('all')
   const [sortBy, setSortBy] = useState('name')
 
-  const emptyAnimal = { id: '', tag: '', name: '', breed: '', sex: 'F', color: '', dob: '', weight: '', sire: '', dam: '', groupId: '', status: 'Active', notes: '', owner: '', registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', photos: [], pregnancyStatus: 'Unknown', expectedDue: '', parity: '', lactationStatus: 'NA' }
+  const emptyAnimal = { 
+    id: '', tag: '', name: '', breed: '', sex: 'F', color: '', dob: '', weight: '', sire: '', dam: '', groupId: '', status: 'Active', notes: '', owner: '', registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', photos: [], 
+    pregnancyStatus: 'Unknown', expectedDue: '', parity: '', lactationStatus: 'NA',
+    // Production Metrics
+    production: {
+      milk: { totalLifetime: 0, currentLactation: 0, peakYield: 0, averageDaily: 0, lastRecorded: '' },
+      eggs: { totalLifetime: 0, currentYear: 0, averageDaily: 0, lastRecorded: '' },
+      meat: { expectedYield: 0, dressedWeight: 0, gradingScore: '' },
+      wool: { totalLifetime: 0, lastShearing: '', averageYield: 0, quality: '' },
+      work: { hoursWorked: 0, tasksCompleted: 0, efficiency: '' },
+      offspring: { totalBorn: 0, totalWeaned: 0, totalSurvived: 0 }
+    },
+    // Genetics & Breeding
+    genetics: { 
+      pedigree: '', 
+      sireLineage: '',
+      damLineage: '',
+      dnaMarkers: '', 
+      breedingValue: '',
+      geneticDefects: [],
+      inbreedingCoefficient: 0,
+      expectedProgenyDifference: {},
+      genomicEvaluation: ''
+    },
+    // Location & Facilities
+    location: { 
+      barn: '',
+      pen: '', 
+      pasture: '',
+      stall: '',
+      paddock: '',
+      lastMoved: '',
+      preferredLocation: ''
+    },
+    // Health Records
+    health: {
+      vaccinations: [],
+      treatments: [],
+      diagnoses: [],
+      allergies: [],
+      chronicConditions: [],
+      lastVetVisit: '',
+      nextVetVisit: '',
+      bodyConditionScore: 0,
+      healthStatus: 'Healthy',
+      quarantineStatus: 'None'
+    },
+    // Financial Tracking
+    financial: {
+      acquisitionCost: 0,
+      currentValue: 0,
+      insuranceValue: 0,
+      maintenanceCost: 0,
+      productionRevenue: 0,
+      feedCost: 0,
+      veterinaryCost: 0,
+      roi: 0,
+      profitLoss: 0
+    },
+    // Insurance & Documentation
+    documentation: {
+      insurancePolicy: '',
+      insuranceProvider: '',
+      insuranceExpiry: '',
+      microchipId: '',
+      passportNumber: '',
+      healthCertificate: '',
+      importExportPermits: [],
+      birthCertificate: '',
+      registrationPapers: []
+    },
+    // Certifications & Awards
+    certifications: {
+      organic: false,
+      freeRange: false,
+      grassFed: false,
+      animalWelfare: '',
+      showAwards: [],
+      breedingCertifications: [],
+      qualityGrades: []
+    },
+    // Behavior & Temperament
+    behavior: {
+      temperament: 'Calm',
+      trainingLevel: 'None',
+      specialNeeds: [],
+      behaviorNotes: '',
+      handlingDifficulty: 'Easy',
+      socialization: 'Good'
+    },
+    // Feeding & Nutrition
+    nutrition: {
+      currentDiet: '',
+      feedingSchedule: '',
+      specialDiet: '',
+      supplements: [],
+      waterIntake: '',
+      nutritionNotes: ''
+    },
+    // Performance Metrics
+    performance: {
+      growthRate: 0,
+      feedConversionRatio: 0,
+      reproductiveEfficiency: 0,
+      productionEfficiency: 0,
+      overallScore: 0
+    },
+    // Event History
+    events: []
+  }
   const [form, setForm] = useState(emptyAnimal)
   const [editingId, setEditingId] = useState(null)
   const [errors, setErrors] = useState({})
@@ -965,7 +1254,44 @@ export default function Animals() {
             {editingId ? '✏️ Edit Animal [v2.0]' : '➕ Add New Animal [v2.0]'}
           </h3>
           
+          {/* Form Section Tabs */}
+          <div style={{ borderBottom: '2px solid #e5e7eb', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              {[
+                { id: 'basic', label: '📋 Basic Info', icon: '📋' },
+                { id: 'production', label: '📊 Production', icon: '📊' },
+                { id: 'genetics', label: '🧬 Genetics', icon: '🧬' },
+                { id: 'health', label: '🏥 Health', icon: '🏥' },
+                { id: 'financial', label: '💰 Financial', icon: '💰' },
+                { id: 'location', label: '📍 Location', icon: '📍' },
+                { id: 'behavior', label: '🎭 Behavior', icon: '🎭' },
+                { id: 'documentation', label: '📄 Docs', icon: '📄' }
+              ].map(section => (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => setFormTab(section.id)}
+                  style={{
+                    padding: '10px 16px',
+                    border: 'none',
+                    borderBottom: formTab === section.id ? '3px solid var(--green)' : '3px solid transparent',
+                    background: formTab === section.id ? '#f0fdf4' : 'transparent',
+                    color: formTab === section.id ? 'var(--green)' : '#6b7280',
+                    fontWeight: formTab === section.id ? '600' : '400',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  {section.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          
           <form onSubmit={saveAnimal} style={{ marginBottom: 16 }} noValidate>
+            
+            {/* BASIC INFO TAB */}
+            {formTab === 'basic' && (
             <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 600 ? '1fr' : '1fr 1fr', gap: window.innerWidth <= 600 ? 12 : 8 }}>
               <label>
                 Tag
@@ -1121,20 +1447,173 @@ export default function Animals() {
                   <option>Lactating</option>
                   <option>Dry</option>
                   <option>NA</option>
+                  <option>Heifer</option>
                 </select>
               </label>
 
               <label style={{ gridColumn: '1 / -1' }}>
                 Notes
-                <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+                <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} />
               </label>
             </div>
-            <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-              <button type="submit" style={{ background: 'var(--green)', color: '#fff', padding: '10px 20px', fontWeight: 'bold', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                {editingId ? 'Update Animal' : 'Add Animal'}
+            )}
+
+            {/* PRODUCTION TAB */}
+            {formTab === 'production' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <h4 style={{ gridColumn: '1 / -1', color: '#059669', marginBottom: 8 }}>📊 Production Metrics</h4>
+              
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#666', marginTop: 12 }}>Milk Production</h5>
+              <label>Total Lifetime (L)<input type="number" step="0.1" value={form.production?.milk?.totalLifetime || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, totalLifetime: e.target.value } } })} /></label>
+              <label>Current Lactation (L)<input type="number" step="0.1" value={form.production?.milk?.currentLactation || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, currentLactation: e.target.value } } })} /></label>
+              <label>Peak Yield (L/day)<input type="number" step="0.1" value={form.production?.milk?.peakYield || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, peakYield: e.target.value } } })} /></label>
+              <label>Average Daily (L)<input type="number" step="0.1" value={form.production?.milk?.averageDaily || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, averageDaily: e.target.value } } })} /></label>
+              
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#666', marginTop: 12 }}>Egg Production</h5>
+              <label>Total Lifetime<input type="number" value={form.production?.eggs?.totalLifetime || ''} onChange={e => setForm({ ...form, production: { ...form.production, eggs: { ...form.production?.eggs, totalLifetime: e.target.value } } })} /></label>
+              <label>Current Year<input type="number" value={form.production?.eggs?.currentYear || ''} onChange={e => setForm({ ...form, production: { ...form.production, eggs: { ...form.production?.eggs, currentYear: e.target.value } } })} /></label>
+              <label>Average Daily<input type="number" step="0.1" value={form.production?.eggs?.averageDaily || ''} onChange={e => setForm({ ...form, production: { ...form.production, eggs: { ...form.production?.eggs, averageDaily: e.target.value } } })} /></label>
+              <label>Last Recorded<input type="date" value={form.production?.eggs?.lastRecorded || ''} onChange={e => setForm({ ...form, production: { ...form.production, eggs: { ...form.production?.eggs, lastRecorded: e.target.value } } })} /></label>
+              
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#666', marginTop: 12 }}>Meat/Wool/Work</h5>
+              <label>Expected Meat Yield (kg)<input type="number" step="0.1" value={form.production?.meat?.expectedYield || ''} onChange={e => setForm({ ...form, production: { ...form.production, meat: { ...form.production?.meat, expectedYield: e.target.value } } })} /></label>
+              <label>Grading Score<input value={form.production?.meat?.gradingScore || ''} onChange={e => setForm({ ...form, production: { ...form.production, meat: { ...form.production?.meat, gradingScore: e.target.value } } })} /></label>
+              <label>Wool Yield (kg)<input type="number" step="0.1" value={form.production?.wool?.averageYield || ''} onChange={e => setForm({ ...form, production: { ...form.production, wool: { ...form.production?.wool, averageYield: e.target.value } } })} /></label>
+              <label>Wool Quality<input value={form.production?.wool?.quality || ''} onChange={e => setForm({ ...form, production: { ...form.production, wool: { ...form.production?.wool, quality: e.target.value } } })} /></label>
+              
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#666', marginTop: 12 }}>Offspring</h5>
+              <label>Total Born<input type="number" value={form.production?.offspring?.totalBorn || ''} onChange={e => setForm({ ...form, production: { ...form.production, offspring: { ...form.production?.offspring, totalBorn: e.target.value } } })} /></label>
+              <label>Total Weaned<input type="number" value={form.production?.offspring?.totalWeaned || ''} onChange={e => setForm({ ...form, production: { ...form.production, offspring: { ...form.production?.offspring, totalWeaned: e.target.value } } })} /></label>
+              <label>Total Survived<input type="number" value={form.production?.offspring?.totalSurvived || ''} onChange={e => setForm({ ...form, production: { ...form.production, offspring: { ...form.production?.offspring, totalSurvived: e.target.value } } })} /></label>
+            </div>
+            )}
+
+            {/* GENETICS TAB */}
+            {formTab === 'genetics' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+              <h4 style={{ color: '#3b82f6', marginBottom: 8 }}>🧬 Genetics & Breeding</h4>
+              <label>Pedigree<textarea rows={2} value={form.genetics?.pedigree || ''} onChange={e => setForm({ ...form, genetics: { ...form.genetics, pedigree: e.target.value } })} placeholder="Full pedigree information" /></label>
+              <label>Sire Lineage<input value={form.genetics?.sireLineage || ''} onChange={e => setForm({ ...form, genetics: { ...form.genetics, sireLineage: e.target.value } })} /></label>
+              <label>Dam Lineage<input value={form.genetics?.damLineage || ''} onChange={e => setForm({ ...form, genetics: { ...form.genetics, damLineage: e.target.value } })} /></label>
+              <label>DNA Markers<input value={form.genetics?.dnaMarkers || ''} onChange={e => setForm({ ...form, genetics: { ...form.genetics, dnaMarkers: e.target.value } })} placeholder="e.g., A2A2, BB, Polled carrier" /></label>
+              <label>Breeding Value<input value={form.genetics?.breedingValue || ''} onChange={e => setForm({ ...form, genetics: { ...form.genetics, breedingValue: e.target.value } })} placeholder="e.g., +2850 NM$" /></label>
+              <label>Inbreeding Coefficient<input type="number" step="0.01" value={form.genetics?.inbreedingCoefficient || ''} onChange={e => setForm({ ...form, genetics: { ...form.genetics, inbreedingCoefficient: e.target.value } })} /></label>
+              <label>Genomic Evaluation<textarea rows={2} value={form.genetics?.genomicEvaluation || ''} onChange={e => setForm({ ...form, genetics: { ...form.genetics, genomicEvaluation: e.target.value } })} placeholder="e.g., TPI: 2750, NM$: 850" /></label>
+              <label>Genetic Defects<textarea rows={2} value={(form.genetics?.geneticDefects || []).join(', ')} onChange={e => setForm({ ...form, genetics: { ...form.genetics, geneticDefects: e.target.value.split(',').map(s => s.trim()) } })} placeholder="Comma-separated list" /></label>
+            </div>
+            )}
+
+            {/* HEALTH TAB */}
+            {formTab === 'health' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <h4 style={{ gridColumn: '1 / -1', color: '#dc2626', marginBottom: 8 }}>🏥 Health Records</h4>
+              <label>Health Status<select value={form.health?.healthStatus || 'Healthy'} onChange={e => setForm({ ...form, health: { ...form.health, healthStatus: e.target.value } })}>
+                <option>Excellent</option>
+                <option>Healthy</option>
+                <option>Fair</option>
+                <option>Sick</option>
+                <option>Recovering</option>
+                <option>Critical</option>
+              </select></label>
+              <label>Body Condition Score (1-5)<input type="number" step="0.5" min="1" max="5" value={form.health?.bodyConditionScore || ''} onChange={e => setForm({ ...form, health: { ...form.health, bodyConditionScore: e.target.value } })} /></label>
+              <label>Last Vet Visit<input type="date" value={form.health?.lastVetVisit || ''} onChange={e => setForm({ ...form, health: { ...form.health, lastVetVisit: e.target.value } })} /></label>
+              <label>Next Vet Visit<input type="date" value={form.health?.nextVetVisit || ''} onChange={e => setForm({ ...form, health: { ...form.health, nextVetVisit: e.target.value } })} /></label>
+              <label>Quarantine Status<select value={form.health?.quarantineStatus || 'None'} onChange={e => setForm({ ...form, health: { ...form.health, quarantineStatus: e.target.value } })}>
+                <option>None</option>
+                <option>Quarantined</option>
+                <option>Isolation</option>
+                <option>Observation</option>
+              </select></label>
+              <label style={{ gridColumn: '1 / -1' }}>Allergies<input value={(form.health?.allergies || []).join(', ')} onChange={e => setForm({ ...form, health: { ...form.health, allergies: e.target.value.split(',').map(s => s.trim()) } })} placeholder="Comma-separated list" /></label>
+              <label style={{ gridColumn: '1 / -1' }}>Chronic Conditions<input value={(form.health?.chronicConditions || []).join(', ')} onChange={e => setForm({ ...form, health: { ...form.health, chronicConditions: e.target.value.split(',').map(s => s.trim()) } })} placeholder="Comma-separated list" /></label>
+            </div>
+            )}
+
+            {/* FINANCIAL TAB */}
+            {formTab === 'financial' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <h4 style={{ gridColumn: '1 / -1', color: '#f59e0b', marginBottom: 8 }}>💰 Financial Tracking</h4>
+              <label>Acquisition Cost (KES)<input type="number" step="0.01" value={form.financial?.acquisitionCost || form.purchasePrice || ''} onChange={e => setForm({ ...form, financial: { ...form.financial, acquisitionCost: e.target.value } })} /></label>
+              <label>Current Value (KES)<input type="number" step="0.01" value={form.financial?.currentValue || ''} onChange={e => setForm({ ...form, financial: { ...form.financial, currentValue: e.target.value } })} /></label>
+              <label>Insurance Value (KES)<input type="number" step="0.01" value={form.financial?.insuranceValue || ''} onChange={e => setForm({ ...form, financial: { ...form.financial, insuranceValue: e.target.value } })} /></label>
+              <label>Maintenance Cost (KES)<input type="number" step="0.01" value={form.financial?.maintenanceCost || ''} onChange={e => setForm({ ...form, financial: { ...form.financial, maintenanceCost: e.target.value } })} /></label>
+              <label>Feed Cost (KES)<input type="number" step="0.01" value={form.financial?.feedCost || ''} onChange={e => setForm({ ...form, financial: { ...form.financial, feedCost: e.target.value } })} /></label>
+              <label>Veterinary Cost (KES)<input type="number" step="0.01" value={form.financial?.veterinaryCost || ''} onChange={e => setForm({ ...form, financial: { ...form.financial, veterinaryCost: e.target.value } })} /></label>
+              <label>Production Revenue (KES)<input type="number" step="0.01" value={form.financial?.productionRevenue || ''} onChange={e => setForm({ ...form, financial: { ...form.financial, productionRevenue: e.target.value } })} /></label>
+              <label>ROI (%)<input type="number" step="0.01" value={form.financial?.roi || ''} onChange={e => setForm({ ...form, financial: { ...form.financial, roi: e.target.value } })} /></label>
+            </div>
+            )}
+
+            {/* LOCATION TAB */}
+            {formTab === 'location' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <h4 style={{ gridColumn: '1 / -1', color: '#8b5cf6', marginBottom: 8 }}>📍 Location & Facilities</h4>
+              <label>Barn<input value={form.location?.barn || ''} onChange={e => setForm({ ...form, location: { ...form.location, barn: e.target.value } })} /></label>
+              <label>Pen<input value={form.location?.pen || ''} onChange={e => setForm({ ...form, location: { ...form.location, pen: e.target.value } })} /></label>
+              <label>Pasture<input value={form.location?.pasture || ''} onChange={e => setForm({ ...form, location: { ...form.location, pasture: e.target.value } })} /></label>
+              <label>Stall<input value={form.location?.stall || ''} onChange={e => setForm({ ...form, location: { ...form.location, stall: e.target.value } })} /></label>
+              <label>Paddock<input value={form.location?.paddock || ''} onChange={e => setForm({ ...form, location: { ...form.location, paddock: e.target.value } })} /></label>
+              <label>Last Moved<input type="date" value={form.location?.lastMoved || ''} onChange={e => setForm({ ...form, location: { ...form.location, lastMoved: e.target.value } })} /></label>
+              <label style={{ gridColumn: '1 / -1' }}>Preferred Location<input value={form.location?.preferredLocation || ''} onChange={e => setForm({ ...form, location: { ...form.location, preferredLocation: e.target.value } })} placeholder="e.g., Shaded area, near water" /></label>
+            </div>
+            )}
+
+            {/* BEHAVIOR TAB */}
+            {formTab === 'behavior' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <h4 style={{ gridColumn: '1 / -1', color: '#ec4899', marginBottom: 8 }}>🎭 Behavior & Temperament</h4>
+              <label>Temperament<select value={form.behavior?.temperament || 'Calm'} onChange={e => setForm({ ...form, behavior: { ...form.behavior, temperament: e.target.value } })}>
+                <option>Calm</option>
+                <option>Friendly</option>
+                <option>Nervous</option>
+                <option>Aggressive</option>
+                <option>Docile</option>
+              </select></label>
+              <label>Handling Difficulty<select value={form.behavior?.handlingDifficulty || 'Easy'} onChange={e => setForm({ ...form, behavior: { ...form.behavior, handlingDifficulty: e.target.value } })}>
+                <option>Easy</option>
+                <option>Moderate</option>
+                <option>Difficult</option>
+                <option>Expert Only</option>
+              </select></label>
+              <label>Training Level<input value={form.behavior?.trainingLevel || ''} onChange={e => setForm({ ...form, behavior: { ...form.behavior, trainingLevel: e.target.value } })} placeholder="e.g., Halter trained, saddle broke" /></label>
+              <label>Socialization<select value={form.behavior?.socialization || 'Good'} onChange={e => setForm({ ...form, behavior: { ...form.behavior, socialization: e.target.value } })}>
+                <option>Excellent</option>
+                <option>Good</option>
+                <option>Fair</option>
+                <option>Poor</option>
+                <option>Isolated</option>
+              </select></label>
+              <label style={{ gridColumn: '1 / -1' }}>Special Needs<input value={(form.behavior?.specialNeeds || []).join(', ')} onChange={e => setForm({ ...form, behavior: { ...form.behavior, specialNeeds: e.target.value.split(',').map(s => s.trim()) } })} placeholder="Comma-separated list" /></label>
+              <label style={{ gridColumn: '1 / -1' }}>Behavior Notes<textarea rows={3} value={form.behavior?.behaviorNotes || ''} onChange={e => setForm({ ...form, behavior: { ...form.behavior, behaviorNotes: e.target.value } })} /></label>
+            </div>
+            )}
+
+            {/* DOCUMENTATION TAB */}
+            {formTab === 'documentation' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <h4 style={{ gridColumn: '1 / -1', color: '#0ea5e9', marginBottom: 8 }}>📄 Documentation & Certifications</h4>
+              <label>Insurance Policy #<input value={form.documentation?.insurancePolicy || ''} onChange={e => setForm({ ...form, documentation: { ...form.documentation, insurancePolicy: e.target.value } })} /></label>
+              <label>Insurance Provider<input value={form.documentation?.insuranceProvider || ''} onChange={e => setForm({ ...form, documentation: { ...form.documentation, insuranceProvider: e.target.value } })} /></label>
+              <label>Insurance Expiry<input type="date" value={form.documentation?.insuranceExpiry || ''} onChange={e => setForm({ ...form, documentation: { ...form.documentation, insuranceExpiry: e.target.value } })} /></label>
+              <label>Microchip ID<input value={form.documentation?.microchipId || ''} onChange={e => setForm({ ...form, documentation: { ...form.documentation, microchipId: e.target.value } })} /></label>
+              <label>Passport Number<input value={form.documentation?.passportNumber || ''} onChange={e => setForm({ ...form, documentation: { ...form.documentation, passportNumber: e.target.value } })} /></label>
+              <label>Health Certificate<input value={form.documentation?.healthCertificate || ''} onChange={e => setForm({ ...form, documentation: { ...form.documentation, healthCertificate: e.target.value } })} /></label>
+              <label>Birth Certificate<input value={form.documentation?.birthCertificate || ''} onChange={e => setForm({ ...form, documentation: { ...form.documentation, birthCertificate: e.target.value } })} /></label>
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#666', marginTop: 12 }}>Certifications</h5>
+              <label>Organic Certified<input type="checkbox" checked={form.certifications?.organic || false} onChange={e => setForm({ ...form, certifications: { ...form.certifications, organic: e.target.checked } })} /></label>
+              <label>Free Range<input type="checkbox" checked={form.certifications?.freeRange || false} onChange={e => setForm({ ...form, certifications: { ...form.certifications, freeRange: e.target.checked } })} /></label>
+              <label>Grass Fed<input type="checkbox" checked={form.certifications?.grassFed || false} onChange={e => setForm({ ...form, certifications: { ...form.certifications, grassFed: e.target.checked } })} /></label>
+              <label style={{ gridColumn: '1 / -1' }}>Animal Welfare Standard<input value={form.certifications?.animalWelfare || ''} onChange={e => setForm({ ...form, certifications: { ...form.certifications, animalWelfare: e.target.value } })} placeholder="e.g., Gold Standard" /></label>
+            </div>
+            )}
+
+            {/* Submit Buttons - Always visible */}
+            <div style={{ marginTop: 24, padding: '16px 0', borderTop: '2px solid #e5e7eb', display: 'flex', gap: 8 }}>
+              <button type="submit" style={{ background: 'var(--green)', color: '#fff', padding: '12px 24px', fontWeight: 'bold', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '15px' }}>
+                {editingId ? '✓ Update Animal' : '+ Add Animal'}
               </button>
-              <button type="button" onClick={resetForm} style={{ padding: '10px 20px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}>Reset</button>
-              {editingId && <button type="button" onClick={() => { resetForm(); setTab('list') }} style={{ padding: '10px 20px', background: '#666', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>}
+              <button type="button" onClick={resetForm} style={{ padding: '12px 24px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '15px' }}>Reset</button>
+              {editingId && <button type="button" onClick={() => { resetForm(); setTab('list') }} style={{ padding: '12px 24px', background: '#666', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '15px' }}>Cancel</button>}
             </div>
           </form>
         </div>

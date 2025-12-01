@@ -332,6 +332,32 @@ export default function Reports(){
 
   function getSectionItems(){
     const m = items || {}
+    
+    // Complete Farm Report - combines all modules
+    if(section === 'completeFarm') {
+      return [
+        { id: 'animals-report', data: { module: 'Animals', count: (m.animals||[]).length, records: m.animals }, type: 'completeFarm' },
+        { id: 'crops-report', data: { module: 'Crops', count: (m.crops||[]).length, records: m.crops }, type: 'completeFarm' },
+        { id: 'poultry-report', data: { module: 'Poultry', count: (m.poultry||[]).length, records: m.poultry }, type: 'completeFarm' },
+        { id: 'calves-report', data: { module: 'Calves', count: (m.calfManagement||[]).length, records: m.calfManagement }, type: 'completeFarm' },
+        { id: 'canines-report', data: { module: 'Canines', count: (m.canineManagement||[]).length, records: m.canineManagement }, type: 'completeFarm' },
+        { id: 'pets-report', data: { module: 'Pets', count: (m.petManagement||[]).length, records: m.petManagement }, type: 'completeFarm' },
+        { id: 'azolla-report', data: { module: 'Azolla Farming', count: (m.azolla||[]).length, records: m.azolla }, type: 'completeFarm' },
+        { id: 'bsf-report', data: { module: 'BSF Farming', count: (m.bsf||[]).length, records: m.bsf }, type: 'completeFarm' },
+        { id: 'pastures-report', data: { module: 'Pastures', count: (m.pastures||[]).length, records: m.pastures }, type: 'completeFarm' },
+        { id: 'breeding-report', data: { module: 'Breeding', count: (m.breeding||[]).length, records: m.breeding }, type: 'completeFarm' },
+        { id: 'feeding-report', data: { module: 'Feeding', count: (m.feeding||[]).length, records: m.feeding }, type: 'completeFarm' },
+        { id: 'treatments-report', data: { module: 'Treatments', count: (m.treatments||[]).length, records: m.treatments }, type: 'completeFarm' },
+        { id: 'measurements-report', data: { module: 'Measurements', count: (m.measurements||[]).length, records: m.measurements }, type: 'completeFarm' },
+        { id: 'milk-report', data: { module: 'Milk Yield', count: (m.milkYield||[]).length, records: m.milkYield }, type: 'completeFarm' },
+        { id: 'finance-report', data: { module: 'Finance', count: (m.finance||[]).length, records: m.finance }, type: 'completeFarm' },
+        { id: 'inventory-report', data: { module: 'Inventory', count: (m.inventory||[]).length, records: m.inventory }, type: 'completeFarm' },
+        { id: 'tasks-report', data: { module: 'Tasks', count: (m.tasks||[]).length, records: m.tasks }, type: 'completeFarm' },
+        { id: 'schedules-report', data: { module: 'Schedules', count: (m.schedules||[]).length, records: m.schedules }, type: 'completeFarm' },
+        { id: 'groups-report', data: { module: 'Groups', count: (m.groups||[]).length, records: m.groups }, type: 'completeFarm' }
+      ]
+    }
+    
     if(section === 'animals') return (m.animals||[]).map(a=> ({ id: a.id || a.tag || a.name, data: a, type:'animal' }))
     if(section === 'tasks') return (m.tasks||[]).map(t=> ({ id: t.id || t.title || Math.random().toString(36).slice(2,8), data: t, type:'task' }))
     if(section === 'finance') return (m.finance||[]).map(f=> ({ id: f.id || Math.random().toString(36).slice(2,8), data: f, type:'finance' }))
@@ -374,7 +400,19 @@ export default function Reports(){
     const m = items || {}
     const stats = { count: list.length }
     
-    if (section === 'finance') {
+    if (section === 'completeFarm') {
+      // Complete farm overview stats
+      stats.totalModules = 19
+      stats.totalAnimals = (m.animals||[]).length + (m.poultry||[]).length + (m.calfManagement||[]).length + (m.canineManagement||[]).length + (m.petManagement||[]).length
+      stats.totalCrops = (m.crops||[]).length
+      stats.totalTasks = (m.tasks||[]).length
+      stats.totalRecords = Object.values(m).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0)
+      const income = (m.finance || []).filter(i => i.type === 'income' || i.amount > 0).reduce((sum, i) => sum + Math.abs(i.amount || 0), 0)
+      const expenses = (m.finance || []).filter(i => i.type === 'expense' || i.amount < 0).reduce((sum, i) => sum + Math.abs(i.amount || 0), 0)
+      stats.totalRevenue = income
+      stats.totalExpenses = expenses
+      stats.netProfit = income - expenses
+    } else if (section === 'finance') {
       const income = (m.finance || []).filter(i => i.type === 'income' || i.amount > 0).reduce((sum, i) => sum + Math.abs(i.amount || 0), 0)
       const expenses = (m.finance || []).filter(i => i.type === 'expense' || i.amount < 0).reduce((sum, i) => sum + Math.abs(i.amount || 0), 0)
       stats.income = income
@@ -412,9 +450,14 @@ export default function Reports(){
               onChange={(e) => setSection(e.target.value)}
               style={{ padding: '8px 12px', fontSize: '14px', minWidth: '220px' }}
             >
+              <optgroup label="📋 Complete Reports">
+                <option value="completeFarm">🌾 Complete Farm Report (All Modules)</option>
+              </optgroup>
               <optgroup label="Livestock">
                 <option value="animals">Animals</option>
-                <option value="canines">Canine Management</option>
+                <option value="calfManagement">Calf Management</option>
+                <option value="canineManagement">Canine Management</option>
+                <option value="petManagement">Pet Management</option>
                 <option value="breeding">Breeding Records</option>
                 <option value="semen">Semen Inventory</option>
                 <option value="poultry">Poultry</option>
@@ -466,12 +509,45 @@ export default function Reports(){
       <div className="panel">
         {/* Summary Stats Card */}
         <div className="card" style={{ marginBottom: '20px', padding: '20px', background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: '#fff' }}>
-          <h3 style={{ margin: '0 0 16px 0', color: '#fff' }}>{section.charAt(0).toUpperCase() + section.slice(1)} Summary</h3>
+          <h3 style={{ margin: '0 0 16px 0', color: '#fff' }}>{section === 'completeFarm' ? '🌾 Complete Farm Overview' : section.charAt(0).toUpperCase() + section.slice(1)} Summary</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
-            <div>
-              <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.count}</div>
-              <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Records</div>
-            </div>
+            {section === 'completeFarm' ? (
+              <>
+                <div>
+                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.totalModules}</div>
+                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Active Modules</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.totalRecords}</div>
+                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Records</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.totalAnimals}</div>
+                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Animals</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.totalCrops}</div>
+                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Crops</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>KES {summaryStats.totalRevenue?.toFixed(0) || 0}</div>
+                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Revenue</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '32px', fontWeight: 'bold', color: summaryStats.netProfit >= 0 ? '#d1fae5' : '#fecaca' }}>
+                    KES {summaryStats.netProfit?.toFixed(0) || 0}
+                  </div>
+                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Net Profit</div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.count}</div>
+                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Records</div>
+                </div>
+              </>
+            )}
             
             {section === 'finance' && (
               <>
@@ -632,7 +708,8 @@ export default function Reports(){
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <div>
                   <div style={{ fontWeight:600 }}>
-                    {it.type === 'animal' ? (it.data.name || it.data.tag || it.id) : 
+                    {it.type === 'completeFarm' ? `📦 ${it.data.module}` :
+                     it.type === 'animal' ? (it.data.name || it.data.tag || it.id) : 
                      it.type === 'crop' ? (it.data.name || it.id) :
                      it.type === 'task' ? (it.data.title || it.id) :
                      it.type === 'finance' ? (it.data.description || it.id) :
@@ -643,15 +720,17 @@ export default function Reports(){
                      it.type === 'health' ? (it.data.name || it.data.tag || it.id) :
                      `${it.type} ${it.id}`}
                   </div>
-                  <div className="muted">{it.type} • {it.id}</div>
+                  <div className="muted">
+                    {it.type === 'completeFarm' ? `${it.data.count} records in ${it.data.module}` : `${it.type} • ${it.id}`}
+                  </div>
                 </div>
                 <div>
                   <button className="tab-btn" onClick={()=> {
                     setViewingData(it.data)
-                    setViewTitle(`${it.type} - ${it.id}`)
+                    setViewTitle(it.type === 'completeFarm' ? `${it.data.module} Module Report` : `${it.type} - ${it.id}`)
                     setViewFormat('formatted')
                   }}>👁️ View</button>
-                  <button className="tab-btn" onClick={()=> downloadDocx(it.data, `${it.type}-${it.id}.docx`, `${it.type} ${it.id}`, section)}>📄 DOCX</button>
+                  <button className="tab-btn" onClick={()=> downloadDocx(it.data, `${it.type}-${it.id}.docx`, it.type === 'completeFarm' ? `${it.data.module} Report` : `${it.type} ${it.id}`, section)}>📄 DOCX</button>
                   <button className="tab-btn" onClick={()=> downloadJson(it.data, `${it.type}-${it.id}.json`)}>JSON</button>
                 </div>
               </div>

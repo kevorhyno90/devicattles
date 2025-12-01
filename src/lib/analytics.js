@@ -438,7 +438,7 @@ export function getMilkProductionStats(period = 'month') {
 }
 
 /**
- * Get comprehensive dashboard data
+ * Get comprehensive dashboard data from ALL modules
  */
 export function getDashboardData() {
   return {
@@ -450,6 +450,407 @@ export function getDashboardData() {
     feedCosts: getFeedCostTrends(6),
     inventory: getInventoryAlerts(),
     milkProduction: getMilkProductionStats('month'),
+    // Crop modules
+    crops: getCropStats(),
+    cropYield: getCropYieldStats(),
+    cropSales: getCropSalesStats(),
+    cropTreatments: getCropTreatmentStats(),
+    // Specialized farming
+    azolla: getAzollaStats(),
+    bsf: getBSFStats(),
+    // Animal submodules
+    poultry: getPoultryStats(),
+    canines: getCanineStats(),
+    pets: getPetStats(),
+    calves: getCalfStats(),
+    // Resource management
+    pastures: getPastureStats(),
+    groups: getGroupStats(),
+    schedules: getScheduleStats(),
+    notifications: getNotificationStats(),
+    // Advanced analytics
+    measurements: getMeasurementStats(),
+    treatments: getTreatmentStats(),
+    feeding: getFeedingStats(),
     lastUpdated: new Date().toISOString()
+  }
+}
+
+/**
+ * Get crop statistics
+ */
+export function getCropStats() {
+  try {
+    const crops = loadData('crops', [])
+    const active = crops.filter(c => c.status === 'Growing' || c.status === 'Planted')
+    const byType = {}
+    const byStatus = {}
+    
+    crops.forEach(crop => {
+      const type = crop.cropType || crop.type || 'Unknown'
+      byType[type] = (byType[type] || 0) + 1
+      
+      const status = crop.status || 'Unknown'
+      byStatus[status] = (byStatus[status] || 0) + 1
+    })
+    
+    const totalArea = crops.reduce((sum, c) => sum + (parseFloat(c.area) || 0), 0)
+    
+    return {
+      total: crops.length,
+      active: active.length,
+      byType,
+      byStatus,
+      totalArea
+    }
+  } catch (error) {
+    console.error('Error getting crop stats:', error)
+    return { total: 0, active: 0, byType: {}, byStatus: {}, totalArea: 0 }
+  }
+}
+
+/**
+ * Get crop yield statistics
+ */
+export function getCropYieldStats() {
+  try {
+    const yields = loadData('cropYield', [])
+    const totalYield = yields.reduce((sum, y) => sum + (parseFloat(y.quantity) || 0), 0)
+    const avgYield = yields.length > 0 ? totalYield / yields.length : 0
+    
+    return {
+      totalRecords: yields.length,
+      totalYield,
+      avgYield,
+      recent: yields.slice(-5)
+    }
+  } catch (error) {
+    console.error('Error getting crop yield stats:', error)
+    return { totalRecords: 0, totalYield: 0, avgYield: 0, recent: [] }
+  }
+}
+
+/**
+ * Get crop sales statistics
+ */
+export function getCropSalesStats() {
+  try {
+    const sales = loadData('cropSales', [])
+    const totalRevenue = sales.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || parseFloat(s.amount) || 0), 0)
+    const totalQuantity = sales.reduce((sum, s) => sum + (parseFloat(s.quantity) || 0), 0)
+    
+    return {
+      totalSales: sales.length,
+      totalRevenue,
+      totalQuantity,
+      recentSales: sales.slice(-5)
+    }
+  } catch (error) {
+    console.error('Error getting crop sales stats:', error)
+    return { totalSales: 0, totalRevenue: 0, totalQuantity: 0, recentSales: [] }
+  }
+}
+
+/**
+ * Get crop treatment statistics
+ */
+export function getCropTreatmentStats() {
+  try {
+    const treatments = loadData('cropTreatments', [])
+    const active = treatments.filter(t => t.status === 'Active' || t.status === 'Ongoing')
+    
+    return {
+      total: treatments.length,
+      active: active.length,
+      recent: treatments.slice(-5)
+    }
+  } catch (error) {
+    console.error('Error getting crop treatment stats:', error)
+    return { total: 0, active: 0, recent: [] }
+  }
+}
+
+/**
+ * Get Azolla farming statistics
+ */
+export function getAzollaStats() {
+  try {
+    const azolla = loadData('azolla', [])
+    const totalProduction = azolla.reduce((sum, a) => sum + (parseFloat(a.yield) || parseFloat(a.production) || 0), 0)
+    
+    return {
+      totalBeds: azolla.length,
+      activeBeds: azolla.filter(a => a.status === 'Active').length,
+      totalProduction,
+      recent: azolla.slice(-5)
+    }
+  } catch (error) {
+    console.error('Error getting azolla stats:', error)
+    return { totalBeds: 0, activeBeds: 0, totalProduction: 0, recent: [] }
+  }
+}
+
+/**
+ * Get Black Soldier Fly farming statistics
+ */
+export function getBSFStats() {
+  try {
+    const bsf = loadData('bsf', [])
+    const totalProduction = bsf.reduce((sum, b) => sum + (parseFloat(b.larvaeProduction) || parseFloat(b.production) || 0), 0)
+    
+    return {
+      totalUnits: bsf.length,
+      activeUnits: bsf.filter(b => b.status === 'Active').length,
+      totalProduction,
+      recent: bsf.slice(-5)
+    }
+  } catch (error) {
+    console.error('Error getting BSF stats:', error)
+    return { totalUnits: 0, activeUnits: 0, totalProduction: 0, recent: [] }
+  }
+}
+
+/**
+ * Get poultry statistics
+ */
+export function getPoultryStats() {
+  try {
+    const poultry = loadData('poultry', [])
+    const byType = {}
+    const eggs = loadData('eggProduction', [])
+    
+    poultry.forEach(p => {
+      const type = p.breed || p.type || 'Unknown'
+      byType[type] = (byType[type] || 0) + 1
+    })
+    
+    const totalEggs = eggs.reduce((sum, e) => sum + (parseFloat(e.quantity) || 0), 0)
+    
+    return {
+      total: poultry.length,
+      byType,
+      totalEggs,
+      activeFlocks: poultry.filter(p => p.status === 'Active').length
+    }
+  } catch (error) {
+    console.error('Error getting poultry stats:', error)
+    return { total: 0, byType: {}, totalEggs: 0, activeFlocks: 0 }
+  }
+}
+
+/**
+ * Get canine statistics
+ */
+export function getCanineStats() {
+  try {
+    const canines = loadData('canines', [])
+    const byPurpose = {}
+    
+    canines.forEach(c => {
+      const purpose = c.purpose || c.role || 'Unknown'
+      byPurpose[purpose] = (byPurpose[purpose] || 0) + 1
+    })
+    
+    return {
+      total: canines.length,
+      active: canines.filter(c => c.status === 'Active').length,
+      byPurpose
+    }
+  } catch (error) {
+    console.error('Error getting canine stats:', error)
+    return { total: 0, active: 0, byPurpose: {} }
+  }
+}
+
+/**
+ * Get pet statistics
+ */
+export function getPetStats() {
+  try {
+    const pets = loadData('pets', [])
+    const byType = {}
+    
+    pets.forEach(p => {
+      const type = p.species || p.type || 'Unknown'
+      byType[type] = (byType[type] || 0) + 1
+    })
+    
+    return {
+      total: pets.length,
+      byType
+    }
+  } catch (error) {
+    console.error('Error getting pet stats:', error)
+    return { total: 0, byType: {} }
+  }
+}
+
+/**
+ * Get calf statistics
+ */
+export function getCalfStats() {
+  try {
+    const calves = loadData('calves', [])
+    const byAge = { '0-3m': 0, '3-6m': 0, '6-12m': 0, '12m+': 0 }
+    
+    calves.forEach(c => {
+      if (c.ageInMonths < 3) byAge['0-3m']++
+      else if (c.ageInMonths < 6) byAge['3-6m']++
+      else if (c.ageInMonths < 12) byAge['6-12m']++
+      else byAge['12m+']++
+    })
+    
+    return {
+      total: calves.length,
+      byAge,
+      recent: calves.slice(-5)
+    }
+  } catch (error) {
+    console.error('Error getting calf stats:', error)
+    return { total: 0, byAge: {}, recent: [] }
+  }
+}
+
+/**
+ * Get pasture statistics
+ */
+export function getPastureStats() {
+  try {
+    const pastures = loadData('pastures', [])
+    const totalArea = pastures.reduce((sum, p) => sum + (parseFloat(p.area) || 0), 0)
+    const available = pastures.filter(p => p.status === 'Available' || p.status === 'Ready')
+    
+    return {
+      total: pastures.length,
+      totalArea,
+      available: available.length,
+      inUse: pastures.filter(p => p.status === 'In Use' || p.status === 'Occupied').length
+    }
+  } catch (error) {
+    console.error('Error getting pasture stats:', error)
+    return { total: 0, totalArea: 0, available: 0, inUse: 0 }
+  }
+}
+
+/**
+ * Get group statistics
+ */
+export function getGroupStats() {
+  try {
+    const groups = loadData('groups', [])
+    const totalAnimals = groups.reduce((sum, g) => sum + (g.members?.length || 0), 0)
+    
+    return {
+      totalGroups: groups.length,
+      totalAnimals,
+      avgGroupSize: groups.length > 0 ? totalAnimals / groups.length : 0
+    }
+  } catch (error) {
+    console.error('Error getting group stats:', error)
+    return { totalGroups: 0, totalAnimals: 0, avgGroupSize: 0 }
+  }
+}
+
+/**
+ * Get schedule statistics
+ */
+export function getScheduleStats() {
+  try {
+    const schedules = loadData('schedules', [])
+    const now = new Date()
+    const today = schedules.filter(s => {
+      const scheduleDate = new Date(s.date || s.scheduledDate)
+      return scheduleDate.toDateString() === now.toDateString()
+    })
+    
+    return {
+      total: schedules.length,
+      today: today.length,
+      upcoming: schedules.filter(s => new Date(s.date || s.scheduledDate) > now).length
+    }
+  } catch (error) {
+    console.error('Error getting schedule stats:', error)
+    return { total: 0, today: 0, upcoming: 0 }
+  }
+}
+
+/**
+ * Get notification statistics
+ */
+export function getNotificationStats() {
+  try {
+    const notifications = loadData('notifications', [])
+    const unread = notifications.filter(n => !n.read)
+    
+    return {
+      total: notifications.length,
+      unread: unread.length,
+      urgent: notifications.filter(n => n.priority === 'high' || n.priority === 'urgent').length
+    }
+  } catch (error) {
+    console.error('Error getting notification stats:', error)
+    return { total: 0, unread: 0, urgent: 0 }
+  }
+}
+
+/**
+ * Get measurement statistics
+ */
+export function getMeasurementStats() {
+  try {
+    const measurements = loadData('measurements', [])
+    const recent = measurements.slice(-10)
+    const avgWeight = recent.reduce((sum, m) => sum + (parseFloat(m.weight) || 0), 0) / Math.max(1, recent.length)
+    
+    return {
+      total: measurements.length,
+      recent: recent.length,
+      avgWeight
+    }
+  } catch (error) {
+    console.error('Error getting measurement stats:', error)
+    return { total: 0, recent: 0, avgWeight: 0 }
+  }
+}
+
+/**
+ * Get treatment statistics
+ */
+export function getTreatmentStats() {
+  try {
+    const treatments = loadData('treatments', [])
+    const active = treatments.filter(t => t.status === 'Active' || t.status === 'Ongoing')
+    const completed = treatments.filter(t => t.status === 'Completed')
+    
+    return {
+      total: treatments.length,
+      active: active.length,
+      completed: completed.length,
+      completionRate: treatments.length > 0 ? (completed.length / treatments.length * 100).toFixed(1) : 0
+    }
+  } catch (error) {
+    console.error('Error getting treatment stats:', error)
+    return { total: 0, active: 0, completed: 0, completionRate: 0 }
+  }
+}
+
+/**
+ * Get feeding statistics
+ */
+export function getFeedingStats() {
+  try {
+    const feeding = loadData('feeding', [])
+    const totalCost = feeding.reduce((sum, f) => sum + (parseFloat(f.cost) || 0), 0)
+    const totalQuantity = feeding.reduce((sum, f) => sum + (parseFloat(f.quantity) || 0), 0)
+    
+    return {
+      total: feeding.length,
+      totalCost,
+      totalQuantity,
+      recent: feeding.slice(-5)
+    }
+  } catch (error) {
+    console.error('Error getting feeding stats:', error)
+    return { total: 0, totalCost: 0, totalQuantity: 0, recent: [] }
   }
 }

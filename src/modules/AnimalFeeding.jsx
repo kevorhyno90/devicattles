@@ -337,6 +337,7 @@ export default function AnimalFeeding({ animals }){
   const [activeTab, setActiveTab] = useState('ingredients')
   const [diets, setDiets] = useState([])
   const [rations, setRations] = useState([])
+  const [feedingEvents, setFeedingEvents] = useState([])
   
   // Ingredient Library
   const [searchTerm, setSearchTerm] = useState('')
@@ -355,19 +356,36 @@ export default function AnimalFeeding({ animals }){
   const [selectedDiet, setSelectedDiet] = useState('')
   const [selectedAnimals, setSelectedAnimals] = useState([])
   
+  // Feeding Events
+  const [eventDate, setEventDate] = useState(new Date().toISOString().slice(0, 16))
+  const [eventFeedType, setEventFeedType] = useState('')
+  const [eventQuantity, setEventQuantity] = useState('')
+  const [eventCost, setEventCost] = useState('')
+  const [eventSupplier, setEventSupplier] = useState('')
+  const [eventMethod, setEventMethod] = useState('Manual')
+  const [eventSupplements, setEventSupplements] = useState('')
+  const [eventResponse, setEventResponse] = useState('')
+  const [eventNotes, setEventNotes] = useState('')
+  const [eventAnimals, setEventAnimals] = useState([])
+  const [eventRation, setEventRation] = useState('')
+  
   // Editing states
   const [editingDietId, setEditingDietId] = useState(null)
   const [editingRationId, setEditingRationId] = useState(null)
+  const [editingEventId, setEditingEventId] = useState(null)
 
   useEffect(() => {
     const d = localStorage.getItem('rumen8:diets')
     const r = localStorage.getItem('rumen8:rations')
+    const e = localStorage.getItem('rumen8:feedingEvents')
     if(d) setDiets(JSON.parse(d))
     if(r) setRations(JSON.parse(r))
+    if(e) setFeedingEvents(JSON.parse(e))
   }, [])
 
   useEffect(() => localStorage.setItem('rumen8:diets', JSON.stringify(diets)), [diets])
   useEffect(() => localStorage.setItem('rumen8:rations', JSON.stringify(rations)), [rations])
+  useEffect(() => localStorage.setItem('rumen8:feedingEvents', JSON.stringify(feedingEvents)), [feedingEvents])
 
   const categories = [...new Set(INGREDIENTS.map(i => i.category))]
   const filteredIngredients = INGREDIENTS.filter(ing => {
@@ -521,6 +539,82 @@ export default function AnimalFeeding({ animals }){
     setSelectedAnimals([])
   }
 
+  function createFeedingEvent() {
+    if (!eventDate || !eventFeedType || !eventQuantity || parseFloat(eventQuantity) <= 0 || eventAnimals.length === 0) {
+      alert('Complete date, feed type, quantity, and select at least one animal')
+      return
+    }
+
+    const newEvent = {
+      id: Date.now(),
+      date: eventDate,
+      feedType: eventFeedType,
+      quantity: parseFloat(eventQuantity),
+      cost: eventCost ? parseFloat(eventCost) : 0,
+      supplier: eventSupplier,
+      method: eventMethod,
+      supplements: eventSupplements,
+      response: eventResponse,
+      notes: eventNotes,
+      animals: eventAnimals,
+      rationId: eventRation || null,
+      created: new Date().toISOString()
+    }
+
+    if (editingEventId) {
+      setFeedingEvents(feedingEvents.map(e => e.id === editingEventId ? newEvent : e))
+      setEditingEventId(null)
+      alert('Feeding event updated!')
+    } else {
+      setFeedingEvents([...feedingEvents, newEvent])
+      alert('Feeding event logged!')
+    }
+
+    // Clear form
+    setEventDate(new Date().toISOString().slice(0, 16))
+    setEventFeedType('')
+    setEventQuantity('')
+    setEventCost('')
+    setEventSupplier('')
+    setEventMethod('Manual')
+    setEventSupplements('')
+    setEventResponse('')
+    setEventNotes('')
+    setEventAnimals([])
+    setEventRation('')
+  }
+
+  function startEditEvent(event) {
+    setEditingEventId(event.id)
+    setEventDate(event.date)
+    setEventFeedType(event.feedType)
+    setEventQuantity(String(event.quantity))
+    setEventCost(String(event.cost))
+    setEventSupplier(event.supplier)
+    setEventMethod(event.method)
+    setEventSupplements(event.supplements)
+    setEventResponse(event.response)
+    setEventNotes(event.notes)
+    setEventAnimals(event.animals)
+    setEventRation(event.rationId || '')
+    setActiveTab('events')
+  }
+
+  function cancelEditEvent() {
+    setEditingEventId(null)
+    setEventDate(new Date().toISOString().slice(0, 16))
+    setEventFeedType('')
+    setEventQuantity('')
+    setEventCost('')
+    setEventSupplier('')
+    setEventMethod('Manual')
+    setEventSupplements('')
+    setEventResponse('')
+    setEventNotes('')
+    setEventAnimals([])
+    setEventRation('')
+  }
+
   const analysis = analyzeDiet()
   const requirements = REQUIREMENTS[targetAnimal]
   
@@ -576,6 +670,31 @@ export default function AnimalFeeding({ animals }){
       created: r.created
     }))
     exportToCSV(data, 'rations.csv')
+  }
+
+  function exportFeedingEventsCSV() {
+    const data = feedingEvents.map(e => {
+      const animalNames = (e.animals || []).map(aId => {
+        const a = (animals || []).find(an => an.id === aId)
+        return a ? (a.name || a.tag) : aId
+      }).join('; ')
+      
+      return {
+        id: e.id,
+        date: new Date(e.date).toLocaleString(),
+        feedType: e.feedType,
+        quantity: e.quantity,
+        cost: e.cost,
+        supplier: e.supplier,
+        method: e.method,
+        supplements: e.supplements,
+        response: e.response,
+        notes: e.notes,
+        animals: animalNames,
+        created: e.created
+      }
+    })
+    exportToCSV(data, 'feeding_events.csv')
   }
 
   function batchPrintRations() {
@@ -639,6 +758,7 @@ export default function AnimalFeeding({ animals }){
           { id: 'formulation', label: '🧪 Diet Formulation' },
           { id: 'diets', label: '💾 Saved Diets' },
           { id: 'rations', label: '🔗 Ration Assignment' },
+          { id: 'events', label: '📝 Feeding Events' },
           { id: 'reports', label: '📊 Reports' }
         ].map(tab => (
           <button
@@ -669,6 +789,9 @@ export default function AnimalFeeding({ animals }){
               <button onClick={exportRationsCSV} style={{ fontSize: 12 }} title="Export rations">📊 Export</button>
               <button onClick={batchPrintRations} style={{ fontSize: 12 }} title="Print all rations">🖨️ Print</button>
             </>
+          )}
+          {activeTab === 'events' && (
+            <button onClick={exportFeedingEventsCSV} style={{ fontSize: 12 }} title="Export feeding events">📊 Export</button>
           )}
         </div>
       </div>
@@ -1015,6 +1138,228 @@ export default function AnimalFeeding({ animals }){
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* FEEDING EVENTS */}
+      {activeTab === 'events' && (
+        <div>
+          <div className="card" style={{ padding: 20, marginBottom: 16 }}>
+            <h4>{editingEventId ? 'Edit Feeding Event' : 'Log Feeding Event'}</h4>
+            <div style={{ display: 'grid', gap: 12, marginTop: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    value={eventDate}
+                    onChange={e => setEventDate(e.target.value)}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Feed Type</label>
+                  <select value={eventFeedType} onChange={e => setEventFeedType(e.target.value)} style={{ width: '100%' }}>
+                    <option value="">-- Select Feed Type --</option>
+                    <option value="Ration">Ration (from Diet)</option>
+                    <option value="Forage">Forage</option>
+                    <option value="Concentrate">Concentrate</option>
+                    <option value="Silage">Silage</option>
+                    <option value="Hay">Hay</option>
+                    <option value="Pasture">Pasture</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              {eventFeedType === 'Ration' && (
+                <div>
+                  <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Select Ration</label>
+                  <select value={eventRation} onChange={e => setEventRation(e.target.value)} style={{ width: '100%' }}>
+                    <option value="">-- Select Ration --</option>
+                    {rations.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  </select>
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Quantity (kg)</label>
+                  <input
+                    type="number"
+                    placeholder="Quantity"
+                    value={eventQuantity}
+                    onChange={e => setEventQuantity(e.target.value)}
+                    step="0.1"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Cost (KES)</label>
+                  <input
+                    type="number"
+                    placeholder="Cost"
+                    value={eventCost}
+                    onChange={e => setEventCost(e.target.value)}
+                    step="0.01"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Supplier</label>
+                  <input
+                    type="text"
+                    placeholder="Supplier name"
+                    value={eventSupplier}
+                    onChange={e => setEventSupplier(e.target.value)}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Feeding Method</label>
+                  <select value={eventMethod} onChange={e => setEventMethod(e.target.value)} style={{ width: '100%' }}>
+                    <option value="Manual">Manual</option>
+                    <option value="Automated">Automated</option>
+                    <option value="TMR Mixer">TMR Mixer</option>
+                    <option value="Group Feeding">Group Feeding</option>
+                    <option value="Individual">Individual</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Supplements/Additives</label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Minerals, Vitamins, Probiotics"
+                    value={eventSupplements}
+                    onChange={e => setEventSupplements(e.target.value)}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Animal Response/Observation</label>
+                <select value={eventResponse} onChange={e => setEventResponse(e.target.value)} style={{ width: '100%' }}>
+                  <option value="">-- Select Response --</option>
+                  <option value="Excellent">Excellent - ate all feed quickly</option>
+                  <option value="Good">Good - ate most feed</option>
+                  <option value="Fair">Fair - ate some feed</option>
+                  <option value="Poor">Poor - minimal intake</option>
+                  <option value="Refused">Refused - did not eat</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Notes</label>
+                <textarea
+                  placeholder="Additional notes or observations..."
+                  value={eventNotes}
+                  onChange={e => setEventNotes(e.target.value)}
+                  rows={3}
+                  style={{ width: '100%', resize: 'vertical' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Select Animals</label>
+                <div style={{ maxHeight: 200, overflow: 'auto', border: '1px solid #e5e7eb', padding: 8, borderRadius: 4 }}>
+                  {(animals || []).map(a => (
+                    <label key={a.id} style={{ display: 'block', padding: 4 }}>
+                      <input
+                        type="checkbox"
+                        checked={eventAnimals.includes(a.id)}
+                        onChange={e => {
+                          if(e.target.checked) setEventAnimals([...eventAnimals, a.id])
+                          else setEventAnimals(eventAnimals.filter(id => id !== a.id))
+                        }}
+                      />
+                      {' '}{a.name || a.tag} ({a.breed})
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                <button onClick={createFeedingEvent} style={{ flex: 1 }}>{editingEventId ? 'Update Event' : 'Log Event'}</button>
+                {editingEventId && <button onClick={cancelEditEvent} style={{ flex: 1 }}>Cancel Edit</button>}
+              </div>
+            </div>
+          </div>
+
+          {/* Feeding Events Table */}
+          {feedingEvents.length > 0 ? (
+            <div className="card" style={{ padding: 0, overflow: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead style={{ background: '#f9fafb', position: 'sticky', top: 0 }}>
+                  <tr>
+                    <th style={{ padding: 10, textAlign: 'left' }}>Date/Time</th>
+                    <th style={{ padding: 10, textAlign: 'left' }}>Feed Type</th>
+                    <th style={{ padding: 10 }}>Quantity (kg)</th>
+                    <th style={{ padding: 10 }}>Cost (KES)</th>
+                    <th style={{ padding: 10, textAlign: 'left' }}>Animals</th>
+                    <th style={{ padding: 10, textAlign: 'left' }}>Method</th>
+                    <th style={{ padding: 10, textAlign: 'left' }}>Response</th>
+                    <th style={{ padding: 10 }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {feedingEvents.sort((a, b) => new Date(b.date) - new Date(a.date)).map(event => {
+                    const animalNames = event.animals.map(aId => {
+                      const a = (animals || []).find(an => an.id === aId)
+                      return a ? (a.name || a.tag) : aId
+                    }).join(', ')
+                    
+                    return (
+                      <tr key={event.id + '-' + event.date + '-' + feedingEvents.indexOf(event)} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                        <td style={{ padding: 10 }}>
+                          <div style={{ fontWeight: 600 }}>{new Date(event.date).toLocaleDateString()}</div>
+                          <div style={{ fontSize: 12, color: '#666' }}>{new Date(event.date).toLocaleTimeString()}</div>
+                        </td>
+                        <td style={{ padding: 10 }}>
+                          <div style={{ fontWeight: 600 }}>{event.feedType}</div>
+                          {event.supplier && <div style={{ fontSize: 12, color: '#666' }}>Supplier: {event.supplier}</div>}
+                        </td>
+                        <td style={{ padding: 10, textAlign: 'center' }}>{event.quantity.toFixed(1)}</td>
+                        <td style={{ padding: 10, textAlign: 'center' }}>
+                          {event.cost > 0 ? `${event.cost.toFixed(2)}` : '-'}
+                        </td>
+                        <td style={{ padding: 10 }}>
+                          <div style={{ fontSize: 13 }}>{animalNames || 'N/A'}</div>
+                          <div style={{ fontSize: 12, color: '#666' }}>{event.animals.length} animal(s)</div>
+                        </td>
+                        <td style={{ padding: 10 }}>{event.method}</td>
+                        <td style={{ padding: 10 }}>
+                          <span style={{
+                            padding: '2px 8px',
+                            borderRadius: 4,
+                            fontSize: 12,
+                            background: event.response === 'Excellent' ? '#dcfce7' : event.response === 'Good' ? '#dbeafe' : event.response === 'Fair' ? '#fef3c7' : event.response === 'Poor' ? '#fee2e2' : '#f3f4f6',
+                            color: event.response === 'Excellent' ? '#166534' : event.response === 'Good' ? '#1e40af' : event.response === 'Fair' ? '#92400e' : event.response === 'Poor' ? '#991b1b' : '#666'
+                          }}>
+                            {event.response || 'N/A'}
+                          </span>
+                        </td>
+                        <td style={{ padding: 10, textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            <button onClick={() => startEditEvent(event)} style={{ fontSize: 12 }}>✏️</button>
+                            <button onClick={() => setFeedingEvents(feedingEvents.filter(e => e.id !== event.id))} style={{ fontSize: 12, color: '#dc2626' }}>🗑️</button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="card" style={{ padding: 40, textAlign: 'center' }}>
+              <div style={{ fontSize: 48 }}>📝</div>
+              <p style={{ color: '#666' }}>No feeding events logged yet</p>
             </div>
           )}
         </div>
