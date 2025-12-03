@@ -34,6 +34,12 @@ export default function AnimalTreatment({ animals }){
   const [vetInventory, setVetInventory] = useState([])
   const [selectedInventoryItem, setSelectedInventoryItem] = useState('')
 
+  // Inline edit state
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ treatment: '', status: 'Completed', severity: 'Routine' })
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
+
   useEffect(()=>{
     const raw = localStorage.getItem(KEY)
     if(raw) setItems(JSON.parse(raw))
@@ -602,7 +608,22 @@ export default function AnimalTreatment({ animals }){
               
               return (
                 <div key={item.id} style={{ padding: 16, borderBottom: '1px solid #eee', borderLeft: `4px solid ${severityColor}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                  {inlineEditId === item.id ? (
+                    <div onKeyDown={handleKeyDown} style={{display:'flex',flexDirection:'column',gap:12}}>
+                      <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                        <input value={inlineData.treatment} onChange={e=>setInlineData({...inlineData,treatment:e.target.value})} placeholder="Treatment" style={{flex:1,minWidth:200}} autoFocus />
+                        <select value={inlineData.status} onChange={e=>setInlineData({...inlineData,status:e.target.value})} style={{width:150}}>
+                          {TREATMENT_STATUS.map(s=><option key={s}>{s}</option>)}
+                        </select>
+                        <select value={inlineData.severity} onChange={e=>setInlineData({...inlineData,severity:e.target.value})} style={{width:120}}>
+                          {SEVERITY_LEVELS.map(s=><option key={s}>{s}</option>)}
+                        </select>
+                        <button onClick={saveInlineEdit} style={{background:'#10b981',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✓ Save</button>
+                        <button onClick={cancelInlineEdit} style={{background:'#ef4444',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✕ Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
                         <span style={{ fontWeight: 600, fontSize: 16 }}>{item.treatment}</span>
@@ -643,17 +664,25 @@ export default function AnimalTreatment({ animals }){
                         </div>
                       )}
                     </div>
-                    <div style={{ display: 'flex', gap: '4px' }}>
+                    <div style={{ display: 'flex', gap: '4px', flexDirection: 'column' }}>
+                      <button className="tab-btn" style={{background:'#3b82f6',color:'#fff',padding:'4px 8px'}} onClick={()=>startInlineEdit(item)}>⚡ Quick</button>
                       <button className="tab-btn" onClick={() => startEdit(item)}>✏️</button>
                       <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => remove(item.id)}>🗑️</button>
                     </div>
                   </div>
+                )}
                 </div>
               )
             })}
           </div>
         )}
       </div>
+      {toast && (
+        <div style={{position:'fixed',bottom:20,right:20,padding:'12px 20px',background:toast.type==='error'?'#ef4444':'#10b981',color:'#fff',borderRadius:8,boxShadow:'0 4px 12px rgba(0,0,0,0.15)',zIndex:10000,display:'flex',gap:12}}>
+          <span>{toast.message}</span>
+          {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
+        </div>
+      )}
     </section>
   )
 }
