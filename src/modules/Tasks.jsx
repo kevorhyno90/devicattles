@@ -19,6 +19,8 @@ export default function Tasks(){
   const [showAddForm, setShowAddForm] = useState(false)
   const [modalOpenId, setModalOpenId] = useState(null)
   const [editingId, setEditingId] = useState(null)
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ title: '', priority: 'Medium', due: '', assignedTo: '' })
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterPriority, setFilterPriority] = useState('all')
   const [sortBy, setSortBy] = useState('due')
@@ -120,6 +122,32 @@ export default function Tasks(){
     setFormData({ title: '', description: '', assignedTo: 'Unassigned', due: '', priority: 'Medium', category: 'Animal Care', estimatedHours: 1, location: '' })
     setEditingId(null)
     setShowAddForm(false)
+  }
+
+  // Inline edit handlers
+  function startInlineEdit(task){
+    setInlineEditId(task.id)
+    setInlineData({
+      title: task.title || '',
+      priority: task.priority || 'Medium',
+      due: task.due || '',
+      assignedTo: task.assignedTo || 'Unassigned'
+    })
+  }
+
+  function saveInlineEdit(){
+    if(!inlineEditId) return
+    updateTask(inlineEditId, {
+      title: (inlineData.title || '').trim() || 'Untitled Task',
+      priority: inlineData.priority,
+      due: inlineData.due,
+      assignedTo: inlineData.assignedTo
+    })
+    setInlineEditId(null)
+  }
+
+  function cancelInlineEdit(){
+    setInlineEditId(null)
   }
 
   // Filter and sort logic
@@ -349,11 +377,28 @@ export default function Tasks(){
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
               <input type="checkbox" checked={task.done} onChange={() => toggleDone(task.id)} style={{ marginTop: '4px' }} />
               <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <h4 style={{ margin: 0, textDecoration: task.done ? 'line-through' : 'none' }}>{task.title}</h4>
-                  <span className={`badge ${task.priority === 'Critical' ? 'flag' : task.priority === 'High' ? 'flag' : 'badge'}`}>{task.priority}</span>
-                  <span className="badge">{task.category}</span>
-                </div>
+                {inlineEditId === task.id ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 160px 180px', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                    <input value={inlineData.title} onChange={e=>setInlineData({...inlineData, title: e.target.value})} placeholder="Task title" />
+                    <select value={inlineData.priority} onChange={e=>setInlineData({...inlineData, priority: e.target.value})}>
+                      {PRIORITIES.map(pri => <option key={pri} value={pri}>{pri}</option>)}
+                    </select>
+                    <input type="date" value={inlineData.due} onChange={e=>setInlineData({...inlineData, due: e.target.value})} />
+                    <select value={inlineData.assignedTo} onChange={e=>setInlineData({...inlineData, assignedTo: e.target.value})}>
+                      {(['Unassigned', ...staff]).map(name => <option key={name} value={name}>{name}</option>)}
+                    </select>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={saveInlineEdit} className="tab-btn">Save</button>
+                      <button onClick={cancelInlineEdit} className="tab-btn">Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <h4 style={{ margin: 0, textDecoration: task.done ? 'line-through' : 'none' }}>{task.title}</h4>
+                    <span className={`badge ${task.priority === 'Critical' ? 'flag' : task.priority === 'High' ? 'flag' : 'badge'}`}>{task.priority}</span>
+                    <span className="badge">{task.category}</span>
+                  </div>
+                )}
                 <p style={{ margin: '4px 0', color: 'var(--muted)', fontSize: '14px' }}>{task.description}</p>
                 <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--muted)' }}>
                   <span>👤 {task.assignedTo}</span>
@@ -365,6 +410,7 @@ export default function Tasks(){
               <div className="controls">
                 <button onClick={() => setModalOpenId(task.id)}>View</button>
                 <button onClick={() => startEdit(task)}>Edit</button>
+                <button onClick={() => startInlineEdit(task)}>Quick Edit</button>
                 <button onClick={() => remove(task.id)}>Delete</button>
               </div>
             </div>
