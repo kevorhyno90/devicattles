@@ -7,6 +7,11 @@ export default function CanineManagement({ animals, setAnimals }) {
   const [tab, setTab] = useState('list') // Top-level tab
   const [detailTab, setDetailTab] = useState('info') // Detail view sub-tab
   const [editingId, setEditingId] = useState(null)
+  
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ name: '', role: 'Guard Dog', trainingLevel: 'Basic', weight: '' })
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
 
   const [formData, setFormData] = useState({
     name: '', breed: '', dob: '', weight: '', sex: 'M',
@@ -95,6 +100,59 @@ export default function CanineManagement({ animals, setAnimals }) {
     }
   }
 
+  const startInlineEdit = (dog) => {
+    setInlineEditId(dog.id)
+    setInlineData({ 
+      name: dog.name || '', 
+      role: dog.role || 'Guard Dog',
+      trainingLevel: dog.trainingLevel || 'Basic',
+      weight: dog.weight || ''
+    })
+  }
+
+  const saveInlineEdit = () => {
+    if (!inlineData.name.trim()) {
+      setToast({ type: 'error', message: 'Name is required' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    setAnimals(animals.map(a => {
+      if (a.id === inlineEditId) {
+        setLastChange({ type: 'edit', item: { ...a } })
+        return { 
+          ...a, 
+          name: inlineData.name.trim(),
+          role: inlineData.role,
+          trainingLevel: inlineData.trainingLevel,
+          weight: inlineData.weight
+        }
+      }
+      return a
+    }))
+    setToast({ type: 'success', message: 'Canine updated', showUndo: true })
+    setTimeout(() => setToast(null), 5000)
+    setInlineEditId(null)
+  }
+
+  const cancelInlineEdit = () => {
+    setInlineEditId(null)
+    setInlineData({ name: '', role: 'Guard Dog', trainingLevel: 'Basic', weight: '' })
+  }
+
+  const undoLastChange = () => {
+    if (lastChange) {
+      setAnimals(animals.map(a => a.id === lastChange.item.id ? lastChange.item : a))
+      setToast({ type: 'success', message: 'Change reverted' })
+      setTimeout(() => setToast(null), 3000)
+      setLastChange(null)
+    }
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); saveInlineEdit() }
+    else if (e.key === 'Escape') cancelInlineEdit()
+  }
+
   const deleteHealthRecord = (canineId, recordId) => {
     setAnimals(animals.map(a => a.id === canineId ? {
       ...a,
@@ -147,9 +205,26 @@ export default function CanineManagement({ animals, setAnimals }) {
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
                 {canines.map(dog => (
-                  <div key={dog.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '14px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }} onClick={() => setSelectedCanine(dog)}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                      <div>
+                  <div key={dog.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '14px', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    {inlineEditId === dog.id ? (
+                      <div onKeyDown={handleKeyDown} style={{display:'flex',flexDirection:'column',gap:8}}>
+                        <input value={inlineData.name} onChange={e=>setInlineData({...inlineData,name:e.target.value})} placeholder="Name" style={{padding:'6px',border:'1px solid #d1d5db',borderRadius:4,fontSize:13}} autoFocus />
+                        <select value={inlineData.role} onChange={e=>setInlineData({...inlineData,role:e.target.value})} style={{padding:'6px',border:'1px solid #d1d5db',borderRadius:4,fontSize:13}}>
+                          {roles.map(r=><option key={r}>{r}</option>)}
+                        </select>
+                        <select value={inlineData.trainingLevel} onChange={e=>setInlineData({...inlineData,trainingLevel:e.target.value})} style={{padding:'6px',border:'1px solid #d1d5db',borderRadius:4,fontSize:13}}>
+                          {trainingLevels.map(t=><option key={t}>{t}</option>)}
+                        </select>
+                        <input type="number" value={inlineData.weight} onChange={e=>setInlineData({...inlineData,weight:e.target.value})} placeholder="Weight (kg)" style={{padding:'6px',border:'1px solid #d1d5db',borderRadius:4,fontSize:13}} />
+                        <div style={{display:'flex',gap:4}}>
+                          <button onClick={saveInlineEdit} style={{flex:1,padding:'6px',background:'#10b981',color:'#fff',border:'none',borderRadius:4,fontSize:11}}>✓ Save</button>
+                          <button onClick={cancelInlineEdit} style={{flex:1,padding:'6px',background:'#ef4444',color:'#fff',border:'none',borderRadius:4,fontSize:11}}>✕ Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{cursor:'pointer'}} onClick={() => setSelectedCanine(dog)}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                          <div>
                         <h4 style={{ margin: '0 0 4px 0', color: '#1f2937' }}>{dog.name}</h4>
                         <p style={{ margin: '0', fontSize: '12px', color: '#666' }}>{dog.breed || 'Mixed'}</p>
                       </div>
@@ -163,9 +238,12 @@ export default function CanineManagement({ animals, setAnimals }) {
                       <div>Weight: {dog.weight || 'N/A'} kg</div>
                     </div>
                     <div style={{ marginTop: '8px', display: 'flex', gap: '4px' }}>
+                      <button onClick={(e) => { e.stopPropagation(); startInlineEdit(dog); }} style={{ flex: 1, padding: '4px 8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>⚡</button>
                       <button onClick={(e) => { e.stopPropagation(); editCanine(dog); }} style={{ flex: 1, padding: '4px 8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>✏️</button>
                       <button onClick={(e) => { e.stopPropagation(); deleteCanine(dog.id); }} style={{ flex: 1, padding: '4px 8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>🗑️</button>
                     </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -506,6 +584,12 @@ export default function CanineManagement({ animals, setAnimals }) {
               )}
             </div>
           )}
+        </div>
+      )}
+      {toast && (
+        <div style={{position:'fixed',bottom:20,right:20,padding:'12px 20px',background:toast.type==='error'?'#ef4444':'#10b981',color:'#fff',borderRadius:8,boxShadow:'0 4px 12px rgba(0,0,0,0.15)',zIndex:10000,display:'flex',gap:12}}>
+          <span>{toast.message}</span>
+          {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
         </div>
       )}
     </div>
