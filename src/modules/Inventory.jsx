@@ -236,6 +236,12 @@ export default function Inventory(){
   const [filterCategory, setFilterCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   
+  // Inline edit state
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ name: '', quantity: '', unitCost: '', location: '', reorderPoint: '' })
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
+  
   const [equipmentForm, setEquipmentForm] = useState({
     name: '', type: 'Tractor', manufacturer: '', model: '', serialNumber: '',
     year: new Date().getFullYear(), purchaseDate: '', purchasePrice: '', currentValue: '',
@@ -334,6 +340,87 @@ export default function Inventory(){
   function remove(id){
     if(!confirm('Delete inventory item?')) return
     setItems(items.filter(i=>i.id!==id))
+  }
+
+  // Inline Quick Edit Functions
+  function startInlineEdit(item) {
+    setInlineEditId(item.id)
+    setInlineData({
+      name: item.name,
+      quantity: item.quantity,
+      unitCost: item.unitCost,
+      location: item.location,
+      reorderPoint: item.reorderPoint || ''
+    })
+  }
+
+  function saveInlineEdit() {
+    // Validation
+    if (!inlineData.name.trim()) {
+      setToast({ type: 'error', message: 'Item name is required' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    if (!inlineData.quantity || isNaN(inlineData.quantity) || Number(inlineData.quantity) < 0) {
+      setToast({ type: 'error', message: 'Valid quantity is required' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+
+    const updated = items.map(i => {
+      if (i.id === inlineEditId) {
+        // Store previous state for undo
+        setLastChange({ type: 'edit', item: { ...i } })
+        const quantity = Number(inlineData.quantity)
+        const unitCost = Number(inlineData.unitCost) || 0
+        return { 
+          ...i, 
+          ...inlineData,
+          quantity,
+          unitCost,
+          totalValue: quantity * unitCost
+        }
+      }
+      return i
+    })
+    
+    setItems(updated)
+    localStorage.setItem(KEY, JSON.stringify(updated))
+    
+    setToast({ type: 'success', message: 'Item updated successfully', showUndo: true })
+    setTimeout(() => setToast(null), 5000)
+    
+    setInlineEditId(null)
+    setInlineData({ name: '', quantity: '', unitCost: '', location: '', reorderPoint: '' })
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({ name: '', quantity: '', unitCost: '', location: '', reorderPoint: '' })
+  }
+
+  function undoLastChange() {
+    if (!lastChange) return
+    
+    if (lastChange.type === 'edit') {
+      const updated = items.map(i => 
+        i.id === lastChange.item.id ? lastChange.item : i
+      )
+      setItems(updated)
+      localStorage.setItem(KEY, JSON.stringify(updated))
+      setToast({ type: 'success', message: 'Change reverted' })
+      setTimeout(() => setToast(null), 3000)
+      setLastChange(null)
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      saveInlineEdit()
+    } else if (e.key === 'Escape') {
+      cancelInlineEdit()
+    }
   }
 
   function adjustQuantity(id, adjustment, reason){
@@ -1016,6 +1103,76 @@ export default function Inventory(){
               padding: '16px',
               borderLeft: isLowStock ? '4px solid #f59e0b' : isExpiring ? '4px solid #dc2626' : 'none'
             }}>
+              {inlineEditId === item.id ? (
+                // Inline Edit Mode
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }} onKeyDown={handleKeyDown}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>⚡ Quick Edit</h4>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={saveInlineEdit} style={{ padding: '6px 16px', fontSize: '0.85rem', background: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>✓ Save</button>
+                      <button onClick={cancelInlineEdit} style={{ padding: '6px 16px', fontSize: '0.85rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>✕ Cancel</button>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 600 ? '1fr' : 'repeat(3, 1fr)', gap: 12 }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: 4 }}>Item Name *</label>
+                      <input
+                        type="text"
+                        value={inlineData.name}
+                        onChange={(e) => setInlineData({ ...inlineData, name: e.target.value })}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                        autoFocus
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: 4 }}>Quantity *</label>
+                      <input
+                        type="number"
+                        value={inlineData.quantity}
+                        onChange={(e) => setInlineData({ ...inlineData, quantity: e.target.value })}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: 4 }}>Unit Cost (KES)</label>
+                      <input
+                        type="number"
+                        value={inlineData.unitCost}
+                        onChange={(e) => setInlineData({ ...inlineData, unitCost: e.target.value })}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: 4 }}>Location</label>
+                      <input
+                        type="text"
+                        value={inlineData.location}
+                        onChange={(e) => setInlineData({ ...inlineData, location: e.target.value })}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: 4 }}>Reorder Point</label>
+                      <input
+                        type="number"
+                        value={inlineData.reorderPoint}
+                        onChange={(e) => setInlineData({ ...inlineData, reorderPoint: e.target.value })}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: 4 }}>
+                    💡 Press Enter to save, Escape to cancel
+                  </div>
+                </div>
+              ) : (
+                // Display Mode
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
@@ -1065,6 +1222,7 @@ export default function Inventory(){
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  <button className="tab-btn" onClick={() => startInlineEdit(item)} title="Quick Edit">⚡ Quick</button>
                   <button className="tab-btn" onClick={() => {
                     const amount = parseFloat(prompt('Enter quantity to add:', '0'))
                     if(amount && amount > 0) adjustQuantity(item.id, amount, 'Stock added')
@@ -1073,11 +1231,12 @@ export default function Inventory(){
                     const amount = parseFloat(prompt('Enter quantity to remove:', '0'))
                     if(amount && amount > 0) adjustQuantity(item.id, -amount, 'Stock used')
                   }}>➖ Use</button>
-                  <button className="tab-btn" onClick={() => setModalOpenId(item.id)}>👁️ Details</button>
-                  <button className="tab-btn" onClick={() => startEdit(item)}>✏️ Edit</button>
+                  <button className="tab-btn" onClick={() => setModalOpenId(item.id)}>👁️ View</button>
+                  <button className="tab-btn" onClick={() => startEdit(item)}>✏️ Full</button>
                   <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => remove(item.id)}>🗑️</button>
                 </div>
               </div>
+              )}
             </div>
           )
         })}
@@ -1245,6 +1404,44 @@ export default function Inventory(){
           </div>
         )
       })()}
+      
+      {/* Toast Notifications */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          padding: '12px 20px',
+          background: toast.type === 'error' ? '#ef4444' : '#10b981',
+          color: '#fff',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 10000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          maxWidth: '400px',
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          <span>{toast.message}</span>
+          {toast.showUndo && (
+            <button
+              onClick={undoLastChange}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                color: '#fff',
+                padding: '4px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.85rem'
+              }}
+            >
+              ↶ Undo
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
