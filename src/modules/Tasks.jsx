@@ -20,7 +20,8 @@ export default function Tasks(){
   const [modalOpenId, setModalOpenId] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [inlineEditId, setInlineEditId] = useState(null)
-  const [inlineData, setInlineData] = useState({ title: '', priority: 'Medium', due: '', assignedTo: '', description: '', estimatedHours: 1, location: '' })
+  const [inlineData, setInlineData] = useState({ title: '', priority: 'Medium', due: '', assignedTo: '', category: 'Animal Care', description: '', estimatedHours: 1, location: '' })
+  const [toast, setToast] = useState(null)
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterPriority, setFilterPriority] = useState('all')
   const [sortBy, setSortBy] = useState('due')
@@ -132,6 +133,7 @@ export default function Tasks(){
       priority: task.priority || 'Medium',
       due: task.due || '',
       assignedTo: task.assignedTo || 'Unassigned',
+      category: task.category || 'Animal Care',
       description: task.description || '',
       estimatedHours: task.estimatedHours || 1,
       location: task.location || ''
@@ -145,11 +147,14 @@ export default function Tasks(){
       priority: inlineData.priority,
       due: inlineData.due,
       assignedTo: inlineData.assignedTo,
+      category: inlineData.category,
       description: (inlineData.description || '').trim(),
       estimatedHours: Number(inlineData.estimatedHours) || 1,
       location: (inlineData.location || '').trim()
     })
     setInlineEditId(null)
+    setToast({ type: 'success', message: 'Task updated successfully' })
+    setTimeout(() => setToast(null), 2000)
   }
 
   function cancelInlineEdit(){
@@ -393,6 +398,9 @@ export default function Tasks(){
                     <select value={inlineData.assignedTo} onChange={e=>setInlineData({...inlineData, assignedTo: e.target.value})}>
                       {(['Unassigned', ...staff]).map(name => <option key={name} value={name}>{name}</option>)}
                     </select>
+                    <select value={inlineData.category} onChange={e=>setInlineData({...inlineData, category: e.target.value})} style={{ gridColumn: '1 / -1' }}>
+                      {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
                     <textarea placeholder="Description" value={inlineData.description} onChange={e=>setInlineData({...inlineData, description: e.target.value})} style={{ gridColumn: '1 / -1', minHeight: '70px' }} />
                     <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '8px', alignItems: 'center', gridColumn: '1 / -1' }}>
                       <input type="number" min="0" placeholder="Est. Hours" value={inlineData.estimatedHours} onChange={e=>setInlineData({...inlineData, estimatedHours: e.target.value})} />
@@ -433,6 +441,12 @@ export default function Tasks(){
         <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>
           <h3>No tasks found</h3>
           <p>No tasks match your current filters. Try adjusting your search criteria.</p>
+        </div>
+      )}
+
+      {toast && (
+        <div className="card" style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.type==='success' ? '#16a34a' : '#dc2626', color: '#fff', padding: '12px 16px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+          {toast.message}
         </div>
       )}
 
