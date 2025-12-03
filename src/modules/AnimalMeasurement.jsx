@@ -39,6 +39,12 @@ export default function AnimalMeasurement({ animals }){
   const [viewMode, setViewMode] = useState('list')
   const [editingId, setEditingId] = useState(null)
 
+  // Inline edit state
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ value: '', unit: 'kg', condition: 'Good' })
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
+
   useEffect(()=>{
     const raw = localStorage.getItem(KEY)
     if(raw) setItems(JSON.parse(raw))
@@ -137,7 +143,60 @@ export default function AnimalMeasurement({ animals }){
     if(animals && animals[0]) setAnimalId(animals[0].id)
   }
 
-  const filteredItems = items.filter(item => {
+  // Inline Quick Edit Functions
+  function startInlineEdit(item) {
+    setInlineEditId(item.id)
+    setInlineData({ 
+      value: String(item.value || ''), 
+      unit: item.unit || 'kg',
+      condition: item.condition || 'Good'
+    })
+  }
+
+  function saveInlineEdit() {
+    if (!inlineData.value || isNaN(inlineData.value) || Number(inlineData.value) <= 0) {
+      setToast({ type: 'error', message: 'Valid measurement value is required' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    const updated = items.map(item => {
+      if (item.id === inlineEditId) {
+        setLastChange({ type: 'edit', item: { ...item } })
+        return { 
+          ...item, 
+          value: parseFloat(inlineData.value),
+          unit: inlineData.unit,
+          condition: inlineData.condition
+        }
+      }
+      return item
+    })
+    setItems(updated)
+    setToast({ type: 'success', message: 'Measurement updated', showUndo: true })
+    setTimeout(() => setToast(null), 5000)
+    setInlineEditId(null)
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({ value: '', unit: 'kg', condition: 'Good' })
+  }
+
+  function undoLastChange() {
+    if (lastChange) {
+      setItems(items.map(i => i.id === lastChange.item.id ? lastChange.item : i))
+      setToast({ type: 'success', message: 'Change reverted' })
+      setTimeout(() => setToast(null), 3000)
+      setLastChange(null)
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') { e.preventDefault(); saveInlineEdit() }
+    else if (e.key === 'Escape') cancelInlineEdit()
+  }
+
+  const filteredItems = items.filter(i => {
     if(filterAnimal !== 'all' && item.animalId !== filterAnimal) return false
     if(filterType !== 'all' && item.type !== filterType) return false
     return true
@@ -458,42 +517,70 @@ export default function AnimalMeasurement({ animals }){
                 const animal = (animals||[]).find(a => a.id === item.animalId)
                 
                 return (
-                  <div key={item.id} style={{ padding: 16, borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontWeight: 600, fontSize: 16 }}>{item.type}</span>
-                        {item.value && <span style={{ fontSize: 18, color: '#059669', fontWeight: 'bold' }}>{item.value} {item.unit}</span>}
-                        <span className="badge" style={{ background: item.condition === 'Excellent' ? '#d1fae5' : item.condition === 'Good' ? '#e0f2fe' : item.condition === 'Fair' ? '#fef3c7' : '#fee2e2' }}>
-                          {item.condition}
-                        </span>
-                        {item.bcs && <span className="badge" style={{ background: '#fef3c7' }}>BCS: {item.bcs}</span>}
-                      </div>
-                      <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
-                        <strong>{animal?.name || animal?.tag || item.animalId}</strong> • {new Date(item.timestamp || item.date).toLocaleDateString()}
-                        {item.measuredBy && ` • ${item.measuredBy}`}
-                      </div>
-                      {(item.height || item.length || item.girth) && (
-                        <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
-                          {item.height && `Height: ${item.height}cm • `}
-                          {item.length && `Length: ${item.length}cm • `}
-                          {item.girth && `Girth: ${item.girth}cm`}
+                  <div key={item.id} style={{ padding: 16, borderBottom: '1px solid #eee' }}>
+                    {inlineEditId === item.id ? (
+                      <div onKeyDown={handleKeyDown} style={{display:'flex',flexDirection:'column',gap:12}}>
+                        <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                          <input type="number" value={inlineData.value} onChange={e=>setInlineData({...inlineData,value:e.target.value})} placeholder="Value" style={{width:100}} autoFocus />
+                          <select value={inlineData.unit} onChange={e=>setInlineData({...inlineData,unit:e.target.value})} style={{width:100}}>
+                            <option value="kg">kg</option>
+                            <option value="lbs">lbs</option>
+                            <option value="cm">cm</option>
+                            <option value="inches">inches</option>
+                          </select>
+                          <select value={inlineData.condition} onChange={e=>setInlineData({...inlineData,condition:e.target.value})} style={{width:120}}>
+                            {CONDITIONS.map(c=><option key={c}>{c}</option>)}
+                          </select>
+                          <button onClick={saveInlineEdit} style={{background:'#10b981',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✓ Save</button>
+                          <button onClick={cancelInlineEdit} style={{background:'#ef4444',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✕ Cancel</button>
                         </div>
-                      )}
-                      {item.notes && (
-                        <div style={{ fontSize: 13, color: '#888', marginTop: 8, padding: 8, background: '#f9fafb', borderRadius: 4 }}>
-                          {item.notes}
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 600, fontSize: 16 }}>{item.type}</span>
+                            {item.value && <span style={{ fontSize: 18, color: '#059669', fontWeight: 'bold' }}>{item.value} {item.unit}</span>}
+                            <span className="badge" style={{ background: item.condition === 'Excellent' ? '#d1fae5' : item.condition === 'Good' ? '#e0f2fe' : item.condition === 'Fair' ? '#fef3c7' : '#fee2e2' }}>
+                              {item.condition}
+                            </span>
+                            {item.bcs && <span className="badge" style={{ background: '#fef3c7' }}>BCS: {item.bcs}</span>}
+                          </div>
+                          <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
+                            <strong>{animal?.name || animal?.tag || item.animalId}</strong> • {new Date(item.timestamp || item.date).toLocaleDateString()}
+                            {item.measuredBy && ` • ${item.measuredBy}`}
+                          </div>
+                          {(item.height || item.length || item.girth) && (
+                            <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+                              {item.height && `Height: ${item.height}cm • `}
+                              {item.length && `Length: ${item.length}cm • `}
+                              {item.girth && `Girth: ${item.girth}cm`}
+                            </div>
+                          )}
+                          {item.notes && (
+                            <div style={{ fontSize: 13, color: '#888', marginTop: 8, padding: 8, background: '#f9fafb', borderRadius: 4 }}>
+                              {item.notes}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <div style={{display:'flex',gap:4}}>
-                      <button className="tab-btn" onClick={() => startEdit(item)}>✏️</button>
-                      <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => remove(item.id)}>🗑️</button>
-                    </div>
+                        <div style={{display:'flex',gap:4,flexDirection:'column'}}>
+                          <button className="tab-btn" style={{background:'#3b82f6',color:'#fff',padding:'4px 8px'}} onClick={()=>startInlineEdit(item)}>⚡ Quick</button>
+                          <button className="tab-btn" onClick={() => startEdit(item)}>✏️</button>
+                          <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => remove(item.id)}>🗑️</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })}
             </div>
           )}
+        </div>
+      )}
+      {toast && (
+        <div style={{position:'fixed',bottom:20,right:20,padding:'12px 20px',background:toast.type==='error'?'#ef4444':'#10b981',color:'#fff',borderRadius:8,boxShadow:'0 4px 12px rgba(0,0,0,0.15)',zIndex:10000,display:'flex',gap:12}}>
+          <span>{toast.message}</span>
+          {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
         </div>
       )}
     </section>
