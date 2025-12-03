@@ -55,6 +55,11 @@ export default function CropSales({ crops, cropId: propCropId }) {
   const [qualityGrade, setQualityGrade] = useState('Premium')
   const [moisture, setMoisture] = useState('')
   const [notes, setNotes] = useState('')
+  
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ quantity: '', pricePerUnit: '', buyer: '', paymentStatus: 'Paid' })
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
 
   useEffect(() => {
     const raw = localStorage.getItem(KEY)
@@ -162,6 +167,70 @@ export default function CropSales({ crops, cropId: propCropId }) {
   function remove(id) {
     if (!confirm('Delete sale record ' + id + '?')) return
     setItems(items.filter(i => i.id !== id))
+  }
+
+  function startInlineEdit(sale) {
+    setInlineEditId(sale.id)
+    setInlineData({ 
+      quantity: sale.quantity || '', 
+      pricePerUnit: sale.pricePerUnit || '',
+      buyer: sale.buyer || '',
+      paymentStatus: sale.paymentStatus || 'Paid'
+    })
+  }
+
+  function saveInlineEdit() {
+    if (!inlineData.quantity || Number(inlineData.quantity) <= 0) {
+      setToast({ type: 'error', message: 'Quantity must be greater than 0' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    if (!inlineData.buyer.trim()) {
+      setToast({ type: 'error', message: 'Buyer name is required' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    const qty = Number(inlineData.quantity)
+    const price = parseFloat(inlineData.pricePerUnit) || 0
+    const totalPrice = qty * price
+    
+    const updated = items.map(item => {
+      if (item.id === inlineEditId) {
+        setLastChange({ type: 'edit', item: { ...item } })
+        return { 
+          ...item, 
+          quantity: qty,
+          pricePerUnit: price,
+          totalPrice,
+          buyer: inlineData.buyer.trim(),
+          paymentStatus: inlineData.paymentStatus
+        }
+      }
+      return item
+    })
+    setItems(updated)
+    setToast({ type: 'success', message: 'Sale record updated', showUndo: true })
+    setTimeout(() => setToast(null), 5000)
+    setInlineEditId(null)
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({ quantity: '', pricePerUnit: '', buyer: '', paymentStatus: 'Paid' })
+  }
+
+  function undoLastChange() {
+    if (lastChange) {
+      setItems(items.map(i => i.id === lastChange.item.id ? lastChange.item : i))
+      setToast({ type: 'success', message: 'Change reverted' })
+      setTimeout(() => setToast(null), 3000)
+      setLastChange(null)
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') { e.preventDefault(); saveInlineEdit() }
+    else if (e.key === 'Escape') cancelInlineEdit()
   }
 
   function updatePaymentStatus(id, newStatus) {
@@ -385,13 +454,25 @@ export default function CropSales({ crops, cropId: propCropId }) {
                 key={sale.id}
                 style={{
                   padding: 16,
-                  borderBottom: '1px solid #e5e7eb',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
+                  borderBottom: '1px solid #e5e7eb'
                 }}
               >
-                <div style={{ flex: 1 }}>
+                {inlineEditId === sale.id ? (
+                  <div onKeyDown={handleKeyDown} style={{display:'flex',flexDirection:'column',gap:12}}>
+                    <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                      <input type="number" value={inlineData.quantity} onChange={e=>setInlineData({...inlineData,quantity:e.target.value})} placeholder="Quantity" style={{width:120}} autoFocus />
+                      <input type="number" value={inlineData.pricePerUnit} onChange={e=>setInlineData({...inlineData,pricePerUnit:e.target.value})} placeholder="Price/Unit" style={{width:120}} />
+                      <input value={inlineData.buyer} onChange={e=>setInlineData({...inlineData,buyer:e.target.value})} placeholder="Buyer" style={{minWidth:200,flex:1}} />
+                      <select value={inlineData.paymentStatus} onChange={e=>setInlineData({...inlineData,paymentStatus:e.target.value})} style={{width:120}}>
+                        {PAYMENT_STATUS.map(s=><option key={s}>{s}</option>)}
+                      </select>
+                      <button onClick={saveInlineEdit} style={{background:'#10b981',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✓ Save</button>
+                      <button onClick={cancelInlineEdit} style={{background:'#ef4444',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✕ Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>
                     {cropName} - {sale.quantity} {sale.unit}
                     <span
@@ -424,6 +505,7 @@ export default function CropSales({ crops, cropId: propCropId }) {
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
+                  <button onClick={()=>startInlineEdit(sale)} style={{padding:'6px 12px',background:'#3b82f6',color:'#fff',border:'none',borderRadius:4,fontSize:12}}>⚡ Quick</button>
                   {sale.paymentStatus !== 'Paid' && (
                     <button
                       onClick={() => updatePaymentStatus(sale.id, 'Paid')}
@@ -439,11 +521,19 @@ export default function CropSales({ crops, cropId: propCropId }) {
                     Delete
                   </button>
                 </div>
+              </div>
+            )}
               </li>
             )
           })}
         </ul>
       </div>
+      {toast && (
+        <div style={{position:'fixed',bottom:20,right:20,padding:'12px 20px',background:toast.type==='error'?'#ef4444':'#10b981',color:'#fff',borderRadius:8,boxShadow:'0 4px 12px rgba(0,0,0,0.15)',zIndex:10000,display:'flex',gap:12}}>
+          <span>{toast.message}</span>
+          {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
+        </div>
+      )}
     </section>
   )
 }
