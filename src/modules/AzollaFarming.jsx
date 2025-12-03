@@ -39,6 +39,12 @@ export default function AzollaFarming() {
     purpose: 'Animal Feed', usedFor: '', salePrice: '', notes: ''
   })
 
+  // Inline edit state
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ name: '', size: '', location: '', status: 'Active' })
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
+
   useEffect(() => {
     const raw = localStorage.getItem(KEY)
     if (raw) setPonds(JSON.parse(raw))
@@ -69,6 +75,66 @@ export default function AzollaFarming() {
   function deletePond(id) {
     if (!confirm('Delete this pond?')) return
     setPonds(ponds.filter(p => p.id !== id))
+  }
+
+  // Inline Quick Edit Functions
+  function startInlineEdit(pond) {
+    setInlineEditId(pond.id)
+    setInlineData({ 
+      name: pond.name || '', 
+      size: String(pond.size || ''), 
+      location: pond.location || '', 
+      status: pond.status || 'Active' 
+    })
+  }
+
+  function saveInlineEdit() {
+    if (!inlineData.name.trim()) {
+      setToast({ type: 'error', message: 'Pond name is required' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    if (!inlineData.size || isNaN(inlineData.size) || Number(inlineData.size) <= 0) {
+      setToast({ type: 'error', message: 'Valid size is required' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    const updated = ponds.map(pond => {
+      if (pond.id === inlineEditId) {
+        setLastChange({ type: 'edit', item: { ...pond } })
+        return { 
+          ...pond, 
+          name: inlineData.name.trim(), 
+          size: parseFloat(inlineData.size),
+          location: inlineData.location.trim(),
+          status: inlineData.status
+        }
+      }
+      return pond
+    })
+    setPonds(updated)
+    setToast({ type: 'success', message: 'Pond updated', showUndo: true })
+    setTimeout(() => setToast(null), 5000)
+    setInlineEditId(null)
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({ name: '', size: '', location: '', status: 'Active' })
+  }
+
+  function undoLastChange() {
+    if (lastChange) {
+      setPonds(ponds.map(p => p.id === lastChange.item.id ? lastChange.item : p))
+      setToast({ type: 'success', message: 'Change reverted' })
+      setTimeout(() => setToast(null), 3000)
+      setLastChange(null)
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') { e.preventDefault(); saveInlineEdit() }
+    else if (e.key === 'Escape') cancelInlineEdit()
   }
 
   function addMaintenance() {
@@ -253,29 +319,47 @@ export default function AzollaFarming() {
                 
                 return (
                   <div key={pond.id} style={{ padding: 16, borderBottom: '1px solid #eee' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
-                          <span style={{ fontWeight: 600, fontSize: 16 }}>{pond.name}</span>
-                          <span className="badge" style={{ 
-                            background: pond.status === 'Active' ? '#d1fae5' : pond.status === 'Maintenance' ? '#fef3c7' : '#fee2e2' 
-                          }}>{pond.status}</span>
+                    {inlineEditId === pond.id ? (
+                      <div onKeyDown={handleKeyDown} style={{display:'flex',flexDirection:'column',gap:12}}>
+                        <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                          <input value={inlineData.name} onChange={e=>setInlineData({...inlineData,name:e.target.value})} placeholder="Pond Name" style={{width:150}} autoFocus />
+                          <input type="number" value={inlineData.size} onChange={e=>setInlineData({...inlineData,size:e.target.value})} placeholder="Size (m²)" style={{width:100}} />
+                          <input value={inlineData.location} onChange={e=>setInlineData({...inlineData,location:e.target.value})} placeholder="Location" style={{width:120}} />
+                          <select value={inlineData.status} onChange={e=>setInlineData({...inlineData,status:e.target.value})} style={{width:120}}>
+                            {POND_STATUS.map(s=><option key={s}>{s}</option>)}
+                          </select>
+                          <button onClick={saveInlineEdit} style={{background:'#10b981',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✓ Save</button>
+                          <button onClick={cancelInlineEdit} style={{background:'#ef4444',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✕ Cancel</button>
                         </div>
-                        <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
-                          <strong>Size:</strong> {pond.size}m² • <strong>Location:</strong> {pond.location} • <strong>Setup:</strong> {new Date(pond.setupDate).toLocaleDateString()} ({daysActive} days)
-                        </div>
-                        <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
-                          <strong>Yield:</strong> {pond.yieldPerWeek}kg/week • <strong>Temp:</strong> {pond.waterTemp}°C • <strong>pH:</strong> {pond.pH}
-                        </div>
-                        <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
-                          <strong>Nutrients:</strong> {pond.nutrients}
-                        </div>
-                        {pond.notes && (
-                          <div style={{ fontSize: 13, color: '#888', marginTop: 8, fontStyle: 'italic' }}>{pond.notes}</div>
-                        )}
                       </div>
-                      <button onClick={() => deletePond(pond.id)} style={{ fontSize: 12, padding: '4px 8px', background: '#dc2626' }}>Delete</button>
-                    </div>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 600, fontSize: 16 }}>{pond.name}</span>
+                            <span className="badge" style={{ 
+                              background: pond.status === 'Active' ? '#d1fae5' : pond.status === 'Maintenance' ? '#fef3c7' : '#fee2e2' 
+                            }}>{pond.status}</span>
+                          </div>
+                          <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
+                            <strong>Size:</strong> {pond.size}m² • <strong>Location:</strong> {pond.location} • <strong>Setup:</strong> {new Date(pond.setupDate).toLocaleDateString()} ({daysActive} days)
+                          </div>
+                          <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+                            <strong>Yield:</strong> {pond.yieldPerWeek}kg/week • <strong>Temp:</strong> {pond.waterTemp}°C • <strong>pH:</strong> {pond.pH}
+                          </div>
+                          <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+                            <strong>Nutrients:</strong> {pond.nutrients}
+                          </div>
+                          {pond.notes && (
+                            <div style={{ fontSize: 13, color: '#888', marginTop: 8, fontStyle: 'italic' }}>{pond.notes}</div>
+                          )}
+                        </div>
+                        <div style={{display:'flex',gap:4,flexDirection:'column'}}>
+                          <button onClick={()=>startInlineEdit(pond)} style={{fontSize:12,padding:'4px 8px',background:'#3b82f6',color:'#fff'}}>⚡ Quick</button>
+                          <button onClick={() => deletePond(pond.id)} style={{ fontSize: 12, padding: '4px 8px', background: '#dc2626',color:'#fff' }}>Delete</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -461,6 +545,12 @@ export default function AzollaFarming() {
               </div>
             )}
           </div>
+        </div>
+      )}
+      {toast && (
+        <div style={{position:'fixed',bottom:20,right:20,padding:'12px 20px',background:toast.type==='error'?'#ef4444':'#10b981',color:'#fff',borderRadius:8,boxShadow:'0 4px 12px rgba(0,0,0,0.15)',zIndex:10000,display:'flex',gap:12}}>
+          <span>{toast.message}</span>
+          {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
         </div>
       )}
     </div>
