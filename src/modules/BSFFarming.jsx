@@ -37,6 +37,11 @@ export default function BSFFarming() {
     type: 'Larvae', quantity: '', weight: '', quality: 'Good',
     purpose: 'Animal Feed', salePrice: '', notes: ''
   })
+  
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ name: '', location: '', status: 'Active', population: '' })
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
 
   useEffect(() => {
     const raw = localStorage.getItem(KEY)
@@ -68,6 +73,60 @@ export default function BSFFarming() {
   function deleteColony(id) {
     if (!confirm('Delete this colony?')) return
     setColonies(colonies.filter(c => c.id !== id))
+  }
+
+  function startInlineEdit(colony) {
+    setInlineEditId(colony.id)
+    setInlineData({ 
+      name: colony.name || '', 
+      location: colony.location || '',
+      status: colony.status || 'Active',
+      population: colony.population || ''
+    })
+  }
+
+  function saveInlineEdit() {
+    if (!inlineData.name.trim()) {
+      setToast({ type: 'error', message: 'Colony name is required' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    const updated = colonies.map(colony => {
+      if (colony.id === inlineEditId) {
+        setLastChange({ type: 'edit', item: { ...colony } })
+        return { 
+          ...colony, 
+          name: inlineData.name.trim(),
+          location: inlineData.location.trim(),
+          status: inlineData.status,
+          population: inlineData.population
+        }
+      }
+      return colony
+    })
+    setColonies(updated)
+    setToast({ type: 'success', message: 'Colony updated', showUndo: true })
+    setTimeout(() => setToast(null), 5000)
+    setInlineEditId(null)
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({ name: '', location: '', status: 'Active', population: '' })
+  }
+
+  function undoLastChange() {
+    if (lastChange) {
+      setColonies(colonies.map(c => c.id === lastChange.item.id ? lastChange.item : c))
+      setToast({ type: 'success', message: 'Change reverted' })
+      setTimeout(() => setToast(null), 3000)
+      setLastChange(null)
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') { e.preventDefault(); saveInlineEdit() }
+    else if (e.key === 'Escape') cancelInlineEdit()
   }
 
   function addFeeding() {
@@ -239,8 +298,22 @@ export default function BSFFarming() {
                 
                 return (
                   <div key={colony.id} style={{ padding: 16, borderBottom: '1px solid #eee' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                      <div style={{ flex: 1 }}>
+                    {inlineEditId === colony.id ? (
+                      <div onKeyDown={handleKeyDown} style={{display:'flex',flexDirection:'column',gap:12}}>
+                        <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                          <input value={inlineData.name} onChange={e=>setInlineData({...inlineData,name:e.target.value})} placeholder="Colony name" style={{width:150}} autoFocus />
+                          <input value={inlineData.location} onChange={e=>setInlineData({...inlineData,location:e.target.value})} placeholder="Location" style={{width:120}} />
+                          <select value={inlineData.status} onChange={e=>setInlineData({...inlineData,status:e.target.value})} style={{width:120}}>
+                            {COLONY_STATUS.map(s=><option key={s}>{s}</option>)}
+                          </select>
+                          <input type="number" value={inlineData.population} onChange={e=>setInlineData({...inlineData,population:e.target.value})} placeholder="Population" style={{width:120}} />
+                          <button onClick={saveInlineEdit} style={{background:'#10b981',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✓ Save</button>
+                          <button onClick={cancelInlineEdit} style={{background:'#ef4444',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✕ Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                        <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
                           <span style={{ fontWeight: 600, fontSize: 16 }}>{colony.name}</span>
                           <span className="badge" style={{ 
@@ -260,8 +333,12 @@ export default function BSFFarming() {
                           <div style={{ fontSize: 13, color: '#888', marginTop: 8, fontStyle: 'italic' }}>{colony.notes}</div>
                         )}
                       </div>
-                      <button onClick={() => deleteColony(colony.id)} style={{ fontSize: 12, padding: '4px 8px', background: '#dc2626' }}>Delete</button>
+                      <div style={{display:'flex',gap:4,flexDirection:'column'}}>
+                        <button onClick={()=>startInlineEdit(colony)} style={{fontSize:12,padding:'4px 8px',background:'#3b82f6',color:'#fff'}}>⚡ Quick</button>
+                        <button onClick={() => deleteColony(colony.id)} style={{ fontSize: 12, padding: '4px 8px', background: '#dc2626' }}>Delete</button>
+                      </div>
                     </div>
+                    )}
                   </div>
                 )
               })}
