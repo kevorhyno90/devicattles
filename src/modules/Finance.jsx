@@ -42,6 +42,12 @@ export default function Finance(){
   const [filterType, setFilterType] = useState('all')
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
   
+  // Inline edit state
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ amount: '', description: '', category: '', subcategory: '', paymentMethod: 'Cash', vendor: '', date: '' })
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
+  
   // Form states
   const [formData, setFormData] = useState({
     amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', 
@@ -145,6 +151,83 @@ export default function Finance(){
   function remove(id){
     if(!confirm('Delete financial entry '+id+'?')) return
     setItems(items.filter(i=>i.id!==id))
+  }
+
+  // Inline Quick Edit Functions
+  function startInlineEdit(entry) {
+    setInlineEditId(entry.id)
+    setInlineData({
+      amount: Math.abs(entry.amount),
+      description: entry.description,
+      category: entry.category,
+      subcategory: entry.subcategory,
+      paymentMethod: entry.paymentMethod,
+      vendor: entry.vendor || '',
+      date: entry.date
+    })
+  }
+
+  function saveInlineEdit() {
+    // Validation
+    if (!inlineData.description.trim()) {
+      setToast({ type: 'error', message: 'Description is required' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    if (!inlineData.amount || isNaN(inlineData.amount) || Number(inlineData.amount) <= 0) {
+      setToast({ type: 'error', message: 'Valid amount is required' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+
+    const updated = items.map(e => {
+      if (e.id === inlineEditId) {
+        // Store previous state for undo
+        setLastChange({ type: 'edit', entry: { ...e } })
+        // Preserve income/expense type, just update amount value
+        const newAmount = e.amount >= 0 ? Number(inlineData.amount) : -Number(inlineData.amount)
+        return { ...e, ...inlineData, amount: newAmount }
+      }
+      return e
+    })
+    
+    setItems(updated)
+    localStorage.setItem(KEY, JSON.stringify(updated))
+    
+    setToast({ type: 'success', message: 'Transaction updated successfully', showUndo: true })
+    setTimeout(() => setToast(null), 5000)
+    
+    setInlineEditId(null)
+    setInlineData({ amount: '', description: '', category: '', subcategory: '', paymentMethod: 'Cash', vendor: '', date: '' })
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({ amount: '', description: '', category: '', subcategory: '', paymentMethod: 'Cash', vendor: '', date: '' })
+  }
+
+  function undoLastChange() {
+    if (!lastChange) return
+    
+    if (lastChange.type === 'edit') {
+      const updated = items.map(e => 
+        e.id === lastChange.entry.id ? lastChange.entry : e
+      )
+      setItems(updated)
+      localStorage.setItem(KEY, JSON.stringify(updated))
+      setToast({ type: 'success', message: 'Change reverted' })
+      setTimeout(() => setToast(null), 3000)
+      setLastChange(null)
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      saveInlineEdit()
+    } else if (e.key === 'Escape') {
+      cancelInlineEdit()
+    }
   }
 
   function addNote(entryId, noteText){
@@ -427,33 +510,106 @@ export default function Finance(){
       <div style={{ display: 'grid', gap: '8px' }}>
         {filteredItems.map(entry => (
           <div key={entry.id} className="card" style={{ padding: '16px', borderLeft: `4px solid ${entry.amount >= 0 ? 'var(--green)' : '#dc2626'}` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                  <h4 style={{ margin: 0 }}>{entry.description}</h4>
-                  <span className={`badge ${entry.amount >= 0 ? 'green' : ''}`}>{entry.category}</span>
-                  <span className="badge">{entry.subcategory}</span>
-                </div>
-                <div style={{ display: 'flex', gap: '20px', fontSize: '14px', color: 'var(--muted)', marginBottom: '4px' }}>
-                  <span>📅 {entry.date}</span>
-                  <span>💳 {entry.paymentMethod}</span>
-                  {entry.vendor && <span>🏪 {entry.vendor}</span>}
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '18px', fontWeight: '700', color: entry.amount >= 0 ? 'var(--green)' : '#dc2626' }}>
-                    {entry.amount >= 0 ? '+' : '-'}KES {Math.abs(entry.amount).toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+            {inlineEditId === entry.id ? (
+              // Inline Edit Mode
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }} onKeyDown={handleKeyDown}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>⚡ Quick Edit</h4>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={saveInlineEdit} style={{ padding: '6px 16px', fontSize: '0.85rem', background: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>✓ Save</button>
+                    <button onClick={cancelInlineEdit} style={{ padding: '6px 16px', fontSize: '0.85rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>✕ Cancel</button>
                   </div>
-                  <div style={{ fontSize: '12px', color: 'var(--muted)' }}>{entry.id}</div>
                 </div>
-                <div className="controls">
-                  <button onClick={() => setModalOpenId(entry.id)}>View</button>
-                  <button onClick={() => startEdit(entry)}>Edit</button>
-                  <button onClick={() => remove(entry.id)}>Delete</button>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 600 ? '1fr' : 'repeat(3, 1fr)', gap: 12 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: 4 }}>Amount (KES) *</label>
+                    <input
+                      type="number"
+                      value={inlineData.amount}
+                      onChange={(e) => setInlineData({ ...inlineData, amount: e.target.value })}
+                      style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                      autoFocus
+                    />
+                  </div>
+                  
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: 4 }}>Date</label>
+                    <input
+                      type="date"
+                      value={inlineData.date}
+                      onChange={(e) => setInlineData({ ...inlineData, date: e.target.value })}
+                      style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: 4 }}>Payment Method</label>
+                    <select
+                      value={inlineData.paymentMethod}
+                      onChange={(e) => setInlineData({ ...inlineData, paymentMethod: e.target.value })}
+                      style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                    >
+                      {PAYMENT_METHODS.map(pm => <option key={pm} value={pm}>{pm}</option>)}
+                    </select>
+                  </div>
+                  
+                  <div style={{ gridColumn: window.innerWidth <= 600 ? '1' : 'span 2' }}>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: 4 }}>Description *</label>
+                    <input
+                      type="text"
+                      value={inlineData.description}
+                      onChange={(e) => setInlineData({ ...inlineData, description: e.target.value })}
+                      style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: 4 }}>Vendor</label>
+                    <input
+                      type="text"
+                      value={inlineData.vendor}
+                      onChange={(e) => setInlineData({ ...inlineData, vendor: e.target.value })}
+                      style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                    />
+                  </div>
+                </div>
+                
+                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: 4 }}>
+                  💡 Press Enter to save, Escape to cancel
                 </div>
               </div>
-            </div>
+            ) : (
+              // Display Mode
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+                    <h4 style={{ margin: 0 }}>{entry.description}</h4>
+                    <span className={`badge ${entry.amount >= 0 ? 'green' : ''}`}>{entry.category}</span>
+                    <span className="badge">{entry.subcategory}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '20px', fontSize: '14px', color: 'var(--muted)', marginBottom: '4px' }}>
+                    <span>📅 {entry.date}</span>
+                    <span>💳 {entry.paymentMethod}</span>
+                    {entry.vendor && <span>🏪 {entry.vendor}</span>}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '18px', fontWeight: '700', color: entry.amount >= 0 ? 'var(--green)' : '#dc2626' }}>
+                      {entry.amount >= 0 ? '+' : '-'}KES {Math.abs(entry.amount).toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--muted)' }}>{entry.id}</div>
+                  </div>
+                  <div className="controls">
+                    <button onClick={() => startInlineEdit(entry)} title="Quick Edit">⚡ Quick</button>
+                    <button onClick={() => setModalOpenId(entry.id)}>View</button>
+                    <button onClick={() => startEdit(entry)}>Full</button>
+                    <button onClick={() => remove(entry.id)}>Delete</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -528,6 +684,44 @@ export default function Finance(){
           </div>
         )
       })()}
+      
+      {/* Toast Notifications */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          padding: '12px 20px',
+          background: toast.type === 'error' ? '#ef4444' : '#10b981',
+          color: '#fff',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 10000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          maxWidth: '400px',
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          <span>{toast.message}</span>
+          {toast.showUndo && (
+            <button
+              onClick={undoLastChange}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                color: '#fff',
+                padding: '4px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.85rem'
+              }}
+            >
+              ↶ Undo
+            </button>
+          )}
+        </div>
+      )}
     </section>
   )
 }

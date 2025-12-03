@@ -861,7 +861,8 @@ body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica
 .app.theme-cyberpunk .tab-btn.active{background:linear-gradient(90deg,#00e5ff33,#ff00c833);color:#ffffff}
 .app.theme-cyberpunk .badge{background:linear-gradient(90deg,#2a1a2a,#3a2a3a);color:#ffd6ff;border:1px solid rgba(255,214,255,0.1)}
 .app.theme-cyberpunk .flag{background:linear-gradient(90deg,#1a1420,#140a18);color:#ffd6ff;border:1px solid rgba(255,0,200,0.08)}
-.app.theme-cyberpunk .add-row input, .app.theme-cyberpunk input, .app.theme-cyberpunk select, .app.theme-cyberpunk textarea{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#f0f8ff;placeholder-color:rgba(240,248,255,0.5)}
+.app.theme-cyberpunk .add-row input, .app.theme-cyberpunk input, .app.theme-cyberpunk select, .app.theme-cyberpunk textarea{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#f0f8ff}
+.app.theme-cyberpunk .add-row input::placeholder, .app.theme-cyberpunk input::placeholder, .app.theme-cyberpunk textarea::placeholder{color:rgba(240,248,255,0.5)}
 .app.theme-cyberpunk .add-row button, .app.theme-cyberpunk .drawer button, .app.theme-cyberpunk .controls button{background:linear-gradient(90deg,#00e5ff,#ff00c8);color:#0a0814;font-weight:600}
 .app.theme-cyberpunk footer{background:transparent;color:rgba(240,248,255,0.85);border-top:1px solid rgba(255,255,255,0.03);}
 .app.theme-cyberpunk .brand-wordmark.shimmer::after{background:linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.2), rgba(255,255,255,0.08));}
