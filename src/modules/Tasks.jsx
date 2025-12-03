@@ -20,7 +20,7 @@ export default function Tasks(){
   const [modalOpenId, setModalOpenId] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [inlineEditId, setInlineEditId] = useState(null)
-  const [inlineData, setInlineData] = useState({ title: '', priority: 'Medium', due: '', assignedTo: '' })
+  const [inlineData, setInlineData] = useState({ title: '', priority: 'Medium', due: '', assignedTo: '', description: '', estimatedHours: 1, location: '' })
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterPriority, setFilterPriority] = useState('all')
   const [sortBy, setSortBy] = useState('due')
@@ -131,7 +131,10 @@ export default function Tasks(){
       title: task.title || '',
       priority: task.priority || 'Medium',
       due: task.due || '',
-      assignedTo: task.assignedTo || 'Unassigned'
+      assignedTo: task.assignedTo || 'Unassigned',
+      description: task.description || '',
+      estimatedHours: task.estimatedHours || 1,
+      location: task.location || ''
     })
   }
 
@@ -141,7 +144,10 @@ export default function Tasks(){
       title: (inlineData.title || '').trim() || 'Untitled Task',
       priority: inlineData.priority,
       due: inlineData.due,
-      assignedTo: inlineData.assignedTo
+      assignedTo: inlineData.assignedTo,
+      description: (inlineData.description || '').trim(),
+      estimatedHours: Number(inlineData.estimatedHours) || 1,
+      location: (inlineData.location || '').trim()
     })
     setInlineEditId(null)
   }
@@ -378,7 +384,7 @@ export default function Tasks(){
               <input type="checkbox" checked={task.done} onChange={() => toggleDone(task.id)} style={{ marginTop: '4px' }} />
               <div style={{ flex: 1 }}>
                 {inlineEditId === task.id ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 160px 180px', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 160px 180px', gap: '8px', alignItems: 'center', marginBottom: '8px' }} onKeyDown={e=>{ if(e.key==='Enter') saveInlineEdit(); if(e.key==='Escape') cancelInlineEdit(); }}>
                     <input value={inlineData.title} onChange={e=>setInlineData({...inlineData, title: e.target.value})} placeholder="Task title" />
                     <select value={inlineData.priority} onChange={e=>setInlineData({...inlineData, priority: e.target.value})}>
                       {PRIORITIES.map(pri => <option key={pri} value={pri}>{pri}</option>)}
@@ -387,6 +393,11 @@ export default function Tasks(){
                     <select value={inlineData.assignedTo} onChange={e=>setInlineData({...inlineData, assignedTo: e.target.value})}>
                       {(['Unassigned', ...staff]).map(name => <option key={name} value={name}>{name}</option>)}
                     </select>
+                    <textarea placeholder="Description" value={inlineData.description} onChange={e=>setInlineData({...inlineData, description: e.target.value})} style={{ gridColumn: '1 / -1', minHeight: '70px' }} />
+                    <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '8px', alignItems: 'center', gridColumn: '1 / -1' }}>
+                      <input type="number" min="0" placeholder="Est. Hours" value={inlineData.estimatedHours} onChange={e=>setInlineData({...inlineData, estimatedHours: e.target.value})} />
+                      <input placeholder="Location" value={inlineData.location} onChange={e=>setInlineData({...inlineData, location: e.target.value})} />
+                    </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={saveInlineEdit} className="tab-btn">Save</button>
                       <button onClick={cancelInlineEdit} className="tab-btn">Cancel</button>
