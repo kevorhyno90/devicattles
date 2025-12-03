@@ -148,6 +148,18 @@ export default function Tasks(){
       setTimeout(() => setToast(null), 2000)
       return
     }
+    // Due date validation: High/Critical must have future due date
+    const isHigh = inlineData.priority === 'High' || inlineData.priority === 'Critical'
+    if(isHigh){
+      const due = inlineData.due ? new Date(inlineData.due) : null
+      const today = new Date()
+      // normalize to date-only
+      if(!due || (new Date(due.toDateString()) <= new Date(today.toDateString()))){
+        setToast({ type: 'error', message: 'High/Critical tasks must have a future due date' })
+        setTimeout(() => setToast(null), 2500)
+        return
+      }
+    }
     const prev = items.find(i => i.id === inlineEditId)
     updateTask(inlineEditId, {
       title: (inlineData.title || '').trim() || 'Untitled Task',
@@ -402,7 +414,7 @@ export default function Tasks(){
                     <select value={inlineData.priority} onChange={e=>setInlineData({...inlineData, priority: e.target.value})}>
                       {PRIORITIES.map(pri => <option key={pri} value={pri}>{pri}</option>)}
                     </select>
-                    <input type="date" value={inlineData.due} onChange={e=>setInlineData({...inlineData, due: e.target.value})} />
+                    <input type="date" value={inlineData.due} onChange={e=>setInlineData({...inlineData, due: e.target.value})} min={new Date().toISOString().slice(0,10)} />
                     <select value={inlineData.assignedTo} onChange={e=>setInlineData({...inlineData, assignedTo: e.target.value})}>
                       {(['Unassigned', ...staff]).map(name => <option key={name} value={name}>{name}</option>)}
                     </select>
