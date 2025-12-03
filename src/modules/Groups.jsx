@@ -66,6 +66,13 @@ export default function Groups({ animals = [] }) {
   const [editingId, setEditingId] = useState(null)
   const [editValues, setEditValues] = useState({})
   const [showAddForm, setShowAddForm] = useState(false)
+  
+  // Inline edit state
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ name: '', type: 'Dairy Cattle', purpose: '', status: 'Active' })
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
+  
   const [newGroup, setNewGroup] = useState({
     name: '',
     type: 'Dairy Cattle',
@@ -119,6 +126,61 @@ export default function Groups({ animals = [] }) {
     if (!confirm('Delete this group? Animals will not be deleted.')) return
     setGroups(groups.filter(g => g.id !== id))
     if (selectedGroup?.id === id) setSelectedGroup(null)
+  }
+
+  // Inline Quick Edit Functions
+  function startInlineEdit(group) {
+    setInlineEditId(group.id)
+    setInlineData({ 
+      name: group.name || '', 
+      type: group.type || 'Dairy Cattle',
+      purpose: group.purpose || '',
+      status: group.status || 'Active'
+    })
+  }
+
+  function saveInlineEdit() {
+    if (!inlineData.name.trim()) {
+      setToast({ type: 'error', message: 'Group name is required' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    const updated = groups.map(group => {
+      if (group.id === inlineEditId) {
+        setLastChange({ type: 'edit', item: { ...group } })
+        return { 
+          ...group, 
+          name: inlineData.name.trim(),
+          type: inlineData.type,
+          purpose: inlineData.purpose.trim(),
+          status: inlineData.status
+        }
+      }
+      return group
+    })
+    setGroups(updated)
+    setToast({ type: 'success', message: 'Group updated', showUndo: true })
+    setTimeout(() => setToast(null), 5000)
+    setInlineEditId(null)
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({ name: '', type: 'Dairy Cattle', purpose: '', status: 'Active' })
+  }
+
+  function undoLastChange() {
+    if (lastChange) {
+      setGroups(groups.map(g => g.id === lastChange.item.id ? lastChange.item : g))
+      setToast({ type: 'success', message: 'Change reverted' })
+      setTimeout(() => setToast(null), 3000)
+      setLastChange(null)
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') { e.preventDefault(); saveInlineEdit() }
+    else if (e.key === 'Escape') cancelInlineEdit()
   }
 
   function startEdit(group) {
@@ -204,7 +266,33 @@ export default function Groups({ animals = [] }) {
       {/* Groups Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '16px' }}>
         {groupStats.map(group => (
-          <div key={group.id} className="card" style={{ padding: '16px', cursor: 'pointer' }} onClick={() => setSelectedGroup(group)}>
+          <div key={group.id}>
+            {inlineEditId === group.id ? (
+              <div className="card" style={{ padding: '16px' }} onKeyDown={handleKeyDown}>
+                <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                  <input value={inlineData.name} onChange={e=>setInlineData({...inlineData,name:e.target.value})} placeholder="Group Name" style={{width:'100%',fontSize:16,fontWeight:600}} autoFocus />
+                  <select value={inlineData.type} onChange={e=>setInlineData({...inlineData,type:e.target.value})} style={{width:'100%'}}>
+                    <option>Dairy Cattle</option>
+                    <option>Beef Cattle</option>
+                    <option>Sheep</option>
+                    <option>Goats</option>
+                    <option>Pigs</option>
+                    <option>Poultry</option>
+                    <option>Mixed</option>
+                  </select>
+                  <input value={inlineData.purpose} onChange={e=>setInlineData({...inlineData,purpose:e.target.value})} placeholder="Purpose" style={{width:'100%'}} />
+                  <select value={inlineData.status} onChange={e=>setInlineData({...inlineData,status:e.target.value})} style={{width:'100%'}}>
+                    <option>Active</option>
+                    <option>Inactive</option>
+                  </select>
+                  <div style={{display:'flex',gap:8}}>
+                    <button onClick={saveInlineEdit} style={{flex:1,background:'#10b981',color:'#fff',padding:'8px',border:'none',borderRadius:4}}>✓ Save</button>
+                    <button onClick={cancelInlineEdit} style={{flex:1,background:'#ef4444',color:'#fff',padding:'8px',border:'none',borderRadius:4}}>✕ Cancel</button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="card" style={{ padding: '16px', cursor: 'pointer' }} onClick={() => setSelectedGroup(group)}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
               <div>
                 <h3 style={{ margin: 0, color: 'var(--green)', fontSize: '18px' }}>{group.name}</h3>
@@ -258,6 +346,12 @@ export default function Groups({ animals = [] }) {
 
             <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
               <button
+                onClick={(e) => { e.stopPropagation(); startInlineEdit(group); }}
+                style={{ flex: 1, padding: '6px', fontSize: '13px', background: '#3b82f6', color: '#fff' }}
+              >
+                ⚡ Quick
+              </button>
+              <button
                 onClick={(e) => { e.stopPropagation(); startEdit(group); }}
                 style={{ flex: 1, padding: '6px', fontSize: '13px' }}
               >
@@ -270,6 +364,8 @@ export default function Groups({ animals = [] }) {
                 🗑️ Delete
               </button>
             </div>
+          </div>
+        )}
           </div>
         ))}
       </div>
@@ -586,6 +682,12 @@ export default function Groups({ animals = [] }) {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {toast && (
+        <div style={{position:'fixed',bottom:20,right:20,padding:'12px 20px',background:toast.type==='error'?'#ef4444':'#10b981',color:'#fff',borderRadius:8,boxShadow:'0 4px 12px rgba(0,0,0,0.15)',zIndex:10000,display:'flex',gap:12}}>
+          <span>{toast.message}</span>
+          {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
         </div>
       )}
     </section>
