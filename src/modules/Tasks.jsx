@@ -22,6 +22,7 @@ export default function Tasks(){
   const [inlineEditId, setInlineEditId] = useState(null)
   const [inlineData, setInlineData] = useState({ title: '', priority: 'Medium', due: '', assignedTo: '', category: 'Animal Care', description: '', estimatedHours: 1, location: '' })
   const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterPriority, setFilterPriority] = useState('all')
   const [sortBy, setSortBy] = useState('due')
@@ -142,6 +143,12 @@ export default function Tasks(){
 
   function saveInlineEdit(){
     if(!inlineEditId) return
+    if(!(inlineData.title || '').trim()){
+      setToast({ type: 'error', message: 'Title cannot be empty' })
+      setTimeout(() => setToast(null), 2000)
+      return
+    }
+    const prev = items.find(i => i.id === inlineEditId)
     updateTask(inlineEditId, {
       title: (inlineData.title || '').trim() || 'Untitled Task',
       priority: inlineData.priority,
@@ -152,6 +159,7 @@ export default function Tasks(){
       estimatedHours: Number(inlineData.estimatedHours) || 1,
       location: (inlineData.location || '').trim()
     })
+    setLastChange({ id: inlineEditId, prev })
     setInlineEditId(null)
     setToast({ type: 'success', message: 'Task updated successfully' })
     setTimeout(() => setToast(null), 2000)
@@ -445,8 +453,11 @@ export default function Tasks(){
       )}
 
       {toast && (
-        <div className="card" style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.type==='success' ? '#16a34a' : '#dc2626', color: '#fff', padding: '12px 16px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
-          {toast.message}
+        <div className="card" style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.type==='success' ? '#16a34a' : (toast.type==='error' ? '#dc2626' : '#374151'), color: '#fff', padding: '12px 16px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display:'flex', alignItems:'center', gap:'12px' }}>
+          <span>{toast.message}</span>
+          {toast.type==='success' && lastChange && (
+            <button onClick={()=>{ updateTask(lastChange.id, lastChange.prev || {}); setToast({ type:'info', message:'Changes undone' }); setTimeout(()=> setToast(null), 1500); setLastChange(null) }} style={{ background:'#111827', color:'#fff', border:'none', padding:'6px 10px', borderRadius:'6px' }}>Undo</button>
+          )}
         </div>
       )}
 
