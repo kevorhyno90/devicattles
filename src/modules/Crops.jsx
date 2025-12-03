@@ -195,6 +195,12 @@ const CropCard = React.memo(({ crop, onViewDetails, onDelete }) => (
           <div>
             <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px' }}>Variety</div>
             <div style={{ fontWeight: '500' }}>{crop.variety || 'Not specified'}</div>
+
+        {toast && (
+          <div className="card" style={{ position:'fixed', bottom:20, right:20, background: toast.type==='success' ? '#16a34a' : '#dc2626', color:'#fff', padding:'10px 14px', borderRadius:8 }}>
+            {toast.message}
+          </div>
+        )}
           </div>
           <div>
             <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px' }}>Field</div>
@@ -508,9 +514,12 @@ export default function Crops(){
   }), [items])
 
   const fileInputRef = useRef(null)
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ name: '', status: 'Planted', area: 0, field: '', planted: '', expectedHarvest: '' })
+  const [toast, setToast] = useState(null)
 
   function handleExportCSV() {
-    const data = filtered.map(c => ({
+    const data = filteredItems.map(c => ({
       id: c.id,
       name: c.name,
       variety: c.variety,
@@ -530,7 +539,7 @@ export default function Crops(){
   }
 
   function handleExportExcel() {
-    const data = filtered.map(c => ({
+    const data = filteredItems.map(c => ({
       id: c.id,
       name: c.name,
       variety: c.variety,
@@ -550,8 +559,54 @@ export default function Crops(){
   }
 
   function handleExportJSON() {
-    exportToJSON(filtered, 'crops.json')
+    exportToJSON(filteredItems, 'crops.json')
   }
+
+  function startInlineEdit(crop){
+    setInlineEditId(crop.id)
+    setInlineData({
+      name: crop.name || '',
+      status: crop.status || 'Planted',
+      area: crop.area || 0,
+      field: crop.field || '',
+      planted: crop.planted || '',
+      expectedHarvest: crop.expectedHarvest || ''
+    })
+  }
+
+  function saveInlineEdit(){
+    if(!inlineEditId) return
+    if(!(inlineData.name||'').trim()){
+      setToast({ type:'error', message:'Crop name cannot be empty' })
+      setTimeout(()=> setToast(null), 2000)
+      return
+    }
+    // Validate dates ordering if both provided
+    if(inlineData.planted && inlineData.expectedHarvest){
+      const p = new Date(inlineData.planted)
+      const h = new Date(inlineData.expectedHarvest)
+      if(h <= p){
+        setToast({ type:'error', message:'Expected harvest must be after planted date' })
+        setTimeout(()=> setToast(null), 2500)
+        return
+      }
+    }
+    const prev = items.find(i=> i.id === inlineEditId)
+    setItems(items.map(c=> c.id===inlineEditId ? {
+      ...c,
+      name: inlineData.name.trim(),
+      status: inlineData.status,
+      area: Number(inlineData.area)||0,
+      field: inlineData.field,
+      planted: inlineData.planted,
+      expectedHarvest: inlineData.expectedHarvest
+    } : c))
+    setInlineEditId(null)
+    setToast({ type:'success', message:'Crop updated successfully' })
+    setTimeout(()=> setToast(null), 2000)
+  }
+
+  function cancelInlineEdit(){ setInlineEditId(null) }
 
   function handleImportClick() {
     fileInputRef.current?.click()
@@ -778,15 +833,39 @@ export default function Crops(){
         </div>
       </div>
 
-      {/* Crops Grid */}
+      {/* Crops Grid with Inline Quick Edit */}
       <div style={{ display: 'grid', gap: '12px' }}>
         {filteredItems.map(crop => (
-          <CropCard 
-            key={crop.id} 
-            crop={crop} 
-            onViewDetails={() => setModalOpenId(crop.id)}
-            onDelete={() => remove(crop.id)}
-          />
+          <div key={crop.id} className="card" style={{ padding: '16px' }}>
+            {inlineEditId === crop.id ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 120px 1fr', gap: '8px', alignItems:'center' }} onKeyDown={e=>{ if(e.key==='Enter') saveInlineEdit(); if(e.key==='Escape') cancelInlineEdit(); }}>
+                <input value={inlineData.name} onChange={e=>setInlineData({...inlineData, name: e.target.value})} placeholder="Crop name" />
+                <select value={inlineData.status} onChange={e=>setInlineData({...inlineData, status: e.target.value})}>
+                  {CROP_STATUS.map(s=> <option key={s} value={s}>{s}</option>)}
+                </select>
+                <input type="number" min="0" step="0.1" value={inlineData.area} onChange={e=>setInlineData({...inlineData, area: e.target.value})} placeholder="Area (acres)" />
+                <input value={inlineData.field} onChange={e=>setInlineData({...inlineData, field: e.target.value})} placeholder="Field" />
+                <input type="date" value={inlineData.planted} onChange={e=>setInlineData({...inlineData, planted: e.target.value})} />
+                <input type="date" value={inlineData.expectedHarvest} onChange={e=>setInlineData({...inlineData, expectedHarvest: e.target.value})} />
+                <div style={{ display:'flex', gap:'8px' }}>
+                  <button className="tab-btn" onClick={saveInlineEdit}>Save</button>
+                  <button className="tab-btn" onClick={cancelInlineEdit}>Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <div>
+                  <div style={{ fontWeight:600 }}>{crop.name} <span className="badge" style={{ marginLeft:8 }}>{crop.status}</span></div>
+                  <div className="muted" style={{ fontSize:12 }}>Area: {crop.area} acres • Field: {crop.field} • Planted: {crop.planted || '—'} • Harvest: {crop.expectedHarvest || crop.actualHarvest || '—'}</div>
+                </div>
+                <div style={{ display:'flex', gap:'8px' }}>
+                  <button onClick={() => setModalOpenId(crop.id)}>View</button>
+                  <button onClick={() => startInlineEdit(crop)}>Quick Edit</button>
+                  <button onClick={() => remove(crop.id)}>Delete</button>
+                </div>
+              </div>
+            )}
+          </div>
         ))}
       </div>
 
