@@ -59,6 +59,11 @@ export default function AnimalMilkYield({ animals }){
   const [filterAnimal, setFilterAnimal] = useState('all')
   const [filterDate, setFilterDate] = useState('')
   const [filterSession, setFilterSession] = useState('all')
+  
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ liters: '', session: 'Morning', quality: 'Grade A', notes: '' })
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
   const [filterQuality, setFilterQuality] = useState('all')
   const [viewMode, setViewMode] = useState('list')
   const [editingId, setEditingId] = useState(null)
@@ -291,6 +296,60 @@ export default function AnimalMilkYield({ animals }){
   }
 
   function remove(id){ if(!confirm('Delete record '+id+'?')) return; setItems(items.filter(i=>i.id!==id)) }
+
+  function startInlineEdit(item) {
+    setInlineEditId(item.id)
+    setInlineData({ 
+      liters: item.liters || '', 
+      session: item.session || 'Morning',
+      quality: item.quality || 'Grade A',
+      notes: item.notes || ''
+    })
+  }
+
+  function saveInlineEdit() {
+    if (!inlineData.liters || Number(inlineData.liters) <= 0) {
+      setToast({ type: 'error', message: 'Liters must be greater than 0' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    const updated = items.map(item => {
+      if (item.id === inlineEditId) {
+        setLastChange({ type: 'edit', item: { ...item } })
+        return { 
+          ...item, 
+          liters: Number(inlineData.liters),
+          session: inlineData.session,
+          quality: inlineData.quality,
+          notes: inlineData.notes.trim()
+        }
+      }
+      return item
+    })
+    setItems(updated)
+    setToast({ type: 'success', message: 'Milk record updated', showUndo: true })
+    setTimeout(() => setToast(null), 5000)
+    setInlineEditId(null)
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({ liters: '', session: 'Morning', quality: 'Grade A', notes: '' })
+  }
+
+  function undoLastChange() {
+    if (lastChange) {
+      setItems(items.map(i => i.id === lastChange.item.id ? lastChange.item : i))
+      setToast({ type: 'success', message: 'Change reverted' })
+      setTimeout(() => setToast(null), 3000)
+      setLastChange(null)
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') { e.preventDefault(); saveInlineEdit() }
+    else if (e.key === 'Escape') cancelInlineEdit()
+  }
 
   function startEdit(item){
         setSpoiledMilk(item.spoiledMilk ? String(item.spoiledMilk) : '')
@@ -1105,8 +1164,25 @@ export default function AnimalMilkYield({ animals }){
                 const sccStatus = item.scc ? (item.scc < 200000 ? 'good' : item.scc < 400000 ? 'warning' : 'poor') : null
                 
                 return (
-                  <div key={item.id} style={{ padding: 16, borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                    <div style={{ flex: 1 }}>
+                  <div key={item.id} style={{ padding: 16, borderBottom: '1px solid #eee' }}>
+                    {inlineEditId === item.id ? (
+                      <div onKeyDown={handleKeyDown} style={{display:'flex',flexDirection:'column',gap:12}}>
+                        <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                          <input type="number" value={inlineData.liters} onChange={e=>setInlineData({...inlineData,liters:e.target.value})} placeholder="Liters" style={{width:100}} autoFocus />
+                          <select value={inlineData.session} onChange={e=>setInlineData({...inlineData,session:e.target.value})} style={{width:120}}>
+                            {MILKING_SESSIONS.map(s=><option key={s}>{s}</option>)}
+                          </select>
+                          <select value={inlineData.quality} onChange={e=>setInlineData({...inlineData,quality:e.target.value})} style={{width:120}}>
+                            {QUALITY_GRADES.map(q=><option key={q}>{q}</option>)}
+                          </select>
+                          <input value={inlineData.notes} onChange={e=>setInlineData({...inlineData,notes:e.target.value})} placeholder="Notes" style={{flex:1,minWidth:150}} />
+                          <button onClick={saveInlineEdit} style={{background:'#10b981',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✓ Save</button>
+                          <button onClick={cancelInlineEdit} style={{background:'#ef4444',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✕ Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
+                        <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
                         <span style={{ fontWeight: 600, fontSize: 18, color: '#059669' }}>{item.liters.toFixed(1)} L</span>
                         <span className="badge" style={{ background: '#e0f2fe' }}>{item.session}</span>
@@ -1134,15 +1210,24 @@ export default function AnimalMilkYield({ animals }){
                         <div style={{ fontSize: 13, color: '#888', marginTop: 8 }}>{item.notes}</div>
                       )}
                     </div>
-                    <div style={{display:'flex',gap:4}}>
-                      <button className="tab-btn" onClick={() => startEdit(item)}>✏️</button>
-                      <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => remove(item.id)}>🗑️</button>
-                    </div>
+                        <div style={{display:'flex',gap:4,flexDirection:'column'}}>
+                          <button className="tab-btn" style={{background:'#3b82f6',color:'#fff',padding:'4px 8px'}} onClick={()=>startInlineEdit(item)}>⚡ Quick</button>
+                          <button className="tab-btn" onClick={() => startEdit(item)}>✏️</button>
+                          <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => remove(item.id)}>🗑️</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })}
             </div>
           )}
+        </div>
+      )}
+      {toast && (
+        <div style={{position:'fixed',bottom:20,right:20,padding:'12px 20px',background:toast.type==='error'?'#ef4444':'#10b981',color:'#fff',borderRadius:8,boxShadow:'0 4px 12px rgba(0,0,0,0.15)',zIndex:10000,display:'flex',gap:12}}>
+          <span>{toast.message}</span>
+          {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
         </div>
       )}
     </section>
