@@ -7,6 +7,9 @@ import BottomNav from './components/BottomNav'
 import { AppViewProvider, AppViewContext } from './lib/AppViewContext.jsx';
 import SwipeHandler from './components/SwipeHandler'
 import ErrorBoundary from './components/ErrorBoundary'
+import GlobalSearch from './components/GlobalSearch'
+import { DataLayer } from './lib/dataLayer'
+import { initGlobalErrorHandler } from './lib/errorHandler'
 
 // Helper function to retry failed lazy loads (important for Android Chrome)
 const lazyWithRetry = (importFunc) => {
@@ -154,13 +157,32 @@ function AppContent() {
   const [animals, setAnimals] = useState([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   
   // UI branding/settings - must be declared before any conditional returns
   const SETTINGS_KEY = 'devinsfarm:ui:settings'
   const defaultSettings = { backgroundOn: false, background: 'bg-farm.svg', logo: 'jr-farm-logo.svg', uploadedLogo: '', theme: 'catalytics' }
   const [settings, setSettings] = useState(defaultSettings)
 
-  // PWA Install Prompt Handler
+  // Initialize error handler and data layer on mount
+  useEffect(() => {
+    initGlobalErrorHandler();
+    DataLayer.initialize().catch(console.error);
+  }, []);
+
+  // Keyboard shortcut for global search (Ctrl/Cmd + K)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(prev => !prev);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // PWA Install Prompt
   useEffect(() => {
     const handleInstallPrompt = (e) => {
       setShowInstallPrompt(true)
@@ -259,6 +281,37 @@ function AppContent() {
     try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)) }
     catch(e){} 
   }, [settings])
+
+  // Global toast notification function
+  useEffect(() => {
+    window.showToast = (message, type = 'info') => {
+      // Create toast element
+      const toast = document.createElement('div');
+      toast.textContent = message;
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 80px;
+        right: 20px;
+        background: ${type === 'error' ? '#dc2626' : type === 'success' ? '#059669' : '#3b82f6'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        max-width: 300px;
+        animation: slideIn 0.3s ease-out;
+      `;
+      document.body.appendChild(toast);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    };
+  }, []);
 
   function handleLoginSuccess(user) {
     setCurrentUser(user)
@@ -367,7 +420,7 @@ function AppContent() {
                 borderRadius: 10,
                 padding: '2px 6px',
                 fontSize: 11,
-                fontWeight: 600
+                fontWeight: '600'
               }}>
                 {unreadNotifications}
               </span>
@@ -1055,6 +1108,9 @@ function AppContent() {
 
       {/* In-app notification banner */}
       <InAppNotification />
+
+      {/* Global Search Modal */}
+      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Mobile Bottom Navigation */}
       <BottomNav />

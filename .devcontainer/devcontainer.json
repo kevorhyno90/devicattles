@@ -1,0 +1,23 @@
+{
+  "name": "DeviCattles Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  
+  "postStartCommand": "npm run dev",
+  
+  "forwardPorts": [5000],
+  "portsAttributes": {
+    "5000": {
+      "label": "Dev Server",
+      "onAutoForward": "notify"
+    }
+  },
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}
