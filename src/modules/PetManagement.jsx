@@ -76,6 +76,11 @@ export default function PetManagement() {
 
   const [form, setForm] = useState(emptyPet)
   const [editingId, setEditingId] = useState(null)
+  
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ name: '', breed: '', weight: '', status: 'Active' })
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
 
   const [vaccineForm, setVaccineForm] = useState({
     type: 'Rabies', date: new Date().toISOString().slice(0, 10),
@@ -137,6 +142,59 @@ export default function PetManagement() {
       setPets(pets.filter(p => p.id !== id))
       setSelectedPet(null)
     }
+  }
+
+  const startInlineEdit = (pet) => {
+    setInlineEditId(pet.id)
+    setInlineData({ 
+      name: pet.name || '', 
+      breed: pet.breed || '',
+      weight: pet.weight || '',
+      status: pet.status || 'Active'
+    })
+  }
+
+  const saveInlineEdit = () => {
+    if (!inlineData.name.trim()) {
+      setToast({ type: 'error', message: 'Name is required' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    setPets(pets.map(p => {
+      if (p.id === inlineEditId) {
+        setLastChange({ type: 'edit', item: { ...p } })
+        return { 
+          ...p, 
+          name: inlineData.name.trim(),
+          breed: inlineData.breed.trim(),
+          weight: inlineData.weight,
+          status: inlineData.status
+        }
+      }
+      return p
+    }))
+    setToast({ type: 'success', message: 'Pet updated', showUndo: true })
+    setTimeout(() => setToast(null), 5000)
+    setInlineEditId(null)
+  }
+
+  const cancelInlineEdit = () => {
+    setInlineEditId(null)
+    setInlineData({ name: '', breed: '', weight: '', status: 'Active' })
+  }
+
+  const undoLastChange = () => {
+    if (lastChange) {
+      setPets(pets.map(p => p.id === lastChange.item.id ? lastChange.item : p))
+      setToast({ type: 'success', message: 'Change reverted' })
+      setTimeout(() => setToast(null), 3000)
+      setLastChange(null)
+    }
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); saveInlineEdit() }
+    else if (e.key === 'Escape') cancelInlineEdit()
   }
 
   const addVaccination = (petId) => {
@@ -283,9 +341,26 @@ export default function PetManagement() {
           {filtered.length > 0 && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', marginBottom: '20px' }}>
               {filtered.map(pet => (
-                <div key={pet.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }} onClick={() => setSelectedPet(pet)} onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)' }} onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                    <div>
+                <div key={pet.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', transition: 'transform 0.2s, box-shadow 0.2s' }}>
+                  {inlineEditId === pet.id ? (
+                    <div onKeyDown={handleKeyDown} style={{display:'flex',flexDirection:'column',gap:10}}>
+                      <input value={inlineData.name} onChange={e=>setInlineData({...inlineData,name:e.target.value})} placeholder="Pet name" style={{padding:'8px',border:'1px solid #d1d5db',borderRadius:4}} autoFocus />
+                      <input value={inlineData.breed} onChange={e=>setInlineData({...inlineData,breed:e.target.value})} placeholder="Breed" style={{padding:'8px',border:'1px solid #d1d5db',borderRadius:4}} />
+                      <input type="number" value={inlineData.weight} onChange={e=>setInlineData({...inlineData,weight:e.target.value})} placeholder="Weight (kg)" style={{padding:'8px',border:'1px solid #d1d5db',borderRadius:4}} />
+                      <select value={inlineData.status} onChange={e=>setInlineData({...inlineData,status:e.target.value})} style={{padding:'8px',border:'1px solid #d1d5db',borderRadius:4}}>
+                        <option>Active</option>
+                        <option>Inactive</option>
+                        <option>Deceased</option>
+                      </select>
+                      <div style={{display:'flex',gap:6}}>
+                        <button onClick={saveInlineEdit} style={{flex:1,padding:'8px',background:'#10b981',color:'#fff',border:'none',borderRadius:4,fontSize:12}}>✓ Save</button>
+                        <button onClick={cancelInlineEdit} style={{flex:1,padding:'8px',background:'#ef4444',color:'#fff',border:'none',borderRadius:4,fontSize:12}}>✕ Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{cursor:'pointer'}} onClick={() => setSelectedPet(pet)}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                        <div>
                       <h4 style={{ margin: '0 0 4px 0', color: '#1f2937' }}>{pet.species === 'Dog' ? '🐕' : '🐈'} {pet.name}</h4>
                       <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>{pet.breed || 'Mixed'}</p>
                     </div>
@@ -299,9 +374,12 @@ export default function PetManagement() {
                     <div>💉 Vaccines: {(pet.vaccinations || []).length}</div>
                   </div>
                   <div style={{ marginTop: '12px', display: 'flex', gap: '6px' }}>
+                    <button onClick={(e) => { e.stopPropagation(); startInlineEdit(pet) }} style={{ flex: 1, padding: '6px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>⚡</button>
                     <button onClick={(e) => { e.stopPropagation(); setForm(pet); setEditingId(pet.id) }} style={{ flex: 1, padding: '6px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>Edit</button>
                     <button onClick={(e) => { e.stopPropagation(); deletePet(pet.id) }} style={{ flex: 1, padding: '6px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>Delete</button>
                   </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -959,6 +1037,12 @@ export default function PetManagement() {
               </div>
             )}
           </div>
+        </div>
+      )}
+      {toast && (
+        <div style={{position:'fixed',bottom:20,right:20,padding:'12px 20px',background:toast.type==='error'?'#ef4444':'#10b981',color:'#fff',borderRadius:8,boxShadow:'0 4px 12px rgba(0,0,0,0.15)',zIndex:10000,display:'flex',gap:12}}>
+          <span>{toast.message}</span>
+          {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
         </div>
       )}
     </div>
