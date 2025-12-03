@@ -15,6 +15,11 @@ export default function CropYield({ crops, cropId: propCropId }){
   const [buyer, setBuyer] = useState('')
   const [sold, setSold] = useState(false)
   const [editingId, setEditingId] = useState(null)
+  
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ quantity: '', pricePerUnit: '', buyer: '', sold: false })
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
 
   useEffect(()=>{
     const raw = localStorage.getItem(KEY)
@@ -81,6 +86,65 @@ export default function CropYield({ crops, cropId: propCropId }){
   }
 
   function remove(id){ if(!confirm('Delete record '+id+'?')) return; setItems(items.filter(i=>i.id!==id)) }
+
+  function startInlineEdit(item) {
+    setInlineEditId(item.id)
+    setInlineData({ 
+      quantity: item.quantity || '', 
+      pricePerUnit: item.pricePerUnit || '',
+      buyer: item.buyer || '',
+      sold: item.sold || false
+    })
+  }
+
+  function saveInlineEdit() {
+    if (!inlineData.quantity || Number(inlineData.quantity) <= 0) {
+      setToast({ type: 'error', message: 'Quantity must be greater than 0' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    const qty = Number(inlineData.quantity)
+    const price = parseFloat(inlineData.pricePerUnit) || 0
+    const totalPrice = qty * price
+    
+    const updated = items.map(item => {
+      if (item.id === inlineEditId) {
+        setLastChange({ type: 'edit', item: { ...item } })
+        return { 
+          ...item, 
+          quantity: qty,
+          pricePerUnit: price,
+          totalPrice,
+          buyer: inlineData.buyer.trim(),
+          sold: inlineData.sold
+        }
+      }
+      return item
+    })
+    setItems(updated)
+    setToast({ type: 'success', message: 'Yield record updated', showUndo: true })
+    setTimeout(() => setToast(null), 5000)
+    setInlineEditId(null)
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({ quantity: '', pricePerUnit: '', buyer: '', sold: false })
+  }
+
+  function undoLastChange() {
+    if (lastChange) {
+      setItems(items.map(i => i.id === lastChange.item.id ? lastChange.item : i))
+      setToast({ type: 'success', message: 'Change reverted' })
+      setTimeout(() => setToast(null), 3000)
+      setLastChange(null)
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') { e.preventDefault(); saveInlineEdit() }
+    else if (e.key === 'Escape') cancelInlineEdit()
+  }
 
   function startEdit(item){
     setEditingId(item.id)
@@ -180,8 +244,24 @@ export default function CropYield({ crops, cropId: propCropId }){
 
       <ul style={{listStyle:'none',padding:0}}>
         {visible.map(it => (
-          <li key={it.id} style={{padding:8,borderBottom:'1px solid #eee',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-            <div>
+          <li key={it.id} style={{padding:8,borderBottom:'1px solid #eee'}}>
+            {inlineEditId === it.id ? (
+              <div onKeyDown={handleKeyDown} style={{display:'flex',flexDirection:'column',gap:8}}>
+                <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                  <input type="number" value={inlineData.quantity} onChange={e=>setInlineData({...inlineData,quantity:e.target.value})} placeholder="Quantity" style={{width:100}} autoFocus />
+                  <input type="number" value={inlineData.pricePerUnit} onChange={e=>setInlineData({...inlineData,pricePerUnit:e.target.value})} placeholder="Price/Unit" style={{width:100}} />
+                  <input value={inlineData.buyer} onChange={e=>setInlineData({...inlineData,buyer:e.target.value})} placeholder="Buyer" style={{width:150}} />
+                  <label style={{display:'flex',alignItems:'center',gap:4}}>
+                    <input type="checkbox" checked={inlineData.sold} onChange={e=>setInlineData({...inlineData,sold:e.target.checked})} />
+                    Sold
+                  </label>
+                  <button onClick={saveInlineEdit} style={{background:'#10b981',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✓ Save</button>
+                  <button onClick={cancelInlineEdit} style={{background:'#ef4444',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✕ Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <div>
               <div style={{fontWeight:600}}>
                 {it.quantity} units
                 {it.sold && <span style={{marginLeft:8,padding:'2px 6px',background:'#dcfce7',color:'#15803d',fontSize:11,borderRadius:4,fontWeight:600}}>✓ Sold</span>}
@@ -194,13 +274,22 @@ export default function CropYield({ crops, cropId: propCropId }){
                 {it.pricePerUnit > 0 && <span> • @ {it.pricePerUnit}/unit</span>}
               </div>
             </div>
-            <div style={{display:'flex',gap:4}}>
-              <button onClick={()=>startEdit(it)}>✏️</button>
-              <button onClick={()=>remove(it.id)}>🗑️</button>
-            </div>
+                <div style={{display:'flex',gap:4,flexDirection:'column'}}>
+                  <button onClick={()=>startInlineEdit(it)} style={{background:'#3b82f6',color:'#fff',padding:'4px 8px'}}>⚡ Quick</button>
+                  <button onClick={()=>startEdit(it)}>✏️</button>
+                  <button onClick={()=>remove(it.id)}>🗑️</button>
+                </div>
+              </div>
+            )}
           </li>
         ))}
       </ul>
+      {toast && (
+        <div style={{position:'fixed',bottom:20,right:20,padding:'12px 20px',background:toast.type==='error'?'#ef4444':'#10b981',color:'#fff',borderRadius:8,boxShadow:'0 4px 12px rgba(0,0,0,0.15)',zIndex:10000,display:'flex',gap:12}}>
+          <span>{toast.message}</span>
+          {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
+        </div>
+      )}
     </section>
   )
 }
