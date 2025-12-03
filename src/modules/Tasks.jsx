@@ -93,7 +93,7 @@ export default function Tasks(){
     setFormData({
       title: task.title,
       description: task.description || '',
-      assignedTo: getCurrentUserName(),
+      assignedTo: task.assignedTo || getCurrentUserName(),
       due: task.due || '',
       priority: task.priority || 'Medium',
       category: task.category || 'Animal Care',
@@ -150,7 +150,7 @@ export default function Tasks(){
   const fileInputRef = useRef(null)
 
   function handleExportCSV() {
-    const data = filtered.map(t => ({
+    const data = filteredItems.map(t => ({
       id: t.id,
       title: t.title,
       description: t.description,
@@ -167,7 +167,7 @@ export default function Tasks(){
   }
 
   function handleExportExcel() {
-    const data = filtered.map(t => ({
+    const data = filteredItems.map(t => ({
       id: t.id,
       title: t.title,
       description: t.description,
@@ -184,7 +184,7 @@ export default function Tasks(){
   }
 
   function handleExportJSON() {
-    exportToJSON(filtered, 'tasks.json')
+    exportToJSON(filteredItems, 'tasks.json')
   }
 
   function handleImportClick() {
