@@ -1144,6 +1144,7 @@ export default function Animals() {
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={() => startInlineEdit(a)} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#ffffcc', border: '1px solid #ffdd00', color: '#333', fontWeight: '500' }}>⚡ Quick</button>
                           <button onClick={() => startEditAnimal(a)} style={{ padding: '6px 12px', fontSize: '0.85rem' }}>✏️ Edit</button>
                           <button onClick={() => deleteAnimal(a.id)} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee', color: '#c00' }}>🗑️</button>
                         </div>
