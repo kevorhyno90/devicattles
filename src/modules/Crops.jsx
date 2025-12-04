@@ -860,7 +860,7 @@ export default function Crops(){
                 </div>
                 <div style={{ display:'flex', gap:'8px' }}>
                   <button onClick={() => setModalOpenId(crop.id)}>View</button>
-                  <button onClick={() => startInlineEdit(crop)}>Quick Edit</button>
+                  <button onClick={() => startInlineEdit(crop)} style={{ background: '#ffffcc', border: '1px solid #ffdd00', color: '#333', fontWeight: '500' }}>⚡ Quick</button>
                   <button onClick={() => remove(crop.id)}>Delete</button>
                 </div>
               </div>
