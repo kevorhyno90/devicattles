@@ -9,6 +9,10 @@ export default function CropTreatment({ crops, cropId: propCropId }){
   const [cropId, setCropId] = useState(propCropId || (crops && crops[0] ? crops[0].id : ''))
   const [treatment, setTreatment] = useState('')
   const [editingId, setEditingId] = useState(null)
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({ treatment: '' })
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
 
   useEffect(()=>{
     const raw = localStorage.getItem(KEY)
@@ -51,6 +55,48 @@ export default function CropTreatment({ crops, cropId: propCropId }){
     setEditingId(null)
     setTreatment('')
     if(!propCropId && crops && crops[0]) setCropId(crops[0].id)
+  }
+
+  function startInlineEdit(item) {
+    setInlineEditId(item.id)
+    setInlineData({ treatment: item.treatment || '' })
+  }
+
+  function saveInlineEdit() {
+    if (!inlineData.treatment.trim()) {
+      setToast({ type: 'error', message: 'Treatment is required' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    setItems(items.map(item => {
+      if (item.id === inlineEditId) {
+        setLastChange({ type: 'edit', item: { ...item } })
+        return { ...item, treatment: inlineData.treatment.trim() }
+      }
+      return item
+    }))
+    setToast({ type: 'success', message: 'Treatment updated', showUndo: true })
+    setTimeout(() => setToast(null), 5000)
+    setInlineEditId(null)
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({ treatment: '' })
+  }
+
+  function undoLastChange() {
+    if (lastChange) {
+      setItems(items.map(i => i.id === lastChange.item.id ? lastChange.item : i))
+      setToast({ type: 'success', message: 'Change reverted' })
+      setTimeout(() => setToast(null), 3000)
+      setLastChange(null)
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') { e.preventDefault(); saveInlineEdit() }
+    else if (e.key === 'Escape') cancelInlineEdit()
   }
 
   const visible = propCropId ? items.filter(i => i.cropId === propCropId) : items
@@ -101,17 +147,41 @@ export default function CropTreatment({ crops, cropId: propCropId }){
       <ul style={{listStyle:'none',padding:0}}>
         {visible.map(it => (
           <li key={it.id} style={{padding:8,borderBottom:'1px solid #eee',display:'flex',justifyContent:'space-between'}}>
-            <div>
-              <div style={{fontWeight:600}}>{it.treatment} <small style={{color:'#666'}}>({it.id})</small></div>
-              <div style={{fontSize:13,color:'#666'}}>{it.date} {propCropId ? '' : `• ${it.cropId}`}</div>
-            </div>
-            <div style={{display:'flex',gap:4}}>
-              <button onClick={()=>startEdit(it)}>✏️</button>
-              <button onClick={()=>remove(it.id)}>🗑️</button>
-            </div>
+            {inlineEditId === it.id ? (
+              <div onKeyDown={handleKeyDown} style={{display:'flex',gap:8,alignItems:'center',flex:1}}>
+                <input
+                  value={inlineData.treatment}
+                  onChange={e=>setInlineData({...inlineData,treatment:e.target.value})}
+                  placeholder="Treatment"
+                  style={{flex:1,padding:'4px 8px'}}
+                  autoFocus
+                />
+                <button onClick={saveInlineEdit} style={{background:'#10b981',color:'#fff',padding:'4px 12px',border:'none',borderRadius:4,cursor:'pointer'}}>✓ Save</button>
+                <button onClick={cancelInlineEdit} style={{background:'#ef4444',color:'#fff',padding:'4px 12px',border:'none',borderRadius:4,cursor:'pointer'}}>✕ Cancel</button>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <div style={{fontWeight:600}}>{it.treatment} <small style={{color:'#666'}}>({it.id})</small></div>
+                  <div style={{fontSize:13,color:'#666'}}>{it.date} {propCropId ? '' : `• ${it.cropId}`}</div>
+                </div>
+                <div style={{display:'flex',gap:4}}>
+                  <button onClick={()=>startInlineEdit(it)} style={{background:'#3b82f6',color:'#fff',padding:'4px 8px',border:'none',borderRadius:4,cursor:'pointer'}}>⚡ Quick</button>
+                  <button onClick={()=>startEdit(it)}>✏️</button>
+                  <button onClick={()=>remove(it.id)}>🗑️</button>
+                </div>
+              </>
+            )}
           </li>
         ))}
       </ul>
+
+      {toast && (
+        <div style={{position:'fixed',bottom:20,right:20,padding:'12px 20px',background:toast.type==='error'?'#ef4444':'#10b981',color:'#fff',borderRadius:8,boxShadow:'0 4px 12px rgba(0,0,0,0.15)',zIndex:10000,display:'flex',gap:12,alignItems:'center'}}>
+          <span>{toast.message}</span>
+          {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
+        </div>
+      )}
     </section>
   )
 }

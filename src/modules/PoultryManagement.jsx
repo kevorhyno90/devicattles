@@ -88,6 +88,12 @@ export default function PoultryManagement() {
   })
   const [editingTreatmentId, setEditingTreatmentId] = useState(null)
 
+  // Inline edit state
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({})
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
+
   // Load data
   useEffect(() => {
     try {
@@ -403,6 +409,74 @@ export default function PoultryManagement() {
     }
   }
 
+  // Inline edit functions
+  function startInlineEdit(item, type) {
+    setInlineEditId(item.id)
+    setInlineData({ ...item })
+    setLastChange({ item, type })
+  }
+
+  function saveInlineEdit() {
+    if (!inlineData.name || !inlineData.name.trim()) {
+      setToast({ type: 'error', message: 'Name is required' })
+      return
+    }
+    
+    if (lastChange?.type === 'flock') {
+      setFlocks(flocks.map(f => f.id === inlineEditId ? inlineData : f))
+    } else if (lastChange?.type === 'bird') {
+      setBirds(birds.map(b => b.id === inlineEditId ? inlineData : b))
+    } else if (lastChange?.type === 'egg') {
+      setEggRecords(eggRecords.map(e => e.id === inlineEditId ? inlineData : e))
+    } else if (lastChange?.type === 'vaccination') {
+      setVaccinations(vaccinations.map(v => v.id === inlineEditId ? inlineData : v))
+    } else if (lastChange?.type === 'health') {
+      setHealthRecords(healthRecords.map(h => h.id === inlineEditId ? inlineData : h))
+    } else if (lastChange?.type === 'treatment') {
+      setTreatments(treatments.map(t => t.id === inlineEditId ? inlineData : t))
+    }
+    
+    setToast({ type: 'success', message: '✓ Updated', showUndo: true })
+    setInlineEditId(null)
+    setTimeout(() => setToast(null), 3000)
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({})
+    setToast(null)
+  }
+
+  function undoLastChange() {
+    if (!lastChange) return
+    
+    if (lastChange.type === 'flock') {
+      setFlocks(flocks.map(f => f.id === inlineEditId ? lastChange.item : f))
+    } else if (lastChange.type === 'bird') {
+      setBirds(birds.map(b => b.id === inlineEditId ? lastChange.item : b))
+    } else if (lastChange.type === 'egg') {
+      setEggRecords(eggRecords.map(e => e.id === inlineEditId ? lastChange.item : e))
+    } else if (lastChange.type === 'vaccination') {
+      setVaccinations(vaccinations.map(v => v.id === inlineEditId ? lastChange.item : v))
+    } else if (lastChange.type === 'health') {
+      setHealthRecords(healthRecords.map(h => h.id === inlineEditId ? lastChange.item : h))
+    } else if (lastChange.type === 'treatment') {
+      setTreatments(treatments.map(t => t.id === inlineEditId ? lastChange.item : t))
+    }
+    
+    setToast(null)
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      saveInlineEdit()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      cancelInlineEdit()
+    }
+  }
+
   // Statistics calculations
   const totalBirds = flocks.reduce((sum, f) => sum + Number(f.quantity || 0), 0)
   const activeFlocks = flocks.filter(f => f.status === 'Active').length
@@ -574,40 +648,58 @@ export default function PoultryManagement() {
           <div style={{ display: 'grid', gap: '12px' }}>
             {flocks.map(flock => (
               <div key={flock.id} className="card" style={{ padding: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600' }}>
-                      {flock.name} ({flock.type})
-                    </h4>
-                    <div style={{ fontSize: '0.9rem', color: '#666', display: 'grid', gap: '4px' }}>
-                      <div><strong>Breed:</strong> {flock.breed}</div>
-                      <div><strong>Quantity:</strong> {flock.quantity} birds</div>
-                      <div><strong>Started:</strong> {flock.dateStarted || 'N/A'}</div>
-                      <div><strong>Status:</strong> <span style={{ 
-                        padding: '2px 8px', 
-                        borderRadius: '4px', 
-                        fontSize: '12px',
-                        background: flock.status === 'Active' ? '#d1fae5' : '#fee2e2',
-                        color: flock.status === 'Active' ? '#065f46' : '#991b1b'
-                      }}>{flock.status}</span></div>
-                      {flock.notes && <div><strong>Notes:</strong> {flock.notes}</div>}
+                {inlineEditId === flock.id ? (
+                  <div onKeyDown={handleKeyDown} style={{ display: 'grid', gap: '12px' }}>
+                    <input type="text" placeholder="Flock Name" value={inlineData.name || ''} onChange={e => setInlineData({ ...inlineData, name: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                    <input type="text" placeholder="Breed" value={inlineData.breed || ''} onChange={e => setInlineData({ ...inlineData, breed: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                    <input type="number" placeholder="Quantity" value={inlineData.quantity || ''} onChange={e => setInlineData({ ...inlineData, quantity: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button type="button" onClick={saveInlineEdit} style={{ padding: '8px 16px', background: '#059669', color: '#fff', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Save</button>
+                      <button type="button" onClick={cancelInlineEdit} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Cancel</button>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      onClick={() => editFlock(flock)}
-                      style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      onClick={() => deleteFlock(flock.id)}
-                      style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer' }}
-                    >
-                      🗑️ Delete
-                    </button>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600' }}>
+                        {flock.name} ({flock.type})
+                      </h4>
+                      <div style={{ fontSize: '0.9rem', color: '#666', display: 'grid', gap: '4px' }}>
+                        <div><strong>Breed:</strong> {flock.breed}</div>
+                        <div><strong>Quantity:</strong> {flock.quantity} birds</div>
+                        <div><strong>Started:</strong> {flock.dateStarted || 'N/A'}</div>
+                        <div><strong>Status:</strong> <span style={{ 
+                          padding: '2px 8px', 
+                          borderRadius: '4px', 
+                          fontSize: '12px',
+                          background: flock.status === 'Active' ? '#d1fae5' : '#fee2e2',
+                          color: flock.status === 'Active' ? '#065f46' : '#991b1b'
+                        }}>{flock.status}</span></div>
+                        {flock.notes && <div><strong>Notes:</strong> {flock.notes}</div>}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => startInlineEdit(flock, 'flock')}
+                        style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#ffffcc', border: '1px solid #ffdd00', borderRadius: '6px', cursor: 'pointer' }}
+                      >
+                        ⚡ Quick
+                      </button>
+                      <button
+                        onClick={() => editFlock(flock)}
+                        style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => deleteFlock(flock.id)}
+                        style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer' }}
+                      >
+                        🗑️ Delete
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             ))}
           </div>
@@ -1548,6 +1640,29 @@ export default function PoultryManagement() {
           </div>
         </div>
       )}
+
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          bottom: 20,
+          right: 20,
+          padding: '12px 20px',
+          borderRadius: 8,
+          background: toast.type === 'error' ? '#fee2e2' : '#d1fae5',
+          color: toast.type === 'error' ? '#991b1b' : '#065f46',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 10000,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 12,
+          maxWidth: 300
+        }}>
+          <div>{toast.message}</div>
+          {toast.showUndo && <button onClick={undoLastChange} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', fontWeight: 600 }}>↶ Undo</button>}
+        </div>
+      )}
     </div>
   )
 }
+
