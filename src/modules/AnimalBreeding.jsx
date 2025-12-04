@@ -108,6 +108,10 @@ export default function AnimalBreeding({ animals }){
   const [status, setStatus] = useState('Completed')
   const [notes, setNotes] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({})
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
 
   // Semen inventory form
   const [semenForm, setSemenForm] = useState({
