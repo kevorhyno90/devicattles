@@ -238,7 +238,7 @@ export default function CanineManagement({ animals, setAnimals }) {
                       <div>Weight: {dog.weight || 'N/A'} kg</div>
                     </div>
                     <div style={{ marginTop: '8px', display: 'flex', gap: '4px' }}>
-                      <button onClick={(e) => { e.stopPropagation(); startInlineEdit(dog); }} style={{ flex: 1, padding: '4px 8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>⚡</button>
+                      <button onClick={(e) => { e.stopPropagation(); startInlineEdit(dog); }} style={{ flex: 1, padding: '4px 8px', background: '#ffffcc', color: '#333', border: '1px solid #ffdd00', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '500' }}>⚡ Quick</button>
                       <button onClick={(e) => { e.stopPropagation(); editCanine(dog); }} style={{ flex: 1, padding: '4px 8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>✏️</button>
                       <button onClick={(e) => { e.stopPropagation(); deleteCanine(dog.id); }} style={{ flex: 1, padding: '4px 8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>🗑️</button>
                     </div>
