@@ -70,6 +70,12 @@ export default function Crops() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [sortBy, setSortBy] = useState('planted')
   
+  // Inline edit state
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({})
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
+  
   const emptyCrop = {
     name: '',
     variety: '',
@@ -158,6 +164,47 @@ export default function Crops() {
   function deleteCrop(id) {
     if (!window.confirm('Delete crop ' + id + '?')) return
     setCrops(crops.filter(c => c.id !== id))
+  }
+
+  // Inline edit functions
+  function startInlineEdit(crop) {
+    setInlineEditId(crop.id)
+    setInlineData({ ...crop })
+    setLastChange({ item: crop })
+  }
+
+  function saveInlineEdit() {
+    if (!inlineData.name || !inlineData.name.trim()) {
+      setToast({ type: 'error', message: 'Name is required' })
+      return
+    }
+    
+    setCrops(crops.map(c => c.id === inlineEditId ? inlineData : c))
+    setToast({ type: 'success', message: '✓ Updated', showUndo: true })
+    setInlineEditId(null)
+    setTimeout(() => setToast(null), 3000)
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({})
+    setToast(null)
+  }
+
+  function undoLastChange() {
+    if (!lastChange) return
+    setCrops(crops.map(c => c.id === inlineEditId ? lastChange.item : c))
+    setToast(null)
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      saveInlineEdit()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      cancelInlineEdit()
+    }
   }
 
   const q = filter.trim().toLowerCase()
@@ -356,6 +403,7 @@ export default function Crops() {
                     </div>
                   </div>
                   <div className="controls" style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => startInlineEdit(crop)} style={{ background: '#ffffcc', border: '1px solid #ffdd00', padding: '8px 12px', borderRadius: '6px' }}>⚡ Quick</button>
                     <button onClick={() => startEditCrop(crop)}>Edit</button>
                     <button onClick={() => deleteCrop(crop.id)}>Delete</button>
                   </div>
@@ -701,6 +749,27 @@ export default function Crops() {
         </div>
       )}
       {/* Azolla ponds tab removed as requested */}
+
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          bottom: 20,
+          right: 20,
+          padding: '12px 20px',
+          borderRadius: 8,
+          background: toast.type === 'error' ? '#fee2e2' : '#d1fae5',
+          color: toast.type === 'error' ? '#991b1b' : '#065f46',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 10000,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 12
+        }}>
+          <div>{toast.message}</div>
+          {toast.showUndo && <button onClick={undoLastChange} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', fontWeight: 600 }}>↶ Undo</button>}
+        </div>
+      )}
     </section>
   )
 }
