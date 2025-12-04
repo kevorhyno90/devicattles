@@ -120,6 +120,12 @@ export default function Schedules() {
     reason: '',
     status: 'PENDING'
   })
+  
+  // Inline edit state
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({})
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
 
   useEffect(() => {
     const rawSchedules = localStorage.getItem(SCHEDULES_KEY)
@@ -341,6 +347,47 @@ export default function Schedules() {
   function deleteEmployee(id) {
     if (!confirm('Delete this employee? This cannot be undone.')) return
     setEmployees(employees.filter(e => e.id !== id))
+  }
+  
+  // Inline edit functions
+  function startInlineEdit(employee) {
+    setInlineEditId(employee.id)
+    setInlineData({ name: employee.name, role: employee.role, phone: employee.phone })
+  }
+  
+  function saveInlineEdit() {
+    if (!inlineData.name || !inlineData.name.trim()) {
+      setToast({ type: 'error', message: 'Employee name is required!' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    
+    const oldEmployee = employees.find(e => e.id === inlineEditId)
+    setLastChange({ id: inlineEditId, item: oldEmployee })
+    
+    setEmployees(employees.map(e => e.id === inlineEditId ? { ...e, name: inlineData.name, role: inlineData.role, phone: inlineData.phone } : e))
+    setToast({ type: 'success', message: 'Employee updated successfully!', undo: true })
+    setTimeout(() => setToast(null), 5000)
+    setInlineEditId(null)
+    setInlineData({})
+  }
+  
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({})
+  }
+  
+  function undoLastChange() {
+    if (lastChange) {
+      setEmployees(employees.map(e => e.id === lastChange.id ? lastChange.item : e))
+      setLastChange(null)
+      setToast(null)
+    }
+  }
+  
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') saveInlineEdit()
+    if (e.key === 'Escape') cancelInlineEdit()
   }
 
   function openEmployeeDetails(employee) {
@@ -1217,22 +1264,58 @@ export default function Schedules() {
                     padding: 16
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div style={{ flex: 1 }}>
-                        <h4 style={{ margin: '0 0 4px 0', fontSize: 18 }}>{emp.name}</h4>
-                        <div style={{ fontSize: 13, opacity: 0.9 }}>{emp.role}</div>
-                        <div style={{ fontSize: 11, opacity: 0.8, marginTop: 4 }}>
-                          {emp.id} • Employed {yearsEmployed} years
+                      {inlineEditId === emp.id ? (
+                        <div style={{ flex: 1, display: 'grid', gap: 8 }}>
+                          <input
+                            type="text"
+                            value={inlineData.name}
+                            onChange={e => setInlineData({ ...inlineData, name: e.target.value })}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Name..."
+                            autoFocus
+                            style={{ padding: 8, fontSize: 16, fontWeight: 600, background: 'rgba(255,255,255,0.9)', border: '1px solid #ddd', borderRadius: 4 }}
+                          />
+                          <input
+                            type="text"
+                            value={inlineData.role}
+                            onChange={e => setInlineData({ ...inlineData, role: e.target.value })}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Role..."
+                            style={{ padding: 6, fontSize: 13, background: 'rgba(255,255,255,0.8)', border: '1px solid #ddd', borderRadius: 4 }}
+                          />
+                          <input
+                            type="text"
+                            value={inlineData.phone}
+                            onChange={e => setInlineData({ ...inlineData, phone: e.target.value })}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Phone..."
+                            style={{ padding: 6, fontSize: 13, background: 'rgba(255,255,255,0.8)', border: '1px solid #ddd', borderRadius: 4 }}
+                          />
+                          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                            <button onClick={saveInlineEdit} style={{ flex: 1, background: '#10b981', color: 'white', border: 'none', padding: '6px', borderRadius: 4 }}>✓ Save</button>
+                            <button onClick={cancelInlineEdit} style={{ flex: 1, background: '#6b7280', color: 'white', border: 'none', padding: '6px', borderRadius: 4 }}>✗ Cancel</button>
+                          </div>
                         </div>
-                      </div>
-                      <div style={{ 
-                        fontSize: 11, 
-                        padding: '4px 12px',
-                        borderRadius: 12,
-                        background: emp.active ? '#4CAF50' : '#999',
-                        fontWeight: 'bold'
-                      }}>
-                        {emp.active ? 'ACTIVE' : 'INACTIVE'}
-                      </div>
+                      ) : (
+                        <>
+                          <div style={{ flex: 1 }}>
+                            <h4 style={{ margin: '0 0 4px 0', fontSize: 18 }}>{emp.name}</h4>
+                            <div style={{ fontSize: 13, opacity: 0.9 }}>{emp.role}</div>
+                            <div style={{ fontSize: 11, opacity: 0.8, marginTop: 4 }}>
+                              {emp.id} • Employed {yearsEmployed} years
+                            </div>
+                          </div>
+                          <div style={{ 
+                            fontSize: 11, 
+                            padding: '4px 12px',
+                            borderRadius: 12,
+                            background: emp.active ? '#4CAF50' : '#999',
+                            fontWeight: 'bold'
+                          }}>
+                            {emp.active ? 'ACTIVE' : 'INACTIVE'}
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -1414,32 +1497,40 @@ export default function Schedules() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div style={{ padding: 12, display: 'flex', gap: 8, background: '#fafafa' }}>
-                    <button 
-                      onClick={() => openEmployeeDetails(emp)}
-                      style={{ flex: 1, fontSize: 11, padding: '8px', background: '#1976d2' }}
-                    >
-                      📄 Full Details
-                    </button>
-                    <button 
-                      onClick={() => openLeaveModal(emp)}
-                      style={{ flex: 1, fontSize: 11, padding: '8px', background: '#4CAF50' }}
-                    >
-                      🏖️ Leave
-                    </button>
-                    <button 
-                      onClick={() => openEmployeeModal(emp)}
-                      style={{ fontSize: 11, padding: '8px 12px', background: '#666' }}
-                    >
-                      ✏️
-                    </button>
-                    <button 
-                      onClick={() => deleteEmployee(emp.id)}
-                      style={{ fontSize: 11, padding: '8px 12px', background: '#f44336' }}
-                    >
-                      🗑️
-                    </button>
-                  </div>
+                  {inlineEditId !== emp.id && (
+                    <div style={{ padding: 12, display: 'flex', gap: 8, background: '#fafafa' }}>
+                      <button 
+                        onClick={() => startInlineEdit(emp)}
+                        style={{ fontSize: 11, padding: '8px 12px', background: '#ffffcc', color: '#333', border: '1px solid #ffdd00' }}
+                      >
+                        ⚡ Quick
+                      </button>
+                      <button 
+                        onClick={() => openEmployeeDetails(emp)}
+                        style={{ flex: 1, fontSize: 11, padding: '8px', background: '#1976d2' }}
+                      >
+                        📄 Full Details
+                      </button>
+                      <button 
+                        onClick={() => openLeaveModal(emp)}
+                        style={{ flex: 1, fontSize: 11, padding: '8px', background: '#4CAF50' }}
+                      >
+                        🏖️ Leave
+                      </button>
+                      <button 
+                        onClick={() => openEmployeeModal(emp)}
+                        style={{ fontSize: 11, padding: '8px 12px', background: '#666' }}
+                      >
+                        ✏️
+                      </button>
+                      <button 
+                        onClick={() => deleteEmployee(emp.id)}
+                        style={{ fontSize: 11, padding: '8px 12px', background: '#f44336' }}
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  )}
                 </div>
               )
             })}
@@ -2700,6 +2791,18 @@ export default function Schedules() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 20, right: 20, background: toast.type === 'error' ? '#dc2626' : '#10b981', color: 'white', padding: '12px 20px', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: 12, zIndex: 10000 }}>
+          <span>{toast.message}</span>
+          {toast.undo && (
+            <button onClick={undoLastChange} style={{ background: 'white', color: '#10b981', border: 'none', padding: '4px 12px', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
+              Undo
+            </button>
+          )}
         </div>
       )}
     </section>
