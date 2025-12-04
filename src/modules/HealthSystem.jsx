@@ -28,6 +28,12 @@ export default function HealthSystem({ animals = [] }){
   const [transferTarget, setTransferTarget] = useState('')
   const [transferMode, setTransferMode] = useState('move')
 
+  // Inline edit state
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({})
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
+
   // Load from localStorage
   useEffect(()=>{ try{ setPatients(JSON.parse(localStorage.getItem(PAT_KEY)||'[]')) }catch(e){ setPatients([]) } }, [])
   useEffect(()=>{ try{ setAppointments(JSON.parse(localStorage.getItem(APPT_KEY)||'[]')) }catch(e){ setAppointments([]) } }, [])
@@ -46,6 +52,46 @@ export default function HealthSystem({ animals = [] }){
   function addPatient(p){ p.id = p.id || uid('p-'); p.createdAt = new Date().toISOString(); setPatients(prev=> [...prev, p]) }
   function updatePatient(id, patch){ setPatients(prev=> prev.map(x=> x.id===id ? { ...x, ...patch } : x)) }
   function removePatient(id){ if(!window.confirm('Delete patient?')) return; setPatients(prev=> prev.filter(p=> p.id!==id)) }
+
+  // Inline edit functions
+  function startInlineEdit(item) {
+    setInlineEditId(item.id)
+    setInlineData({ ...item })
+    setLastChange({ item })
+  }
+
+  function saveInlineEdit() {
+    if (!inlineData.name || !inlineData.name.trim()) {
+      setToast({ type: 'error', message: 'Name is required' })
+      return
+    }
+    setPatients(prev=> prev.map(p => p.id === inlineEditId ? inlineData : p))
+    setToast({ type: 'success', message: '✓ Updated', showUndo: true })
+    setInlineEditId(null)
+    setTimeout(() => setToast(null), 3000)
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({})
+    setToast(null)
+  }
+
+  function undoLastChange() {
+    if (!lastChange) return
+    setPatients(prev=> prev.map(p => p.id === inlineEditId ? lastChange.item : p))
+    setToast(null)
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      saveInlineEdit()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      cancelInlineEdit()
+    }
+  }
 
   function createAppointment(a){ a.id = a.id || uid('a-'); a.createdAt = new Date().toISOString(); setAppointments(prev=> [...prev, a]) }
   function addPrescription(r){ r.id = r.id || uid('r-'); r.createdAt = new Date().toISOString(); setPrescriptions(prev=> [...prev, r]) }
@@ -333,6 +379,7 @@ function RecordsView({ patients = [], addPatient, updatePatient, removePatient, 
               <div style={{textAlign:'right', display:'flex', flexDirection:'column', gap:6, alignItems:'flex-end'}}>
                 <div className="muted" style={{fontSize:12}}>{p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ''}</div>
                 <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                  <button className="tab-btn" style={{background:'#ffffcc',border:'1px solid #ffdd00'}} onClick={(e)=>{ e.stopPropagation(); startInlineEdit(p); }}>⚡</button>
                   <div className="badge">{(p.notes||[]).length} notes</div>
                   {p.admitted ? (
                     <button className="tab-btn" onClick={(e)=>{ e.stopPropagation(); const note = prompt('Discharge note (optional)'); dischargePatient(p.id, note); updatePatient(p.id, { admitted:false, dischargeNote: note }); if(selected===p.id) setForm(prev=> ({ ...prev, admitted:false, dischargeNote: note })); }}>Discharge</button>
@@ -991,6 +1038,27 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
           </div>
         ))}
       </div>
+
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          bottom: 20,
+          right: 20,
+          padding: '12px 20px',
+          borderRadius: 8,
+          background: toast.type === 'error' ? '#fee2e2' : '#d1fae5',
+          color: toast.type === 'error' ? '#991b1b' : '#065f46',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 10000,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 12
+        }}>
+          <div>{toast.message}</div>
+          {toast.showUndo && <button onClick={undoLastChange} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', fontWeight: 600 }}>↶ Undo</button>}
+        </div>
+      )}
     </div>
   )
 }
