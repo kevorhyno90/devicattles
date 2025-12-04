@@ -374,7 +374,7 @@ export default function PetManagement() {
                     <div>💉 Vaccines: {(pet.vaccinations || []).length}</div>
                   </div>
                   <div style={{ marginTop: '12px', display: 'flex', gap: '6px' }}>
-                    <button onClick={(e) => { e.stopPropagation(); startInlineEdit(pet) }} style={{ flex: 1, padding: '6px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>⚡</button>
+                    <button onClick={(e) => { e.stopPropagation(); startInlineEdit(pet) }} style={{ flex: 1, padding: '6px', background: '#ffffcc', color: '#333', border: '1px solid #ffdd00', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>⚡ Quick</button>
                     <button onClick={(e) => { e.stopPropagation(); setForm(pet); setEditingId(pet.id) }} style={{ flex: 1, padding: '6px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>Edit</button>
                     <button onClick={(e) => { e.stopPropagation(); deletePet(pet.id) }} style={{ flex: 1, padding: '6px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>Delete</button>
                   </div>
