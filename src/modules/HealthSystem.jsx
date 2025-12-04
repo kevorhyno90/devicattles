@@ -379,7 +379,7 @@ function RecordsView({ patients = [], addPatient, updatePatient, removePatient, 
               <div style={{textAlign:'right', display:'flex', flexDirection:'column', gap:6, alignItems:'flex-end'}}>
                 <div className="muted" style={{fontSize:12}}>{p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ''}</div>
                 <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                  <button className="tab-btn" style={{background:'#ffffcc',border:'1px solid #ffdd00'}} onClick={(e)=>{ e.stopPropagation(); startInlineEdit(p); }}>⚡</button>
+                  <button className="tab-btn" style={{background:'#ffffcc',border:'1px solid #ffdd00',fontWeight:500}} onClick={(e)=>{ e.stopPropagation(); startInlineEdit(p); }}>⚡ Quick</button>
                   <div className="badge">{(p.notes||[]).length} notes</div>
                   {p.admitted ? (
                     <button className="tab-btn" onClick={(e)=>{ e.stopPropagation(); const note = prompt('Discharge note (optional)'); dischargePatient(p.id, note); updatePatient(p.id, { admitted:false, dischargeNote: note }); if(selected===p.id) setForm(prev=> ({ ...prev, admitted:false, dischargeNote: note })); }}>Discharge</button>
