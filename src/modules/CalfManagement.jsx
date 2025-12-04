@@ -109,6 +109,12 @@ export default function CalfManagement({ animals }) {
     medication: '', dosage: '', veterinarian: '', cost: '', nextVisit: '', notes: ''
   })
 
+  // Inline edit state
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({})
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
+
   useEffect(() => {
     const raw = localStorage.getItem(KEY)
     if (raw) setCalves(JSON.parse(raw))
@@ -167,6 +173,47 @@ export default function CalfManagement({ animals }) {
     if (!confirm('Delete this calf record?')) return
     setCalves(calves.filter(c => c.id !== id))
     if (selectedCalf?.id === id) setSelectedCalf(null)
+  }
+
+  // Inline edit functions
+  function startInlineEdit(item) {
+    setInlineEditId(item.id)
+    setInlineData({ ...item })
+    setLastChange({ item })
+  }
+
+  function saveInlineEdit() {
+    if (!inlineData.name || !inlineData.name.trim()) {
+      setToast({ type: 'error', message: 'Name is required' })
+      return
+    }
+    
+    setCalves(calves.map(c => c.id === inlineEditId ? inlineData : c))
+    setToast({ type: 'success', message: '✓ Updated', showUndo: true })
+    setInlineEditId(null)
+    setTimeout(() => setToast(null), 3000)
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({})
+    setToast(null)
+  }
+
+  function undoLastChange() {
+    if (!lastChange) return
+    setCalves(calves.map(c => c.id === inlineEditId ? lastChange.item : c))
+    setToast(null)
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      saveInlineEdit()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      cancelInlineEdit()
+    }
   }
 
   function addFeeding() {
@@ -460,38 +507,52 @@ export default function CalfManagement({ animals }) {
                 
                 return (
                   <div key={calf.id} style={{ padding: 16, borderBottom: '1px solid #eee' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
-                          <span style={{ fontWeight: 600, fontSize: 16 }}>{calf.name || calf.tag}</span>
-                          <span className="badge">{calf.sex === 'F' ? '♀ Female' : '♂ Male'}</span>
-                          <span className="badge" style={{ background: calf.healthStatus === 'Healthy' ? '#d1fae5' : '#fee2e2' }}>
-                            {calf.healthStatus}
-                          </span>
-                          {isWeaned && <span className="badge" style={{ background: '#e0f2fe' }}>Weaned</span>}
+                    {inlineEditId === calf.id ? (
+                      <div onKeyDown={handleKeyDown} style={{ display: 'grid', gap: '12px' }}>
+                        <input type="text" placeholder="Calf Name" value={inlineData.name || ''} onChange={e => setInlineData({ ...inlineData, name: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                        <input type="text" placeholder="Tag" value={inlineData.tag || ''} onChange={e => setInlineData({ ...inlineData, tag: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                        <input type="text" placeholder="Breed" value={inlineData.breed || ''} onChange={e => setInlineData({ ...inlineData, breed: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                        <input type="number" placeholder="Current Weight (kg)" value={inlineData.currentWeight || ''} onChange={e => setInlineData({ ...inlineData, currentWeight: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button type="button" onClick={saveInlineEdit} style={{ padding: '8px 16px', background: '#059669', color: '#fff', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Save</button>
+                          <button type="button" onClick={cancelInlineEdit} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Cancel</button>
                         </div>
-                        <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
-                          <strong>Tag:</strong> {calf.tag} • <strong>Breed:</strong> {calf.breed} • <strong>Age:</strong> {ageInWeeks} weeks ({ageInDays} days)
-                        </div>
-                        <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
-                          <strong>Dam:</strong> {calf.damName || calf.damId || 'Unknown'} • <strong>Sire:</strong> {calf.sireName || calf.sireId || 'Unknown'}
-                        </div>
-                        <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
-                          <strong>Birth Weight:</strong> {calf.birthWeight} kg • <strong>Current Weight:</strong> {calf.currentWeight || 'Not recorded'} kg
-                        </div>
-                        <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
-                          <strong>Housing:</strong> {calf.housingType} • <strong>Colostrum:</strong> {calf.colostrumIntake}
-                        </div>
-                        {calf.notes && (
-                          <div style={{ fontSize: 13, color: '#888', marginTop: 8, fontStyle: 'italic' }}>{calf.notes}</div>
-                        )}
                       </div>
-                      <div style={{ display: 'flex', gap: 4, flexDirection: 'column' }}>
-                        <button onClick={() => setSelectedCalf(calf)} style={{ fontSize: 12, padding: '4px 8px' }}>View Details</button>
-                        <button onClick={() => startEditCalf(calf)} style={{ fontSize: 12, padding: '4px 8px', background: '#3b82f6' }}>✏️ Edit</button>
-                        <button onClick={() => deleteCalf(calf.id)} style={{ fontSize: 12, padding: '4px 8px', background: '#dc2626' }}>🗑️ Delete</button>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 600, fontSize: 16 }}>{calf.name || calf.tag}</span>
+                            <span className="badge">{calf.sex === 'F' ? '♀ Female' : '♂ Male'}</span>
+                            <span className="badge" style={{ background: calf.healthStatus === 'Healthy' ? '#d1fae5' : '#fee2e2' }}>
+                              {calf.healthStatus}
+                            </span>
+                            {isWeaned && <span className="badge" style={{ background: '#e0f2fe' }}>Weaned</span>}
+                          </div>
+                          <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
+                            <strong>Tag:</strong> {calf.tag} • <strong>Breed:</strong> {calf.breed} • <strong>Age:</strong> {ageInWeeks} weeks ({ageInDays} days)
+                          </div>
+                          <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+                            <strong>Dam:</strong> {calf.damName || calf.damId || 'Unknown'} • <strong>Sire:</strong> {calf.sireName || calf.sireId || 'Unknown'}
+                          </div>
+                          <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+                            <strong>Birth Weight:</strong> {calf.birthWeight} kg • <strong>Current Weight:</strong> {calf.currentWeight || 'Not recorded'} kg
+                          </div>
+                          <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+                            <strong>Housing:</strong> {calf.housingType} • <strong>Colostrum:</strong> {calf.colostrumIntake}
+                          </div>
+                          {calf.notes && (
+                            <div style={{ fontSize: 13, color: '#888', marginTop: 8, fontStyle: 'italic' }}>{calf.notes}</div>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', gap: 4, flexDirection: 'column' }}>
+                          <button onClick={() => setSelectedCalf(calf)} style={{ fontSize: 12, padding: '4px 8px' }}>View Details</button>
+                          <button onClick={() => startInlineEdit(calf)} style={{ fontSize: 12, padding: '4px 8px', background: '#ffffcc', border: '1px solid #ffdd00' }}>⚡ Quick</button>
+                          <button onClick={() => startEditCalf(calf)} style={{ fontSize: 12, padding: '4px 8px', background: '#3b82f6' }}>✏️ Edit</button>
+                          <button onClick={() => deleteCalf(calf.id)} style={{ fontSize: 12, padding: '4px 8px', background: '#dc2626' }}>🗑️ Delete</button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )
               })}
@@ -1001,6 +1062,29 @@ export default function CalfManagement({ animals }) {
           </div>
         </div>
       )}
+
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          bottom: 20,
+          right: 20,
+          padding: '12px 20px',
+          borderRadius: 8,
+          background: toast.type === 'error' ? '#fee2e2' : '#d1fae5',
+          color: toast.type === 'error' ? '#991b1b' : '#065f46',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 10000,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 12,
+          maxWidth: 300
+        }}>
+          <div>{toast.message}</div>
+          {toast.showUndo && <button onClick={undoLastChange} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', fontWeight: 600 }}>↶ Undo</button>}
+        </div>
+      )}
     </div>
   )
 }
+
