@@ -94,9 +94,17 @@ export default function HealthSystem({ animals = [] }){
   }
 
   function createAppointment(a){ a.id = a.id || uid('a-'); a.createdAt = new Date().toISOString(); setAppointments(prev=> [...prev, a]) }
+  function updateAppointment(id, patch){ setAppointments(prev=> prev.map(a=> a.id===id ? { ...a, ...patch } : a)) }
+  
   function addPrescription(r){ r.id = r.id || uid('r-'); r.createdAt = new Date().toISOString(); setPrescriptions(prev=> [...prev, r]) }
+  function updatePrescription(id, patch){ setPrescriptions(prev=> prev.map(r=> r.id===id ? { ...r, ...patch } : r)) }
+  
   function addInventoryItem(it){ it.id = it.id || uid('i-'); it.qty = Number(it.qty||0); setInventory(prev=> [...prev, it]) }
+  function updateInventoryItem(id, patch){ setInventory(prev=> prev.map(it=> it.id===id ? { ...it, ...patch, qty: Number(patch.qty||0) } : it)) }
+  function adjustInventory(id, delta){ setInventory(prev=> prev.map(it=> it.id===id ? { ...it, qty: it.qty + delta } : it)) }
+  
   function charge(patientId, desc, amount){ const b = { id: uid('b-'), patientId, desc, amount: Number(amount||0), paid:false, createdAt: new Date().toISOString() }; setBilling(prev=> [...prev, b]) }
+  function updateBillingItem(id, patch){ setBilling(prev=> prev.map(b=> b.id===id ? { ...b, ...patch, amount: patch.amount ? Number(patch.amount) : b.amount } : b)) }
   function setInvoicePaid(id, paid=true){ setBilling(prev=> prev.map(b=> b.id===id ? { ...b, paid } : b)) }
 
   async function attachFileToPatient(patientId, file){
@@ -259,10 +267,10 @@ export default function HealthSystem({ animals = [] }){
           </div>
         )}
 
-        {tab==='appointments' && <AppointmentView patients={patients} appointments={appointments} createAppointment={createAppointment} />}
-        {tab==='prescriptions' && <PrescriptionView patients={patients} prescriptions={prescriptions} addPrescription={addPrescription} inventory={inventory} />}
-        {tab==='inventory' && <InventoryView inventory={inventory} addInventory={addInventoryItem} adjustInventory={(id,delta)=> setInventory(prev=> prev.map(it=> it.id===id ? { ...it, qty: Math.max(0, Number(it.qty||0) + delta) } : it)) } />}
-        {tab==='billing' && <BillingView patients={patients} billing={billing} charge={charge} setInvoicePaid={setInvoicePaid} generateInvoice={(pid)=> alert('Generate invoice for '+pid)} />}
+        {tab==='appointments' && <AppointmentView patients={patients} appointments={appointments} createAppointment={createAppointment} updateAppointment={updateAppointment} />}
+        {tab==='prescriptions' && <PrescriptionView patients={patients} prescriptions={prescriptions} addPrescription={addPrescription} updatePrescription={updatePrescription} inventory={inventory} />}
+        {tab==='inventory' && <InventoryView inventory={inventory} addInventory={addInventoryItem} adjustInventory={adjustInventory} updateInventory={updateInventoryItem} />}
+        {tab==='billing' && <BillingView patients={patients} billing={billing} charge={charge} setInvoicePaid={setInvoicePaid} updateBilling={updateBillingItem} generateInvoice={(pid)=> alert('Generate invoice for '+pid)} />}
 
         {tab==='reports' && (
           <ReportsView
@@ -574,75 +582,211 @@ function VitalsList({ items=[] }){
   return (<ul>{items.slice().reverse().map(i=> <li key={i.id}>{i.createdAt ? new Date(i.createdAt).toLocaleString() : ''} — {i.weight? `${i.weight} kg` : ''} {i.temp? `• ${i.temp}°C` : ''} {i.hr? `• ${i.hr} bpm` : ''} {i.notes? `• ${i.notes}` : ''}</li>)}</ul>)
 }
 
-function AppointmentView({ patients=[], appointments=[], createAppointment }){
+function AppointmentView({ patients=[], appointments=[], createAppointment, updateAppointment }){
   const [patientId, setPatientId] = useState('')
   const [when, setWhen] = useState('')
   const [reason, setReason] = useState('')
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({})
+  
+  function startInlineEdit(appt) {
+    setInlineEditId(appt.id)
+    setInlineData({ when: appt.when || '', reason: appt.reason || '', status: appt.status || 'Scheduled' })
+  }
+  
+  function saveInlineEdit() {
+    updateAppointment?.(inlineEditId, inlineData)
+    setInlineEditId(null)
+  }
+  
   return (
     <div>
       <form onSubmit={e=>{ e.preventDefault(); createAppointment({ patientId, when, reason, createdAt: new Date().toISOString(), status: 'Scheduled' }); setPatientId(''); setWhen(''); setReason('') }}>
-        <div style={{ display:'flex', gap:8 }}>
+        <div style={{ display:'flex', gap:8, marginBottom:16 }}>
           <select value={patientId} onChange={e=>setPatientId(e.target.value)}><option value=''>Select patient</option>{patients.map(p=>(<option key={p.id} value={p.id}>{p.name}</option>))}</select>
-          <label style={{marginRight:4}}>Appointment Date & Time:</label>
           <input type='datetime-local' value={when} onChange={e=>setWhen(e.target.value)} />
           <input placeholder='Reason' value={reason} onChange={e=>setReason(e.target.value)} />
           <button type='submit'>Create</button>
         </div>
       </form>
-      <div style={{ marginTop:8 }}>{appointments.map(a=> (<div key={a.id}>{(patients.find(p=>p.id===a.patientId)||{}).name || a.patientId} — {a.when || a.createdAt} — {a.status}</div>))}</div>
+      <div style={{ marginTop:12, display:'grid', gap:8 }}>{appointments.map(a=> (
+        <div key={a.id} style={{padding:12,border:'1px solid #e5e7eb',borderRadius:6,background:'#fff'}}>
+          {inlineEditId === a.id ? (
+            <div style={{display:'grid',gap:8}}>
+              <input type='datetime-local' value={inlineData.when} onChange={e=>setInlineData({...inlineData,when:e.target.value})} style={{padding:6,border:'1px solid #ddd',borderRadius:4}} />
+              <input value={inlineData.reason} onChange={e=>setInlineData({...inlineData,reason:e.target.value})} placeholder='Reason' style={{padding:6,border:'1px solid #ddd',borderRadius:4}} />
+              <select value={inlineData.status} onChange={e=>setInlineData({...inlineData,status:e.target.value})} style={{padding:6,border:'1px solid #ddd',borderRadius:4}}>
+                <option>Scheduled</option><option>Completed</option><option>Cancelled</option>
+              </select>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={saveInlineEdit} style={{flex:1,padding:6,background:'#059669',color:'#fff',border:'none',borderRadius:4}}>Save</button>
+                <button onClick={()=>setInlineEditId(null)} style={{flex:1,padding:6,background:'#f3f4f6',border:'1px solid #d1d5db',borderRadius:4}}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div>{(patients.find(p=>p.id===a.patientId)||{}).name || a.patientId} — {a.when || a.createdAt} — {a.status}</div>
+              <button onClick={()=>startInlineEdit(a)} style={{padding:'4px 10px',background:'#ffffcc',border:'1px solid #ffdd00',borderRadius:4,cursor:'pointer',fontSize:'0.875rem'}}>⚡ Quick</button>
+            </div>
+          )}
+        </div>
+      ))}</div>
     </div>
   )
 }
 
-function PrescriptionView({ patients=[], prescriptions=[], addPrescription, inventory=[] }){
+function PrescriptionView({ patients=[], prescriptions=[], addPrescription, updatePrescription, inventory=[] }){
   const [patientId, setPatientId] = useState('')
   const [drug, setDrug] = useState('')
   const [dose, setDose] = useState('')
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({})
+  
+  function startInlineEdit(rx) {
+    setInlineEditId(rx.id)
+    setInlineData({ drug: rx.drug || '', dose: rx.dose || '' })
+  }
+  
+  function saveInlineEdit() {
+    updatePrescription?.(inlineEditId, inlineData)
+    setInlineEditId(null)
+  }
+  
   return (
     <div>
       <form onSubmit={e=>{ e.preventDefault(); addPrescription({ patientId, drug, dose }); setDrug(''); setDose('') }}>
-        <div style={{ display:'flex', gap:8 }}>
+        <div style={{ display:'flex', gap:8, marginBottom:16 }}>
           <select value={patientId} onChange={e=>setPatientId(e.target.value)}><option value=''>Select patient</option>{patients.map(p=>(<option key={p.id} value={p.id}>{p.name}</option>))}</select>
           <input placeholder='Drug' value={drug} onChange={e=>setDrug(e.target.value)} />
           <input placeholder='Dose' value={dose} onChange={e=>setDose(e.target.value)} />
           <button type='submit'>Prescribe</button>
         </div>
       </form>
-      <ul>{prescriptions.map(r=> <li key={r.id}>{(patients.find(p=>p.id===r.patientId)||{}).name||r.patientId} — {r.drug} — {r.dose}</li>)}</ul>
+      <div style={{marginTop:12,display:'grid',gap:8}}>{prescriptions.map(r=> (
+        <div key={r.id} style={{padding:12,border:'1px solid #e5e7eb',borderRadius:6,background:'#fff'}}>
+          {inlineEditId === r.id ? (
+            <div style={{display:'grid',gap:8}}>
+              <input value={inlineData.drug} onChange={e=>setInlineData({...inlineData,drug:e.target.value})} placeholder='Drug' style={{padding:6,border:'1px solid #ddd',borderRadius:4}} />
+              <input value={inlineData.dose} onChange={e=>setInlineData({...inlineData,dose:e.target.value})} placeholder='Dose' style={{padding:6,border:'1px solid #ddd',borderRadius:4}} />
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={saveInlineEdit} style={{flex:1,padding:6,background:'#059669',color:'#fff',border:'none',borderRadius:4}}>Save</button>
+                <button onClick={()=>setInlineEditId(null)} style={{flex:1,padding:6,background:'#f3f4f6',border:'1px solid #d1d5db',borderRadius:4}}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div>{(patients.find(p=>p.id===r.patientId)||{}).name||r.patientId} — {r.drug} — {r.dose}</div>
+              <button onClick={()=>startInlineEdit(r)} style={{padding:'4px 10px',background:'#ffffcc',border:'1px solid #ffdd00',borderRadius:4,cursor:'pointer',fontSize:'0.875rem'}}>⚡ Quick</button>
+            </div>
+          )}
+        </div>
+      ))}</div>
     </div>
   )
 }
 
-function InventoryView({ inventory=[], addInventory, adjustInventory }){
+function InventoryView({ inventory=[], addInventory, adjustInventory, updateInventory }){
   const [name, setName] = useState('')
   const [qty, setQty] = useState(0)
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({})
+  
+  function startInlineEdit(item) {
+    setInlineEditId(item.id)
+    setInlineData({ name: item.name || '', qty: item.qty || 0 })
+  }
+  
+  function saveInlineEdit() {
+    updateInventory?.(inlineEditId, inlineData)
+    setInlineEditId(null)
+  }
+  
   return (
     <div>
-      <form onSubmit={e=>{ e.preventDefault(); addInventory({ name, qty }); setName(''); setQty(0) }}>
-        <input placeholder='Item name' value={name} onChange={e=>setName(e.target.value)} />
-        <input type='number' value={qty} onChange={e=>setQty(e.target.value)} />
-        <button type='submit'>Add</button>
+      <form onSubmit={e=>{ e.preventDefault(); addInventory({ name, qty }); setName(''); setQty(0) }} style={{marginBottom:16}}>
+        <div style={{display:'flex',gap:8}}>
+          <input placeholder='Item name' value={name} onChange={e=>setName(e.target.value)} style={{flex:1,padding:8}} />
+          <input type='number' value={qty} onChange={e=>setQty(e.target.value)} style={{width:100,padding:8}} />
+          <button type='submit' style={{padding:'8px 16px'}}>Add</button>
+        </div>
       </form>
-      <ul>{inventory.map(it=>(<li key={it.id}>{it.name} — {it.qty} <button onClick={()=>adjustInventory(it.id,-1)}>-</button><button onClick={()=>adjustInventory(it.id,1)}>+</button></li>))}</ul>
+      <div style={{display:'grid',gap:8}}>{inventory.map(it=>(
+        <div key={it.id} style={{padding:12,border:'1px solid #e5e7eb',borderRadius:6,background:'#fff'}}>
+          {inlineEditId === it.id ? (
+            <div style={{display:'grid',gap:8}}>
+              <input value={inlineData.name} onChange={e=>setInlineData({...inlineData,name:e.target.value})} placeholder='Name' style={{padding:6,border:'1px solid #ddd',borderRadius:4}} />
+              <input type='number' value={inlineData.qty} onChange={e=>setInlineData({...inlineData,qty:e.target.value})} placeholder='Quantity' style={{padding:6,border:'1px solid #ddd',borderRadius:4}} />
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={saveInlineEdit} style={{flex:1,padding:6,background:'#059669',color:'#fff',border:'none',borderRadius:4}}>Save</button>
+                <button onClick={()=>setInlineEditId(null)} style={{flex:1,padding:6,background:'#f3f4f6',border:'1px solid #d1d5db',borderRadius:4}}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div>{it.name} — {it.qty}</div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>adjustInventory(it.id,-1)} style={{padding:'4px 8px',background:'#f3f4f6',border:'1px solid #d1d5db',borderRadius:4}}>-</button>
+                <button onClick={()=>adjustInventory(it.id,1)} style={{padding:'4px 8px',background:'#f3f4f6',border:'1px solid #d1d5db',borderRadius:4}}>+</button>
+                <button onClick={()=>startInlineEdit(it)} style={{padding:'4px 10px',background:'#ffffcc',border:'1px solid #ffdd00',borderRadius:4,cursor:'pointer',fontSize:'0.875rem'}}>⚡ Quick</button>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}</div>
     </div>
   )
 }
 
-function BillingView({ patients=[], billing=[], charge, setInvoicePaid, generateInvoice }){
+function BillingView({ patients=[], billing=[], charge, setInvoicePaid, generateInvoice, updateBilling }){
   const [patientId, setPatientId] = useState('')
   const [desc, setDesc] = useState('')
   const [amount, setAmount] = useState('')
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({})
+  
+  function startInlineEdit(bill) {
+    setInlineEditId(bill.id)
+    setInlineData({ desc: bill.desc || '', amount: bill.amount || '' })
+  }
+  
+  function saveInlineEdit() {
+    updateBilling?.(inlineEditId, inlineData)
+    setInlineEditId(null)
+  }
+  
   return (
     <div>
       <form onSubmit={e=>{ e.preventDefault(); charge(patientId, desc, amount); setDesc(''); setAmount('') }}>
-        <div style={{ display:'flex', gap:8 }}>
+        <div style={{ display:'flex', gap:8, marginBottom:16 }}>
           <select value={patientId} onChange={e=>setPatientId(e.target.value)}><option value=''>Select patient</option>{patients.map(p=>(<option key={p.id} value={p.id}>{p.name}</option>))}</select>
           <input placeholder='Description' value={desc} onChange={e=>setDesc(e.target.value)} />
           <input placeholder='Amount' type='number' value={amount} onChange={e=>setAmount(e.target.value)} />
           <button type='submit'>Charge</button>
         </div>
       </form>
-      <ul>{billing.map(b=>(<li key={b.id}>{b.desc} — ${Number(b.amount).toFixed(2)} — {(patients.find(p=>p.id===b.patientId)||{}).name||b.patientId} — {b.paid? 'Paid' : <button onClick={()=>setInvoicePaid(b.id,true)}>Mark paid</button>} <button onClick={()=>generateInvoice(b.patientId)}>Invoice</button></li>))}</ul>
+      <div style={{marginTop:12,display:'grid',gap:8}}>{billing.map(b=>(
+        <div key={b.id} style={{padding:12,border:'1px solid #e5e7eb',borderRadius:6,background:'#fff'}}>
+          {inlineEditId === b.id ? (
+            <div style={{display:'grid',gap:8}}>
+              <input value={inlineData.desc} onChange={e=>setInlineData({...inlineData,desc:e.target.value})} placeholder='Description' style={{padding:6,border:'1px solid #ddd',borderRadius:4}} />
+              <input type='number' value={inlineData.amount} onChange={e=>setInlineData({...inlineData,amount:e.target.value})} placeholder='Amount' style={{padding:6,border:'1px solid #ddd',borderRadius:4}} />
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={saveInlineEdit} style={{flex:1,padding:6,background:'#059669',color:'#fff',border:'none',borderRadius:4}}>Save</button>
+                <button onClick={()=>setInlineEditId(null)} style={{flex:1,padding:6,background:'#f3f4f6',border:'1px solid #d1d5db',borderRadius:4}}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div>{b.desc} — ${Number(b.amount).toFixed(2)} — {(patients.find(p=>p.id===b.patientId)||{}).name||b.patientId}</div>
+              <div style={{display:'flex',gap:8}}>
+                {b.paid ? <span style={{padding:'4px 8px',background:'#d1fae5',color:'#065f46',borderRadius:4,fontSize:'0.875rem'}}>Paid</span> : <button onClick={()=>setInvoicePaid(b.id,true)} style={{padding:'4px 8px',background:'#f3f4f6',border:'1px solid #d1d5db',borderRadius:4,fontSize:'0.875rem'}}>Mark paid</button>}
+                <button onClick={()=>generateInvoice(b.patientId)} style={{padding:'4px 8px',background:'#f3f4f6',border:'1px solid #d1d5db',borderRadius:4,fontSize:'0.875rem'}}>Invoice</button>
+                <button onClick={()=>startInlineEdit(b)} style={{padding:'4px 10px',background:'#ffffcc',border:'1px solid #ffdd00',borderRadius:4,cursor:'pointer',fontSize:'0.875rem'}}>⚡ Quick</button>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}</div>
     </div>
   )
 }

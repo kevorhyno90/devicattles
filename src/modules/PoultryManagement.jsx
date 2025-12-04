@@ -971,34 +971,57 @@ export default function PoultryManagement() {
               const usableEggs = Number(record.eggsCollected) - Number(record.broken || 0) - Number(record.dirty || 0)
               return (
                 <div key={record.id} className="card" style={{ padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1 }}>
-                      <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600' }}>
-                        {record.date} - {flock?.name || 'Unknown Flock'}
-                      </h4>
-                      <div style={{ fontSize: '0.9rem', color: '#666', display: 'grid', gap: '4px' }}>
-                        <div><strong>Collected:</strong> {record.eggsCollected} eggs</div>
-                        <div><strong>Broken:</strong> {record.broken || 0} | <strong>Dirty:</strong> {record.dirty || 0}</div>
-                        <div><strong>Usable:</strong> {usableEggs} eggs</div>
-                        <div><strong>Grade:</strong> {record.grade}</div>
-                        {record.notes && <div><strong>Notes:</strong> {record.notes}</div>}
+                  {inlineEditId === record.id ? (
+                    <div onKeyDown={handleKeyDown} style={{ display: 'grid', gap: '12px' }}>
+                      <input type="number" placeholder="Eggs Collected" value={inlineData.eggsCollected || ''} onChange={e => setInlineData({ ...inlineData, eggsCollected: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                      <input type="number" placeholder="Broken" value={inlineData.broken || ''} onChange={e => setInlineData({ ...inlineData, broken: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                      <input type="number" placeholder="Dirty" value={inlineData.dirty || ''} onChange={e => setInlineData({ ...inlineData, dirty: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                      <select value={inlineData.grade || 'A'} onChange={e => setInlineData({ ...inlineData, grade: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }}>
+                        <option value="A">Grade A</option>
+                        <option value="B">Grade B</option>
+                        <option value="C">Grade C</option>
+                      </select>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button type="button" onClick={saveInlineEdit} style={{ padding: '8px 16px', background: '#059669', color: '#fff', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Save</button>
+                        <button type="button" onClick={cancelInlineEdit} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Cancel</button>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={() => editEggRecord(record)}
-                        style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}
-                      >
-                        ✏️ Edit
-                      </button>
-                      <button
-                        onClick={() => deleteEggRecord(record.id)}
-                        style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer' }}
-                      >
-                        🗑️ Delete
-                      </button>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600' }}>
+                          {record.date} - {flock?.name || 'Unknown Flock'}
+                        </h4>
+                        <div style={{ fontSize: '0.9rem', color: '#666', display: 'grid', gap: '4px' }}>
+                          <div><strong>Collected:</strong> {record.eggsCollected} eggs</div>
+                          <div><strong>Broken:</strong> {record.broken || 0} | <strong>Dirty:</strong> {record.dirty || 0}</div>
+                          <div><strong>Usable:</strong> {usableEggs} eggs</div>
+                          <div><strong>Grade:</strong> {record.grade}</div>
+                          {record.notes && <div><strong>Notes:</strong> {record.notes}</div>}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => startInlineEdit(record, 'egg')}
+                          style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#ffffcc', border: '1px solid #ffdd00', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          ⚡ Quick
+                        </button>
+                        <button
+                          onClick={() => editEggRecord(record)}
+                          style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => deleteEggRecord(record.id)}
+                          style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )
             })}
@@ -1147,58 +1170,88 @@ export default function PoultryManagement() {
               }
               return (
                 <div key={record.id} className="card" style={{ padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1 }}>
-                      <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600' }}>
-                        {record.issue}
-                      </h4>
-                      <div style={{ fontSize: '0.9rem', color: '#666', display: 'grid', gap: '6px' }}>
-                        <div><strong>Date:</strong> {record.date} | <strong>Flock:</strong> {flock?.name || 'Unknown'}</div>
-                        <div><strong>Affected Birds:</strong> {record.affectedBirds || 'Not specified'}</div>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <strong>Severity:</strong>
-                          <span style={{
-                            padding: '2px 8px',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            background: severityColors[record.severity]?.bg || '#f3f4f6',
-                            color: severityColors[record.severity]?.text || '#374151'
-                          }}>
-                            {record.severity}
-                          </span>
-                          <strong>Status:</strong>
-                          <span style={{
-                            padding: '2px 8px',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            background: statusColors[record.status]?.bg || '#f3f4f6',
-                            color: statusColors[record.status]?.text || '#374151'
-                          }}>
-                            {record.status}
-                          </span>
-                        </div>
-                        {record.action && <div><strong>Action:</strong> {record.action}</div>}
-                        {record.cost && <div><strong>Cost:</strong> KSH {Number(record.cost).toLocaleString()}</div>}
-                        {record.notes && <div><strong>Notes:</strong> {record.notes}</div>}
+                  {inlineEditId === record.id ? (
+                    <div onKeyDown={handleKeyDown} style={{ display: 'grid', gap: '12px' }}>
+                      <input type="text" placeholder="Health Issue" value={inlineData.issue || ''} onChange={e => setInlineData({ ...inlineData, issue: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                      <input type="number" placeholder="Affected Birds" value={inlineData.affectedBirds || ''} onChange={e => setInlineData({ ...inlineData, affectedBirds: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                      <select value={inlineData.severity || 'Moderate'} onChange={e => setInlineData({ ...inlineData, severity: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }}>
+                        <option value="Mild">Mild</option>
+                        <option value="Moderate">Moderate</option>
+                        <option value="Severe">Severe</option>
+                        <option value="Critical">Critical</option>
+                      </select>
+                      <select value={inlineData.status || 'Under Observation'} onChange={e => setInlineData({ ...inlineData, status: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }}>
+                        <option value="Under Observation">Under Observation</option>
+                        <option value="Under Treatment">Under Treatment</option>
+                        <option value="Recovering">Recovering</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Escalated">Escalated</option>
+                      </select>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button type="button" onClick={saveInlineEdit} style={{ padding: '8px 16px', background: '#059669', color: '#fff', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Save</button>
+                        <button type="button" onClick={cancelInlineEdit} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Cancel</button>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={() => editHealthRecord(record)}
-                        style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}
-                      >
-                        ✏️ Edit
-                      </button>
-                      <button
-                        onClick={() => deleteHealthRecord(record.id)}
-                        style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer' }}
-                      >
-                        🗑️ Delete
-                      </button>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600' }}>
+                          {record.issue}
+                        </h4>
+                        <div style={{ fontSize: '0.9rem', color: '#666', display: 'grid', gap: '6px' }}>
+                          <div><strong>Date:</strong> {record.date} | <strong>Flock:</strong> {flock?.name || 'Unknown'}</div>
+                          <div><strong>Affected Birds:</strong> {record.affectedBirds || 'Not specified'}</div>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <strong>Severity:</strong>
+                            <span style={{
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              background: severityColors[record.severity]?.bg || '#f3f4f6',
+                              color: severityColors[record.severity]?.text || '#374151'
+                            }}>
+                              {record.severity}
+                            </span>
+                            <strong>Status:</strong>
+                            <span style={{
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              background: statusColors[record.status]?.bg || '#f3f4f6',
+                              color: statusColors[record.status]?.text || '#374151'
+                            }}>
+                              {record.status}
+                            </span>
+                          </div>
+                          {record.action && <div><strong>Action:</strong> {record.action}</div>}
+                          {record.cost && <div><strong>Cost:</strong> KSH {Number(record.cost).toLocaleString()}</div>}
+                          {record.notes && <div><strong>Notes:</strong> {record.notes}</div>}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => startInlineEdit(record, 'health')}
+                          style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#ffffcc', border: '1px solid #ffdd00', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          ⚡ Quick
+                        </button>
+                        <button
+                          onClick={() => editHealthRecord(record)}
+                          style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => deleteHealthRecord(record.id)}
+                          style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )
             })}
@@ -1341,36 +1394,61 @@ export default function PoultryManagement() {
               const isDue = vac.nextDueDate && new Date(vac.nextDueDate) <= new Date()
               return (
                 <div key={vac.id} className="card" style={{ padding: '16px', borderLeft: isDue ? '4px solid #ef4444' : 'none' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1 }}>
-                      <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600' }}>
-                        {vac.vaccineName}
-                        {isDue && <span style={{ marginLeft: '8px', padding: '2px 8px', background: '#fee2e2', color: '#991b1b', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>⚠️ Due</span>}
-                      </h4>
-                      <div style={{ fontSize: '0.9rem', color: '#666', display: 'grid', gap: '4px' }}>
-                        <div><strong>Date:</strong> {vac.date} | <strong>Flock:</strong> {flock?.name || 'Unknown'}</div>
-                        <div><strong>Method:</strong> {vac.method} | <strong>Dosage:</strong> {vac.dosage || 'N/A'}</div>
-                        {vac.administeredBy && <div><strong>Administered By:</strong> {vac.administeredBy}</div>}
-                        {vac.nextDueDate && <div><strong>Next Due:</strong> {vac.nextDueDate}</div>}
-                        {vac.cost && <div><strong>Cost:</strong> KSH {Number(vac.cost).toLocaleString()}</div>}
-                        {vac.notes && <div><strong>Notes:</strong> {vac.notes}</div>}
+                  {inlineEditId === vac.id ? (
+                    <div onKeyDown={handleKeyDown} style={{ display: 'grid', gap: '12px' }}>
+                      <input type="text" placeholder="Vaccine Name" value={inlineData.vaccineName || ''} onChange={e => setInlineData({ ...inlineData, vaccineName: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                      <select value={inlineData.method || 'Drinking Water'} onChange={e => setInlineData({ ...inlineData, method: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }}>
+                        <option value="Drinking Water">Drinking Water</option>
+                        <option value="Spray">Spray</option>
+                        <option value="Eye Drop">Eye Drop</option>
+                        <option value="Injection">Injection (IM/SC)</option>
+                        <option value="Wing Web">Wing Web</option>
+                      </select>
+                      <input type="text" placeholder="Dosage" value={inlineData.dosage || ''} onChange={e => setInlineData({ ...inlineData, dosage: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                      <input type="date" placeholder="Next Due Date" value={inlineData.nextDueDate || ''} onChange={e => setInlineData({ ...inlineData, nextDueDate: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button type="button" onClick={saveInlineEdit} style={{ padding: '8px 16px', background: '#059669', color: '#fff', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Save</button>
+                        <button type="button" onClick={cancelInlineEdit} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Cancel</button>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={() => editVaccination(vac)}
-                        style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}
-                      >
-                        ✏️ Edit
-                      </button>
-                      <button
-                        onClick={() => deleteVaccination(vac.id)}
-                        style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer' }}
-                      >
-                        🗑️ Delete
-                      </button>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600' }}>
+                          {vac.vaccineName}
+                          {isDue && <span style={{ marginLeft: '8px', padding: '2px 8px', background: '#fee2e2', color: '#991b1b', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>⚠️ Due</span>}
+                        </h4>
+                        <div style={{ fontSize: '0.9rem', color: '#666', display: 'grid', gap: '4px' }}>
+                          <div><strong>Date:</strong> {vac.date} | <strong>Flock:</strong> {flock?.name || 'Unknown'}</div>
+                          <div><strong>Method:</strong> {vac.method} | <strong>Dosage:</strong> {vac.dosage || 'N/A'}</div>
+                          {vac.administeredBy && <div><strong>Administered By:</strong> {vac.administeredBy}</div>}
+                          {vac.nextDueDate && <div><strong>Next Due:</strong> {vac.nextDueDate}</div>}
+                          {vac.cost && <div><strong>Cost:</strong> KSH {Number(vac.cost).toLocaleString()}</div>}
+                          {vac.notes && <div><strong>Notes:</strong> {vac.notes}</div>}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => startInlineEdit(vac, 'vaccination')}
+                          style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#ffffcc', border: '1px solid #ffdd00', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          ⚡ Quick
+                        </button>
+                        <button
+                          onClick={() => editVaccination(vac)}
+                          style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => deleteVaccination(vac.id)}
+                          style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )
             })}
@@ -1518,34 +1596,53 @@ export default function PoultryManagement() {
               const flock = flocks.find(f => f.id === treatment.flockId)
               return (
                 <div key={treatment.id} className="card" style={{ padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1 }}>
-                      <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600' }}>
-                        {treatment.condition} - {treatment.medication}
-                      </h4>
-                      <div style={{ fontSize: '0.9rem', color: '#666', display: 'grid', gap: '4px' }}>
-                        <div><strong>Date:</strong> {treatment.date} | <strong>Flock:</strong> {flock?.name || 'Unknown'}</div>
-                        <div><strong>Dosage:</strong> {treatment.dosage || 'N/A'} | <strong>Duration:</strong> {treatment.duration || 'N/A'}</div>
-                        {treatment.administeredBy && <div><strong>Administered By:</strong> {treatment.administeredBy}</div>}
-                        {treatment.cost && <div><strong>Cost:</strong> KES {Number(treatment.cost).toLocaleString()}</div>}
-                        {treatment.notes && <div><strong>Notes:</strong> {treatment.notes}</div>}
+                  {inlineEditId === treatment.id ? (
+                    <div onKeyDown={handleKeyDown} style={{ display: 'grid', gap: '12px' }}>
+                      <input type="text" placeholder="Condition/Disease" value={inlineData.condition || ''} onChange={e => setInlineData({ ...inlineData, condition: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                      <input type="text" placeholder="Medication" value={inlineData.medication || ''} onChange={e => setInlineData({ ...inlineData, medication: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                      <input type="text" placeholder="Dosage" value={inlineData.dosage || ''} onChange={e => setInlineData({ ...inlineData, dosage: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                      <input type="text" placeholder="Duration" value={inlineData.duration || ''} onChange={e => setInlineData({ ...inlineData, duration: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button type="button" onClick={saveInlineEdit} style={{ padding: '8px 16px', background: '#059669', color: '#fff', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Save</button>
+                        <button type="button" onClick={cancelInlineEdit} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Cancel</button>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={() => editTreatment(treatment)}
-                        style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}
-                      >
-                        ✏️ Edit
-                      </button>
-                      <button
-                        onClick={() => deleteTreatment(treatment.id)}
-                        style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer' }}
-                      >
-                        🗑️ Delete
-                      </button>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600' }}>
+                          {treatment.condition} - {treatment.medication}
+                        </h4>
+                        <div style={{ fontSize: '0.9rem', color: '#666', display: 'grid', gap: '4px' }}>
+                          <div><strong>Date:</strong> {treatment.date} | <strong>Flock:</strong> {flock?.name || 'Unknown'}</div>
+                          <div><strong>Dosage:</strong> {treatment.dosage || 'N/A'} | <strong>Duration:</strong> {treatment.duration || 'N/A'}</div>
+                          {treatment.administeredBy && <div><strong>Administered By:</strong> {treatment.administeredBy}</div>}
+                          {treatment.cost && <div><strong>Cost:</strong> KES {Number(treatment.cost).toLocaleString()}</div>}
+                          {treatment.notes && <div><strong>Notes:</strong> {treatment.notes}</div>}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => startInlineEdit(treatment, 'treatment')}
+                          style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#ffffcc', border: '1px solid #ffdd00', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          ⚡ Quick
+                        </button>
+                        <button
+                          onClick={() => editTreatment(treatment)}
+                          style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => deleteTreatment(treatment.id)}
+                          style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )
             })}
