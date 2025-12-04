@@ -373,6 +373,12 @@ export default function AnimalFeeding({ animals }){
   const [editingDietId, setEditingDietId] = useState(null)
   const [editingRationId, setEditingRationId] = useState(null)
   const [editingEventId, setEditingEventId] = useState(null)
+  
+  // Inline edit state
+  const [inlineEditId, setInlineEditId] = useState(null)
+  const [inlineData, setInlineData] = useState({})
+  const [toast, setToast] = useState(null)
+  const [lastChange, setLastChange] = useState(null)
 
   useEffect(() => {
     const d = localStorage.getItem('rumen8:diets')
@@ -407,6 +413,47 @@ export default function AnimalFeeding({ animals }){
 
   function removeFromDiet(id) {
     setDietIngredients(dietIngredients.filter(i => i.id !== id))
+  }
+  
+  // Inline edit functions
+  function startInlineEdit(diet) {
+    setInlineEditId(diet.id)
+    setInlineData({ name: diet.name, targetAnimal: diet.targetAnimal })
+  }
+  
+  function saveInlineEdit() {
+    if (!inlineData.name || !inlineData.name.trim()) {
+      setToast({ type: 'error', message: 'Diet name is required!' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    
+    const oldDiet = diets.find(d => d.id === inlineEditId)
+    setLastChange({ id: inlineEditId, item: oldDiet })
+    
+    setDiets(diets.map(d => d.id === inlineEditId ? { ...d, name: inlineData.name, targetAnimal: inlineData.targetAnimal } : d))
+    setToast({ type: 'success', message: 'Diet updated successfully!', undo: true })
+    setTimeout(() => setToast(null), 5000)
+    setInlineEditId(null)
+    setInlineData({})
+  }
+  
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({})
+  }
+  
+  function undoLastChange() {
+    if (lastChange) {
+      setDiets(diets.map(d => d.id === lastChange.id ? lastChange.item : d))
+      setLastChange(null)
+      setToast(null)
+    }
+  }
+  
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') saveInlineEdit()
+    if (e.key === 'Escape') cancelInlineEdit()
   }
 
   function analyzeDiet() {
@@ -1045,14 +1092,45 @@ export default function AnimalFeeding({ animals }){
               {diets.map(diet => (
                 <div key={diet.id} className="card" style={{ padding: 20 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                    <div>
-                      <h4 style={{ margin: '0 0 8px 0' }}>{diet.name}</h4>
-                      <div style={{ fontSize: 14, color: '#666' }}>{diet.targetAnimal}</div>
+                    <div style={{ flex: 1 }}>
+                      {inlineEditId === diet.id ? (
+                        <div style={{ display: 'grid', gap: 8 }}>
+                          <input
+                            type="text"
+                            value={inlineData.name}
+                            onChange={e => setInlineData({ ...inlineData, name: e.target.value })}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Diet name..."
+                            autoFocus
+                            style={{ padding: 8, fontSize: 16, fontWeight: 600 }}
+                          />
+                          <input
+                            type="text"
+                            value={inlineData.targetAnimal}
+                            onChange={e => setInlineData({ ...inlineData, targetAnimal: e.target.value })}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Target animal..."
+                            style={{ padding: 8, fontSize: 14 }}
+                          />
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button onClick={saveInlineEdit} style={{ background: '#10b981', color: 'white' }}>✓ Save</button>
+                            <button onClick={cancelInlineEdit} style={{ background: '#6b7280', color: 'white' }}>✗ Cancel</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <h4 style={{ margin: '0 0 8px 0' }}>{diet.name}</h4>
+                          <div style={{ fontSize: 14, color: '#666' }}>{diet.targetAnimal}</div>
+                        </>
+                      )}
                     </div>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => startEditDiet(diet)}>✏️ Edit</button>
-                      <button onClick={() => setDiets(diets.filter(d => d.id !== diet.id))} style={{ color: '#dc2626' }}>🗑️ Delete</button>
-                    </div>
+                    {inlineEditId !== diet.id && (
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => startInlineEdit(diet)} style={{ background: '#ffffcc', border: '1px solid #ffdd00' }}>⚡ Quick</button>
+                        <button onClick={() => startEditDiet(diet)}>✏️ Edit</button>
+                        <button onClick={() => setDiets(diets.filter(d => d.id !== diet.id))} style={{ color: '#dc2626' }}>🗑️ Delete</button>
+                      </div>
+                    )}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 16, fontSize: 13 }}>
                     <div><strong>DM:</strong> {diet.analysis.DM.toFixed(1)} kg</div>
@@ -1371,6 +1449,18 @@ export default function AnimalFeeding({ animals }){
           <div style={{ fontSize: 48 }}>📊</div>
           <h4>Reports & Analytics</h4>
           <p style={{ color: '#666' }}>Feed cost analysis, nutrient balance reports coming soon</p>
+        </div>
+      )}
+      
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 20, right: 20, background: toast.type === 'error' ? '#dc2626' : '#10b981', color: 'white', padding: '12px 20px', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: 12, zIndex: 10000 }}>
+          <span>{toast.message}</span>
+          {toast.undo && (
+            <button onClick={undoLastChange} style={{ background: 'white', color: '#10b981', border: 'none', padding: '4px 12px', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
+              Undo
+            </button>
+          )}
         </div>
       )}
     </section>
