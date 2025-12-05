@@ -62,6 +62,7 @@ const VoiceCommandCenter = lazyWithRetry(() => import('./modules/VoiceCommandCen
 const WeatherDashboard = lazyWithRetry(() => import('./modules/WeatherDashboard'))
 const IoTDevices = lazyWithRetry(() => import('./modules/IoTDevices'))
 const MarketPrices = lazyWithRetry(() => import('./modules/MarketPrices'))
+const Farm3D = lazyWithRetry(() => import('./modules/Farm3D'))
 
 // Loading fallback component with timeout detection
 const LoadingFallback = () => {
@@ -593,6 +594,22 @@ function AppContent() {
             💰 Market Prices
           </button>
           <button 
+            className={view==='farm3d'? 'active':''} 
+            onClick={()=>setView('farm3d')}
+            style={{
+              background: view==='farm3d' ? '#ec4899' : '#f3f4f6',
+              color: view==='farm3d' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            🗺️ 3D Farm
+          </button>
+          <button 
             className={view==='animals'? 'active':''} 
             onClick={()=>setView('animals')}
             style={{
@@ -997,6 +1014,15 @@ function AppContent() {
               ← Back to Dashboard
             </button>
             <ErrorBoundary><MarketPrices /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'farm3d' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><Farm3D /></ErrorBoundary>
           </section>
         )}
 

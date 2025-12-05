@@ -1197,6 +1197,9 @@ export default function Dashboard({ onNavigate }) {
           <button onClick={() => onNavigate && onNavigate('market')} className="btn-primary" style={{ background: '#10b981' }}>
             💰 Market Prices
           </button>
+          <button onClick={() => onNavigate && onNavigate('farm3d')} className="btn-primary" style={{ background: '#ec4899' }}>
+            🗺️ 3D Farm View
+          </button>
           <button onClick={() => onNavigate && onNavigate('animals')} className="btn-primary">
             ➕ Add Animal
           </button>
