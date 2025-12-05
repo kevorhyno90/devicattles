@@ -306,3 +306,114 @@ export function logPrint(entityType, count) {
     count
   })
 }
+
+/**
+ * Generate sample audit logs for demonstration
+ * Creates realistic activity patterns for a farm operation
+ */
+export function generateSampleAuditLogs() {
+  const now = Date.now()
+  const day = 24 * 60 * 60 * 1000
+  
+  const users = [
+    { name: 'John Kamau', role: 'MANAGER' },
+    { name: 'Mary Wanjiru', role: 'WORKER' },
+    { name: 'Peter Omondi', role: 'WORKER' }
+  ]
+  
+  const samples = [
+    // Recent activity (today)
+    { hours: 2, action: ACTIONS.UPDATE, entity: ENTITIES.MILK_YIELD, id: 'milk_001', user: 1, details: { volume: '18.5 liters', animal: 'Bessie #101' } },
+    { hours: 3, action: ACTIONS.CREATE, entity: ENTITIES.TASK, id: 'task_201', user: 0, details: { title: 'Fence repair - North paddock' } },
+    { hours: 4, action: ACTIONS.UPDATE, entity: ENTITIES.ANIMAL, id: 'cattle_005', user: 1, details: { changes: 'health status, weight' } },
+    { hours: 5, action: ACTIONS.CREATE, entity: ENTITIES.TRANSACTION, id: 'tx_145', user: 0, details: { type: 'income', amount: 'KES 15,000', category: 'Milk sales' } },
+    { hours: 6, action: ACTIONS.UPDATE, entity: ENTITIES.INVENTORY, id: 'inv_dairy_meal', user: 2, details: { quantity: '-50kg', operation: 'feeding' } },
+    
+    // Yesterday
+    { hours: 20, action: ACTIONS.CREATE, entity: ENTITIES.TREATMENT, id: 'treat_089', user: 1, details: { animal: 'Daisy #203', type: 'vaccination', medicine: 'FMD vaccine' } },
+    { hours: 22, action: ACTIONS.UPDATE, entity: ENTITIES.CROP, id: 'crop_maize_02', user: 2, details: { stage: 'flowering', notes: 'Applied fertilizer' } },
+    { hours: 24, action: ACTIONS.DELETE, entity: ENTITIES.TASK, id: 'task_198', user: 0, details: { title: 'Clean dairy shed - completed' } },
+    { hours: 26, action: ACTIONS.CREATE, entity: ENTITIES.MEASUREMENT, id: 'meas_067', user: 1, details: { animal: 'Bull #305', weight: '485kg', type: 'weight' } },
+    { hours: 28, action: ACTIONS.UPDATE, entity: ENTITIES.MILK_YIELD, id: 'milk_002', user: 1, details: { volume: '20.2 liters', animal: 'Rosie #104' } },
+    
+    // 2 days ago
+    { hours: 44, action: ACTIONS.CREATE, entity: ENTITIES.BREEDING, id: 'breed_034', user: 0, details: { cow: 'Bella #107', bull: 'Champion #301', method: 'Natural' } },
+    { hours: 46, action: ACTIONS.UPDATE, entity: ENTITIES.EQUIPMENT, id: 'eq_tractor_01', user: 2, details: { maintenance: 'Oil change', hours: '520' } },
+    { hours: 48, action: ACTIONS.CREATE, entity: ENTITIES.TRANSACTION, id: 'tx_144', user: 0, details: { type: 'expense', amount: 'KES 8,500', category: 'Feed purchase' } },
+    { hours: 50, action: ACTIONS.EXPORT, entity: ENTITIES.ANIMAL, id: 'bulk', user: 0, details: { count: 45, format: 'CSV' } },
+    
+    // 3 days ago
+    { hours: 68, action: ACTIONS.CREATE, entity: ENTITIES.ANIMAL, id: 'cattle_045', user: 0, details: { name: 'Luna', tag: '#209', breed: 'Friesian', gender: 'Female' } },
+    { hours: 70, action: ACTIONS.UPDATE, entity: ENTITIES.DIET, id: 'diet_dairy_01', user: 1, details: { changes: 'Added mineral supplement' } },
+    { hours: 72, action: ACTIONS.CREATE, entity: ENTITIES.TASK, id: 'task_200', user: 0, details: { title: 'Apply pesticide - Tomato field', due: 'Tomorrow' } },
+    { hours: 74, action: ACTIONS.UPDATE, entity: ENTITIES.INVENTORY, id: 'inv_hay', user: 2, details: { quantity: '+200 bales', operation: 'stock received' } },
+    
+    // 4 days ago
+    { hours: 92, action: ACTIONS.CREATE, entity: ENTITIES.TREATMENT, id: 'treat_088', user: 1, details: { animal: 'Molly #206', type: 'deworming', medicine: 'Albendazole' } },
+    { hours: 94, action: ACTIONS.UPDATE, entity: ENTITIES.CROP, id: 'crop_beans_01', user: 2, details: { stage: 'harvesting', yield: '12 bags' } },
+    { hours: 96, action: ACTIONS.CREATE, entity: ENTITIES.TRANSACTION, id: 'tx_143', user: 0, details: { type: 'income', amount: 'KES 25,000', category: 'Crop sales' } },
+    
+    // 5 days ago
+    { hours: 116, action: ACTIONS.UPDATE, entity: ENTITIES.ANIMAL, id: 'cattle_012', user: 1, details: { changes: 'status: breeding', notes: 'Heat detected' } },
+    { hours: 118, action: ACTIONS.CREATE, entity: ENTITIES.MILK_YIELD, id: 'milk_003', user: 1, details: { volume: '19.8 liters', animal: 'Bessie #101' } },
+    { hours: 120, action: ACTIONS.UPDATE, entity: ENTITIES.TASK, id: 'task_195', user: 2, details: { status: 'completed', notes: 'Water troughs cleaned' } },
+    
+    // 6 days ago
+    { hours: 140, action: ACTIONS.CREATE, entity: ENTITIES.RATION, id: 'ration_034', user: 0, details: { group: 'Dairy cows', formula: 'High protein mix' } },
+    { hours: 142, action: ACTIONS.UPDATE, entity: ENTITIES.INVENTORY, id: 'inv_maize_germ', user: 2, details: { quantity: '-30kg', operation: 'feeding' } },
+    { hours: 144, action: ACTIONS.CREATE, entity: ENTITIES.TRANSACTION, id: 'tx_142', user: 0, details: { type: 'expense', amount: 'KES 12,000', category: 'Veterinary services' } },
+    
+    // 1 week ago
+    { hours: 164, action: ACTIONS.IMPORT, entity: ENTITIES.ANIMAL, id: 'bulk', user: 0, details: { count: 15, source: 'CSV file', notes: 'New cattle batch' } },
+    { hours: 166, action: ACTIONS.CREATE, entity: ENTITIES.TREATMENT, id: 'treat_087', user: 1, details: { animal: 'Group: Calves', type: 'vaccination', medicine: 'Multivaccine' } },
+    { hours: 168, action: ACTIONS.UPDATE, entity: ENTITIES.CROP, id: 'crop_maize_01', user: 2, details: { stage: 'mature', notes: 'Ready for harvest next week' } }
+  ]
+  
+  const audit = []
+  
+  samples.forEach(sample => {
+    const user = users[sample.user]
+    const timestamp = new Date(now - (sample.hours * 60 * 60 * 1000))
+    
+    const entry = {
+      id: 'audit-' + timestamp.getTime() + '-' + Math.random().toString(36).substr(2, 9),
+      timestamp: timestamp.toISOString(),
+      action: sample.action,
+      entityType: sample.entity,
+      entityId: sample.id,
+      userId: `user_${sample.user}`,
+      userName: user.name,
+      userRole: user.role,
+      details: sample.details,
+      ipAddress: '192.168.1.' + (10 + sample.user),
+      userAgent: 'Mozilla/5.0 (Mobile) Farm Management App'
+    }
+    
+    audit.push(entry)
+  })
+  
+  // Add to existing log
+  const existing = getAuditLog()
+  const combined = [...audit, ...existing]
+  
+  // Keep only MAX_AUDIT_ENTRIES
+  if (combined.length > MAX_AUDIT_ENTRIES) {
+    combined.splice(MAX_AUDIT_ENTRIES)
+  }
+  
+  localStorage.setItem(AUDIT_KEY, JSON.stringify(combined))
+  
+  return {
+    success: true,
+    generated: audit.length,
+    total: combined.length
+  }
+}
+
+// Quick shorthand for common logging
+export function logActivity(action, description, metadata = {}) {
+  return logAction(action, ENTITIES.SYSTEM, 'activity', {
+    description,
+    ...metadata
+  })
+}

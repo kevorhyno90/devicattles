@@ -1191,6 +1191,12 @@ export default function Dashboard({ onNavigate }) {
           <button onClick={() => onNavigate && onNavigate('weather')} className="btn-primary" style={{ background: '#0ea5e9' }}>
             🌤️ Weather
           </button>
+          <button onClick={() => onNavigate && onNavigate('iot')} className="btn-primary" style={{ background: '#8b5cf6' }}>
+            📟 IoT Devices
+          </button>
+          <button onClick={() => onNavigate && onNavigate('market')} className="btn-primary" style={{ background: '#10b981' }}>
+            💰 Market Prices
+          </button>
           <button onClick={() => onNavigate && onNavigate('animals')} className="btn-primary">
             ➕ Add Animal
           </button>
