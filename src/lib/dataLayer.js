@@ -8,10 +8,12 @@
  * - Transaction support
  * - Audit logging integration
  * - Validation before save
+ * - Performance monitoring
  */
 
 import { loadDataAsync, saveData, loadData } from './storage';
 import { logAction } from './audit';
+import { perfMonitor } from './performanceUtils';
 
 // Data version tracking
 const DATA_VERSION = '1.0.0';

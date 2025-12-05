@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { getCurrentUserName, getAllUsers } from '../lib/auth'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
+import { useDebounce } from '../lib/useDebounce'
 
 const SAMPLE = [
   { id: 'T-001', title: 'Check water troughs', description: 'Inspect all water systems in pastures A-D', assignedTo: 'John Smith', due: '2025-11-16', priority: 'High', category: 'Maintenance', done: false, createdDate: '2025-11-15', estimatedHours: 2, notes: [], location: 'Pasture A-D' },
@@ -26,6 +27,10 @@ export default function Tasks(){
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterPriority, setFilterPriority] = useState('all')
   const [sortBy, setSortBy] = useState('due')
+  const [searchTerm, setSearchTerm] = useState('')
+  
+  // Debounce search for better performance
+  const debouncedSearch = useDebounce(searchTerm, 300)
   
   // Form states
   const [formData, setFormData] = useState({
@@ -181,23 +186,42 @@ export default function Tasks(){
     setInlineEditId(null)
   }
 
-  // Filter and sort logic
-  const filteredItems = items.filter(task => {
-    if(activeTab === 'pending' && task.done) return false
-    if(activeTab === 'completed' && !task.done) return false
-    if(activeTab === 'overdue' && (task.done || !task.due || new Date(task.due) >= new Date())) return false
-    if(filterCategory !== 'all' && task.category !== filterCategory) return false
-    if(filterPriority !== 'all' && task.priority !== filterPriority) return false
-    return true
-  }).sort((a, b) => {
-    if(sortBy === 'due') return new Date(a.due || '9999-12-31') - new Date(b.due || '9999-12-31')
-    if(sortBy === 'priority') {
-      const priorityOrder = { 'Critical': 4, 'High': 3, 'Medium': 2, 'Low': 1 }
-      return priorityOrder[b.priority] - priorityOrder[a.priority]
-    }
-    if(sortBy === 'created') return new Date(b.createdDate) - new Date(a.createdDate)
-    return 0
-  })
+  // Filter and sort logic with search
+  const filteredItems = useMemo(() => {
+    const q = debouncedSearch.trim().toLowerCase()
+    
+    return items.filter(task => {
+      // Text search
+      if (q) {
+        const matchesSearch = 
+          (task.title || '').toLowerCase().includes(q) ||
+          (task.description || '').toLowerCase().includes(q) ||
+          (task.assignedTo || '').toLowerCase().includes(q) ||
+          (task.category || '').toLowerCase().includes(q) ||
+          (task.location || '').toLowerCase().includes(q)
+        if (!matchesSearch) return false
+      }
+      
+      // Tab filters
+      if(activeTab === 'pending' && task.done) return false
+      if(activeTab === 'completed' && !task.done) return false
+      if(activeTab === 'overdue' && (task.done || !task.due || new Date(task.due) >= new Date())) return false
+      
+      // Category and priority filters
+      if(filterCategory !== 'all' && task.category !== filterCategory) return false
+      if(filterPriority !== 'all' && task.priority !== filterPriority) return false
+      
+      return true
+    }).sort((a, b) => {
+      if(sortBy === 'due') return new Date(a.due || '9999-12-31') - new Date(b.due || '9999-12-31')
+      if(sortBy === 'priority') {
+        const priorityOrder = { 'Critical': 4, 'High': 3, 'Medium': 2, 'Low': 1 }
+        return priorityOrder[b.priority] - priorityOrder[a.priority]
+      }
+      if(sortBy === 'created') return new Date(b.createdDate) - new Date(a.createdDate)
+      return 0
+    })
+  }, [items, debouncedSearch, activeTab, filterCategory, filterPriority, sortBy])
 
   const stats = {
     total: items.length,
@@ -377,6 +401,20 @@ export default function Tasks(){
 
       {/* Filters and Tabs */}
       <div className="card" style={{ marginBottom: '20px', padding: '16px' }}>
+        <div style={{ marginBottom: '12px' }}>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder="🔍 Search tasks (title, description, assignee, location)..."
+            style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+          />
+          {searchTerm && (
+            <div style={{ marginTop: '4px', fontSize: '14px', color: '#6b7280' }}>
+              Found {filteredItems.length} task{filteredItems.length !== 1 ? 's' : ''}
+            </div>
+          )}
+        </div>
         <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: '8px' }}>
             {['all', 'pending', 'completed', 'overdue'].map(tab => (
