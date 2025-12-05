@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 import { getFinancialSummary } from '../lib/moduleIntegration'
 import { useDebounce } from '../lib/useDebounce'
+import VirtualizedList from '../components/VirtualizedList'
 
 const SAMPLE = [
   { id: 'F-001', date: '2025-01-12', amount: -18000.00, type: 'expense', category: 'Veterinary', subcategory: 'Vaccines', description: 'Annual vaccination program', notes: [], paymentMethod: 'M-Pesa', vendor: 'Valley Veterinary Clinic' },
@@ -547,8 +548,11 @@ export default function Finance(){
       </div>
 
       {/* Transactions List */}
-      <div style={{ display: 'grid', gap: '8px' }}>
-        {filteredItems.map(entry => (
+      <VirtualizedList
+        items={filteredItems}
+        itemHeight={120}
+        height={Math.min(600, filteredItems.length * 120)}
+        renderItem={(entry, index) => (
           <div key={entry.id} className="card" style={{ padding: '16px', borderLeft: `4px solid ${entry.amount >= 0 ? 'var(--green)' : '#dc2626'}` }}>
             {inlineEditId === entry.id ? (
               // Inline Edit Mode
@@ -651,8 +655,8 @@ export default function Finance(){
               </div>
             )}
           </div>
-        ))}
-      </div>
+        )}
+      />
 
       {/* Transaction Detail Modal */}
       {modalOpenId && (() => {

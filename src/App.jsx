@@ -4,6 +4,7 @@ import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme'
 import OfflineIndicator from './components/OfflineIndicator'
 import InAppNotification from './components/InAppNotification'
 import BottomNav from './components/BottomNav'
+import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp'
 import { AppViewProvider, AppViewContext } from './lib/AppViewContext.jsx';
 import SwipeHandler from './components/SwipeHandler'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -56,6 +57,9 @@ const PetManagement = lazyWithRetry(() => import('./modules/PetManagement'))
 const CanineManagement = lazyWithRetry(() => import('./modules/CanineManagement'))
 const CalendarView = lazyWithRetry(() => import('./modules/CalendarView'))
 const FarmMap = lazyWithRetry(() => import('./modules/FarmMap'))
+const SmartAlerts = lazyWithRetry(() => import('./modules/SmartAlerts'))
+const VoiceCommandCenter = lazyWithRetry(() => import('./modules/VoiceCommandCenter'))
+const WeatherDashboard = lazyWithRetry(() => import('./modules/WeatherDashboard'))
 
 // Loading fallback component with timeout detection
 const LoadingFallback = () => {
@@ -507,6 +511,54 @@ function AppContent() {
             )}
           </button>
           <button 
+            className={view==='alerts'? 'active':''} 
+            onClick={()=>setView('alerts')}
+            style={{
+              background: view==='alerts' ? '#dc2626' : '#f3f4f6',
+              color: view==='alerts' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            🔔 Smart Alerts
+          </button>
+          <button 
+            className={view==='voice'? 'active':''} 
+            onClick={()=>setView('voice')}
+            style={{
+              background: view==='voice' ? '#7c3aed' : '#f3f4f6',
+              color: view==='voice' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            🎤 Voice Control
+          </button>
+          <button 
+            className={view==='weather'? 'active':''} 
+            onClick={()=>setView('weather')}
+            style={{
+              background: view==='weather' ? '#0ea5e9' : '#f3f4f6',
+              color: view==='weather' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            🌤️ Weather
+          </button>
+          <button 
             className={view==='animals'? 'active':''} 
             onClick={()=>setView('animals')}
             style={{
@@ -869,6 +921,33 @@ function AppContent() {
           </section>
         )}
 
+        {view === 'alerts' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><SmartAlerts onNavigate={setView} /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'voice' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><VoiceCommandCenter onNavigate={setView} /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'weather' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><WeatherDashboard onNavigate={setView} /></ErrorBoundary>
+          </section>
+        )}
+
         {view === 'audit' && (
           <section>
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
@@ -1117,6 +1196,9 @@ function AppContent() {
 
       {/* Global Search Modal */}
       <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+
+      {/* Keyboard Shortcuts Help */}
+      <KeyboardShortcutsHelp />
 
       {/* Mobile Bottom Navigation */}
       <BottomNav />

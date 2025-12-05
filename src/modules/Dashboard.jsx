@@ -9,18 +9,37 @@ import {
   getFeedCostTrends
 } from '../lib/analytics'
 import { getFinancialSummary as getIntegratedFinancials } from '../lib/moduleIntegration'
+import { getCacheStats } from '../lib/dataCache'
+import { getPredictiveDashboard } from '../lib/predictiveAnalytics'
+import { getAllSmartAlerts, getAlertsSummary } from '../lib/smartAlerts'
+import { getCurrentWeather, getFarmLocation } from '../lib/weatherApi'
+import { loadData } from '../lib/storage'
 
 export default function Dashboard({ onNavigate }) {
   const [dashboardData, setDashboardData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState('month')
   const [autoRefresh, setAutoRefresh] = useState(true)
+  const [cacheStats, setCacheStats] = useState(null)
+  const [predictions, setPredictions] = useState(null)
+  const [alertsSummary, setAlertsSummary] = useState(null)
+  const [voiceSupported, setVoiceSupported] = useState(false)
+  const [weather, setWeather] = useState(null)
+
+  // Check voice support
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    setVoiceSupported(!!SpeechRecognition)
+  }, [])
 
   useEffect(() => {
     loadDashboard()
     
     if (autoRefresh) {
-      const interval = setInterval(loadDashboard, 60000) // Refresh every minute
+      const interval = setInterval(() => {
+        loadDashboard()
+        setCacheStats(getCacheStats())
+      }, 60000) // Refresh every minute
       return () => clearInterval(interval)
     }
   }, [period, autoRefresh])
@@ -36,6 +55,42 @@ export default function Dashboard({ onNavigate }) {
         ...data
       }))
       setDashboardData({ ...data, integratedFinance })
+      setCacheStats(getCacheStats())
+      
+      // Load smart alerts summary
+      try {
+        const alertsSum = getAlertsSummary()
+        setAlertsSummary(alertsSum)
+      } catch (error) {
+        console.error('Error loading alerts:', error)
+      }
+      
+      // Load predictive analytics
+      try {
+        const animals = loadData('cattalytics:animals', [])
+        const crops = loadData('cattalytics:crops:v2', [])
+        const finance = loadData('cattalytics:finance', [])
+        const milkRecords = loadData('cattalytics:milk-yield', [])
+        const cropYields = loadData('cattalytics:crop-yield', [])
+        
+        const predictiveData = getPredictiveDashboard(animals, crops, finance, milkRecords, cropYields)
+        setPredictions(predictiveData)
+      } catch (error) {
+        console.error('Error loading predictions:', error)
+      }
+      
+      // Load weather data
+      try {
+        const location = getFarmLocation()
+        const apiKey = localStorage.getItem('cattalytics:weather:apikey') || null
+        getCurrentWeather(location, apiKey).then(weatherData => {
+          setWeather(weatherData)
+        }).catch(err => {
+          console.error('Weather load error:', err)
+        })
+      } catch (error) {
+        console.error('Error initializing weather:', error)
+      }
     } catch (error) {
       console.error('Error loading dashboard:', error)
       // Set safe defaults on error
@@ -866,6 +921,14 @@ export default function Dashboard({ onNavigate }) {
             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#059669' }}>$0</div>
             <div style={{ fontSize: '12px', color: '#6b7280' }}>All FREE</div>
           </div>
+          
+          {cacheStats && (
+            <div style={{ background: '#fff', padding: '12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>🗂️ Cache</div>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b' }}>{cacheStats.hitRate}</div>
+              <div style={{ fontSize: '12px', color: '#6b7280' }}>Hit Rate</div>
+            </div>
+          )}
         </div>
 
         <div style={{ background: '#fffbeb', padding: '12px', borderRadius: '8px', marginBottom: '12px', border: '1px solid #fbbf24' }}>
@@ -875,9 +938,110 @@ export default function Dashboard({ onNavigate }) {
             <li>🔍 Global Search with Ctrl+K shortcut</li>
             <li>📊 Performance tools: Debouncing, Virtualization, Lazy Loading</li>
             <li>🛡️ Enhanced error handling with user-friendly messages</li>
-            <li>💾 Centralized data layer with caching</li>
+            <li>💾 Smart data caching with 5-minute TTL</li>
+            <li>⚙️ Web Workers for background statistics</li>
+            <li>⌨️ Keyboard shortcuts help (press '?')</li>
           </ul>
         </div>
+
+        {cacheStats && (
+          <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '8px', marginBottom: '12px', border: '1px solid #bbf7d0' }}>
+            <div style={{ fontWeight: '600', marginBottom: '8px', color: '#166534' }}>🗂️ Cache Performance:</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px', fontSize: '13px' }}>
+              <div>
+                <div style={{ color: '#6b7280' }}>Hit Rate</div>
+                <div style={{ fontWeight: 'bold', color: '#059669' }}>{cacheStats.hitRate}</div>
+              </div>
+              <div>
+                <div style={{ color: '#6b7280' }}>Cache Size</div>
+                <div style={{ fontWeight: 'bold', color: '#059669' }}>{cacheStats.cacheSize} entries</div>
+              </div>
+              <div>
+                <div style={{ color: '#6b7280' }}>Memory</div>
+                <div style={{ fontWeight: 'bold', color: '#059669' }}>{cacheStats.memoryUsage}</div>
+              </div>
+              <div>
+                <div style={{ color: '#6b7280' }}>Hits/Misses</div>
+                <div style={{ fontWeight: 'bold', color: '#059669' }}>{cacheStats.hits}/{cacheStats.misses}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {predictions && (
+          <div style={{ background: '#eff6ff', padding: '16px', borderRadius: '8px', marginBottom: '12px', border: '1px solid #93c5fd' }}>
+            <div style={{ fontWeight: '600', marginBottom: '12px', color: '#1e40af', fontSize: '16px' }}>🔮 AI Predictions</div>
+            
+            {/* Milk Yield Predictions */}
+            {predictions.milkYield && (
+              <div style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #dbeafe' }}>
+                <div style={{ fontWeight: '600', marginBottom: '8px', color: '#1e3a8a' }}>🥛 Milk Yield Forecast</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', fontSize: '13px' }}>
+                  <div style={{ background: '#fff', padding: '8px', borderRadius: '6px' }}>
+                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Current Daily Avg</div>
+                    <div style={{ fontWeight: 'bold', color: '#1e40af' }}>{predictions.milkYield.currentAverage?.toFixed(1) || 0} L</div>
+                  </div>
+                  <div style={{ background: '#fff', padding: '8px', borderRadius: '6px' }}>
+                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Predicted Daily Avg</div>
+                    <div style={{ fontWeight: 'bold', color: '#2563eb' }}>{predictions.milkYield.predictedAverage?.toFixed(1) || 0} L</div>
+                  </div>
+                  <div style={{ background: '#fff', padding: '8px', borderRadius: '6px' }}>
+                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Next Week Total</div>
+                    <div style={{ fontWeight: 'bold', color: '#7c3aed' }}>{predictions.milkYield.nextWeekTotal?.toFixed(0) || 0} L</div>
+                  </div>
+                  <div style={{ background: '#fff', padding: '8px', borderRadius: '6px' }}>
+                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Trend</div>
+                    <div style={{ fontWeight: 'bold', color: predictions.milkYield.trend === 'increasing' ? '#059669' : predictions.milkYield.trend === 'decreasing' ? '#dc2626' : '#6b7280' }}>
+                      {predictions.milkYield.trend === 'increasing' ? '↗' : predictions.milkYield.trend === 'decreasing' ? '↘' : '→'} {predictions.milkYield.trend || 'stable'}
+                    </div>
+                  </div>
+                  <div style={{ background: '#fff', padding: '8px', borderRadius: '6px' }}>
+                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Confidence</div>
+                    <div style={{ fontWeight: 'bold', color: '#059669' }}>{predictions.milkYield.confidence || 0}%</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Crop Harvest Predictions */}
+            {predictions.crops && predictions.crops.length > 0 && (
+              <div style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #dbeafe' }}>
+                <div style={{ fontWeight: '600', marginBottom: '8px', color: '#1e3a8a' }}>🌾 Crop Harvest Predictions</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                  {predictions.crops.slice(0, 3).map((crop, idx) => (
+                    <div key={idx} style={{ background: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px' }}>
+                      <div style={{ fontWeight: '600', color: '#1e40af', marginBottom: '4px' }}>{crop.cropName}</div>
+                      <div style={{ color: '#6b7280', fontSize: '12px' }}>Variety: {crop.variety}</div>
+                      <div style={{ color: '#059669', fontWeight: '500', marginTop: '4px' }}>Yield: {crop.predictedYield?.toFixed(0) || 0} kg</div>
+                      <div style={{ color: '#6b7280', fontSize: '11px' }}>Harvest: {crop.harvestDate ? new Date(crop.harvestDate).toLocaleDateString() : 'TBD'}</div>
+                      <div style={{ color: '#6b7280', fontSize: '11px' }}>Days: {crop.daysUntilHarvest || 0}</div>
+                      <div style={{ color: '#7c3aed', fontSize: '11px', marginTop: '4px' }}>Confidence: {crop.confidence || 0}%</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Expense Predictions */}
+            {predictions.expenses && (
+              <div>
+                <div style={{ fontWeight: '600', marginBottom: '8px', color: '#1e3a8a' }}>💰 Expense Forecast</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', fontSize: '13px' }}>
+                  <div style={{ background: '#fff', padding: '10px', borderRadius: '6px' }}>
+                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Next Month</div>
+                    <div style={{ fontWeight: 'bold', color: '#dc2626' }}>KES {predictions.expenses.nextMonth?.toLocaleString() || 0}</div>
+                    <div style={{ color: '#7c3aed', fontSize: '11px', marginTop: '4px' }}>Confidence: {predictions.expenses.confidence || 0}%</div>
+                  </div>
+                  <div style={{ background: '#fff', padding: '10px', borderRadius: '6px' }}>
+                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Next Quarter</div>
+                    <div style={{ fontWeight: 'bold', color: '#dc2626' }}>KES {predictions.expenses.nextQuarter?.toLocaleString() || 0}</div>
+                    <div style={{ color: '#7c3aed', fontSize: '11px', marginTop: '4px' }}>Confidence: {predictions.expenses.confidence || 0}%</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button 
@@ -901,10 +1065,132 @@ export default function Dashboard({ onNavigate }) {
         </div>
       </div>
 
+      {/* Weather Widget */}
+      {weather && (
+        <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '16px', borderRadius: '8px', marginBottom: '20px', color: 'white' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ margin: 0, fontSize: '18px' }}>🌤️ Weather at {weather.location}</h3>
+            <button
+              onClick={() => onNavigate && onNavigate('weather')}
+              style={{
+                padding: '6px 12px',
+                background: 'rgba(255,255,255,0.2)',
+                color: 'white',
+                border: '1px solid rgba(255,255,255,0.3)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: '500',
+                fontSize: '13px'
+              }}
+            >
+              Full Forecast →
+            </button>
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '12px' }}>
+            <div>
+              <div style={{ fontSize: '48px', fontWeight: 'bold' }}>{weather.temperature}°C</div>
+              <div style={{ fontSize: '14px', textTransform: 'capitalize', opacity: 0.9 }}>
+                {weather.description}
+              </div>
+            </div>
+            <img src={weather.iconUrl} alt={weather.description} style={{ width: '80px', height: '80px' }} />
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '12px', fontSize: '13px' }}>
+            <div>
+              <div style={{ opacity: 0.8 }}>Feels Like</div>
+              <div style={{ fontWeight: 'bold' }}>{weather.feelsLike}°C</div>
+            </div>
+            <div>
+              <div style={{ opacity: 0.8 }}>Humidity</div>
+              <div style={{ fontWeight: 'bold' }}>{weather.humidity}%</div>
+            </div>
+            <div>
+              <div style={{ opacity: 0.8 }}>Wind</div>
+              <div style={{ fontWeight: 'bold' }}>{weather.windSpeed} m/s</div>
+            </div>
+          </div>
+          
+          {weather.demo && (
+            <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(255,255,255,0.15)', borderRadius: '4px', fontSize: '12px' }}>
+              ⚠️ Demo mode - Add API key in Weather Dashboard for real data
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Smart Alerts Summary */}
+      {alertsSummary && alertsSummary.total > 0 && (
+        <div style={{ background: '#fef2f2', padding: '16px', borderRadius: '8px', marginBottom: '20px', border: '2px solid #fca5a5' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ margin: 0, color: '#991b1b' }}>🔔 Smart Alerts</h3>
+            <button
+              onClick={() => onNavigate && onNavigate('alerts')}
+              style={{
+                padding: '6px 12px',
+                background: '#dc2626',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: '500',
+                fontSize: '13px'
+              }}
+            >
+              View All →
+            </button>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '12px', marginBottom: '12px' }}>
+            {alertsSummary.critical > 0 && (
+              <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', textAlign: 'center', border: '2px solid #dc2626' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#dc2626' }}>{alertsSummary.critical}</div>
+                <div style={{ fontSize: '12px', color: '#991b1b' }}>🚨 Critical</div>
+              </div>
+            )}
+            
+            {alertsSummary.high > 0 && (
+              <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', textAlign: 'center', border: '2px solid #ea580c' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ea580c' }}>{alertsSummary.high}</div>
+                <div style={{ fontSize: '12px', color: '#9a3412' }}>⚠️ High</div>
+              </div>
+            )}
+            
+            {alertsSummary.medium > 0 && (
+              <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', textAlign: 'center', border: '2px solid #f59e0b' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b' }}>{alertsSummary.medium}</div>
+                <div style={{ fontSize: '12px', color: '#92400e' }}>⚡ Medium</div>
+              </div>
+            )}
+            
+            <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', textAlign: 'center', border: '2px solid #6b7280' }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#374151' }}>{alertsSummary.total}</div>
+              <div style={{ fontSize: '12px', color: '#6b7280' }}>📋 Total</div>
+            </div>
+          </div>
+          
+          <div style={{ fontSize: '13px', color: '#7f1d1d' }}>
+            Showing actionable alerts that need your attention
+          </div>
+        </div>
+      )}
+
       {/* Quick Actions */}
       <div className="quick-actions">
         <h3>⚡ Quick Actions</h3>
         <div className="quick-actions-grid">
+          <button onClick={() => onNavigate && onNavigate('alerts')} className="btn-primary" style={{ background: '#dc2626' }}>
+            🔔 Smart Alerts
+          </button>
+          {voiceSupported && (
+            <button onClick={() => onNavigate && onNavigate('voice')} className="btn-primary" style={{ background: '#7c3aed' }}>
+              🎤 Voice Control
+            </button>
+          )}
+          <button onClick={() => onNavigate && onNavigate('weather')} className="btn-primary" style={{ background: '#0ea5e9' }}>
+            🌤️ Weather
+          </button>
           <button onClick={() => onNavigate && onNavigate('animals')} className="btn-primary">
             ➕ Add Animal
           </button>

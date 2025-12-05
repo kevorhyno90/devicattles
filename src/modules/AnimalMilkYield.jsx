@@ -574,7 +574,7 @@ export default function AnimalMilkYield({ animals }){
           {mastitisAlerts.length > 0 && (
             <div className="card" style={{ padding: 12, background: '#fee2e2', border: '2px solid #dc2626', flex: 1, minWidth: 200 }}>
               <div style={{ fontWeight: 'bold', color: '#dc2626', marginBottom: 4 }}>⚠️ Mastitis Alert</div>
-              <div style={{ fontSize: 13 }}>{mastitisAlerts.length} record(s) with SCC > 400,000</div>
+              <div style={{ fontSize: 13 }}>{mastitisAlerts.length} record(s) with SCC {'>'} 400,000</div>
             </div>
           )}
           {qualityIssues.length > 0 && (

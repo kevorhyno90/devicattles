@@ -1,11 +1,11 @@
-import React from 'react';
-import { FixedSizeList } from 'react-window';
+import React, { useState, useEffect, useRef } from 'react';
 
 /**
  * VirtualizedList Component
  * 
- * High-performance list rendering for large datasets
+ * High-performance list rendering for large datasets using native React
  * Only renders visible items, dramatically improving performance
+ * No external dependencies - pure React implementation
  * 
  * @param {Array} items - Array of items to render
  * @param {Function} renderItem - Function to render each item (item, index) => JSX
@@ -32,8 +32,12 @@ export default function VirtualizedList({
   itemHeight = 120, 
   height = 600,
   width = '100%',
-  className = ''
+  className = '',
+  overscan = 3 // Number of extra items to render above/below viewport
 }) {
+  const [scrollTop, setScrollTop] = useState(0);
+  const containerRef = useRef(null);
+
   // If list is small, just render normally (no need for virtualization)
   if (items.length < 20) {
     return (
@@ -48,25 +52,63 @@ export default function VirtualizedList({
   }
 
   // For large lists, use virtualization
-  const Row = ({ index, style }) => {
-    const item = items[index];
-    return (
-      <div style={style}>
-        {renderItem(item, index)}
-      </div>
-    );
+  const handleScroll = (e) => {
+    setScrollTop(e.target.scrollTop);
   };
 
+  // Calculate visible range
+  const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
+  const endIndex = Math.min(
+    items.length - 1,
+    Math.ceil((scrollTop + height) / itemHeight) + overscan
+  );
+
+  // Get visible items
+  const visibleItems = items.slice(startIndex, endIndex + 1);
+
+  // Total height for scrollbar
+  const totalHeight = items.length * itemHeight;
+
   return (
-    <FixedSizeList
-      height={height}
-      itemCount={items.length}
-      itemSize={itemHeight}
-      width={width}
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
       className={className}
+      style={{
+        height: `${height}px`,
+        width,
+        overflowY: 'auto',
+        position: 'relative'
+      }}
     >
-      {Row}
-    </FixedSizeList>
+      {/* Spacer to maintain scroll height */}
+      <div style={{ height: `${totalHeight}px`, position: 'relative' }}>
+        {/* Visible items */}
+        <div
+          style={{
+            position: 'absolute',
+            top: `${startIndex * itemHeight}px`,
+            left: 0,
+            right: 0
+          }}
+        >
+          {visibleItems.map((item, i) => {
+            const index = startIndex + i;
+            return (
+              <div
+                key={item.id || index}
+                style={{
+                  height: `${itemHeight}px`,
+                  overflow: 'hidden'
+                }}
+              >
+                {renderItem(item, index)}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -87,8 +129,11 @@ export function VirtualizedGrid({
   columnCount = 3,
   itemHeight = 200,
   height = 600,
-  width = '100%'
+  width = '100%',
+  overscan = 2
 }) {
+  const [scrollTop, setScrollTop] = useState(0);
+  
   if (items.length < 20) {
     return (
       <div style={{ 
@@ -105,37 +150,68 @@ export function VirtualizedGrid({
     );
   }
 
-  const Row = ({ index, style }) => {
-    const startIdx = index * columnCount;
-    const rowItems = items.slice(startIdx, startIdx + columnCount);
-    
-    return (
-      <div style={{
-        ...style,
-        display: 'grid',
-        gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
-        gap: '16px',
-        paddingRight: '16px'
-      }}>
-        {rowItems.map((item, colIndex) => (
-          <div key={item.id || (startIdx + colIndex)}>
-            {renderItem(item, startIdx + colIndex)}
-          </div>
-        ))}
-      </div>
-    );
+  const handleScroll = (e) => {
+    setScrollTop(e.target.scrollTop);
   };
 
+  // Calculate rows
   const rowCount = Math.ceil(items.length / columnCount);
+  const startRow = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
+  const endRow = Math.min(
+    rowCount - 1,
+    Math.ceil((scrollTop + height) / itemHeight) + overscan
+  );
+
+  const visibleRows = [];
+  for (let rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
+    const startIdx = rowIndex * columnCount;
+    const rowItems = items.slice(startIdx, startIdx + columnCount);
+    if (rowItems.length > 0) {
+      visibleRows.push({ rowIndex, items: rowItems, startIdx });
+    }
+  }
+
+  const totalHeight = rowCount * itemHeight;
 
   return (
-    <FixedSizeList
-      height={height}
-      itemCount={rowCount}
-      itemSize={itemHeight}
-      width={width}
+    <div
+      onScroll={handleScroll}
+      style={{
+        height: `${height}px`,
+        width,
+        overflowY: 'auto',
+        position: 'relative'
+      }}
     >
-      {Row}
-    </FixedSizeList>
+      <div style={{ height: `${totalHeight}px`, position: 'relative' }}>
+        <div
+          style={{
+            position: 'absolute',
+            top: `${startRow * itemHeight}px`,
+            left: 0,
+            right: 0
+          }}
+        >
+          {visibleRows.map(({ rowIndex, items: rowItems, startIdx }) => (
+            <div
+              key={rowIndex}
+              style={{
+                height: `${itemHeight}px`,
+                display: 'grid',
+                gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
+                gap: '16px',
+                marginBottom: '0'
+              }}
+            >
+              {rowItems.map((item, colIndex) => (
+                <div key={item.id || (startIdx + colIndex)}>
+                  {renderItem(item, startIdx + colIndex)}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

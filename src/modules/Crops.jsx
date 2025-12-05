@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 import { useDebounce } from '../lib/useDebounce'
+import VirtualizedList from '../components/VirtualizedList'
 
 const SAMPLE = [
   {
@@ -868,8 +869,11 @@ export default function Crops(){
       </div>
 
       {/* Crops Grid with Inline Quick Edit */}
-      <div style={{ display: 'grid', gap: '12px' }}>
-        {filteredItems.map(crop => (
+      <VirtualizedList
+        items={filteredItems}
+        itemHeight={80}
+        height={Math.min(600, filteredItems.length * 80)}
+        renderItem={(crop, index) => (
           <div key={crop.id} className="card" style={{ padding: '16px' }}>
             {inlineEditId === crop.id ? (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 120px 1fr', gap: '8px', alignItems:'center' }} onKeyDown={e=>{ if(e.key==='Enter') saveInlineEdit(); if(e.key==='Escape') cancelInlineEdit(); }}>
@@ -900,8 +904,8 @@ export default function Crops(){
               </div>
             )}
           </div>
-        ))}
-      </div>
+        )}
+      />
 
       {/* Crop Detail Modal */}
       {modalOpenId && (() => {

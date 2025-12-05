@@ -1204,9 +1204,11 @@ export default function Reports(){
                           }}>Download Table as CSV</button>
                         </>
                       );
-                    })()}
+                    })()
+                  }
                   </div>
-                )}
+                )
+              }
               
               {viewFormat === 'xml' && (
                 <pre style={{ 

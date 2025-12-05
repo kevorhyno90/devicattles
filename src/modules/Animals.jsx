@@ -17,6 +17,7 @@ import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON
 import { generateQRCodeDataURL, printQRTag, batchPrintQRTags } from '../lib/qrcode'
 import { useDebounce } from '../lib/useDebounce'
 import { perfMonitor } from '../lib/performanceUtils'
+import VirtualizedList from '../components/VirtualizedList'
 
 // Realized Animals component: HTML5 controls, inline validation, unique tag checks,
 // realistic sample data, and non-placeholder behavior.
@@ -1134,13 +1135,18 @@ export default function Animals() {
 
           {/* Animal List - stack vertically, collapsible details on mobile */}
           <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '16px', color: 'inherit' }}>Animals ({sortedAnimals.length})</h3>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {sortedAnimals.map(a => {
+          
+          {/* Use VirtualizedList for better performance with large herds */}
+          <VirtualizedList
+            items={sortedAnimals}
+            itemHeight={expandedIds.length > 0 ? 600 : 150}
+            height={Math.min(600, sortedAnimals.length * 150)}
+            renderItem={(a, index) => {
               const isExp = expandedIds.includes(a.id)
               const preview = (a.photos && a.photos.length) ? a.photos[0].dataUrl : (a.photo || null)
               const groupName = groups.find(g => g.id === a.groupId)?.name || 'No group'
               return (
-                <li key={a.id} className="card" style={{ marginBottom: 12, padding: 16, ...(window.innerWidth <= 600 ? { padding: '12px' } : {}) }}>
+                <div className="card" style={{ marginBottom: 12, padding: 16, ...(window.innerWidth <= 600 ? { padding: '12px' } : {}) }}>
                   <div style={{ display: 'flex', gap: 16, alignItems: window.innerWidth <= 600 ? 'center' : 'flex-start', flexDirection: window.innerWidth <= 600 ? 'column' : 'row' }}>
                     {preview && (
                       <img src={preview} alt={a.name} style={{ width: window.innerWidth <= 600 ? '100%' : 80, height: window.innerWidth <= 600 ? 'auto' : 80, objectFit: 'cover', borderRadius: 8, flexShrink: 0, maxWidth: window.innerWidth <= 600 ? '180px' : undefined }} />
@@ -1256,10 +1262,10 @@ export default function Animals() {
                       </button>
                     </div>
                   </div>
-                </li>
+                </div>
               )
-            })}
-          </ul>
+            }}
+          />
         </div>
       )}
 

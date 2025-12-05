@@ -5,11 +5,17 @@
  */
 
 import { loadData } from './storage'
+import { getCachedData, setCachedData, invalidateCache } from './dataCache'
 
 /**
  * Get total animals grouped by type
  */
 export function getAnimalsByType() {
+  // Try to get from cache first (5 minute TTL)
+  const cacheKey = 'analytics:animalsByType'
+  const cached = getCachedData(cacheKey, 5 * 60 * 1000)
+  if (cached) return cached
+  
   try {
     const animals = loadData('animals', [])
     // Ensure animals is an array
@@ -26,11 +32,15 @@ export function getAnimalsByType() {
       byType[type] = (byType[type] || 0) + 1
     })
     
-    return {
+    const result = {
       total: activeAnimals.length,
       byType,
       byStatus: getAnimalsByStatus(activeAnimals)
     }
+    
+    // Cache the result
+    setCachedData(cacheKey, result, 5 * 60 * 1000)
+    return result
   } catch (error) {
     console.error('Error calculating animals by type:', error)
     return { total: 0, byType: {}, byStatus: {} }

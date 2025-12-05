@@ -1,6 +1,66 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { savePhoto, getPhotosByEntity, deletePhoto } from '../lib/photoStorage'
 import { fileToDataUrl } from '../lib/image'
+
+/**
+ * LazyImage Component
+ * Loads images only when they become visible in viewport
+ */
+function LazyImage({ src, alt, style, placeholder = '#f3f4f6' }) {
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [isInView, setIsInView] = useState(false)
+  const imgRef = useRef(null)
+
+  useEffect(() => {
+    if (!imgRef.current) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setIsInView(true)
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      {
+        rootMargin: '50px' // Start loading 50px before image enters viewport
+      }
+    )
+
+    observer.observe(imgRef.current)
+
+    return () => {
+      if (imgRef.current) {
+        observer.unobserve(imgRef.current)
+      }
+    }
+  }, [])
+
+  return (
+    <div 
+      ref={imgRef}
+      style={{
+        ...style,
+        background: isLoaded ? 'transparent' : placeholder,
+        transition: 'background 0.3s'
+      }}
+    >
+      {isInView && (
+        <img
+          src={src}
+          alt={alt}
+          onLoad={() => setIsLoaded(true)}
+          style={{
+            ...style,
+            opacity: isLoaded ? 1 : 0,
+            transition: 'opacity 0.3s'
+          }}
+        />
+      )}
+    </div>
+  )
+}
 
 /**
  * Photo Gallery Component
@@ -221,7 +281,7 @@ export default function PhotoGallery({ entityType, entityId, entityName }) {
               onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
-              <img
+              <LazyImage
                 src={photo.dataUrl}
                 alt={photo.caption}
                 style={{
