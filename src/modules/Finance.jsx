@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 import { getFinancialSummary } from '../lib/moduleIntegration'
+import { useDebounce } from '../lib/useDebounce'
 
 const SAMPLE = [
   { id: 'F-001', date: '2025-01-12', amount: -18000.00, type: 'expense', category: 'Veterinary', subcategory: 'Vaccines', description: 'Annual vaccination program', notes: [], paymentMethod: 'M-Pesa', vendor: 'Valley Veterinary Clinic' },
@@ -41,6 +42,10 @@ export default function Finance(){
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterType, setFilterType] = useState('all')
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
+  const [searchTerm, setSearchTerm] = useState('')
+  
+  // Debounce search for better performance
+  const debouncedSearch = useDebounce(searchTerm, 300)
   
   // Inline edit state
   const [inlineEditId, setInlineEditId] = useState(null)
@@ -285,14 +290,35 @@ export default function Finance(){
     setShowAddForm(false)
   }
 
-  // Filter and calculate totals
-  const filteredItems = items.filter(entry => {
-    if(filterType !== 'all' && entry.type !== filterType) return false
-    if(filterCategory !== 'all' && entry.category !== filterCategory) return false
-    if(dateRange.start && entry.date < dateRange.start) return false
-    if(dateRange.end && entry.date > dateRange.end) return false
-    return true
-  }).sort((a, b) => new Date(b.date) - new Date(a.date))
+  // Filter and calculate totals with search
+  const filteredItems = useMemo(() => {
+    const q = debouncedSearch.trim().toLowerCase()
+    
+    return items.filter(entry => {
+      // Text search
+      if (q) {
+        const matchesSearch = 
+          (entry.description || '').toLowerCase().includes(q) ||
+          (entry.category || '').toLowerCase().includes(q) ||
+          (entry.subcategory || '').toLowerCase().includes(q) ||
+          (entry.vendor || '').toLowerCase().includes(q) ||
+          (entry.paymentMethod || '').toLowerCase().includes(q)
+        if (!matchesSearch) return false
+      }
+      
+      // Type filter
+      if(filterType !== 'all' && entry.type !== filterType) return false
+      
+      // Category filter
+      if(filterCategory !== 'all' && entry.category !== filterCategory) return false
+      
+      // Date range filter
+      if(dateRange.start && entry.date < dateRange.start) return false
+      if(dateRange.end && entry.date > dateRange.end) return false
+      
+      return true
+    }).sort((a, b) => new Date(b.date) - new Date(a.date))
+  }, [items, debouncedSearch, filterType, filterCategory, dateRange])
 
   const currentDate = new Date()
   const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().slice(0,10)
@@ -474,6 +500,20 @@ export default function Finance(){
 
       {/* Filters */}
       <div className="card" style={{ marginBottom: '20px', padding: '16px' }}>
+        <div style={{ marginBottom: '12px' }}>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder="🔍 Search transactions (description, category, vendor)..."
+            style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+          />
+          {searchTerm && (
+            <div style={{ marginTop: '4px', fontSize: '14px', color: '#6b7280' }}>
+              Found {filteredItems.length} transaction{filteredItems.length !== 1 ? 's' : ''}
+            </div>
+          )}
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', alignItems: 'end' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Type</label>
@@ -487,8 +527,8 @@ export default function Finance(){
             <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Category</label>
             <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
               <option value="all">All Categories</option>
-              {[...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES].map(cat => 
-                <option key={cat.name} value={cat.name}>{cat.name}</option>
+              {[...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES].map((cat, idx) => 
+                <option key={`${cat.name}-${idx}`} value={cat.name}>{cat.name}</option>
               )}
             </select>
           </div>
@@ -501,7 +541,7 @@ export default function Finance(){
             <input type="date" value={dateRange.end} onChange={e => setDateRange({...dateRange, end: e.target.value})} />
           </div>
           <div>
-            <button onClick={() => {setFilterType('all'); setFilterCategory('all'); setDateRange({start: '', end: ''})}} style={{ background: '#6b7280', color: '#fff', padding: '8px 12px', border: 'none', borderRadius: '4px' }}>Clear Filters</button>
+            <button onClick={() => {setFilterType('all'); setFilterCategory('all'); setDateRange({start: '', end: ''}); setSearchTerm('')}} style={{ background: '#6b7280', color: '#fff', padding: '8px 12px', border: 'none', borderRadius: '4px' }}>Clear Filters</button>
           </div>
         </div>
       </div>

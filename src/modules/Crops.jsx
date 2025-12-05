@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
+import { useDebounce } from '../lib/useDebounce'
 
 const SAMPLE = [
   {
@@ -237,6 +238,10 @@ export default function Crops(){
   const [activeTab, setActiveTab] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
   const [sortBy, setSortBy] = useState('planted')
+  const [searchTerm, setSearchTerm] = useState('')
+  
+  // Debounce search for better performance
+  const debouncedSearch = useDebounce(searchTerm, 300)
   
   const [formData, setFormData] = useState({
     name: '', variety: '', field: '', area: '', planted: '', expectedHarvest: '',
@@ -491,12 +496,29 @@ export default function Crops(){
     return 'High'
   }
 
-  // Memoized filter and sort
+  // Memoized filter and sort with search
   const filteredItems = useMemo(() => {
+    const q = debouncedSearch.trim().toLowerCase()
+    
     return items.filter(crop => {
+      // Text search filter
+      if (q) {
+        const matchesSearch = 
+          (crop.name || '').toLowerCase().includes(q) ||
+          (crop.variety || '').toLowerCase().includes(q) ||
+          (crop.field || '').toLowerCase().includes(q) ||
+          (crop.status || '').toLowerCase().includes(q) ||
+          (crop.soilType || '').toLowerCase().includes(q)
+        if (!matchesSearch) return false
+      }
+      
+      // Status filter
       if(filterStatus !== 'all' && crop.status !== filterStatus) return false
+      
+      // Tab filter
       if(activeTab === 'active' && ['Harvested', 'Failed'].includes(crop.status)) return false
       if(activeTab === 'completed' && !['Harvested', 'Failed'].includes(crop.status)) return false
+      
       return true
     }).sort((a, b) => {
       if(sortBy === 'planted') return new Date(b.planted || '1900-01-01') - new Date(a.planted || '1900-01-01')
@@ -504,7 +526,7 @@ export default function Crops(){
       if(sortBy === 'name') return a.name.localeCompare(b.name)
       return 0
     })
-  }, [items, filterStatus, activeTab, sortBy])
+  }, [items, debouncedSearch, filterStatus, activeTab, sortBy])
 
   const stats = useMemo(() => ({
     total: items.length,
@@ -821,6 +843,13 @@ export default function Crops(){
               </button>
             ))}
           </div>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder="🔍 Search crops (name, variety, field)..."
+            style={{ flex: 1, minWidth: '200px', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+          />
           <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="all">All Status</option>
             {CROP_STATUS.map(status => <option key={status} value={status}>{status}</option>)}
@@ -831,6 +860,11 @@ export default function Crops(){
             <option value="name">Sort by Name</option>
           </select>
         </div>
+        {searchTerm && (
+          <div style={{ marginTop: '8px', fontSize: '14px', color: '#6b7280' }}>
+            Found {filteredItems.length} crop{filteredItems.length !== 1 ? 's' : ''}
+          </div>
+        )}
       </div>
 
       {/* Crops Grid with Inline Quick Edit */}

@@ -194,15 +194,21 @@ function AppContent() {
   }, [])
 
   // Request notification permission and listen for messages on startup
+  // NOTE: Only initialize listener if permission already granted
+  // Don't auto-request permission (must be user-initiated)
   useEffect(() => {
-    requestNotificationPermission().then(token => {
-      if (token) {
-        listenForMessages((payload) => {
-          // Optionally handle foreground notifications here
-          console.log('Foreground notification:', payload)
-        });
-      }
-    });
+    // Check if permission already granted
+    if ('Notification' in window && Notification.permission === 'granted') {
+      requestNotificationPermission().then(token => {
+        if (token) {
+          listenForMessages((payload) => {
+            console.log('📬 Foreground notification:', payload);
+          });
+        }
+      });
+    } else {
+      console.info('ℹ️ Notifications not yet enabled. Enable from Notification Center or Settings.');
+    }
   }, []);
 
   // Check authentication on mount

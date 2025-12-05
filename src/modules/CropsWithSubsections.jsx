@@ -73,6 +73,7 @@ export default function Crops() {
   // Inline edit state
   const [inlineEditId, setInlineEditId] = useState(null)
   const [inlineData, setInlineData] = useState({})
+  const [inlineType, setInlineType] = useState(null) // 'crop', 'pest', 'disease'
   const [toast, setToast] = useState(null)
   const [lastChange, setLastChange] = useState(null)
   
@@ -166,34 +167,71 @@ export default function Crops() {
     setCrops(crops.filter(c => c.id !== id))
   }
 
+  function deletePestRecord(id) {
+    if (!window.confirm('Delete this pest record?')) return
+    setPestRecords(pestRecords.filter(p => p.id !== id))
+    setToast({ type: 'success', message: '✓ Pest record deleted' })
+    setTimeout(() => setToast(null), 3000)
+  }
+
+  function deleteDiseaseRecord(id) {
+    if (!window.confirm('Delete this disease record?')) return
+    setDiseaseRecords(diseaseRecords.filter(d => d.id !== id))
+    setToast({ type: 'success', message: '✓ Disease record deleted' })
+    setTimeout(() => setToast(null), 3000)
+  }
+
   // Inline edit functions
-  function startInlineEdit(crop) {
-    setInlineEditId(crop.id)
-    setInlineData({ ...crop })
-    setLastChange({ item: crop })
+  function startInlineEdit(item, type = 'crop') {
+    setInlineEditId(item.id)
+    setInlineData({ ...item })
+    setInlineType(type)
+    setLastChange({ item, type })
   }
 
   function saveInlineEdit() {
-    if (!inlineData.name || !inlineData.name.trim()) {
-      setToast({ type: 'error', message: 'Name is required' })
-      return
+    if (inlineType === 'crop') {
+      if (!inlineData.name || !inlineData.name.trim()) {
+        setToast({ type: 'error', message: 'Name is required' })
+        return
+      }
+      setCrops(crops.map(c => c.id === inlineEditId ? inlineData : c))
+    } else if (inlineType === 'pest') {
+      if (!inlineData.pest || !inlineData.severity) {
+        setToast({ type: 'error', message: 'Pest and severity are required' })
+        return
+      }
+      setPestRecords(pestRecords.map(p => p.id === inlineEditId ? inlineData : p))
+    } else if (inlineType === 'disease') {
+      if (!inlineData.disease || !inlineData.severity) {
+        setToast({ type: 'error', message: 'Disease and severity are required' })
+        return
+      }
+      setDiseaseRecords(diseaseRecords.map(d => d.id === inlineEditId ? inlineData : d))
     }
     
-    setCrops(crops.map(c => c.id === inlineEditId ? inlineData : c))
     setToast({ type: 'success', message: '✓ Updated', showUndo: true })
     setInlineEditId(null)
+    setInlineType(null)
     setTimeout(() => setToast(null), 3000)
   }
 
   function cancelInlineEdit() {
     setInlineEditId(null)
     setInlineData({})
+    setInlineType(null)
     setToast(null)
   }
 
   function undoLastChange() {
     if (!lastChange) return
-    setCrops(crops.map(c => c.id === inlineEditId ? lastChange.item : c))
+    if (lastChange.type === 'crop') {
+      setCrops(crops.map(c => c.id === lastChange.item.id ? lastChange.item : c))
+    } else if (lastChange.type === 'pest') {
+      setPestRecords(pestRecords.map(p => p.id === lastChange.item.id ? lastChange.item : p))
+    } else if (lastChange.type === 'disease') {
+      setDiseaseRecords(diseaseRecords.map(d => d.id === lastChange.item.id ? lastChange.item : d))
+    }
     setToast(null)
   }
 
@@ -403,7 +441,7 @@ export default function Crops() {
                     </div>
                   </div>
                   <div className="controls" style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => startInlineEdit(crop)} style={{ background: '#ffffcc', border: '1px solid #ffdd00', padding: '8px 12px', borderRadius: '6px' }}>⚡ Quick</button>
+                    <button onClick={() => startInlineEdit(crop, 'crop')} style={{ background: '#ffffcc', border: '1px solid #ffdd00', padding: '8px 12px', borderRadius: '6px' }}>⚡ Quick</button>
                     <button onClick={() => startEditCrop(crop)}>Edit</button>
                     <button onClick={() => deleteCrop(crop.id)}>Delete</button>
                   </div>
@@ -688,11 +726,48 @@ export default function Crops() {
             </form>
           )}
           <ul>
-            {pestRecords.map(rec => (
-              <li key={rec.id}>
-                <strong>{rec.cropId}</strong> | {rec.date} | {rec.pest} | Severity: {rec.severity} | Action: {rec.action} | {rec.notes}
-              </li>
-            ))}
+            {pestRecords.map(rec => {
+              const crop = crops.find(c => c.id === rec.cropId)
+              return (
+                <li key={rec.id} style={{ listStyle: 'none', padding: 0, marginBottom: '12px' }}>
+                  <div className="card" style={{ padding: '16px' }}>
+                    {inlineEditId === rec.id && inlineType === 'pest' ? (
+                      <div onKeyDown={handleKeyDown} style={{ display: 'grid', gap: '12px' }}>
+                        <input type="text" placeholder="Pest Name" value={inlineData.pest || ''} onChange={e => setInlineData({ ...inlineData, pest: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                        <select value={inlineData.severity || 'Mild'} onChange={e => setInlineData({ ...inlineData, severity: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }}>
+                          <option value="Mild">Mild</option>
+                          <option value="Moderate">Moderate</option>
+                          <option value="Severe">Severe</option>
+                          <option value="Critical">Critical</option>
+                        </select>
+                        <input type="text" placeholder="Action Taken" value={inlineData.action || ''} onChange={e => setInlineData({ ...inlineData, action: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                        <textarea placeholder="Notes" value={inlineData.notes || ''} onChange={e => setInlineData({ ...inlineData, notes: e.target.value })} rows={2} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button type="button" onClick={saveInlineEdit} style={{ padding: '8px 16px', background: '#059669', color: '#fff', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Save</button>
+                          <button type="button" onClick={cancelInlineEdit} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600' }}>{rec.pest}</h4>
+                          <div style={{ fontSize: '0.9rem', color: '#666', display: 'grid', gap: '4px' }}>
+                            <div><strong>Crop:</strong> {crop?.name || rec.cropId} | <strong>Date:</strong> {rec.date}</div>
+                            <div><strong>Severity:</strong> <span style={{ padding: '2px 8px', borderRadius: '4px', background: rec.severity === 'Critical' ? '#fee2e2' : rec.severity === 'Severe' ? '#fed7aa' : rec.severity === 'Moderate' ? '#fef3c7' : '#d1fae5', color: rec.severity === 'Critical' ? '#991b1b' : rec.severity === 'Severe' ? '#9a3412' : rec.severity === 'Moderate' ? '#92400e' : '#065f46' }}>{rec.severity}</span></div>
+                            {rec.action && <div><strong>Action:</strong> {rec.action}</div>}
+                            {rec.notes && <div><strong>Notes:</strong> {rec.notes}</div>}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => startInlineEdit(rec, 'pest')} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#ffffcc', border: '1px solid #ffdd00', borderRadius: '6px', cursor: 'pointer' }}>⚡ Quick</button>
+                          <button onClick={() => deletePestRecord(rec.id)} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer' }}>🗑️ Delete</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}
@@ -719,11 +794,48 @@ export default function Crops() {
             </form>
           )}
           <ul>
-            {diseaseRecords.map(rec => (
-              <li key={rec.id}>
-                <strong>{rec.cropId}</strong> | {rec.date} | {rec.disease} | Severity: {rec.severity} | Action: {rec.action} | {rec.notes}
-              </li>
-            ))}
+            {diseaseRecords.map(rec => {
+              const crop = crops.find(c => c.id === rec.cropId)
+              return (
+                <li key={rec.id} style={{ listStyle: 'none', padding: 0, marginBottom: '12px' }}>
+                  <div className="card" style={{ padding: '16px' }}>
+                    {inlineEditId === rec.id && inlineType === 'disease' ? (
+                      <div onKeyDown={handleKeyDown} style={{ display: 'grid', gap: '12px' }}>
+                        <input type="text" placeholder="Disease Name" value={inlineData.disease || ''} onChange={e => setInlineData({ ...inlineData, disease: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                        <select value={inlineData.severity || 'Mild'} onChange={e => setInlineData({ ...inlineData, severity: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }}>
+                          <option value="Mild">Mild</option>
+                          <option value="Moderate">Moderate</option>
+                          <option value="Severe">Severe</option>
+                          <option value="Critical">Critical</option>
+                        </select>
+                        <input type="text" placeholder="Action Taken" value={inlineData.action || ''} onChange={e => setInlineData({ ...inlineData, action: e.target.value })} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                        <textarea placeholder="Notes" value={inlineData.notes || ''} onChange={e => setInlineData({ ...inlineData, notes: e.target.value })} rows={2} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button type="button" onClick={saveInlineEdit} style={{ padding: '8px 16px', background: '#059669', color: '#fff', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Save</button>
+                          <button type="button" onClick={cancelInlineEdit} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', flex: 1 }}>Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: '600' }}>{rec.disease}</h4>
+                          <div style={{ fontSize: '0.9rem', color: '#666', display: 'grid', gap: '4px' }}>
+                            <div><strong>Crop:</strong> {crop?.name || rec.cropId} | <strong>Date:</strong> {rec.date}</div>
+                            <div><strong>Severity:</strong> <span style={{ padding: '2px 8px', borderRadius: '4px', background: rec.severity === 'Critical' ? '#fee2e2' : rec.severity === 'Severe' ? '#fed7aa' : rec.severity === 'Moderate' ? '#fef3c7' : '#d1fae5', color: rec.severity === 'Critical' ? '#991b1b' : rec.severity === 'Severe' ? '#9a3412' : rec.severity === 'Moderate' ? '#92400e' : '#065f46' }}>{rec.severity}</span></div>
+                            {rec.action && <div><strong>Action:</strong> {rec.action}</div>}
+                            {rec.notes && <div><strong>Notes:</strong> {rec.notes}</div>}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => startInlineEdit(rec, 'disease')} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#ffffcc', border: '1px solid #ffdd00', borderRadius: '6px', cursor: 'pointer' }}>⚡ Quick</button>
+                          <button onClick={() => deleteDiseaseRecord(rec.id)} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer' }}>🗑️ Delete</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}

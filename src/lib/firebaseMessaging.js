@@ -1,25 +1,69 @@
 import { messaging } from "./firebase";
 import { getToken, onMessage } from "firebase/messaging";
 
+// Check if notifications are supported in the current environment
+function isNotificationSupported() {
+  return (
+    'serviceWorker' in navigator &&
+    'Notification' in window &&
+    window.isSecureContext &&
+    messaging !== null &&
+    messaging !== undefined
+  );
+}
+
 export async function requestNotificationPermission() {
+  // Early return if notifications not supported
+  if (!isNotificationSupported()) {
+    console.info('ℹ️ Notifications not supported in this environment');
+    return null;
+  }
+  
   try {
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-      const token = await getToken(messaging, { vapidKey: "BG4uQNeO-WWaHsPHvfFF1m4ojmz6u1HwbYniH4gkKGH1hHYhsPqe_YC-kvLTn6Q-qMbd9VAqvGy7x1hwKLP9roI" });
-      console.log("FCM Token:", token);
-      return token;
-    } else {
-      throw new Error("Notification permission denied");
+    // Check current permission state first
+    if (Notification.permission === 'denied') {
+      console.info('ℹ️ Notification permission already denied');
+      return null;
     }
+    
+    // Only request if permission is 'default'
+    if (Notification.permission === 'default') {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        return null;
+      }
+    }
+    
+    // Get FCM token
+    const token = await getToken(messaging, { 
+      vapidKey: "BG4uQNeO-WWaHsPHvfFF1m4ojmz6u1HwbYniH4gkKGH1hHYhsPqe_YC-kvLTn6Q-qMbd9VAqvGy7x1hwKLP9roI" 
+    });
+    console.log("✅ FCM Token:", token);
+    return token;
   } catch (err) {
-    console.error("FCM setup error:", err);
+    // Suppress expected errors in unsupported environments
+    if (err.code === 'messaging/unsupported-browser' || 
+        err.message?.includes('messaging') ||
+        err.message?.includes('not supported')) {
+      console.info('ℹ️ Push messaging not available in this browser/environment');
+    } else {
+      console.warn('⚠️ FCM setup error:', err.message);
+    }
     return null;
   }
 }
 
 export function listenForMessages(callback) {
-  onMessage(messaging, (payload) => {
-    console.log("FCM Message received:", payload);
-    if (callback) callback(payload);
-  });
+  if (!isNotificationSupported()) {
+    return; // Silently skip if not supported
+  }
+  
+  try {
+    onMessage(messaging, (payload) => {
+      console.log("📨 FCM Message received:", payload);
+      if (callback) callback(payload);
+    });
+  } catch (err) {
+    console.info('ℹ️ Message listener not available in this environment');
+  }
 }

@@ -11,11 +11,11 @@
  * 7. Enable Authentication > Email/Password in Firebase Console
  */
 
-import { initializeApp } from 'firebase/app'
-import { initializeFirestore, CACHE_SIZE_UNLIMITED, persistentLocalCache } from 'firebase/firestore'
+import { initializeApp, getApps } from 'firebase/app'
+import { initializeFirestore, getFirestore, CACHE_SIZE_UNLIMITED, persistentLocalCache } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
-import { getAnalytics } from 'firebase/analytics'
-import { getMessaging } from 'firebase/messaging'
+import { getAnalytics, isSupported as analyticsIsSupported } from 'firebase/analytics'
+import { getMessaging, isSupported as messagingIsSupported } from 'firebase/messaging'
 
 // Firebase configuration - CONFIGURED
 // Project: devicattlesgit-35265529-12687
@@ -35,7 +35,7 @@ export function isFirebaseConfigured() {
          firebaseConfig.projectId !== "YOUR_PROJECT_ID"
 }
 
-// Initialize Firebase
+// Initialize Firebase (singleton pattern to prevent re-initialization)
 let app = null
 let db = null
 let auth = null
@@ -43,15 +43,64 @@ let analytics = null
 let messaging = null
 let isInitialized = false
 
+// Environment detection
+const isDev = typeof window !== 'undefined' && (
+  window.location.hostname === 'localhost' || 
+  window.location.hostname.includes('github.dev') ||
+  window.location.hostname.includes('githubpreview.dev')
+);
+
 try {
   if (isFirebaseConfigured()) {
-    app = initializeApp(firebaseConfig)
-    db = initializeFirestore(app, {
-      localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED })
-    })
+    // Check if Firebase is already initialized (prevents HMR errors)
+    if (getApps().length === 0) {
+      app = initializeApp(firebaseConfig)
+      try {
+        db = initializeFirestore(app, {
+          localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED })
+        })
+      } catch (firestoreError) {
+        // Firestore already initialized, use getFirestore
+        db = getFirestore(app)
+      }
+    } else {
+      // Use existing app instance
+      app = getApps()[0]
+      db = getFirestore(app)
+    }
+    
     auth = getAuth(app)
-    analytics = getAnalytics(app)
-    messaging = getMessaging(app)
+    
+    // Skip Analytics completely in development (no cookies, no warnings)
+    if (!isDev) {
+      analyticsIsSupported().then(supported => {
+        if (supported) {
+          try {
+            analytics = getAnalytics(app);
+          } catch (err) {
+            analytics = null;
+          }
+        }
+      }).catch(() => {
+        analytics = null;
+      });
+    }
+    
+    // Initialize Messaging only if supported and only once
+    if (!messaging) {
+      messagingIsSupported().then(supported => {
+        if (supported) {
+          try {
+            messaging = getMessaging(app);
+          } catch (err) {
+            messaging = null;
+          }
+        }
+      }).catch(() => {
+        messaging = null;
+      });
+    }
+    
     isInitialized = true
   } else {
     // Log once on first check - not a warning since it's expected in local/demo mode

@@ -80,7 +80,7 @@ export const PRIORITIES = {
  */
 export async function requestNotificationPermission() {
   if (!('Notification' in window)) {
-    console.warn('Browser does not support notifications');
+    console.info('ℹ️ Browser does not support notifications');
     return false;
   }
 
@@ -88,12 +88,22 @@ export async function requestNotificationPermission() {
     return true;
   }
 
-  if (Notification.permission !== 'denied') {
-    const permission = await Notification.requestPermission();
-    return permission === 'granted';
+  if (Notification.permission === 'denied') {
+    console.info('ℹ️ Notification permission already denied');
+    return false;
   }
 
-  return false;
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      console.log('✅ Notification permission granted');
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.info('ℹ️ Notification request not available in this environment');
+    return false;
+  }
 }
 
 /**

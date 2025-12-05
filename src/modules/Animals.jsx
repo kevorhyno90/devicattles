@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import Pastures from './Pastures'
 import HealthSystem from './HealthSystem'
 import AnimalFeeding from './AnimalFeeding'
@@ -15,6 +15,8 @@ import PhotoGallery from '../components/PhotoGallery'
 import { fileToDataUrl, estimateDataUrlSize, uid } from '../lib/image'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
 import { generateQRCodeDataURL, printQRTag, batchPrintQRTags } from '../lib/qrcode'
+import { useDebounce } from '../lib/useDebounce'
+import { perfMonitor } from '../lib/performanceUtils'
 
 // Realized Animals component: HTML5 controls, inline validation, unique tag checks,
 // realistic sample data, and non-placeholder behavior.
@@ -232,6 +234,9 @@ export default function Animals() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterSex, setFilterSex] = useState('all')
   const [sortBy, setSortBy] = useState('name')
+  
+  // Debounce filter for better performance
+  const debouncedFilter = useDebounce(filter, 300)
 
   const emptyAnimal = { 
     id: '', tag: '', name: '', breed: '', sex: 'F', color: '', dob: '', weight: '', sire: '', dam: '', groupId: '', status: 'Active', notes: '', owner: '', registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', photos: [], 
@@ -554,33 +559,43 @@ export default function Animals() {
     setAnimals(animals.map(a => a.groupId === id ? { ...a, groupId: '' } : a))
   }
 
-  const q = filter.trim().toLowerCase()
-  const filtered = animals.filter(a => {
-    // Text search
-    if (q) {
-      const groupName = groups.find(g => g.id === a.groupId)?.name || ''
-      const matchesText = (a.id || '').toLowerCase().includes(q) || 
-                         (a.tag || '').toLowerCase().includes(q) || 
-                         (a.name || '').toLowerCase().includes(q) || 
-                         (a.breed || '').toLowerCase().includes(q) || 
-                         groupName.toLowerCase().includes(q)
-      if (!matchesText) return false
-    }
+  // Use debounced filter for better performance with large datasets
+  const q = debouncedFilter.trim().toLowerCase()
+  
+  // Memoize filtering for better performance
+  const filtered = useMemo(() => {
+    perfMonitor.start('Filter Animals')
     
-    // Group filter
-    if (filterGroup !== 'all') {
-      if (filterGroup === 'ungrouped' && a.groupId) return false
-      if (filterGroup !== 'ungrouped' && a.groupId !== filterGroup) return false
-    }
+    const result = animals.filter(a => {
+      // Text search
+      if (q) {
+        const groupName = groups.find(g => g.id === a.groupId)?.name || ''
+        const matchesText = (a.id || '').toLowerCase().includes(q) || 
+                           (a.tag || '').toLowerCase().includes(q) || 
+                           (a.name || '').toLowerCase().includes(q) || 
+                           (a.breed || '').toLowerCase().includes(q) || 
+                           groupName.toLowerCase().includes(q)
+        if (!matchesText) return false
+      }
+      
+      // Group filter
+      if (filterGroup !== 'all') {
+        if (filterGroup === 'ungrouped' && a.groupId) return false
+        if (filterGroup !== 'ungrouped' && a.groupId !== filterGroup) return false
+      }
+      
+      // Status filter
+      if (filterStatus !== 'all' && a.status !== filterStatus) return false
+      
+      // Sex filter
+      if (filterSex !== 'all' && a.sex !== filterSex) return false
+      
+      return true
+    })
     
-    // Status filter
-    if (filterStatus !== 'all' && a.status !== filterStatus) return false
-    
-    // Sex filter
-    if (filterSex !== 'all' && a.sex !== filterSex) return false
-    
-    return true
-  })
+    perfMonitor.end('Filter Animals')
+    return result
+  }, [animals, debouncedFilter, filterGroup, filterStatus, filterSex, groups])
 
   // Sort animals
   const sortedAnimals = [...filtered].sort((a, b) => {

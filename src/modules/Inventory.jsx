@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
+import { useDebounce } from '../lib/useDebounce'
 
 const SAMPLE = [
   { 
@@ -235,6 +236,9 @@ export default function Inventory(){
   const [modalOpenId, setModalOpenId] = useState(null)
   const [filterCategory, setFilterCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  
+  // Debounce search for better performance
+  const debouncedSearch = useDebounce(searchTerm, 300)
   
   // Inline edit state
   const [inlineEditId, setInlineEditId] = useState(null)
@@ -512,22 +516,34 @@ export default function Inventory(){
     }))
   }
 
-  const filteredItems = items.filter(item => {
-    const matchesCategory = filterCategory === 'all' || item.category === filterCategory
-    const matchesSearch = !searchTerm || 
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.supplier?.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesCategory && matchesSearch
-  })
+  // Memoized filtering with debounced search for better performance
+  const filteredItems = useMemo(() => {
+    const q = debouncedSearch.trim().toLowerCase()
+    
+    return items.filter(item => {
+      const matchesCategory = filterCategory === 'all' || item.category === filterCategory
+      const matchesSearch = !q || 
+        (item.name || '').toLowerCase().includes(q) ||
+        (item.supplier || '').toLowerCase().includes(q) ||
+        (item.category || '').toLowerCase().includes(q) ||
+        (item.location || '').toLowerCase().includes(q)
+      return matchesCategory && matchesSearch
+    })
+  }, [items, debouncedSearch, filterCategory])
 
-  const filteredEquipment = equipment.filter(eq => {
-    const matchesType = filterCategory === 'all' || eq.type === filterCategory
-    const matchesSearch = !searchTerm ||
-      eq.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      eq.manufacturer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      eq.model?.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesType && matchesSearch
-  })
+  const filteredEquipment = useMemo(() => {
+    const q = debouncedSearch.trim().toLowerCase()
+    
+    return equipment.filter(eq => {
+      const matchesType = filterCategory === 'all' || eq.type === filterCategory
+      const matchesSearch = !q ||
+        (eq.name || '').toLowerCase().includes(q) ||
+        (eq.manufacturer || '').toLowerCase().includes(q) ||
+        (eq.model || '').toLowerCase().includes(q) ||
+        (eq.location || '').toLowerCase().includes(q)
+      return matchesType && matchesSearch
+    })
+  }, [equipment, debouncedSearch, filterCategory])
 
   const lowStockItems = items.filter(i => i.quantity <= (i.reorderPoint || 0))
   const totalValue = items.reduce((sum, i) => sum + (i.totalValue || 0), 0)
