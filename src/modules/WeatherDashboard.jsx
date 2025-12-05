@@ -77,7 +77,10 @@ export default function WeatherDashboard({ onNavigate }) {
 
   // Format time
   const formatTime = (date) => {
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+    if (!date) return 'N/A'
+    const dateObj = date instanceof Date ? date : new Date(date)
+    if (isNaN(dateObj.getTime())) return 'N/A'
+    return dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
   }
 
   // Get wind direction
