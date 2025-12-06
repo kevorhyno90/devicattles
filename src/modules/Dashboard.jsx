@@ -1200,6 +1200,9 @@ export default function Dashboard({ onNavigate }) {
           <button onClick={() => onNavigate && onNavigate('farm3d')} className="btn-primary" style={{ background: '#ec4899' }}>
             🗺️ 3D Farm View
           </button>
+          <button onClick={() => onNavigate && onNavigate('timeline')} className="btn-primary" style={{ background: '#f59e0b' }}>
+            📅 Timeline Planner
+          </button>
           <button onClick={() => onNavigate && onNavigate('animals')} className="btn-primary">
             ➕ Add Animal
           </button>

@@ -63,6 +63,7 @@ const WeatherDashboard = lazyWithRetry(() => import('./modules/WeatherDashboard'
 const IoTDevices = lazyWithRetry(() => import('./modules/IoTDevices'))
 const MarketPrices = lazyWithRetry(() => import('./modules/MarketPrices'))
 const Farm3D = lazyWithRetry(() => import('./modules/Farm3D'))
+const TimelinePlanner = lazyWithRetry(() => import('./modules/TimelinePlanner'))
 
 // Loading fallback component with timeout detection
 const LoadingFallback = () => {
@@ -610,6 +611,22 @@ function AppContent() {
             🗺️ 3D Farm
           </button>
           <button 
+            className={view==='timeline'? 'active':''} 
+            onClick={()=>setView('timeline')}
+            style={{
+              background: view==='timeline' ? '#f59e0b' : '#f3f4f6',
+              color: view==='timeline' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            📅 Timeline
+          </button>
+          <button 
             className={view==='animals'? 'active':''} 
             onClick={()=>setView('animals')}
             style={{
@@ -1023,6 +1040,15 @@ function AppContent() {
               ← Back to Dashboard
             </button>
             <ErrorBoundary><Farm3D /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'timeline' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><TimelinePlanner /></ErrorBoundary>
           </section>
         )}
 
