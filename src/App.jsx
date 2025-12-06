@@ -64,6 +64,12 @@ const IoTDevices = lazyWithRetry(() => import('./modules/IoTDevices'))
 const MarketPrices = lazyWithRetry(() => import('./modules/MarketPrices'))
 const Farm3D = lazyWithRetry(() => import('./modules/Farm3D'))
 const TimelinePlanner = lazyWithRetry(() => import('./modules/TimelinePlanner'))
+const PhotoGalleryAdvanced = lazyWithRetry(() => import('./modules/PhotoGalleryAdvanced'))
+const GeospatialMap = lazyWithRetry(() => import('./modules/GeospatialMap'))
+const PredictiveAnalytics = lazyWithRetry(() => import('./modules/PredictiveAnalytics'))
+const AdvancedBatchOps = lazyWithRetry(() => import('./modules/AdvancedBatchOps'))
+const CustomReportBuilder = lazyWithRetry(() => import('./modules/CustomReportBuilder'))
+const AIInsightsDashboard = lazyWithRetry(() => import('./modules/AIInsightsDashboard'))
 
 // Loading fallback component with timeout detection
 const LoadingFallback = () => {
@@ -627,6 +633,54 @@ function AppContent() {
             📅 Timeline
           </button>
           <button 
+            className={view==='photos'? 'active':''} 
+            onClick={()=>setView('photos')}
+            style={{
+              background: view==='photos' ? '#a855f7' : '#f3f4f6',
+              color: view==='photos' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            📸 Photos
+          </button>
+          <button 
+            className={view==='geomap'? 'active':''} 
+            onClick={()=>setView('geomap')}
+            style={{
+              background: view==='geomap' ? '#10b981' : '#f3f4f6',
+              color: view==='geomap' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            🌍 GeoMap
+          </button>
+          <button 
+            className={view==='predictions'? 'active':''} 
+            onClick={()=>setView('predictions')}
+            style={{
+              background: view==='predictions' ? '#8b5cf6' : '#f3f4f6',
+              color: view==='predictions' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            🔮 Predictions
+          </button>
+          <button 
             className={view==='animals'? 'active':''} 
             onClick={()=>setView('animals')}
             style={{
@@ -1049,6 +1103,60 @@ function AppContent() {
               ← Back to Dashboard
             </button>
             <ErrorBoundary><TimelinePlanner /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'photos' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><PhotoGalleryAdvanced /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'geomap' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><GeospatialMap /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'predictions' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><PredictiveAnalytics /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'batchops' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><AdvancedBatchOps /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'customreports' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><CustomReportBuilder /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'aiinsights' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><AIInsightsDashboard /></ErrorBoundary>
           </section>
         )}
 

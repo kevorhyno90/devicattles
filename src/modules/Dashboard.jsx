@@ -14,6 +14,7 @@ import { getPredictiveDashboard } from '../lib/predictiveAnalytics'
 import { getAllSmartAlerts, getAlertsSummary } from '../lib/smartAlerts'
 import { getCurrentWeather, getFarmLocation } from '../lib/weatherApi'
 import { loadData } from '../lib/storage'
+import DashboardCustomizer from '../components/DashboardCustomizer'
 
 export default function Dashboard({ onNavigate }) {
   const [dashboardData, setDashboardData] = useState(null)
@@ -25,6 +26,7 @@ export default function Dashboard({ onNavigate }) {
   const [alertsSummary, setAlertsSummary] = useState(null)
   const [voiceSupported, setVoiceSupported] = useState(false)
   const [weather, setWeather] = useState(null)
+  const [showCustomizer, setShowCustomizer] = useState(false)
 
   // Check voice support
   useEffect(() => {
@@ -125,6 +127,9 @@ export default function Dashboard({ onNavigate }) {
       <div className="dashboard-header">
         <h1>📊 Farm Dashboard</h1>
         <div className="dashboard-controls">
+          <button onClick={() => setShowCustomizer(true)} className="btn-primary" style={{ background: '#8b5cf6', marginRight: 12 }}>
+            🎨 Customize
+          </button>
           <label>
             <input
               type="checkbox"
@@ -136,6 +141,11 @@ export default function Dashboard({ onNavigate }) {
           <button onClick={loadDashboard} className="btn-secondary">🔄 Refresh</button>
         </div>
       </div>
+
+      {/* Dashboard Customizer Modal */}
+      {showCustomizer && (
+        <DashboardCustomizer onClose={() => setShowCustomizer(false)} />
+      )}
 
       {/* PWA Install Banner */}
       {typeof window !== 'undefined' && window.installPWA && (
@@ -1202,6 +1212,24 @@ export default function Dashboard({ onNavigate }) {
           </button>
           <button onClick={() => onNavigate && onNavigate('timeline')} className="btn-primary" style={{ background: '#f59e0b' }}>
             📅 Timeline Planner
+          </button>
+          <button onClick={() => onNavigate && onNavigate('photos')} className="btn-primary" style={{ background: '#a855f7' }}>
+            📸 Photo Gallery
+          </button>
+          <button onClick={() => onNavigate && onNavigate('geomap')} className="btn-primary" style={{ background: '#10b981' }}>
+            🌍 Geospatial Map
+          </button>
+          <button onClick={() => onNavigate && onNavigate('predictions')} className="btn-primary" style={{ background: '#8b5cf6' }}>
+            🔮 Predictions
+          </button>
+          <button onClick={() => onNavigate && onNavigate('aiinsights')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}>
+            🤖 AI Insights
+          </button>
+          <button onClick={() => onNavigate && onNavigate('batchops')} className="btn-primary" style={{ background: '#f59e0b' }}>
+            ⚡ Batch Operations
+          </button>
+          <button onClick={() => onNavigate && onNavigate('customreports')} className="btn-primary" style={{ background: '#8b5cf6' }}>
+            📊 Custom Reports
           </button>
           <button onClick={() => onNavigate && onNavigate('animals')} className="btn-primary">
             ➕ Add Animal
