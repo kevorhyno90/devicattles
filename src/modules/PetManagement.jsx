@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import DataLayer from '../lib/dataLayer'
+import ErrorBoundary from '../components/ErrorBoundary'
 import { exportVaccinationRecords } from '../lib/pdfExport'
 
 // Lazy load Chart.js to prevent blocking module load on mobile
@@ -35,33 +37,9 @@ const VACCINE_TYPES = {
   cat: ['FVRCP (Distemper)', 'Rabies', 'FeLV (Feline Leukemia)', 'FIV Test', 'Bordetella']
 }
 
-const SAMPLE_PETS = [
-  {
-    id: 'P-001',
-    name: 'Max',
-    species: 'Dog',
-    breed: 'German Shepherd',
-    dob: '2020-03-15',
-    sex: 'M',
-    microchip: 'MC123456789',
-    weight: 35,
-    color: 'Black/Tan',
-    status: 'Active',
-    vaccinations: [
-      { id: 'V1', type: 'Rabies', date: '2024-03-15', vet: 'City Vet Clinic', nextDue: '2027-03-15', notes: '3-year vaccine' }
-    ],
-    healthRecords: [],
-    medications: [],
-    feedingSchedule: { food: 'Premium Dog Food', portions: '2 cups', frequency: 'Twice Daily' },
-    breedingRecords: [],
-    groomingLog: [],
-    notes: 'Guard dog, well-trained'
-  }
-]
-
 export default function PetManagement() {
-  const KEY = 'cattalytics:pets'
   const [pets, setPets] = useState([])
+  const [search, setSearch] = useState('')
   const [tab, setTab] = useState('list')
   const [selectedPet, setSelectedPet] = useState(null)
   const [detailTab, setDetailTab] = useState('info')
@@ -116,9 +94,17 @@ export default function PetManagement() {
   })
 
   useEffect(() => {
-    const raw = localStorage.getItem(KEY)
-    setPets(raw ? JSON.parse(raw) : SAMPLE_PETS)
-  }, [])
+    async function fetchPets() {
+      if (search.trim()) {
+        const results = await DataLayer.createEntity('cattalytics:pets', 'Pet').search(search, ['name', 'species', 'breed', 'status'])
+        setPets(results)
+      } else {
+        const all = await DataLayer.createEntity('cattalytics:pets', 'Pet').getAll()
+        setPets(all)
+      }
+    }
+    fetchPets()
+  }, [search])
 
   useEffect(() => {
     if (pets.length > 0) localStorage.setItem(KEY, JSON.stringify(pets))
@@ -282,240 +268,206 @@ export default function PetManagement() {
   ).filter(v => v.isDue).sort((a, b) => new Date(a.nextDue) - new Date(b.nextDue))
 
   return (
-    <div style={{ padding: '20px', background: '#f9fafb', minHeight: '100vh' }}>
-      <div style={{ marginBottom: '20px' }}>
-        <h3 style={{ marginTop: 0 }}>🐾 Pet Management</h3>
-        <p style={{ color: '#666', fontSize: '14px' }}>Comprehensive pet care system for dogs and cats</p>
-      </div>
-
-      {/* Top-Level Tabs */}
-      <div style={{ marginBottom: '20px', borderBottom: '2px solid #e5e7eb' }}>
-        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-          <button onClick={() => setTab('list')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'list' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'list' ? '#f5f3ff' : 'transparent', color: tab === 'list' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'list' ? '600' : '400', cursor: 'pointer' }}>
-            📋 Pet List
-          </button>
-          <button onClick={() => setTab('vaccinations')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'vaccinations' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'vaccinations' ? '#f5f3ff' : 'transparent', color: tab === 'vaccinations' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'vaccinations' ? '600' : '400', cursor: 'pointer' }}>
-            💉 Vaccinations ({upcomingVaccines.length})
-          </button>
-          <button onClick={() => setTab('health')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'health' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'health' ? '#f5f3ff' : 'transparent', color: tab === 'health' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'health' ? '600' : '400', cursor: 'pointer' }}>
-            🏥 Health Records
-          </button>
-          <button onClick={() => setTab('feeding')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'feeding' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'feeding' ? '#f5f3ff' : 'transparent', color: tab === 'feeding' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'feeding' ? '600' : '400', cursor: 'pointer' }}>
-            🍽️ Feeding
-          </button>
-          <button onClick={() => setTab('breeding')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'breeding' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'breeding' ? '#f5f3ff' : 'transparent', color: tab === 'breeding' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'breeding' ? '600' : '400', cursor: 'pointer' }}>
-            🐣 Breeding
-          </button>
-          <button onClick={() => setTab('grooming')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'grooming' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'grooming' ? '#f5f3ff' : 'transparent', color: tab === 'grooming' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'grooming' ? '600' : '400', cursor: 'pointer' }}>
-            ✂️ Grooming
-          </button>
-          <button onClick={() => setTab('training')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'training' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'training' ? '#f5f3ff' : 'transparent', color: tab === 'training' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'training' ? '600' : '400', cursor: 'pointer' }}>
-            🎓 Training
-          </button>
+    <ErrorBoundary>
+      <div style={{ padding: '20px', background: '#f9fafb', minHeight: '100vh' }}>
+        <div style={{ marginBottom: '20px' }}>
+          <h3 style={{ marginTop: 0 }}>🐾 Pet Management</h3>
+          <p style={{ color: '#666', fontSize: '14px' }}>Comprehensive pet care system for dogs and cats</p>
         </div>
-      </div>
 
-      {tab === 'list' && !selectedPet && (
-        <div>
-          {/* Filters */}
-          <div style={{ background: 'white', padding: '16px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e5e7eb' }}>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <input 
-                type="text" 
-                id="pet-search" 
-                name="pet-search" 
-                placeholder="🔍 Search pets..." 
-                value={filter.search}
-                onChange={e => setFilter({...filter, search: e.target.value})}
-                style={{ flex: 1, minWidth: '200px', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              />
-              <select id="pet-filter-species" name="pet-filter-species" value={filter.species} onChange={e => setFilter({...filter, species: e.target.value})} style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
-                <option value="all">All Species</option>
-                <option value="Dog">🐕 Dogs</option>
-                <option value="Cat">🐈 Cats</option>
-              </select>
-            </div>
+        {/* Top-Level Tabs */}
+        <div style={{ marginBottom: '20px', borderBottom: '2px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+            <button onClick={() => setTab('list')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'list' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'list' ? '#f5f3ff' : 'transparent', color: tab === 'list' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'list' ? '600' : '400', cursor: 'pointer' }}>
+              📋 Pet List
+            </button>
+            <button onClick={() => setTab('vaccinations')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'vaccinations' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'vaccinations' ? '#f5f3ff' : 'transparent', color: tab === 'vaccinations' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'vaccinations' ? '600' : '400', cursor: 'pointer' }}>
+              💉 Vaccinations ({upcomingVaccines.length})
+            </button>
+            <button onClick={() => setTab('health')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'health' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'health' ? '#f5f3ff' : 'transparent', color: tab === 'health' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'health' ? '600' : '400', cursor: 'pointer' }}>
+              🏥 Health Records
+            </button>
+            <button onClick={() => setTab('feeding')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'feeding' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'feeding' ? '#f5f3ff' : 'transparent', color: tab === 'feeding' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'feeding' ? '600' : '400', cursor: 'pointer' }}>
+              🍽️ Feeding
+            </button>
+            <button onClick={() => setTab('breeding')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'breeding' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'breeding' ? '#f5f3ff' : 'transparent', color: tab === 'breeding' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'breeding' ? '600' : '400', cursor: 'pointer' }}>
+              🐣 Breeding
+            </button>
+            <button onClick={() => setTab('grooming')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'grooming' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'grooming' ? '#f5f3ff' : 'transparent', color: tab === 'grooming' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'grooming' ? '600' : '400', cursor: 'pointer' }}>
+              ✂️ Grooming
+            </button>
+            <button onClick={() => setTab('training')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'training' ? '3px solid #8b5cf6' : '3px solid transparent', background: tab === 'training' ? '#f5f3ff' : 'transparent', color: tab === 'training' ? '#8b5cf6' : '#6b7280', fontWeight: tab === 'training' ? '600' : '400', cursor: 'pointer' }}>
+              🎓 Training
+            </button>
           </div>
+        </div>
 
-          {/* Pet Grid */}
-          {filtered.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-              {filtered.map(pet => (
-                <div key={pet.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', transition: 'transform 0.2s, box-shadow 0.2s' }}>
-                  {inlineEditId === pet.id ? (
-                    <div onKeyDown={handleKeyDown} style={{display:'flex',flexDirection:'column',gap:10}}>
-                      <input value={inlineData.name} onChange={e=>setInlineData({...inlineData,name:e.target.value})} placeholder="Pet name" style={{padding:'8px',border:'1px solid #d1d5db',borderRadius:4}} autoFocus />
-                      <input value={inlineData.breed} onChange={e=>setInlineData({...inlineData,breed:e.target.value})} placeholder="Breed" style={{padding:'8px',border:'1px solid #d1d5db',borderRadius:4}} />
-                      <input type="number" value={inlineData.weight} onChange={e=>setInlineData({...inlineData,weight:e.target.value})} placeholder="Weight (kg)" style={{padding:'8px',border:'1px solid #d1d5db',borderRadius:4}} />
-                      <select value={inlineData.status} onChange={e=>setInlineData({...inlineData,status:e.target.value})} style={{padding:'8px',border:'1px solid #d1d5db',borderRadius:4}}>
-                        <option>Active</option>
-                        <option>Inactive</option>
-                        <option>Deceased</option>
-                      </select>
-                      <div style={{display:'flex',gap:6}}>
-                        <button onClick={saveInlineEdit} style={{flex:1,padding:'8px',background:'#10b981',color:'#fff',border:'none',borderRadius:4,fontSize:12}}>✓ Save</button>
-                        <button onClick={cancelInlineEdit} style={{flex:1,padding:'8px',background:'#ef4444',color:'#fff',border:'none',borderRadius:4,fontSize:12}}>✕ Cancel</button>
+        {tab === 'list' && !selectedPet && (
+          <div>
+            {/* Search Bar */}
+            <div style={{ marginBottom: '16px' }}>
+              <input
+                type="text"
+                placeholder="Search pets by name, species, breed, status..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #d1d5db' }}
+              />
+            </div>
+
+            {/* Pet List */}
+            <div style={{ marginTop: '12px', maxHeight: 600, overflowY: 'auto' }}>
+              {pets.map(pet => (
+                  <div key={pet.id} style={{ borderBottom: '1px solid #eee', padding: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <strong>{pet.name}</strong> <em>({pet.species})</em>
+                      </div>
+                      <div>
+                        <button onClick={(e) => { e.stopPropagation(); setSelectedPet(pet) }} style={{ padding: '6px 12px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
+                          View Details
+                        </button>
                       </div>
                     </div>
-                  ) : (
-                    <div style={{cursor:'pointer'}} onClick={() => setSelectedPet(pet)}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                        <div>
-                      <h4 style={{ margin: '0 0 4px 0', color: '#1f2937' }}>{pet.species === 'Dog' ? '🐕' : '🐈'} {pet.name}</h4>
-                      <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>{pet.breed || 'Mixed'}</p>
+                    <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
+                      {pet.breed} - {pet.status}
                     </div>
-                    <span style={{ background: pet.status === 'Active' ? '#d1fae5' : '#fee2e2', color: pet.status === 'Active' ? '#065f46' : '#991b1b', padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '500' }}>
-                      {pet.status}
-                    </span>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#666', lineHeight: '1.6' }}>
-                    <div>📅 DOB: {pet.dob || 'N/A'}</div>
-                    <div>⚖️ Weight: {pet.weight || 'N/A'} kg</div>
-                    <div>💉 Vaccines: {(pet.vaccinations || []).length}</div>
-                  </div>
-                  <div style={{ marginTop: '12px', display: 'flex', gap: '6px' }}>
-                    <button onClick={(e) => { e.stopPropagation(); startInlineEdit(pet) }} style={{ flex: 1, padding: '6px', background: '#ffffcc', color: '#333', border: '1px solid #ffdd00', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>⚡ Quick</button>
-                    <button onClick={(e) => { e.stopPropagation(); setForm(pet); setEditingId(pet.id) }} style={{ flex: 1, padding: '6px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>Edit</button>
-                    <button onClick={(e) => { e.stopPropagation(); deletePet(pet.id) }} style={{ flex: 1, padding: '6px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>Delete</button>
-                  </div>
-                    </div>
-                  )}
-                </div>
               ))}
             </div>
-          )}
 
-          {filtered.length === 0 && (
-            <div style={{ background: 'white', border: '2px dashed #d1d5db', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
-              <div style={{ fontSize: '48px', marginBottom: '10px' }}>🐾</div>
-              <p style={{ margin: 0, color: '#666' }}>No pets found</p>
-            </div>
-          )}
+            {/* No Pets Message */}
+            {pets.length === 0 && (
+              <div style={{ background: 'white', border: '2px dashed #d1d5db', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
+                <div style={{ fontSize: '48px', marginBottom: '10px' }}>🐾</div>
+                <p style={{ margin: 0, color: '#666' }}>No pets found</p>
+              </div>
+            )}
 
-          {/* Add/Edit Form */}
-          {(editingId || form.name) && (
-            <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '20px', marginTop: '20px' }}>
-              <h4 style={{ marginTop: 0 }}>{editingId ? 'Edit Pet' : 'Add New Pet'}</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                <input type="text" id="pet-name" name="pet-name" placeholder="Pet name *" value={form.name} onChange={e => setForm({...form, name: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
-                <select id="pet-species" name="pet-species" value={form.species} onChange={e => setForm({...form, species: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
-                  <option value="Dog">🐕 Dog</option>
-                  <option value="Cat">🐈 Cat</option>
-                </select>
-                <input type="text" id="pet-breed" name="pet-breed" placeholder="Breed" value={form.breed} onChange={e => setForm({...form, breed: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
-                <div style={{display:'flex',flexDirection:'column'}}>
-                  <label style={{marginBottom:2}}>Date of Birth:</label>
-                  <input type="date" id="pet-dob" name="pet-dob" value={form.dob} onChange={e => setForm({...form, dob: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+            {/* Add/Edit Form */}
+            {(editingId || form.name) && (
+              <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '20px', marginTop: '20px' }}>
+                <h4 style={{ marginTop: 0 }}>{editingId ? 'Edit Pet' : 'Add New Pet'}</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                  <input type="text" id="pet-name" name="pet-name" placeholder="Pet name *" value={form.name} onChange={e => setForm({...form, name: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                  <select id="pet-species" name="pet-species" value={form.species} onChange={e => setForm({...form, species: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+                    <option value="Dog">🐕 Dog</option>
+                    <option value="Cat">🐈 Cat</option>
+                  </select>
+                  <input type="text" id="pet-breed" name="pet-breed" placeholder="Breed" value={form.breed} onChange={e => setForm({...form, breed: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                  <div style={{display:'flex',flexDirection:'column'}}>
+                    <label style={{marginBottom:2}}>Date of Birth:</label>
+                    <input type="date" id="pet-dob" name="pet-dob" value={form.dob} onChange={e => setForm({...form, dob: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                  </div>
+                  <select id="pet-sex" name="pet-sex" value={form.sex} onChange={e => setForm({...form, sex: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+                    <option value="M">Male</option>
+                    <option value="F">Female</option>
+                  </select>
+                  <input type="text" id="pet-microchip" name="pet-microchip" placeholder="Microchip #" value={form.microchip} onChange={e => setForm({...form, microchip: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                  <input type="number" id="pet-weight" name="pet-weight" placeholder="Weight (kg)" value={form.weight} onChange={e => setForm({...form, weight: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                  <input type="text" id="pet-color" name="pet-color" placeholder="Color" value={form.color} onChange={e => setForm({...form, color: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
                 </div>
-                <select id="pet-sex" name="pet-sex" value={form.sex} onChange={e => setForm({...form, sex: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
-                  <option value="M">Male</option>
-                  <option value="F">Female</option>
-                </select>
-                <input type="text" id="pet-microchip" name="pet-microchip" placeholder="Microchip #" value={form.microchip} onChange={e => setForm({...form, microchip: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
-                <input type="number" id="pet-weight" name="pet-weight" placeholder="Weight (kg)" value={form.weight} onChange={e => setForm({...form, weight: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
-                <input type="text" id="pet-color" name="pet-color" placeholder="Color" value={form.color} onChange={e => setForm({...form, color: e.target.value})} style={{ padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                <textarea id="pet-notes" name="pet-notes" placeholder="Notes" value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', minHeight: '80px', fontFamily: 'inherit', marginBottom: '12px' }} />
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={savePet} style={{ flex: 1, padding: '12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
+                    {editingId ? 'Update' : 'Add'} Pet
+                  </button>
+                  <button onClick={() => { setForm(emptyPet); setEditingId(null) }} style={{ flex: 1, padding: '12px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
+                    Cancel
+                  </button>
+                </div>
               </div>
-              <textarea id="pet-notes" name="pet-notes" placeholder="Notes" value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', minHeight: '80px', fontFamily: 'inherit', marginBottom: '12px' }} />
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={savePet} style={{ flex: 1, padding: '12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
-                  {editingId ? 'Update' : 'Add'} Pet
-                </button>
-                <button onClick={() => { setForm(emptyPet); setEditingId(null) }} style={{ flex: 1, padding: '12px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
+            )}
 
-          {!editingId && !form.name && (
-            <button onClick={() => setForm({...emptyPet, name: ' '})} style={{ width: '100%', padding: '14px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer', marginTop: '20px' }}>
-              + Add New Pet
-            </button>
-          )}
-        </div>
-      )}
-
-      {tab === 'vaccinations' && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ margin: 0 }}>Vaccination Records</h3>
-            <button onClick={() => exportVaccinationRecords(pets)} style={{ padding: '8px 16px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
-              📕 Export PDF
-            </button>
+            {!editingId && !form.name && (
+              <button onClick={() => setForm({...emptyPet, name: ' '})} style={{ width: '100%', padding: '14px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer', marginTop: '20px' }}>
+                + Add New Pet
+              </button>
+            )}
           </div>
-          
-          {upcomingVaccines.length > 0 && (
-            <div style={{ background: '#fef3c7', border: '1px solid #fbbf24', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
-              <h4 style={{ margin: '0 0 12px 0', color: '#92400e' }}>⚠️ Upcoming Vaccinations (Next 30 Days)</h4>
-              {upcomingVaccines.map(v => (
-                <div key={v.id} style={{ background: 'white', padding: '10px', borderRadius: '6px', marginBottom: '8px' }}>
-                  <div style={{ fontWeight: '600' }}>{v.petName} - {v.type}</div>
-                  <div style={{ fontSize: '13px', color: '#666' }}>Due: {v.nextDue}</div>
+        )}
+
+        {tab === 'vaccinations' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0 }}>Vaccination Records</h3>
+              <button onClick={() => exportVaccinationRecords(pets)} style={{ padding: '8px 16px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
+                📕 Export PDF
+              </button>
+            </div>
+            
+            {upcomingVaccines.length > 0 && (
+              <div style={{ background: '#fef3c7', border: '1px solid #fbbf24', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
+                <h4 style={{ margin: '0 0 12px 0', color: '#92400e' }}>⚠️ Upcoming Vaccinations (Next 30 Days)</h4>
+                {upcomingVaccines.map(v => (
+                  <div key={v.id} style={{ background: 'white', padding: '10px', borderRadius: '6px', marginBottom: '8px' }}>
+                    <div style={{ fontWeight: '600' }}>{v.petName} - {v.type}</div>
+                    <div style={{ fontSize: '13px', color: '#666' }}>Due: {v.nextDue}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <h4>All Vaccination Records</h4>
+            {pets.map(pet => (
+              pet.vaccinations && pet.vaccinations.length > 0 && (
+                <div key={pet.id} style={{ marginBottom: '24px' }}>
+                  <h5 style={{ margin: '0 0 12px 0' }}>{pet.species === 'Dog' ? '🐕' : '🐈'} {pet.name}</h5>
+                  {pet.vaccinations.map(v => (
+                    <div key={v.id} style={{ background: 'white', padding: '14px', borderRadius: '6px', border: '1px solid #e5e7eb', marginBottom: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <strong>{v.type}</strong>
+                        {v.nextDue && <span style={{ fontSize: '12px', color: '#666' }}>Next: {v.nextDue}</span>}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>
+                        <div>📅 Date: {v.date}</div>
+                        {v.vet && <div>🏥 Vet: {v.vet}</div>}
+                        {v.notes && <div>📝 {v.notes}</div>}
+                      </div>
+                      <button onClick={() => deleteRecord(pet.id, 'vaccinations', v.id)} style={{ marginTop: '8px', padding: '4px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Delete</button>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
-
-          <h4>All Vaccination Records</h4>
-          {pets.map(pet => (
-            pet.vaccinations && pet.vaccinations.length > 0 && (
-              <div key={pet.id} style={{ marginBottom: '24px' }}>
-                <h5 style={{ margin: '0 0 12px 0' }}>{pet.species === 'Dog' ? '🐕' : '🐈'} {pet.name}</h5>
-                {pet.vaccinations.map(v => (
-                  <div key={v.id} style={{ background: 'white', padding: '14px', borderRadius: '6px', border: '1px solid #e5e7eb', marginBottom: '10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <strong>{v.type}</strong>
-                      {v.nextDue && <span style={{ fontSize: '12px', color: '#666' }}>Next: {v.nextDue}</span>}
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>
-                      <div>📅 Date: {v.date}</div>
-                      {v.vet && <div>🏥 Vet: {v.vet}</div>}
-                      {v.notes && <div>📝 {v.notes}</div>}
-                    </div>
-                    <button onClick={() => deleteRecord(pet.id, 'vaccinations', v.id)} style={{ marginTop: '8px', padding: '4px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Delete</button>
-                  </div>
-                ))}
+              )
+            ))}
+            {pets.every(p => !p.vaccinations || p.vaccinations.length === 0) && (
+              <div style={{ background: 'white', border: '2px dashed #d1d5db', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
+                <p style={{ margin: 0, color: '#666' }}>No vaccination records yet</p>
               </div>
-            )
-          ))}
-          {pets.every(p => !p.vaccinations || p.vaccinations.length === 0) && (
-            <div style={{ background: 'white', border: '2px dashed #d1d5db', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
-              <p style={{ margin: 0, color: '#666' }}>No vaccination records yet</p>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
 
-      {tab === 'health' && (
-        <div>
-          <h4>Health Records</h4>
-          {pets.map(pet => (
-            pet.healthRecords && pet.healthRecords.length > 0 && (
-              <div key={pet.id} style={{ marginBottom: '24px' }}>
-                <h5 style={{ margin: '0 0 12px 0' }}>{pet.species === 'Dog' ? '🐕' : '🐈'} {pet.name}</h5>
-                {pet.healthRecords.map(h => (
-                  <div key={h.id} style={{ background: 'white', padding: '14px', borderRadius: '6px', border: '1px solid #e5e7eb', marginBottom: '10px' }}>
-                    <div style={{ fontWeight: '600', marginBottom: '8px' }}>{h.diagnosis}</div>
-                    <div style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>
-                      <div>📅 {h.date}</div>
-                      {h.treatment && <div>💊 Treatment: {h.treatment}</div>}
-                      {h.vet && <div>🏥 Vet: {h.vet}</div>}
-                      {h.followUp && <div>📆 Follow-up: {h.followUp}</div>}
-                      {h.notes && <div>📝 {h.notes}</div>}
+        {tab === 'health' && (
+          <div>
+            <h4>Health Records</h4>
+            {pets.map(pet => (
+              pet.healthRecords && pet.healthRecords.length > 0 && (
+                <div key={pet.id} style={{ marginBottom: '24px' }}>
+                  <h5 style={{ margin: '0 0 12px 0' }}>{pet.species === 'Dog' ? '🐕' : '🐈'} {pet.name}</h5>
+                  {pet.healthRecords.map(h => (
+                    <div key={h.id} style={{ background: 'white', padding: '14px', borderRadius: '6px', border: '1px solid #e5e7eb', marginBottom: '10px' }}>
+                      <div style={{ fontWeight: '600', marginBottom: '8px' }}>{h.diagnosis}</div>
+                      <div style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>
+                        <div>📅 {h.date}</div>
+                        {h.treatment && <div>💊 Treatment: {h.treatment}</div>}
+                        {h.vet && <div>🏥 Vet: {h.vet}</div>}
+                        {h.followUp && <div>📆 Follow-up: {h.followUp}</div>}
+                        {h.notes && <div>📝 {h.notes}</div>}
+                      </div>
+                      <button onClick={() => deleteRecord(pet.id, 'healthRecords', h.id)} style={{ marginTop: '8px', padding: '4px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Delete</button>
                     </div>
-                    <button onClick={() => deleteRecord(pet.id, 'healthRecords', h.id)} style={{ marginTop: '8px', padding: '4px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Delete</button>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              )
+            ))}
+            {pets.every(p => !p.healthRecords || p.healthRecords.length === 0) && (
+              <div style={{ background: 'white', border: '2px dashed #d1d5db', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
+                <p style={{ margin: 0, color: '#666' }}>No health records yet</p>
               </div>
-            )
-          ))}
-          {pets.every(p => !p.healthRecords || p.healthRecords.length === 0) && (
-            <div style={{ background: 'white', border: '2px dashed #d1d5db', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
-              <p style={{ margin: 0, color: '#666' }}>No health records yet</p>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
 
       {tab === 'feeding' && (
         <div>
@@ -1045,6 +997,7 @@ export default function PetManagement() {
           {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
         </div>
       )}
-    </div>
+      </div>
+    </ErrorBoundary>
   )
 }

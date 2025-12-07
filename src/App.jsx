@@ -72,6 +72,9 @@ const CustomReportBuilder = lazyWithRetry(() => import('./modules/CustomReportBu
 const AIInsightsDashboard = lazyWithRetry(() => import('./modules/AIInsightsDashboard'))
 const AlertCenter = lazyWithRetry(() => import('./modules/AlertCenter'))
 const MobileSettings = lazyWithRetry(() => import('./modules/MobileSettings'))
+const DashboardBuilder = lazyWithRetry(() => import('./modules/DashboardBuilder'))
+const ActivityFeed = lazyWithRetry(() => import('./modules/ActivityFeed'))
+const IoTSensorDashboard = lazyWithRetry(() => import('./modules/IoTSensorDashboard'))
 
 // Loading fallback component with timeout detection
 const LoadingFallback = () => {
@@ -1177,6 +1180,33 @@ function AppContent() {
               ← Back to Dashboard
             </button>
             <ErrorBoundary><MobileSettings /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'dashboardbuilder' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><DashboardBuilder /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'activityfeed' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><ActivityFeed /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'iotsensors' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><IoTSensorDashboard /></ErrorBoundary>
           </section>
         )}
 

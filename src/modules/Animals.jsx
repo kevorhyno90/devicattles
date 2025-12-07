@@ -13,6 +13,7 @@ import PoultryManagement from './PoultryManagement'
 import CanineManagement from './CanineManagement'
 import PhotoGallery from '../components/PhotoGallery'
 import { fileToDataUrl, estimateDataUrlSize, uid } from '../lib/image'
+import { logAnimalActivity } from '../lib/activityLogger'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
 import { generateQRCodeDataURL, printQRTag, batchPrintQRTags } from '../lib/qrcode'
 import { useDebounce } from '../lib/useDebounce'
@@ -480,6 +481,9 @@ export default function Animals() {
       
       // Update the animal in the array, preserving fields not in the form
       setAnimals(animals.map(a => a.id === editingId ? { ...a, ...updatedAnimal } : a))
+      
+      // Log activity
+      logAnimalActivity('updated', `Updated animal: ${updatedAnimal.name || updatedAnimal.tag}`, updatedAnimal)
     } else {
       // Create new animal - generate ID and QR code
       const id = 'A-' + (1000 + Math.floor(Math.random() * 900000))
@@ -496,7 +500,11 @@ export default function Animals() {
       }
       candidate.qrCode = generateQRCodeDataURL(JSON.stringify(qrData))
       
-      setAnimals([...animals, { ...candidate, id }])
+      const newAnimal = { ...candidate, id }
+      setAnimals([...animals, newAnimal])
+      
+      // Log activity
+      logAnimalActivity('created', `Added new animal: ${newAnimal.name || newAnimal.tag}`, newAnimal)
     }
     resetForm()
     setTab('list')
@@ -508,7 +516,17 @@ export default function Animals() {
     setEditingId(a.id)
     setTab('addAnimal')
   }
-  function deleteAnimal(id) { if (!window.confirm('Delete animal ' + id + '?')) return; setAnimals(animals.filter(a => a.id !== id)) }
+  function deleteAnimal(id) { 
+    const animal = animals.find(a => a.id === id)
+    if (!window.confirm('Delete animal ' + id + '?')) return
+    
+    setAnimals(animals.filter(a => a.id !== id))
+    
+    // Log activity
+    if (animal) {
+      logAnimalActivity('deleted', `Deleted animal: ${animal.name || animal.tag}`, animal)
+    }
+  }
 
   function resetGroupForm() {
     setGroupCategory('');

@@ -1237,6 +1237,15 @@ export default function Dashboard({ onNavigate }) {
           <button onClick={() => onNavigate && onNavigate('mobilesettings')} className="btn-primary" style={{ background: '#6366f1' }}>
             📱 Mobile Settings
           </button>
+          <button onClick={() => onNavigate && onNavigate('dashboardbuilder')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', border: 'none' }}>
+            🎨 Dashboard Builder
+          </button>
+          <button onClick={() => onNavigate && onNavigate('activityfeed')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #14b8a6 100%)', border: 'none' }}>
+            📊 Activity Feed
+          </button>
+          <button onClick={() => onNavigate && onNavigate('iotsensors')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)', border: 'none' }}>
+            🔌 IoT Sensors
+          </button>
           <button onClick={() => onNavigate && onNavigate('animals')} className="btn-primary">
             ➕ Add Animal
           </button>

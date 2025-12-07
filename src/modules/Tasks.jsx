@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { getCurrentUserName, getAllUsers } from '../lib/auth'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 import { useDebounce } from '../lib/useDebounce'
+import { logTaskActivity } from '../lib/activityLogger'
 
 const SAMPLE = [
   { id: 'T-001', title: 'Check water troughs', description: 'Inspect all water systems in pastures A-D', assignedTo: 'John Smith', due: '2025-11-16', priority: 'High', category: 'Maintenance', done: false, createdDate: '2025-11-15', estimatedHours: 2, notes: [], location: 'Pasture A-D' },
@@ -64,21 +65,29 @@ export default function Tasks(){
       notes: []
     }
     setItems([...items, newTask])
+    logTaskActivity('created', `Created task: ${newTask.title}`, newTask)
     setFormData({ title: '', description: '', assignedTo: getCurrentUserName(), due: '', priority: 'Medium', category: 'Animal Care', estimatedHours: 1, location: '' })
     setShowAddForm(false)
   }
 
   function remove(id){ 
     if(!confirm('Delete task '+id+'?')) return
-    setItems(items.filter(i=>i.id!==id)) 
+    const task = items.find(i => i.id === id)
+    setItems(items.filter(i=>i.id!==id))
+    if(task) logTaskActivity('deleted', `Deleted task: ${task.title}`, task)
   }
 
   function toggleDone(id){ 
+    const task = items.find(i => i.id === id)
     setItems(items.map(i=> i.id===id ? {
       ...i, 
       done: !i.done,
       completedDate: !i.done ? new Date().toISOString().slice(0,10) : null
-    } : i)) 
+    } : i))
+    if(task) {
+      const action = !task.done ? 'completed' : 'reopened'
+      logTaskActivity(action, `${action === 'completed' ? 'Completed' : 'Reopened'} task: ${task.title}`, task)
+    }
   }
 
   function addNote(taskId, note){

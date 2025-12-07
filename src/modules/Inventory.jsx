@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 import { useDebounce } from '../lib/useDebounce'
+import { logInventoryActivity } from '../lib/activityLogger'
 
 const SAMPLE = [
   { 
@@ -300,15 +301,17 @@ export default function Inventory(){
     const unitCost = parseFloat(formData.unitCost) || 0
     
     if(editingId){
-      setItems(items.map(i => i.id === editingId ? {
-        ...i,
+      const updatedItem = {
+        ...items.find(i => i.id === editingId),
         ...formData,
         quantity,
         unitCost,
         totalValue: quantity * unitCost,
         reorderPoint: parseFloat(formData.reorderPoint) || 0,
         reorderQuantity: parseFloat(formData.reorderQuantity) || 0
-      } : i))
+      }
+      setItems(items.map(i => i.id === editingId ? updatedItem : i))
+      logInventoryActivity('updated', `Updated inventory: ${updatedItem.name} (${updatedItem.quantity} ${updatedItem.unit})`, updatedItem)
       setEditingId(null)
     } else {
       const id = 'INV-' + Math.floor(1000 + Math.random()*9000)
@@ -327,6 +330,7 @@ export default function Inventory(){
         lastOrdered: new Date().toISOString().slice(0,10)
       }
       setItems([...items, newItem])
+      logInventoryActivity('created', `Added inventory: ${newItem.name} (${newItem.quantity} ${newItem.unit})`, newItem)
     }
     
     setFilterCategory('all')
@@ -343,7 +347,11 @@ export default function Inventory(){
 
   function remove(id){
     if(!confirm('Delete inventory item?')) return
+    const item = items.find(i => i.id === id)
     setItems(items.filter(i=>i.id!==id))
+    if(item) {
+      logInventoryActivity('deleted', `Removed inventory: ${item.name}`, item)
+    }
   }
 
   // Inline Quick Edit Functions

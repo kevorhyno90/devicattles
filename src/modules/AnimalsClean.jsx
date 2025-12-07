@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
+import DataLayer from '../lib/dataLayer'
+import ErrorBoundary from '../components/ErrorBoundary'
 
-export default function Animals(){
-  const KEY = 'cattalytics:animals'
+function Animals(){
   const [animals, setAnimals] = useState([])
   const [name, setName] = useState('')
+  const [search, setSearch] = useState('')
   
   // Inline edit state
   const [inlineEditId, setInlineEditId] = useState(null)
@@ -12,21 +14,32 @@ export default function Animals(){
   const [lastChange, setLastChange] = useState(null)
 
   useEffect(()=>{
-    const raw = localStorage.getItem(KEY)
-    if(raw) setAnimals(JSON.parse(raw))
-    else setAnimals([])
-  }, [])
+    async function fetchAnimals() {
+      if (search.trim()) {
+        const results = await DataLayer.animals.search(search, ['name', 'tagNumber', 'breed', 'status'])
+        setAnimals(results)
+      } else {
+        const all = await DataLayer.animals.getAll();
+        setAnimals(all);
+      }
+    }
+    fetchAnimals();
+  },[search])
 
-  useEffect(()=> localStorage.setItem(KEY, JSON.stringify(animals)), [animals])
-
-  function add(){
+  async function add(){
     if(!name.trim()) return
     const id = 'A-' + Math.floor(1000 + Math.random()*9000)
-    setAnimals([...animals, { id, name: name.trim(), breed: '', dob: '', status: 'Active' }])
+    const newAnimal = { id, name: name.trim(), breed: '', dob: '', status: 'Active' }
+    await DataLayer.animals.create(newAnimal)
+    setAnimals(await DataLayer.animals.getAll())
     setName('')
   }
 
-  function remove(id){ if(!confirm('Delete '+id+'?')) return; setAnimals(animals.filter(a=>a.id!==id)) }
+  async function remove(id){
+    if(!confirm('Delete '+id+'?')) return;
+    await DataLayer.animals.delete(id)
+    setAnimals(await DataLayer.animals.getAll())
+  }
 
   // Inline edit functions
   function startInlineEdit(item) {
@@ -35,13 +48,13 @@ export default function Animals(){
     setLastChange({ item })
   }
 
-  function saveInlineEdit() {
+  async function saveInlineEdit() {
     if (!inlineData.name || !inlineData.name.trim()) {
       setToast({ type: 'error', message: 'Name is required' })
       return
     }
-    
-    setAnimals(animals.map(a => a.id === inlineEditId ? inlineData : a))
+    await DataLayer.animals.update(inlineEditId, inlineData)
+    setAnimals(await DataLayer.animals.getAll())
     setToast({ type: 'success', message: '✓ Updated', showUndo: true })
     setInlineEditId(null)
     setTimeout(() => setToast(null), 3000)
@@ -53,9 +66,10 @@ export default function Animals(){
     setToast(null)
   }
 
-  function undoLastChange() {
+  async function undoLastChange() {
     if (!lastChange) return
-    setAnimals(animals.map(a => a.id === inlineEditId ? lastChange.item : a))
+    await DataLayer.animals.update(inlineEditId, lastChange.item)
+    setAnimals(await DataLayer.animals.getAll())
     setToast(null)
   }
 
@@ -76,27 +90,34 @@ export default function Animals(){
         <input id="animal-name" name="animal-name" placeholder="Animal name" value={name} onChange={e=>setName(e.target.value)} />
         <button onClick={add}>Add Animal</button>
       </div>
-
-      <ul style={{marginTop:12}}>
-        {animals.map(a=> (
-          <li key={a.id} style={{marginBottom:6}}>
-            {inlineEditId === a.id ? (
-              <div onKeyDown={handleKeyDown} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <input type="text" value={inlineData.name || ''} onChange={e => setInlineData({ ...inlineData, name: e.target.value })} style={{ flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: 4 }} />
-                <button onClick={saveInlineEdit} style={{ padding: '4px 12px', background: '#059669', color: '#fff', borderRadius: 4, cursor: 'pointer' }}>Save</button>
-                <button onClick={cancelInlineEdit} style={{ padding: '4px 12px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer' }}>Cancel</button>
-              </div>
-            ) : (
-              <>
-                <strong>{a.name}</strong> <em>({a.id})</em>
-                <button style={{marginLeft:8, background: '#ffffcc', border: '1px solid #ffdd00', borderRadius: 4, cursor: 'pointer'}} onClick={()=>startInlineEdit(a)}>⚡ Quick</button>
-                <button style={{marginLeft:4}} onClick={()=>remove(a.id)}>Delete</button>
-              </>
-            )}
-          </li>
+      <div style={{marginTop:12, marginBottom:8}}>
+        <input
+          type="text"
+          placeholder="Search by name, tag, breed, status..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{ width: '100%', padding: '6px 10px', borderRadius: 4, border: '1px solid #ddd' }}
+        />
+      </div>
+      <div style={{marginTop:12, maxHeight:400, overflowY:'auto'}}>
+        {animals.map(a => (
+            <li key={a.id} style={{marginBottom:6, listStyle:'none'}}>
+              {inlineEditId === a.id ? (
+                <div onKeyDown={handleKeyDown} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input type="text" value={inlineData.name || ''} onChange={e => setInlineData({ ...inlineData, name: e.target.value })} style={{ flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: 4 }} />
+                  <button onClick={saveInlineEdit} style={{ padding: '4px 12px', background: '#059669', color: '#fff', borderRadius: 4, cursor: 'pointer' }}>Save</button>
+                  <button onClick={cancelInlineEdit} style={{ padding: '4px 12px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer' }}>Cancel</button>
+                </div>
+              ) : (
+                <>
+                  <strong>{a.name}</strong> <em>({a.id})</em>
+                  <button style={{marginLeft:8, background: '#ffffcc', border: '1px solid #ffdd00', borderRadius: 4, cursor: 'pointer'}} onClick={()=>startInlineEdit(a)}>⚡ Quick</button>
+                  <button style={{marginLeft:4}} onClick={()=>remove(a.id)}>Delete</button>
+                </>
+              )}
+            </li>
         ))}
-      </ul>
-
+      </div>
       {toast && (
         <div style={{
           position: 'fixed',
@@ -120,3 +141,11 @@ export default function Animals(){
     </section>
   )
 }
+
+const AnimalsClean = () => (
+  <ErrorBoundary>
+    <Animals />
+  </ErrorBoundary>
+)
+
+export default AnimalsClean

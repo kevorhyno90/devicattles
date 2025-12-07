@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 import { useDebounce } from '../lib/useDebounce'
 import VirtualizedList from '../components/VirtualizedList'
+import { logCropActivity } from '../lib/activityLogger'
 
 const SAMPLE = [
   {
@@ -297,6 +298,7 @@ export default function Crops(){
       cultivar: formData.variety
     }
     setItems([...items, newCrop])
+    logCropActivity('created', `Planted ${newCrop.name} in ${newCrop.field} (${newCrop.area} acres)`, newCrop)
     setFormData({ 
       name: '', variety: '', field: '', area: '', planted: '', expectedHarvest: '',
       soilType: 'Loam', irrigationType: 'Sprinkler', status: 'Planned', certificationLevel: 'Conventional',
@@ -308,7 +310,11 @@ export default function Crops(){
 
   function remove(id){ 
     if(!confirm('Delete crop '+id+'?')) return
-    setItems(items.filter(i=>i.id!==id)) 
+    const crop = items.find(i => i.id === id)
+    setItems(items.filter(i=>i.id!==id))
+    if(crop) {
+      logCropActivity('deleted', `Removed crop: ${crop.name} from ${crop.field}`, crop)
+    }
   }
 
   function addNote(cropId, noteText){

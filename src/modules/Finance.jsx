@@ -3,6 +3,7 @@ import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON
 import { getFinancialSummary } from '../lib/moduleIntegration'
 import { useDebounce } from '../lib/useDebounce'
 import VirtualizedList from '../components/VirtualizedList'
+import { logFinanceActivity } from '../lib/activityLogger'
 
 const SAMPLE = [
   { id: 'F-001', date: '2025-01-12', amount: -18000.00, type: 'expense', category: 'Veterinary', subcategory: 'Vaccines', description: 'Annual vaccination program', notes: [], paymentMethod: 'M-Pesa', vendor: 'Valley Veterinary Clinic' },
@@ -150,13 +151,26 @@ export default function Finance(){
     }
     
     setItems([...items, newEntry])
+    logFinanceActivity(
+      'created',
+      `Added ${newEntry.type}: ${newEntry.description} - KES ${Math.abs(newEntry.amount).toLocaleString()}`,
+      newEntry
+    )
     setFormData({ amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10) })
     setShowAddForm(false)
   }
 
   function remove(id){
     if(!confirm('Delete financial entry '+id+'?')) return
+    const entry = items.find(i => i.id === id)
     setItems(items.filter(i=>i.id!==id))
+    if(entry) {
+      logFinanceActivity(
+        'deleted',
+        `Deleted ${entry.type}: ${entry.description} - KES ${Math.abs(entry.amount).toLocaleString()}`,
+        entry
+      )
+    }
   }
 
   // Inline Quick Edit Functions
