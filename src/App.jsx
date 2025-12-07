@@ -70,6 +70,8 @@ const PredictiveAnalytics = lazyWithRetry(() => import('./modules/PredictiveAnal
 const AdvancedBatchOps = lazyWithRetry(() => import('./modules/AdvancedBatchOps'))
 const CustomReportBuilder = lazyWithRetry(() => import('./modules/CustomReportBuilder'))
 const AIInsightsDashboard = lazyWithRetry(() => import('./modules/AIInsightsDashboard'))
+const AlertCenter = lazyWithRetry(() => import('./modules/AlertCenter'))
+const MobileSettings = lazyWithRetry(() => import('./modules/MobileSettings'))
 
 // Loading fallback component with timeout detection
 const LoadingFallback = () => {
@@ -1157,6 +1159,24 @@ function AppContent() {
               ← Back to Dashboard
             </button>
             <ErrorBoundary><AIInsightsDashboard /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'alertcenter' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><AlertCenter /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'mobilesettings' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><MobileSettings /></ErrorBoundary>
           </section>
         )}
 

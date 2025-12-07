@@ -1,19 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { 
-  generateAllAlerts,
-  getActiveAlerts,
-  getAlertsByType,
-  getAlertsByPriority,
-  getAlertCounts,
-  dismissAlert,
-  snoozeAlert,
-  AlertType,
-  AlertPriority
+  getAllSmartAlerts,
+  getAlertsSummary,
+  PRIORITY,
+  CATEGORY
 } from '../lib/smartAlerts'
 
 export default function AlertCenter() {
   const [alerts, setAlerts] = useState([])
-  const [activeAlerts, setActiveAlerts] = useState([])
   const [filterType, setFilterType] = useState('all')
   const [filterPriority, setFilterPriority] = useState('all')
   const [showDismissed, setShowDismissed] = useState(false)
@@ -26,61 +20,59 @@ export default function AlertCenter() {
     // Auto-refresh every 5 minutes
     const interval = setInterval(loadAlerts, 5 * 60 * 1000)
     return () => clearInterval(interval)
-  }, [])
-
-  useEffect(() => {
-    applyFilters()
-  }, [alerts, filterType, filterPriority, showDismissed])
+  }, [showDismissed])
 
   const loadAlerts = () => {
     setLoading(true)
     
-    // Load all data
-    const animals = JSON.parse(localStorage.getItem('cattalytics:animals') || '[]')
-    const finances = JSON.parse(localStorage.getItem('cattalytics:finance') || '[]')
-    const tasks = JSON.parse(localStorage.getItem('cattalytics:tasks') || '[]')
-    const inventory = JSON.parse(localStorage.getItem('cattalytics:inventory') || '[]')
+    // Get all smart alerts
+    const allAlerts = getAllSmartAlerts()
+    console.log('AlertCenter: getAllSmartAlerts returned', allAlerts.length, 'alerts')
     
-    // Generate all alerts
-    const allAlerts = generateAllAlerts({
-      animals,
-      finances,
-      tasks,
-      inventory
-    })
+    // Load dismissed alerts
+    const dismissed = JSON.parse(localStorage.getItem('cattalytics:dismissed-alerts') || '[]')
     
-    setAlerts(allAlerts)
-    setActiveAlerts(getActiveAlerts(allAlerts))
+    // Filter out dismissed unless showDismissed is true
+    const filtered = showDismissed 
+      ? allAlerts 
+      : allAlerts.filter(a => !dismissed.includes(a.id))
+    
+    console.log('AlertCenter: After filtering dismissed, showing', filtered.length, 'alerts')
+    setAlerts(filtered)
     setLoading(false)
   }
 
-  const applyFilters = () => {
-    let filtered = showDismissed ? [...alerts] : [...activeAlerts]
+  const dismissAlert = (alertId) => {
+    const dismissed = JSON.parse(localStorage.getItem('cattalytics:dismissed-alerts') || '[]')
+    if (!dismissed.includes(alertId)) {
+      dismissed.push(alertId)
+      localStorage.setItem('cattalytics:dismissed-alerts', JSON.stringify(dismissed))
+    }
+    loadAlerts()
+  }
+
+  const clearDismissed = () => {
+    localStorage.setItem('cattalytics:dismissed-alerts', '[]')
+    loadAlerts()
+  }
+
+  const getFilteredAlerts = () => {
+    let filtered = [...alerts]
     
     if (filterType !== 'all') {
-      filtered = getAlertsByType(filtered, filterType)
+      filtered = filtered.filter(a => a.category === filterType)
     }
     
     if (filterPriority !== 'all') {
-      filtered = getAlertsByPriority(filtered, filterPriority)
+      filtered = filtered.filter(a => a.priority === filterPriority)
     }
     
-    setActiveAlerts(filtered)
-  }
-
-  const handleDismiss = (alertId) => {
-    dismissAlert(alertId)
-    loadAlerts()
-  }
-
-  const handleSnooze = (alertId, hours) => {
-    snoozeAlert(alertId, hours)
-    loadAlerts()
+    return filtered
   }
 
   const getPriorityColor = (priority) => {
     const colors = {
-      urgent: '#dc2626',
+      critical: '#dc2626',
       high: '#f59e0b',
       medium: '#3b82f6',
       low: '#10b981'
@@ -88,28 +80,31 @@ export default function AlertCenter() {
     return colors[priority] || '#6b7280'
   }
 
-  const getTypeIcon = (type) => {
+  const getTypeIcon = (category) => {
     const icons = {
-      health_critical: '🚨',
-      health_warning: '🏥',
-      financial: '💰',
+      health: '🏥',
       breeding: '🐄',
-      feed: '🌾',
-      task: '✅',
-      weather: '🌤️',
+      feeding: '🌾',
+      harvest: '🌾',
       inventory: '📦',
-      milestone: '🎉',
-      reminder: '⏰'
+      financial: '💰',
+      maintenance: '🔧',
+      weather: '🌤️'
     }
-    return icons[type] || '📢'
+    return icons[category] || '🔔'
   }
 
-  const counts = getAlertCounts(activeAlerts)
+  const filteredAlerts = getFilteredAlerts()
+  const summary = getAlertsSummary()
+  const criticalCount = alerts.filter(a => a.priority === 'critical').length
+  const highCount = alerts.filter(a => a.priority === 'high').length
+
+  console.log('AlertCenter: Rendering with', alerts.length, 'total alerts,', filteredAlerts.length, 'filtered')
 
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-        <div style={{ fontSize: '48px', marginBottom: '16px' }}>📢</div>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
         <div>Loading alerts...</div>
       </div>
     )
@@ -120,7 +115,7 @@ export default function AlertCenter() {
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '700', color: '#111' }}>
-          📢 Alert Center
+          🔔 Alert Center
         </h1>
         <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
           Real-time notifications and alerts for your farm
@@ -142,7 +137,7 @@ export default function AlertCenter() {
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}>
           <div style={{ fontSize: '11px', opacity: 0.9, marginBottom: '4px' }}>URGENT</div>
-          <div style={{ fontSize: '28px', fontWeight: '700' }}>{counts.urgent}</div>
+          <div style={{ fontSize: '28px', fontWeight: '700' }}>{criticalCount}</div>
         </div>
         
         <div style={{
@@ -153,7 +148,7 @@ export default function AlertCenter() {
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}>
           <div style={{ fontSize: '11px', opacity: 0.9, marginBottom: '4px' }}>HIGH</div>
-          <div style={{ fontSize: '28px', fontWeight: '700' }}>{counts.high}</div>
+          <div style={{ fontSize: '28px', fontWeight: '700' }}>{highCount}</div>
         </div>
         
         <div style={{
@@ -163,8 +158,8 @@ export default function AlertCenter() {
           borderRadius: '8px',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}>
-          <div style={{ fontSize: '11px', opacity: 0.9, marginBottom: '4px' }}>MEDIUM</div>
-          <div style={{ fontSize: '28px', fontWeight: '700' }}>{counts.medium}</div>
+          <div style={{ fontSize: '11px', opacity: 0.9, marginBottom: '4px' }}>TOTAL</div>
+          <div style={{ fontSize: '28px', fontWeight: '700' }}>{alerts.length}</div>
         </div>
         
         <div style={{
@@ -174,8 +169,8 @@ export default function AlertCenter() {
           borderRadius: '8px',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}>
-          <div style={{ fontSize: '11px', opacity: 0.9, marginBottom: '4px' }}>LOW</div>
-          <div style={{ fontSize: '28px', fontWeight: '700' }}>{counts.low}</div>
+          <div style={{ fontSize: '11px', opacity: 0.9, marginBottom: '4px' }}>ACTIVE</div>
+          <div style={{ fontSize: '28px', fontWeight: '700' }}>{filteredAlerts.length}</div>
         </div>
       </div>
 
@@ -205,13 +200,14 @@ export default function AlertCenter() {
             }}
           >
             <option value="all">All Types</option>
-            <option value={AlertType.HEALTH_CRITICAL}>🚨 Critical Health</option>
-            <option value={AlertType.HEALTH_WARNING}>🏥 Health Warning</option>
-            <option value={AlertType.FINANCIAL}>💰 Financial</option>
-            <option value={AlertType.BREEDING}>🐄 Breeding</option>
-            <option value={AlertType.FEED}>🌾 Feed</option>
-            <option value={AlertType.TASK}>✅ Tasks</option>
-            <option value={AlertType.MILESTONE}>🎉 Milestones</option>
+            <option value="health">🏥 Health</option>
+            <option value="breeding">🐄 Breeding</option>
+            <option value="feeding">🌾 Feeding</option>
+            <option value="harvest">🌾 Harvest</option>
+            <option value="inventory">📦 Inventory</option>
+            <option value="financial">💰 Financial</option>
+            <option value="maintenance">🔧 Maintenance</option>
+            <option value="weather">🌤️ Weather</option>
           </select>
         </div>
 
@@ -229,10 +225,10 @@ export default function AlertCenter() {
             }}
           >
             <option value="all">All Priorities</option>
-            <option value={AlertPriority.URGENT}>🔴 Urgent</option>
-            <option value={AlertPriority.HIGH}>🟠 High</option>
-            <option value={AlertPriority.MEDIUM}>🔵 Medium</option>
-            <option value={AlertPriority.LOW}>🟢 Low</option>
+            <option value="critical">🔴 Critical</option>
+            <option value="high">🟠 High</option>
+            <option value="medium">🔵 Medium</option>
+            <option value="low">🟢 Low</option>
           </select>
         </div>
 
@@ -265,7 +261,7 @@ export default function AlertCenter() {
       </div>
 
       {/* Alerts List */}
-      {activeAlerts.length === 0 ? (
+      {filteredAlerts.length === 0 ? (
         <div style={{
           background: 'white',
           padding: '60px 20px',
@@ -276,7 +272,10 @@ export default function AlertCenter() {
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>✨</div>
           <h3 style={{ margin: '0 0 8px 0', color: '#111' }}>All Clear!</h3>
           <p style={{ margin: 0, color: '#666' }}>
-            No active alerts at the moment
+            {alerts.length === 0 
+              ? 'No alerts generated yet. Add some animals, tasks, or inventory to generate smart alerts.'
+              : 'No active alerts match your current filters'
+            }
           </p>
         </div>
       ) : (

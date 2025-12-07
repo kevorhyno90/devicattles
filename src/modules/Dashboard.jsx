@@ -1225,11 +1225,17 @@ export default function Dashboard({ onNavigate }) {
           <button onClick={() => onNavigate && onNavigate('aiinsights')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}>
             🤖 AI Insights
           </button>
+          <button onClick={() => onNavigate && onNavigate('alertcenter')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', border: 'none' }}>
+            🔔 Alert Center
+          </button>
           <button onClick={() => onNavigate && onNavigate('batchops')} className="btn-primary" style={{ background: '#f59e0b' }}>
             ⚡ Batch Operations
           </button>
           <button onClick={() => onNavigate && onNavigate('customreports')} className="btn-primary" style={{ background: '#8b5cf6' }}>
             📊 Custom Reports
+          </button>
+          <button onClick={() => onNavigate && onNavigate('mobilesettings')} className="btn-primary" style={{ background: '#6366f1' }}>
+            📱 Mobile Settings
           </button>
           <button onClick={() => onNavigate && onNavigate('animals')} className="btn-primary">
             ➕ Add Animal
