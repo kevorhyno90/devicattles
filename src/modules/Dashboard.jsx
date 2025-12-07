@@ -1246,6 +1246,24 @@ export default function Dashboard({ onNavigate }) {
           <button onClick={() => onNavigate && onNavigate('iotsensors')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)', border: 'none' }}>
             🔌 IoT Sensors
           </button>
+          <button onClick={() => onNavigate && onNavigate('animal-health')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', border: 'none' }}>
+            🏥 Animal Health
+          </button>
+          <button onClick={() => onNavigate && onNavigate('health-analytics')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none' }}>
+            📊 Health Analytics
+          </button>
+          <button onClick={() => onNavigate && onNavigate('store-demo')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', border: 'none' }}>
+            🏪 Store Demo
+          </button>
+          <button onClick={() => onNavigate && onNavigate('marketplace')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', border: 'none' }}>
+            🛒 Marketplace
+          </button>
+          <button onClick={() => onNavigate && onNavigate('community')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none' }}>
+            👥 Community
+          </button>
+          <button onClick={() => onNavigate && onNavigate('knowledge')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', border: 'none' }}>
+            📚 Knowledge Base
+          </button>
           <button onClick={() => onNavigate && onNavigate('animals')} className="btn-primary">
             ➕ Add Animal
           </button>

@@ -11,6 +11,8 @@ import ErrorBoundary from './components/ErrorBoundary'
 import GlobalSearch from './components/GlobalSearch'
 import { DataLayer } from './lib/dataLayer'
 import { initGlobalErrorHandler } from './lib/errorHandler'
+import ToastContainer from './components/ToastContainer'
+import { useAnimalStore, useCropStore, useFinanceStore, useTaskStore, useInventoryStore, useUIStore } from './stores'
 
 // Helper function to retry failed lazy loads (important for Android Chrome)
 const lazyWithRetry = (importFunc) => {
@@ -75,6 +77,12 @@ const MobileSettings = lazyWithRetry(() => import('./modules/MobileSettings'))
 const DashboardBuilder = lazyWithRetry(() => import('./modules/DashboardBuilder'))
 const ActivityFeed = lazyWithRetry(() => import('./modules/ActivityFeed'))
 const IoTSensorDashboard = lazyWithRetry(() => import('./modules/IoTSensorDashboard'))
+const AnimalHealthTracker = lazyWithRetry(() => import('./modules/AnimalHealthTracker'))
+const HealthAnalyticsDashboard = lazyWithRetry(() => import('./modules/HealthAnalyticsDashboard'))
+const StoreDemo = lazyWithRetry(() => import('./modules/StoreDemo'))
+const Marketplace = lazyWithRetry(() => import('./modules/Marketplace'))
+const Community = lazyWithRetry(() => import('./modules/Community'))
+const KnowledgeBase = lazyWithRetry(() => import('./modules/KnowledgeBase'))
 
 // Loading fallback component with timeout detection
 const LoadingFallback = () => {
@@ -958,6 +966,60 @@ function AppContent() {
             </section>
           )}
 
+          {view === 'animal-health' && (
+            <section>
+              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                ← Back to Dashboard
+              </button>
+              <ErrorBoundary><AnimalHealthTracker onNavigate={setView} /></ErrorBoundary>
+            </section>
+          )}
+
+          {view === 'health-analytics' && (
+            <section>
+              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                ← Back to Dashboard
+              </button>
+              <ErrorBoundary><HealthAnalyticsDashboard onNavigate={setView} /></ErrorBoundary>
+            </section>
+          )}
+
+          {view === 'store-demo' && (
+            <section>
+              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                ← Back to Dashboard
+              </button>
+              <ErrorBoundary><StoreDemo /></ErrorBoundary>
+            </section>
+          )}
+
+          {view === 'marketplace' && (
+            <section>
+              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                ← Back to Dashboard
+              </button>
+              <ErrorBoundary><Marketplace /></ErrorBoundary>
+            </section>
+          )}
+
+          {view === 'community' && (
+            <section>
+              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                ← Back to Dashboard
+              </button>
+              <ErrorBoundary><Community /></ErrorBoundary>
+            </section>
+          )}
+
+          {view === 'knowledge' && (
+            <section>
+              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                ← Back to Dashboard
+              </button>
+              <ErrorBoundary><KnowledgeBase /></ErrorBoundary>
+            </section>
+          )}
+
           {view === 'tasks' && (
             <section>
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
@@ -1470,6 +1532,9 @@ function AppContent() {
 
       {/* Offline indicator */}
       <OfflineIndicator />
+      
+      {/* Toast notifications */}
+      <ToastContainer />
     </div>
   )
 }
