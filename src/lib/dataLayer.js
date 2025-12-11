@@ -476,6 +476,99 @@ class InventoryEntity extends Entity {
 }
 
 /**
+ * Notifications entity
+ */
+class NotificationsEntity extends Entity {
+  constructor() {
+    super('cattalytics:notifications', 'Notification');
+  }
+
+  validate(notification) {
+    if (!notification.message || notification.message.trim() === '') {
+      return { valid: false, error: 'Notification message is required' };
+    }
+    if (!notification.type || !['alert', 'info', 'warning', 'success'].includes(notification.type)) {
+      return { valid: false, error: 'Invalid notification type' };
+    }
+    return { valid: true };
+  }
+
+  async getUnread() {
+    return this.query(n => !n.read);
+  }
+
+  async getByType(type) {
+    return this.query(n => n.type === type);
+  }
+
+  async markAsRead(id) {
+    const notification = await this.getById(id);
+    if (notification) {
+      return this.update(id, { read: true });
+    }
+    return null;
+  }
+
+  async markAllAsRead() {
+    const all = await this.getAll();
+    const updates = all.map(n => ({ ...n, read: true }));
+    saveData(this.storageKey, updates);
+    invalidateCache(this.storageKey);
+    return updates;
+  }
+}
+
+/**
+ * Activities entity - User activity log
+ */
+class ActivitiesEntity extends Entity {
+  constructor() {
+    super('cattalytics:activities', 'Activity');
+  }
+
+  validate(activity) {
+    if (!activity.action || activity.action.trim() === '') {
+      return { valid: false, error: 'Activity action is required' };
+    }
+    if (!activity.userId) {
+      return { valid: false, error: 'Activity userId is required' };
+    }
+    return { valid: true };
+  }
+
+  async getByUser(userId) {
+    return this.query(a => a.userId === userId);
+  }
+
+  async getRecent(limit = 50) {
+    const all = await this.getAll();
+    return all
+      .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0))
+      .slice(0, limit);
+  }
+
+  async getByDateRange(startDate, endDate) {
+    return this.query(a => {
+      const date = new Date(a.timestamp);
+      return date >= new Date(startDate) && date <= new Date(endDate);
+    });
+  }
+
+  async cleanup(daysOld = 90) {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+    
+    const all = await this.getAll();
+    const filtered = all.filter(a => new Date(a.timestamp) > cutoffDate);
+    
+    saveData(this.storageKey, filtered);
+    invalidateCache(this.storageKey);
+    
+    return all.length - filtered.length; // return number deleted
+  }
+}
+
+/**
  * Unified Data Layer API
  */
 export const DataLayer = {
@@ -484,6 +577,8 @@ export const DataLayer = {
   tasks: new TasksEntity(),
   finance: new FinanceEntity(),
   inventory: new InventoryEntity(),
+  notifications: new NotificationsEntity(),
+  activities: new ActivitiesEntity(),
   
   // Generic entity creator for other modules
   createEntity(storageKey, entityName) {

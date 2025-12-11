@@ -61,11 +61,9 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5000,
-    strictPort: true,
+    strictPort: false,
     allowedHosts: true,
-    hmr: {
-      overlay: true
-    },
+    hmr: false, // Disable HMR in Codespaces to avoid WebSocket connection errors
     watch: {
       usePolling: false,
       interval: 100

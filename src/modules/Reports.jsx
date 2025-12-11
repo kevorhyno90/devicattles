@@ -1104,7 +1104,8 @@ export default function Reports(){
                   <div style={{ overflowX: 'auto', marginTop: '16px' }}>
                     {(() => {
                       // Collect all unique keys from all records
-                      const allKeys = Array.from(new Set(viewingData.flatMap(obj => Object.keys(obj))));
+                      const dataArray = Array.isArray(viewingData) ? viewingData : [viewingData];
+                      const allKeys = Array.from(new Set(dataArray.flatMap(obj => Object.keys(obj))));
                       return (
                         <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '15px', background: '#fff' }}>
                           <thead>
@@ -1132,7 +1133,8 @@ export default function Reports(){
                 <div style={{ overflowX: 'auto', marginTop: '16px' }}>
                   {(() => {
                     // Collect all unique keys from all records
-                    const allKeys = Array.from(new Set(viewingData.flatMap(obj => Object.keys(obj))));
+                    const dataArray = Array.isArray(viewingData) ? viewingData : [viewingData];
+                    const allKeys = Array.from(new Set(dataArray.flatMap(obj => Object.keys(obj))));
                     return (
                       <>
                         <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '15px', background: '#fff' }}>

@@ -1,11 +1,30 @@
 /**
  * Predictive Analytics Engine
- * Uses historical data to predict future trends
- * - Milk yield predictions
+ * Uses historical data and ML algorithms to predict future trends
+ * 
+ * Features:
+ * - Milk yield predictions (7-30 days ahead)
+ * - Weight gain forecasting
+ * - Breeding success probability
+ * - Feed cost optimization
  * - Crop harvest forecasts
  * - Expense predictions
  * - Revenue forecasts
+ * 
+ * Algorithms:
+ * - Linear Regression
+ * - Moving Averages
+ * - Seasonal Decomposition
+ * - Confidence Scoring
+ * 
+ * Usage:
+ * import { PredictiveAnalytics } from './predictiveAnalytics';
+ * const analytics = new PredictiveAnalytics();
+ * const prediction = await analytics.predictMilkYield(animalId, 30);
  */
+
+import { DataLayer } from './dataLayer';
+import { logAction } from './audit';
 
 /**
  * Simple Moving Average
@@ -396,3 +415,419 @@ export function getPredictiveDashboard(animals, crops, finance, milkRecords, cro
     revenue: predictRevenue(finance, animals, crops)
   }
 }
+
+/**
+ * Enhanced Predictive Analytics Class
+ * Provides AI-powered predictions with DataLayer integration
+ */
+export class PredictiveAnalytics {
+  constructor() {
+    this.initialized = true;
+  }
+
+  /**
+   * Predict milk yield for specific animal
+   * @param {string} animalId - Animal ID
+   * @param {number} daysAhead - Days to predict ahead (default 30)
+   * @returns {Promise<Object>} Prediction results
+   */
+  async predictMilkYieldForAnimal(animalId, daysAhead = 30) {
+    try {
+      const milkRecords = await DataLayer.milkYield?.getByAnimal(animalId, 90) || [];
+      
+      if (milkRecords.length < 7) {
+        return {
+          success: false,
+          error: 'Insufficient data',
+          message: 'Need at least 7 milk records for prediction',
+          animalId
+        };
+      }
+
+      // Extract amounts and sort by date
+      const sorted = milkRecords
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .map(r => r.amount);
+
+      // Perform regression
+      const { slope, intercept, rSquared } = linearRegression(sorted);
+
+      // Generate predictions
+      const predictions = [];
+      for (let i = 0; i < daysAhead; i++) {
+        const predictedValue = slope * (sorted.length + i) + intercept;
+        predictions.push({
+          day: i + 1,
+          date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          predicted: Math.max(0, predictedValue).toFixed(2),
+          confidence: this.calculateConfidence(rSquared, i, daysAhead)
+        });
+      }
+
+      const avgHistorical = sorted.reduce((a, b) => a + b, 0) / sorted.length;
+      const avgPredicted = predictions.reduce((sum, p) => sum + parseFloat(p.predicted), 0) / predictions.length;
+
+      const trend = slope > 0.1 ? 'increasing' : slope < -0.1 ? 'decreasing' : 'stable';
+
+      // Log prediction
+      logAction('prediction_made', {
+        type: 'milk_yield',
+        animalId,
+        daysAhead,
+        confidence: (rSquared * 100).toFixed(1)
+      });
+
+      return {
+        success: true,
+        animalId,
+        predictions,
+        trend,
+        confidence: (rSquared * 100).toFixed(1),
+        historicalAverage: avgHistorical.toFixed(2),
+        predictedAverage: avgPredicted.toFixed(2),
+        changePercent: ((avgPredicted - avgHistorical) / avgHistorical * 100).toFixed(1)
+      };
+    } catch (error) {
+      console.error('Milk yield prediction failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Predict weight gain until target weight
+   * @param {string} animalId - Animal ID
+   * @param {number} targetWeight - Target weight in kg
+   * @returns {Promise<Object>} Prediction results
+   */
+  async predictWeightGain(animalId, targetWeight) {
+    try {
+      const measurements = await DataLayer.measurements?.getByAnimal(animalId) || [];
+      
+      if (measurements.length < 3) {
+        return {
+          success: false,
+          error: 'Insufficient data',
+          message: 'Need at least 3 weight measurements'
+        };
+      }
+
+      // Sort by date and extract weights
+      const weights = measurements
+        .filter(m => m.weight)
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .map(m => ({ date: new Date(m.date), weight: m.weight }));
+
+      // Calculate average daily gain
+      const totalGain = weights[weights.length - 1].weight - weights[0].weight;
+      const totalDays = (weights[weights.length - 1].date - weights[0].date) / (1000 * 60 * 60 * 24);
+      const avgDailyGain = totalGain / totalDays;
+
+      // Current weight and remaining gain
+      const currentWeight = weights[weights.length - 1].weight;
+      const remainingGain = targetWeight - currentWeight;
+
+      if (remainingGain <= 0) {
+        return {
+          success: true,
+          message: 'Target weight already reached',
+          currentWeight,
+          targetWeight
+        };
+      }
+
+      // Calculate days to target
+      const daysToTarget = Math.ceil(remainingGain / avgDailyGain);
+      const estimatedDate = new Date(Date.now() + daysToTarget * 24 * 60 * 60 * 1000);
+
+      // Generate weekly predictions
+      const weeklyPredictions = [];
+      for (let week = 1; week <= Math.ceil(daysToTarget / 7); week++) {
+        const days = week * 7;
+        const predictedWeight = currentWeight + (avgDailyGain * days);
+        weeklyPredictions.push({
+          week,
+          date: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          weight: Math.min(predictedWeight, targetWeight).toFixed(1)
+        });
+      }
+
+      return {
+        success: true,
+        animalId,
+        currentWeight,
+        targetWeight,
+        remainingGain: remainingGain.toFixed(1),
+        avgDailyGain: avgDailyGain.toFixed(2),
+        daysToTarget,
+        estimatedDate: estimatedDate.toISOString().split('T')[0],
+        weeklyPredictions,
+        confidence: weights.length >= 5 ? 'high' : 'medium'
+      };
+    } catch (error) {
+      console.error('Weight gain prediction failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Predict breeding success probability
+   * @param {string} animalId - Animal ID
+   * @returns {Promise<Object>} Success probability and recommendations
+   */
+  async predictBreedingSuccess(animalId) {
+    try {
+      const animal = await DataLayer.animals.getById(animalId);
+      
+      if (!animal) {
+        return { success: false, error: 'Animal not found' };
+      }
+
+      // Base success rate (industry average)
+      let successRate = 0.75;
+      const factors = [];
+
+      // Historical breeding success
+      if (animal.breedingHistory && animal.breedingHistory.length > 0) {
+        const successful = animal.breedingHistory.filter(b => b.conceived).length;
+        const historicalRate = successful / animal.breedingHistory.length;
+        successRate = historicalRate;
+        factors.push({
+          factor: 'Historical Success',
+          impact: historicalRate > 0.7 ? 'positive' : 'negative',
+          value: (historicalRate * 100).toFixed(1) + '%'
+        });
+      }
+
+      // Age factor (peak fertility 24-96 months for cattle)
+      const ageMonths = animal.age || 24;
+      let ageFactor = 1.0;
+
+      if (ageMonths < 24) {
+        ageFactor = 0.8;
+        factors.push({ factor: 'Age', impact: 'negative', value: 'Young - below peak fertility' });
+      } else if (ageMonths > 96) {
+        ageFactor = 0.7;
+        factors.push({ factor: 'Age', impact: 'negative', value: 'Older - reduced fertility' });
+      } else {
+        ageFactor = 1.1;
+        factors.push({ factor: 'Age', impact: 'positive', value: 'Peak breeding age' });
+      }
+
+      // Health factor
+      const healthScore = await this.calculateHealthScore(animalId);
+      factors.push({
+        factor: 'Health',
+        impact: healthScore > 0.8 ? 'positive' : 'negative',
+        value: (healthScore * 100).toFixed(0) + '%'
+      });
+
+      // Pregnancy-free period
+      if (animal.lastBreedingDate) {
+        const daysSinceBreeding = (Date.now() - new Date(animal.lastBreedingDate).getTime()) / (1000 * 60 * 60 * 24);
+        if (daysSinceBreeding > 60) {
+          factors.push({ factor: 'Rest Period', impact: 'positive', value: 'Adequate recovery time' });
+        }
+      }
+
+      // Calculate adjusted success rate
+      const adjustedRate = Math.min(1.0, successRate * ageFactor * healthScore);
+
+      return {
+        success: true,
+        animalId,
+        animalName: animal.name,
+        successRate: (adjustedRate * 100).toFixed(1),
+        confidence: animal.breedingHistory?.length > 3 ? 'high' : 'medium',
+        factors,
+        recommendation: adjustedRate > 0.6 
+          ? 'Good breeding candidate - proceed with breeding'
+          : 'Consider health improvements and optimal timing'
+      };
+    } catch (error) {
+      console.error('Breeding success prediction failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Calculate health score for animal
+   */
+  async calculateHealthScore(animalId) {
+    let score = 1.0;
+
+    try {
+      // Check recent treatments
+      const treatments = await DataLayer.treatments?.getByAnimal(animalId) || [];
+      const recentTreatments = treatments.filter(t => {
+        const monthsAgo = (Date.now() - new Date(t.date).getTime()) / (1000 * 60 * 60 * 24 * 30);
+        return monthsAgo <= 3;
+      });
+
+      if (recentTreatments.length > 2) {
+        score *= 0.8; // Multiple recent treatments = health concerns
+      }
+
+      // Check vaccinations (if tracked)
+      const animal = await DataLayer.animals.getById(animalId);
+      if (animal.nextVaccinationDate) {
+        const vaccDate = new Date(animal.nextVaccinationDate);
+        if (vaccDate < new Date()) {
+          score *= 0.9; // Overdue vaccination
+        }
+      }
+    } catch (error) {
+      console.error('Health score calculation error:', error);
+    }
+
+    return Math.max(0.5, score);
+  }
+
+  /**
+   * Optimize feed costs based on consumption patterns
+   * @returns {Promise<Object>} Feed optimization recommendations
+   */
+  async optimizeFeedCosts() {
+    try {
+      const feedings = await DataLayer.feeding?.getAll() || [];
+      const inventory = await DataLayer.inventory?.getAll() || [];
+
+      if (feedings.length < 10) {
+        return {
+          success: false,
+          error: 'Insufficient feeding data'
+        };
+      }
+
+      // Calculate feed consumption patterns
+      const consumption = {};
+      const last30Days = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+      feedings
+        .filter(f => new Date(f.date).getTime() > last30Days)
+        .forEach(f => {
+          if (!consumption[f.feedType]) {
+            consumption[f.feedType] = { total: 0, count: 0 };
+          }
+          consumption[f.feedType].total += f.amount || 0;
+          consumption[f.feedType].count++;
+        });
+
+      // Get feed costs from inventory
+      const feedItems = inventory.filter(i => i.category === 'feed' || i.type === 'feed');
+
+      const recommendations = [];
+
+      for (const feed of feedItems) {
+        const usage = consumption[feed.name];
+        if (!usage) continue;
+
+        const avgDaily = usage.total / 30;
+        const costPerKg = feed.unitCost || 0;
+        const monthlyCost = avgDaily * 30 * costPerKg;
+        const monthlyUsage = avgDaily * 30;
+
+        let suggestion = 'Current usage optimal';
+        let savings = 0;
+
+        // Check for bulk purchase opportunities
+        if (monthlyCost > 10000) {
+          savings = monthlyCost * 0.15; // Assume 15% bulk discount
+          suggestion = `Consider bulk purchase for ₦${savings.toFixed(0)} monthly savings`;
+        }
+
+        // Check for wastage (high variation)
+        const dailyAmounts = feedings
+          .filter(f => f.feedType === feed.name && new Date(f.date).getTime() > last30Days)
+          .map(f => f.amount || 0);
+        
+        if (dailyAmounts.length > 5) {
+          const avg = dailyAmounts.reduce((a, b) => a + b, 0) / dailyAmounts.length;
+          const variance = dailyAmounts.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / dailyAmounts.length;
+          const stdDev = Math.sqrt(variance);
+
+          if (stdDev / avg > 0.3) {
+            suggestion += ' | High variation detected - standardize feeding amounts to reduce waste';
+          }
+        }
+
+        recommendations.push({
+          feedType: feed.name,
+          avgDailyUse: avgDaily.toFixed(2),
+          monthlyUsage: monthlyUsage.toFixed(2),
+          monthlyCost: monthlyCost.toFixed(2),
+          costPerKg: costPerKg.toFixed(2),
+          suggestion,
+          potentialSavings: savings.toFixed(0)
+        });
+      }
+
+      const totalMonthlyCost = recommendations.reduce((sum, r) => sum + parseFloat(r.monthlyCost), 0);
+      const totalSavings = recommendations.reduce((sum, r) => sum + parseFloat(r.potentialSavings), 0);
+
+      return {
+        success: true,
+        totalMonthlyCost: totalMonthlyCost.toFixed(2),
+        potentialSavings: totalSavings.toFixed(2),
+        savingsPercent: ((totalSavings / totalMonthlyCost) * 100).toFixed(1),
+        recommendations,
+        dataRange: '30 days'
+      };
+    } catch (error) {
+      console.error('Feed cost optimization failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Calculate confidence score based on data quality
+   */
+  calculateConfidence(rSquared, dayIndex, totalDays) {
+    // Base confidence from R-squared
+    let confidence = rSquared * 100;
+
+    // Reduce confidence for distant predictions
+    const distanceFactor = 1 - (dayIndex / totalDays) * 0.3;
+    confidence *= distanceFactor;
+
+    return Math.max(20, Math.min(100, confidence)).toFixed(1);
+  }
+
+  /**
+   * Get comprehensive analytics dashboard
+   */
+  async getDashboard() {
+    try {
+      const animals = await DataLayer.animals.getAll();
+      const finance = await DataLayer.finance.getAll();
+
+      // Get milk-producing animals
+      const milkingAnimals = animals.filter(a => 
+        a.lactationStatus === 'Lactating' || a.purpose === 'Dairy'
+      );
+
+      // Get predictions for first milking animal (demo)
+      let milkPrediction = null;
+      if (milkingAnimals.length > 0) {
+        milkPrediction = await this.predictMilkYieldForAnimal(milkingAnimals[0].id, 7);
+      }
+
+      // Feed optimization
+      const feedOptimization = await this.optimizeFeedCosts();
+
+      return {
+        success: true,
+        milkProduction: milkPrediction,
+        feedCosts: feedOptimization,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Dashboard generation failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+}
+
+// Create singleton instance
+export const predictiveAnalytics = new PredictiveAnalytics();
+
+export default predictiveAnalytics;

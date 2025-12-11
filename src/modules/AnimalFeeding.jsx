@@ -879,7 +879,7 @@ export default function AnimalFeeding({ animals }){
               </thead>
               <tbody>
                 {filteredIngredients.map(ing => (
-                  <tr key={ing.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <tr key={`${ing.name}-${ing.category}`} style={{ borderBottom: '1px solid #e5e7eb' }}>
                     <td style={{ padding: 10 }}>
                       <div style={{ fontWeight: 600 }}>{ing.name}</div>
                       <div style={{ fontSize: 12, color: '#666' }}>{ing.category}</div>
@@ -966,7 +966,7 @@ export default function AnimalFeeding({ animals }){
               <select value={selectedIngId} onChange={e => setSelectedIngId(e.target.value)}>
                 <option value="">-- Select Ingredient --</option>
                 {INGREDIENTS.map(ing => (
-                  <option key={ing.id} value={ing.id}>{ing.name} ({ing.category})</option>
+                  <option key={`${ing.name}-${ing.category}`} value={ing.id}>{ing.name} ({ing.category})</option>
                 ))}
               </select>
               <input
@@ -998,7 +998,7 @@ export default function AnimalFeeding({ animals }){
                     const total = dietIngredients.reduce((s, i) => s + i.amount, 0)
                     const pct = (ing.amount / total) * 100
                     return (
-                      <tr key={ing.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      <tr key={`${ing.name}-${ing.id}`} style={{ borderBottom: '1px solid #e5e7eb' }}>
                         <td style={{ padding: 8 }}>{ing.name}</td>
                         <td style={{ padding: 8, textAlign: 'right' }}>{ing.amount.toFixed(2)}</td>
                         <td style={{ padding: 8, textAlign: 'right' }}>{pct.toFixed(1)}%</td>
@@ -1386,14 +1386,14 @@ export default function AnimalFeeding({ animals }){
                   </tr>
                 </thead>
                 <tbody>
-                  {feedingEvents.sort((a, b) => new Date(b.date) - new Date(a.date)).map(event => {
+                  {feedingEvents.sort((a, b) => new Date(b.date) - new Date(a.date)).map((event) => {
                     const animalNames = event.animals.map(aId => {
                       const a = (animals || []).find(an => an.id === aId)
                       return a ? (a.name || a.tag) : aId
                     }).join(', ')
                     
                     return (
-                      <tr key={event.id + '-' + event.date + '-' + feedingEvents.indexOf(event)} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      <tr key={event.id || `feeding-event-${event.date}-${Math.random()}`} style={{ borderBottom: '1px solid #e5e7eb' }}>
                         <td style={{ padding: 10 }}>
                           <div style={{ fontWeight: 600 }}>{new Date(event.date).toLocaleDateString()}</div>
                           <div style={{ fontSize: 12, color: '#666' }}>{new Date(event.date).toLocaleTimeString()}</div>

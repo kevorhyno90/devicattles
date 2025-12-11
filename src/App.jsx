@@ -37,7 +37,8 @@ const lazyWithRetry = (importFunc) => {
 // Lazy load all modules with retry logic
 const Dashboard = lazyWithRetry(() => import('./modules/Dashboard'))
 const NotificationCenter = lazyWithRetry(() => import('./modules/NotificationCenter'))
-const Animals = lazyWithRetry(() => import('./modules/Animals'))
+// Load Animals synchronously to avoid dynamic import timeouts in Codespaces
+import Animals from './modules/Animals'
 const Tasks = lazyWithRetry(() => import('./modules/Tasks'))
 const Finance = lazyWithRetry(() => import('./modules/Finance'))
 const Schedules = lazyWithRetry(() => import('./modules/Schedules'))
@@ -83,6 +84,11 @@ const StoreDemo = lazyWithRetry(() => import('./modules/StoreDemo'))
 const Marketplace = lazyWithRetry(() => import('./modules/Marketplace'))
 const Community = lazyWithRetry(() => import('./modules/Community'))
 const KnowledgeBase = lazyWithRetry(() => import('./modules/KnowledgeBase'))
+
+// Phase 2: Smart Features UI Modules
+const AlertRules = lazyWithRetry(() => import('./modules/AlertRules'))
+const DiseaseDetection = lazyWithRetry(() => import('./modules/DiseaseDetection'))
+const PredictiveDashboard = lazyWithRetry(() => import('./modules/PredictiveDashboard'))
 
 // Loading fallback component with timeout detection
 const LoadingFallback = () => {
@@ -172,6 +178,8 @@ import { isAuthRequired, getDefaultUser } from './lib/appSettings'
 import { startReminderChecker, stopReminderChecker, getUnreadCount } from './lib/notifications'
 import { checkAllAutoNotifications } from './lib/autoNotifications'
 import { initSync, setupAutoSync } from './lib/sync'
+import { alertRuleEngine } from './lib/alertRuleEngine'
+import { installAllRules } from './lib/farmAlertRules'
 
 // App content component that uses theme
 function AppContent() {
@@ -280,6 +288,27 @@ function AppContent() {
         setupAutoSync()
       } catch (error) {
         console.warn('Sync initialization failed (optional feature):', error)
+      }
+      
+      // Phase 2: Initialize smart alert rules
+      try {
+        console.log('🔔 Initializing smart alert rules...')
+        installAllRules(alertRuleEngine)
+        alertRuleEngine.evaluateAllRules()
+        const alertInterval = setInterval(() => {
+          alertRuleEngine.evaluateAllRules()
+        }, 5 * 60 * 1000) // Every 5 minutes
+        
+        // Cleanup alert interval
+        return () => {
+          stopReminderChecker(intervalId)
+          clearInterval(countInterval)
+          clearInterval(autoCheckInterval)
+          clearInterval(alertInterval)
+          window.removeEventListener('newNotification', updateUnreadCount)
+        }
+      } catch (error) {
+        console.warn('Alert rules initialization failed (optional feature):', error)
       }
       
       return () => {
@@ -564,6 +593,54 @@ function AppContent() {
             }}
           >
             🎤 Voice Control
+          </button>
+          <button 
+            className={view==='alert-rules'? 'active':''} 
+            onClick={()=>setView('alert-rules')}
+            style={{
+              background: view==='alert-rules' ? '#f59e0b' : '#f3f4f6',
+              color: view==='alert-rules' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            🔔 Alert Rules
+          </button>
+          <button 
+            className={view==='disease-detection'? 'active':''} 
+            onClick={()=>setView('disease-detection')}
+            style={{
+              background: view==='disease-detection' ? '#ef4444' : '#f3f4f6',
+              color: view==='disease-detection' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            🔬 Disease Detection
+          </button>
+          <button 
+            className={view==='predictive-dashboard'? 'active':''} 
+            onClick={()=>setView('predictive-dashboard')}
+            style={{
+              background: view==='predictive-dashboard' ? '#8b5cf6' : '#f3f4f6',
+              color: view==='predictive-dashboard' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            📊 Predictions
           </button>
           <button 
             className={view==='weather'? 'active':''} 
@@ -1269,6 +1346,34 @@ function AppContent() {
               ← Back to Dashboard
             </button>
             <ErrorBoundary><IoTSensorDashboard /></ErrorBoundary>
+          </section>
+        )}
+
+        {/* Phase 2: Smart Features UI Routes */}
+        {view === 'alert-rules' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><AlertRules /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'disease-detection' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><DiseaseDetection /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'predictive-dashboard' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><PredictiveDashboard /></ErrorBoundary>
           </section>
         )}
 

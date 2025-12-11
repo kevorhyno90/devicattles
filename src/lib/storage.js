@@ -3,24 +3,38 @@
 import { safeSetItem, safeGetItem } from './safeStorage'
 
 const DB_NAME = 'devinsfarm'
-const DB_VERSION = 1
+const DB_VERSION = 3
 const STORES = {
   animals: 'animals',
-  transactions: 'transactions',
-  inventory: 'inventory',
-  equipment: 'equipment',
-  tasks: 'tasks',
   crops: 'crops',
+  tasks: 'tasks',
+  finance: 'finance',
+  inventory: 'inventory',
+  notifications: 'notifications',
+  activities: 'activities',
+  transactions: 'transactions',
+  equipment: 'equipment',
   treatments: 'treatments',
   measurements: 'measurements',
   breeding: 'breeding',
   milkYield: 'milkYield',
   diets: 'diets',
-  rations: 'rations'
+  rations: 'rations',
+  alert_rules: 'alert_rules'
 }
 
 let db = null
 let useIndexedDB = true
+
+// Normalize store names used by DataLayer vs IndexedDB
+// DataLayer passes keys like 'cattalytics:animals'.
+// IndexedDB stores are created without the prefix (e.g., 'animals').
+function normalizeStoreName(storeName) {
+  if (typeof storeName === 'string' && storeName.startsWith('cattalytics:')) {
+    return storeName.split(':').slice(1).join(':');
+  }
+  return storeName;
+}
 
 // Initialize IndexedDB
 async function initDB() {
@@ -117,8 +131,9 @@ async function saveToIndexedDB(storeName, data) {
   if (!db) throw new Error('Database not initialized')
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([storeName], 'readwrite')
-    const store = transaction.objectStore(storeName)
+    const idbStore = normalizeStoreName(storeName)
+    const transaction = db.transaction([idbStore], 'readwrite')
+    const store = transaction.objectStore(idbStore)
 
     // Clear existing data
     store.clear()
@@ -135,8 +150,9 @@ async function loadFromIndexedDB(storeName) {
   if (!db) throw new Error('Database not initialized')
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([storeName], 'readonly')
-    const store = transaction.objectStore(storeName)
+    const idbStore = normalizeStoreName(storeName)
+    const transaction = db.transaction([idbStore], 'readonly')
+    const store = transaction.objectStore(idbStore)
     const request = store.getAll()
 
     request.onsuccess = () => resolve(request.result || [])
@@ -147,7 +163,7 @@ async function loadFromIndexedDB(storeName) {
 // LocalStorage implementation
 function saveToLocalStorage(storeName, data) {
   try {
-    const key = `cattalytics:${storeName}`
+    const key = storeName
     const result = safeSetItem(key, JSON.stringify(data))
     if (!result.success) {
       throw new Error(result.error || 'Storage failed')
@@ -164,7 +180,7 @@ function saveToLocalStorage(storeName, data) {
 
 function loadFromLocalStorage(storeName, defaultData = []) {
   try {
-    const key = `cattalytics:${storeName}`
+    const key = storeName
     const raw = safeGetItem(key, null)
     if (!raw) return defaultData
     

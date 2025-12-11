@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
  * Knowledge Base Module
  * Educational content library and AI assistance
  * Features: Farming Guides, FAQ, AI Chatbot, Tips & Tricks
+ * @returns {JSX.Element}
  */
 export default function KnowledgeBase() {
   const [activeTab, setActiveTab] = useState('guides')
@@ -16,12 +17,18 @@ export default function KnowledgeBase() {
   const [expandedFaq, setExpandedFaq] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [toast, setToast] = useState(null)
+  const [bookmarkedGuides, setBookmarkedGuides] = useState([])
+  const [filterCategory, setFilterCategory] = useState('All')
+  const [ratedTips, setRatedTips] = useState({})
 
   // Load data from localStorage
   useEffect(() => {
     const savedGuides = localStorage.getItem('cattalytics:knowledge:guides')
     const savedFaq = localStorage.getItem('cattalytics:knowledge:faq')
     const savedTips = localStorage.getItem('cattalytics:knowledge:tips')
+    const savedBookmarks = localStorage.getItem('cattalytics:knowledge:bookmarks')
+    const savedChatHistory = localStorage.getItem('cattalytics:knowledge:chatHistory')
+    const savedRatings = localStorage.getItem('cattalytics:knowledge:tipRatings')
 
     if (savedGuides) setGuides(JSON.parse(savedGuides))
     else setGuides(sampleGuides)
@@ -31,11 +38,13 @@ export default function KnowledgeBase() {
 
     if (savedTips) setTips(JSON.parse(savedTips))
     else setTips(sampleTips)
-  }, [])
 
-  // Initialize chatbot
-  useEffect(() => {
-    if (chatMessages.length === 0) {
+    if (savedBookmarks) setBookmarkedGuides(JSON.parse(savedBookmarks))
+    if (savedRatings) setRatedTips(JSON.parse(savedRatings))
+    
+    if (savedChatHistory) {
+      setChatMessages(JSON.parse(savedChatHistory))
+    } else {
       setChatMessages([{
         id: 1,
         text: 'Hello! I\'m your farming assistant. Ask me anything about livestock care, crop management, financial planning, or using this app!',
@@ -45,9 +54,53 @@ export default function KnowledgeBase() {
     }
   }, [])
 
+  // Save chat history
+  useEffect(() => {
+    if (chatMessages.length > 0) {
+      localStorage.setItem('cattalytics:knowledge:chatHistory', JSON.stringify(chatMessages))
+    }
+  }, [chatMessages])
+
+  // Save bookmarks
+  useEffect(() => {
+    localStorage.setItem('cattalytics:knowledge:bookmarks', JSON.stringify(bookmarkedGuides))
+  }, [bookmarkedGuides])
+
+  // Save tip ratings
+  useEffect(() => {
+    localStorage.setItem('cattalytics:knowledge:tipRatings', JSON.stringify(ratedTips))
+  }, [ratedTips])
+
   const showToast = (message, type = 'success') => {
     setToast({ message, type })
     setTimeout(() => setToast(null), 3000)
+  }
+
+  const toggleBookmark = (guideId) => {
+    if (bookmarkedGuides.includes(guideId)) {
+      setBookmarkedGuides(bookmarkedGuides.filter(id => id !== guideId))
+      showToast('Bookmark removed')
+    } else {
+      setBookmarkedGuides([...bookmarkedGuides, guideId])
+      showToast('Guide bookmarked!')
+    }
+  }
+
+  const rateTip = (tipId, rating) => {
+    setRatedTips({ ...ratedTips, [tipId]: rating })
+    showToast(`Tip rated ${rating} stars!`)
+  }
+
+  const clearChatHistory = () => {
+    if (confirm('Clear all chat history?')) {
+      setChatMessages([{
+        id: 1,
+        text: 'Hello! I\'m your farming assistant. Ask me anything about livestock care, crop management, financial planning, or using this app!',
+        sender: 'bot',
+        time: new Date().toLocaleTimeString()
+      }])
+      showToast('Chat history cleared')
+    }
   }
 
   const handleSendMessage = () => {
@@ -134,11 +187,13 @@ export default function KnowledgeBase() {
     return 'I can help you with topics like livestock care, dairy management, crop cultivation, financial planning, pest control, animal health, and using this app\'s features. What would you like to know more about?'
   }
 
-  const filteredGuides = guides.filter(guide =>
-    guide.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    guide.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    guide.category.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredGuides = guides.filter(guide => {
+    const matchesSearch = guide.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         guide.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         guide.category.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = filterCategory === 'All' || guide.category === filterCategory
+    return matchesSearch && matchesCategory
+  })
 
   const filteredFaq = faqItems.filter(faq =>
     faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -148,9 +203,30 @@ export default function KnowledgeBase() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-      <h1 style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span>📚</span> Knowledge Base
-      </h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+        {selectedGuide && (
+          <button
+            onClick={() => setSelectedGuide(null)}
+            style={{
+              padding: '8px 16px',
+              background: '#f3f4f6',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            ← Back
+          </button>
+        )}
+        <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span>📚</span> Knowledge Base
+        </h1>
+      </div>
       <p style={{ color: '#666', marginBottom: '24px' }}>
         Learn farming best practices, get answers, and chat with our AI assistant
       </p>
@@ -218,70 +294,149 @@ export default function KnowledgeBase() {
       {/* Guides Tab */}
       {activeTab === 'guides' && (
         <div>
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', marginBottom: '16px' }}>
             <input
               type="text"
-              placeholder="Search guides..."
+              placeholder="🔍 Search guides..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
-                width: '100%',
                 padding: '12px',
                 border: '2px solid #e5e7eb',
                 borderRadius: '8px',
-                fontSize: '16px'
+                fontSize: '14px'
               }}
             />
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              style={{
+                padding: '12px',
+                border: '2px solid #e5e7eb',
+                borderRadius: '8px',
+                fontSize: '14px',
+                background: '#fff',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="All">All Categories</option>
+              <option value="Livestock">Livestock</option>
+              <option value="Health">Health</option>
+              <option value="Crops">Crops</option>
+              <option value="Finance">Finance</option>
+              <option value="Equipment">Equipment</option>
+            </select>
+            <button
+              onClick={() => setSearchQuery('')}
+              style={{
+                padding: '12px',
+                background: '#f3f4f6',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '600'
+              }}
+            >
+              Clear Filters
+            </button>
           </div>
+
+          {bookmarkedGuides.length > 0 && (
+            <div style={{ marginBottom: '24px', padding: '16px', background: '#fef3c7', borderRadius: '8px', border: '2px solid #f59e0b' }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px' }}>📌 Your Bookmarks ({bookmarkedGuides.length})</h3>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {guides.filter(g => bookmarkedGuides.includes(g.id)).map(guide => (
+                  <button
+                    key={guide.id}
+                    onClick={() => setSelectedGuide(guide)}
+                    style={{
+                      padding: '6px 12px',
+                      background: '#fff',
+                      border: '1px solid #d97706',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '13px'
+                    }}
+                  >
+                    {guide.icon} {guide.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div style={{ display: 'grid', gap: '20px', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
             {filteredGuides.map(guide => (
               <div
                 key={guide.id}
-                onClick={() => setSelectedGuide(guide)}
                 style={{
                   background: '#fff',
                   padding: '20px',
                   borderRadius: '12px',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s'
+                  position: 'relative'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
               >
-                <div style={{
-                  width: '100%',
-                  height: '160px',
-                  background: `linear-gradient(135deg, ${guide.color1} 0%, ${guide.color2} 100%)`,
-                  borderRadius: '8px',
-                  marginBottom: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '64px'
-                }}>
-                  {guide.icon}
-                </div>
-                <span style={{
-                  display: 'inline-block',
-                  padding: '4px 12px',
-                  background: '#dbeafe',
-                  color: '#1e40af',
-                  borderRadius: '12px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  marginBottom: '8px'
-                }}>
-                  {guide.category}
-                </span>
-                <h3 style={{ margin: '8px 0', fontSize: '18px' }}>{guide.title}</h3>
-                <p style={{ margin: '0 0 12px 0', color: '#666', fontSize: '14px', lineHeight: '1.5' }}>
-                  {guide.description}
-                </p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#666' }}>
-                  <span>📖 {guide.readTime}</span>
-                  <span>⭐ {guide.rating}/5</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleBookmark(guide.id) }}
+                  style={{
+                    position: 'absolute',
+                    top: '16px',
+                    right: '16px',
+                    background: bookmarkedGuides.includes(guide.id) ? '#fbbf24' : '#f3f4f6',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '36px',
+                    height: '36px',
+                    cursor: 'pointer',
+                    fontSize: '18px',
+                    zIndex: 10
+                  }}
+                >
+                  {bookmarkedGuides.includes(guide.id) ? '⭐' : '☆'}
+                </button>
+                <div
+                  onClick={() => setSelectedGuide(guide)}
+                  style={{
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <div style={{
+                    width: '100%',
+                    height: '160px',
+                    background: `linear-gradient(135deg, ${guide.color1} 0%, ${guide.color2} 100%)`,
+                    borderRadius: '8px',
+                    marginBottom: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '64px'
+                  }}>
+                    {guide.icon}
+                  </div>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '4px 12px',
+                    background: '#dbeafe',
+                    color: '#1e40af',
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    marginBottom: '8px'
+                  }}>
+                    {guide.category}
+                  </span>
+                  <h3 style={{ margin: '8px 0', fontSize: '18px' }}>{guide.title}</h3>
+                  <p style={{ margin: '0 0 12px 0', color: '#666', fontSize: '14px', lineHeight: '1.5' }}>
+                    {guide.description}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#666' }}>
+                    <span>📖 {guide.readTime}</span>
+                    <span>⭐ {guide.rating}/5</span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -369,14 +524,34 @@ export default function KnowledgeBase() {
             borderBottom: '2px solid #e5e7eb',
             background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
             borderRadius: '12px 12px 0 0',
-            color: '#fff'
+            color: '#fff',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
           }}>
-            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              🤖 AI Farming Assistant
-            </h3>
-            <p style={{ margin: '4px 0 0 0', fontSize: '14px', opacity: 0.9 }}>
-              Ask me anything about farming!
-            </p>
+            <div>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🤖 AI Farming Assistant
+              </h3>
+              <p style={{ margin: '4px 0 0 0', fontSize: '14px', opacity: 0.9 }}>
+                Ask me anything about farming!
+              </p>
+            </div>
+            <button
+              onClick={clearChatHistory}
+              style={{
+                padding: '8px 16px',
+                background: 'rgba(255,255,255,0.2)',
+                color: '#fff',
+                border: '1px solid rgba(255,255,255,0.3)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: '600'
+              }}
+            >
+              🗑️ Clear History
+            </button>
           </div>
 
           <div style={{
@@ -466,9 +641,34 @@ export default function KnowledgeBase() {
             >
               <div style={{ fontSize: '48px', marginBottom: '12px' }}>{tip.icon}</div>
               <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>{tip.title}</h3>
-              <p style={{ margin: 0, color: '#666', fontSize: '14px', lineHeight: '1.5' }}>
+              <p style={{ margin: '0 0 16px 0', color: '#666', fontSize: '14px', lineHeight: '1.5' }}>
                 {tip.description}
               </p>
+              <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '12px' }}>
+                <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>Was this helpful?</div>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      onClick={() => rateTip(tip.id, star)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        fontSize: '20px',
+                        cursor: 'pointer',
+                        color: ratedTips[tip.id] >= star ? '#fbbf24' : '#d1d5db'
+                      }}
+                    >
+                      ★
+                    </button>
+                  ))}
+                  {ratedTips[tip.id] && (
+                    <span style={{ marginLeft: '8px', fontSize: '13px', color: '#666' }}>
+                      ({ratedTips[tip.id]} stars)
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -739,3 +939,4 @@ const sampleTips = [
     description: 'Connect with other farmers in the Community module. Share experiences, get advice, and stay informed about local disease outbreaks and market trends.'
   }
 ]
+
