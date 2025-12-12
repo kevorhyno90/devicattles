@@ -1,3 +1,6 @@
+  // Store the deferred install prompt event
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
 import React, { useState, useEffect, lazy, Suspense, useContext } from 'react'
 import { requestNotificationPermission, listenForMessages } from './lib/firebaseMessaging'
 import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme'
@@ -219,14 +222,33 @@ function AppContent() {
 
   // PWA Install Prompt
   useEffect(() => {
-    const handleInstallPrompt = (e) => {
-      setShowInstallPrompt(true)
-    }
-    window.addEventListener('pwa-install-available', handleInstallPrompt)
+    // Listen for the beforeinstallprompt event
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallPrompt(true);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     return () => {
-      window.removeEventListener('pwa-install-available', handleInstallPrompt)
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  // Handle install button click
+  const handleInstallClick = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          window.showToast && window.showToast('App installation started!', 'success');
+        } else {
+          window.showToast && window.showToast('App installation dismissed.', 'info');
+        }
+        setDeferredPrompt(null);
+        setShowInstallPrompt(false);
+      });
     }
-  }, [])
+  };
 
   // Request notification permission and listen for messages on startup
   // NOTE: Only initialize listener if permission already granted
