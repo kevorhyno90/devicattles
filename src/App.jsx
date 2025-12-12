@@ -222,6 +222,10 @@ function AppContent() {
   useEffect(() => {
     // Listen for the beforeinstallprompt event
     const handleBeforeInstallPrompt = (e) => {
+      // Only prevent default if we're not in standalone mode (not already installed)
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        return; // App is already installed, don't show prompt
+      }
       e.preventDefault();
       setDeferredPrompt(e);
       setShowInstallPrompt(true);

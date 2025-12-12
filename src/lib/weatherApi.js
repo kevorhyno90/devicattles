@@ -40,6 +40,35 @@ function cacheWeather(location, weather) {
   }
 }
 
+  /**
+   * Get mock weather data for demo/fallback
+   */
+  function getMockWeatherData(location) {
+    const cityName = location.includes(',') ? location.split(',')[0].trim() : location
+    return {
+      location: cityName,
+      country: 'KE',
+      temperature: 25,
+      feelsLike: 26,
+      tempMin: 22,
+      tempMax: 28,
+      humidity: 65,
+      pressure: 1013,
+      description: 'partly cloudy',
+      icon: '02d',
+      iconUrl: 'https://openweathermap.org/img/wn/02d@2x.png',
+      windSpeed: 3.5,
+      windDirection: 180,
+      cloudiness: 40,
+      visibility: 10000,
+      sunrise: new Date(),
+      sunset: new Date(Date.now() + 12 * 60 * 60 * 1000),
+      timestamp: new Date(),
+      coordinates: { lat: -1.2921, lon: 36.8219 },
+      isMock: true
+    }
+  }
+
 /**
  * Get current weather for a location
  * @param {string} location - City name or coordinates (lat,lon)
@@ -58,7 +87,11 @@ export async function getCurrentWeather(location, apiKey = null) {
     // Priority: passed apiKey > env variable > localStorage > demo
     const key = apiKey || import.meta.env.VITE_WEATHER_API_KEY || localStorage.getItem('cattalytics:weather:apikey') || 'demo'
     
-    let url
+    // Skip if using demo key (will fail with 401), return mock data instead
+    if (key === 'demo') {
+      console.info('⚠️ Weather: Using demo mode (use a real API key for live data)');
+      return getMockWeatherData(location);
+    }
     if (location.includes(',')) {
       const [part1, part2] = location.split(',')
       // Check if both parts are numbers (coordinates) vs city,country
