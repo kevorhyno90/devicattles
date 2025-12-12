@@ -7,25 +7,48 @@ import { AppViewProvider } from './lib/AppViewContext.jsx';
 import { initializeAudio } from './lib/notifications.js';
 import './styles.css'
 
-// Initialize the audio context for notification sounds
-initializeAudio();
+// Verify React is available
+if (!React || !React.version) {
+  console.error('❌ Critical Error: React is not properly loaded')
+  document.body.innerHTML = '<div style="padding: 20px; background: #dc2626; color: white;"><h1>Error</h1><p>Failed to load application. Please refresh the page.</p></div>'
+  throw new Error('React is not available')
+}
 
-createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <BrowserRouter
-      future={{
-        v7_startTransition: true,
-        v7_relativeSplatPath: true
-      }}
-    >
-      <ThemeProvider>
-        <AppViewProvider>
-          <App />
-        </AppViewProvider>
-      </ThemeProvider>
-    </BrowserRouter>
-  </React.StrictMode>
-);
+// Initialize the audio context for notification sounds
+try {
+  initializeAudio();
+} catch (e) {
+  console.warn('⚠️ Audio initialization failed (optional):', e)
+}
+
+const rootElement = document.getElementById('root')
+if (!rootElement) {
+  console.error('❌ Root element not found')
+  throw new Error('Root element with id="root" not found in index.html')
+}
+
+try {
+  createRoot(rootElement).render(
+    <React.StrictMode>
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true
+        }}
+      >
+        <ThemeProvider>
+          <AppViewProvider>
+            <App />
+          </AppViewProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </React.StrictMode>
+  );
+} catch (e) {
+  console.error('❌ Failed to render React app:', e)
+  document.body.innerHTML = '<div style="padding: 20px; background: #dc2626; color: white;"><h1>Error</h1><p>Failed to load application. Error: ' + e.message + '</p></div>'
+  throw e
+}
 
 // Register service worker for PWA support
 // Only in production or when explicitly enabled
@@ -35,6 +58,27 @@ const isCodespaces = window.location.hostname.includes('github.dev') || window.l
 if ('serviceWorker' in navigator && !isDev && !isCodespaces) {
   window.addEventListener('load', async () => {
     try {
+      // First, unregister any existing service workers to clear stale cache
+      const registrations = await navigator.serviceWorker.getRegistrations()
+      for (let reg of registrations) {
+        try {
+          await reg.unregister()
+          console.log('🔄 Unregistered old service worker')
+        } catch (e) {
+          console.warn('Failed to unregister service worker:', e)
+        }
+      }
+      
+      // Clear all caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys()
+        for (let cacheName of cacheNames) {
+          await caches.delete(cacheName)
+          console.log(`🔄 Cleared cache: ${cacheName}`)
+        }
+      }
+      
+      // Now register the fresh service worker
       const reg = await navigator.serviceWorker.register(import.meta.env.BASE_URL + 'sw.js', {
         scope: import.meta.env.BASE_URL
       })

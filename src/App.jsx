@@ -1,6 +1,3 @@
-  // Store the deferred install prompt event
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-
 import React, { useState, useEffect, lazy, Suspense, useContext } from 'react'
 import { requestNotificationPermission, listenForMessages } from './lib/firebaseMessaging'
 import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme'
@@ -195,6 +192,7 @@ function AppContent() {
   const [animals, setAnimals] = useState([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
   
   // UI branding/settings - must be declared before any conditional returns

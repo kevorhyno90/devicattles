@@ -1165,53 +1165,7 @@ export default function Reports(){
                   })()}
                 </div>
               )}
-                  <div style={{ overflowX: 'auto', marginTop: '16px' }}>
-                    {(() => {
-                      // Collect all unique keys from all records
-                      const allKeys = Array.from(new Set(viewingData.flatMap(obj => Object.keys(obj))));
-                      return (
-                        <>
-                          <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '15px', background: '#fff' }}>
-                            <thead>
-                              <tr>
-                                {allKeys.map(key => (
-                                  <th key={key} style={{ border: '1px solid #e5e7eb', padding: '8px', background: '#f3f4f6', color: '#059669', fontWeight: 'bold' }}>{key}</th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {viewingData.map((row, idx) => (
-                                <tr key={idx}>
-                                  {allKeys.map((key, vidx) => (
-                                    <td key={vidx} style={{ border: '1px solid #e5e7eb', padding: '8px', color: '#374151' }}>{typeof row[key] === 'object' ? JSON.stringify(row[key]) : String(row[key] ?? '')}</td>
-                                  ))}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                          <button style={{ marginTop: '12px', background: '#059669', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px' }} onClick={() => {
-                            const csv = [allKeys.join(','), ...viewingData.map(row => allKeys.map(key => {
-                              const val = row[key];
-                              return typeof val === 'object' ? JSON.stringify(val) : String(val ?? '');
-                            }).join(',') )].join('\n');
-                            const blob = new Blob([csv], { type: 'text/csv' });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `${viewTitle.replace(/ /g, '-')}.csv`;
-                            document.body.appendChild(a);
-                            a.click();
-                            a.remove();
-                            URL.revokeObjectURL(url);
-                          }}>Download Table as CSV</button>
-                        </>
-                      );
-                    })()
-                  }
-                  </div>
-                )
-              }
-              
+
               {viewFormat === 'xml' && (
                 <pre style={{ 
                   margin: 0,
