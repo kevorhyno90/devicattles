@@ -1,0 +1,9 @@
+{
+  "recommendations": [],
+  "unwantedRecommendations": [
+    "ms-vscode.vscode-typescript-next",
+    "eamodio.gitlens",
+    "sonarsource.sonarlint-vscode",
+    "esbenp.prettier-vscode"
+  ]
+}

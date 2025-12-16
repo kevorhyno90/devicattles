@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import EditableField from '../components/EditableField'
 import {
   getDashboardData,
   getAnimalsByType,
@@ -27,6 +28,30 @@ export default function Dashboard({ onNavigate }) {
   const [voiceSupported, setVoiceSupported] = useState(false)
   const [weather, setWeather] = useState(null)
   const [showCustomizer, setShowCustomizer] = useState(false)
+  const [quickActionsTitle, setQuickActionsTitle] = useState('⚡ Quick Actions')
+  const [qaLabels, setQaLabels] = useState({
+    alerts: '🔔 Smart Alerts',
+    voice: '🎤 Voice Control',
+    weather: '🌤️ Weather',
+    iot: '📟 IoT Devices',
+    market: '💰 Market Prices'
+  })
+
+  // Persist quick actions edits
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('cattalytics:dashboard:qa') || 'null')
+      if (saved) {
+        setQuickActionsTitle(saved.title || '⚡ Quick Actions')
+        setQaLabels(saved.labels || qaLabels)
+      }
+    } catch {}
+  }, [])
+  useEffect(() => {
+    try {
+      localStorage.setItem('cattalytics:dashboard:qa', JSON.stringify({ title: quickActionsTitle, labels: qaLabels }))
+    } catch {}
+  }, [quickActionsTitle, qaLabels])
 
   // Check voice support
   useEffect(() => {
@@ -1188,24 +1213,30 @@ export default function Dashboard({ onNavigate }) {
 
       {/* Quick Actions */}
       <div className="quick-actions">
-        <h3>⚡ Quick Actions</h3>
+        <h3>
+          <EditableField 
+            value={quickActionsTitle}
+            onChange={(v)=>setQuickActionsTitle(v)}
+            inputStyle={{ fontSize: 18, fontWeight: 700 }}
+          />
+        </h3>
         <div className="quick-actions-grid">
           <button onClick={() => onNavigate && onNavigate('alerts')} className="btn-primary" style={{ background: '#dc2626' }}>
-            🔔 Smart Alerts
+            <EditableField value={qaLabels.alerts} onChange={(v)=>setQaLabels(l=>({ ...l, alerts: v }))} inputStyle={{ fontWeight: 600 }} />
           </button>
           {voiceSupported && (
             <button onClick={() => onNavigate && onNavigate('voice')} className="btn-primary" style={{ background: '#7c3aed' }}>
-              🎤 Voice Control
+              <EditableField value={qaLabels.voice} onChange={(v)=>setQaLabels(l=>({ ...l, voice: v }))} inputStyle={{ fontWeight: 600 }} />
             </button>
           )}
           <button onClick={() => onNavigate && onNavigate('weather')} className="btn-primary" style={{ background: '#0ea5e9' }}>
-            🌤️ Weather
+            <EditableField value={qaLabels.weather} onChange={(v)=>setQaLabels(l=>({ ...l, weather: v }))} inputStyle={{ fontWeight: 600 }} />
           </button>
           <button onClick={() => onNavigate && onNavigate('iot')} className="btn-primary" style={{ background: '#8b5cf6' }}>
-            📟 IoT Devices
+            <EditableField value={qaLabels.iot} onChange={(v)=>setQaLabels(l=>({ ...l, iot: v }))} inputStyle={{ fontWeight: 600 }} />
           </button>
           <button onClick={() => onNavigate && onNavigate('market')} className="btn-primary" style={{ background: '#10b981' }}>
-            💰 Market Prices
+            <EditableField value={qaLabels.market} onChange={(v)=>setQaLabels(l=>({ ...l, market: v }))} inputStyle={{ fontWeight: 600 }} />
           </button>
           <button onClick={() => onNavigate && onNavigate('farm3d')} className="btn-primary" style={{ background: '#ec4899' }}>
             🗺️ 3D Farm View

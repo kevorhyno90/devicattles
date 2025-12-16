@@ -1,7 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import CropYield from './CropYield'
-import CropSales from './CropSales'
-import CropTreatment from './CropTreatment'
 // Pest and Disease Management submodules
 import { useEffect as useNotificationEffect } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
@@ -686,23 +683,26 @@ export default function Crops() {
         </div>
       )}
 
-      {tab === 'yields' && (
+      {/* Commented out: CropYield sub-module removed */}
+      {/* tab === 'yields' && (
         <div>
           <CropYield crops={crops} />
         </div>
-      )}
+      ) */}
 
-      {tab === 'sales' && (
+      {/* Commented out: CropSales sub-module removed */}
+      {/* tab === 'sales' && (
         <div>
           <CropSales crops={crops} />
         </div>
-      )}
+      ) */}
 
-      {tab === 'treatments' && (
+      {/* Commented out: CropTreatment sub-module removed */}
+      {/* tab === 'treatments' && (
         <div>
           <CropTreatment crops={crops} />
         </div>
-      )}
+      ) */}
       {tab === 'pests' && (
         <div>
           <h3>Pest Management</h3>

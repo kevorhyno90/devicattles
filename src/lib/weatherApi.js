@@ -86,6 +86,7 @@ export async function getCurrentWeather(location, apiKey = null) {
     const baseUrl = 'https://api.openweathermap.org/data/2.5/weather'
     // Priority: passed apiKey > env variable > localStorage > demo
     const key = apiKey || import.meta.env.VITE_WEATHER_API_KEY || localStorage.getItem('cattalytics:weather:apikey') || 'demo'
+    let url
     
     // Skip if using demo key (will fail with 401), return mock data instead
     if (key === 'demo') {

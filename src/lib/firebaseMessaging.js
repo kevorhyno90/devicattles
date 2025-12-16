@@ -15,14 +15,19 @@ function isNotificationSupported() {
 export async function requestNotificationPermission() {
   // Early return if notifications not supported
   if (!isNotificationSupported()) {
-    console.info('ℹ️ Notifications not supported in this environment');
+    // Silence in development/Codespaces to reduce noise
+    if (import.meta.env.PROD) {
+      console.info('ℹ️ Notifications not supported in this environment');
+    }
     return null;
   }
   
   try {
     // Check current permission state first
     if (Notification.permission === 'denied') {
-      console.info('ℹ️ Notification permission already denied');
+      if (import.meta.env.PROD) {
+        console.info('ℹ️ Notification permission already denied');
+      }
       return null;
     }
     
@@ -38,14 +43,18 @@ export async function requestNotificationPermission() {
     const token = await getToken(messaging, { 
       vapidKey: "BG4uQNeO-WWaHsPHvfFF1m4ojmz6u1HwbYniH4gkKGH1hHYhsPqe_YC-kvLTn6Q-qMbd9VAqvGy7x1hwKLP9roI" 
     });
-    console.log("✅ FCM Token:", token);
+    if (import.meta.env.PROD) {
+      console.log("✅ FCM Token:", token);
+    }
     return token;
   } catch (err) {
     // Suppress expected errors in unsupported environments
     if (err.code === 'messaging/unsupported-browser' || 
         err.message?.includes('messaging') ||
         err.message?.includes('not supported')) {
-      console.info('ℹ️ Push messaging not available in this browser/environment');
+      if (import.meta.env.PROD) {
+        console.info('ℹ️ Push messaging not available in this browser/environment');
+      }
     } else {
       console.warn('⚠️ FCM setup error:', err.message);
     }
@@ -60,10 +69,14 @@ export function listenForMessages(callback) {
   
   try {
     onMessage(messaging, (payload) => {
-      console.log("📨 FCM Message received:", payload);
+      if (import.meta.env.PROD) {
+        console.log("📨 FCM Message received:", payload);
+      }
       if (callback) callback(payload);
     });
   } catch (err) {
-    console.info('ℹ️ Message listener not available in this environment');
+    if (import.meta.env.PROD) {
+      console.info('ℹ️ Message listener not available in this environment');
+    }
   }
 }

@@ -1,0 +1,11 @@
+{
+  "remote.extensionKind": {
+    "ms-vscode-remote.vscode-server": ["ui"],
+    "eamodio.gitlens": ["ui"],
+    "ms-vscode.js-debug": ["ui"],
+    "ms-vscode.vscode-typescript-next": ["ui"]
+  },
+  "remote.otherPortsAttributes": {
+    "onAutoForward": "notify"
+  }
+}

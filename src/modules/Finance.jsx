@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react'
+import EditableField from '../components/EditableField'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 import { getFinancialSummary } from '../lib/moduleIntegration'
 import { useDebounce } from '../lib/useDebounce'
@@ -642,14 +643,20 @@ export default function Finance(){
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                    <h4 style={{ margin: 0 }}>{entry.description}</h4>
+                    <h4 style={{ margin: 0 }}>
+                      <EditableField 
+                        value={entry.description}
+                        onChange={(v)=>updateEntry(entry.id, { description: v })}
+                        inputStyle={{ fontSize: 16, fontWeight: 600 }}
+                      />
+                    </h4>
                     <span className={`badge ${entry.amount >= 0 ? 'green' : ''}`}>{entry.category}</span>
                     <span className="badge">{entry.subcategory}</span>
                   </div>
                   <div style={{ display: 'flex', gap: '20px', fontSize: '14px', color: 'var(--muted)', marginBottom: '4px' }}>
                     <span>📅 {entry.date}</span>
                     <span>💳 {entry.paymentMethod}</span>
-                    {entry.vendor && <span>🏪 {entry.vendor}</span>}
+                    <span>🏪{' '}<EditableField value={entry.vendor || ''} onChange={(v)=>updateEntry(entry.id, { vendor: v })} inputStyle={{ fontSize: 13 }} /></span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

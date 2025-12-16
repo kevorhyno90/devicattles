@@ -70,7 +70,7 @@ const TimelinePlanner = lazyWithRetry(() => import('./modules/TimelinePlanner'))
 const PhotoGalleryAdvanced = lazyWithRetry(() => import('./modules/PhotoGalleryAdvanced'))
 const GeospatialMap = lazyWithRetry(() => import('./modules/GeospatialMap'))
 const PredictiveAnalytics = lazyWithRetry(() => import('./modules/PredictiveAnalytics'))
-const AdvancedBatchOps = lazyWithRetry(() => import('./modules/AdvancedBatchOps'))
+// Removed for startup performance: const AdvancedBatchOps = lazyWithRetry(() => import('./modules/AdvancedBatchOps'))
 const CustomReportBuilder = lazyWithRetry(() => import('./modules/CustomReportBuilder'))
 const AIInsightsDashboard = lazyWithRetry(() => import('./modules/AIInsightsDashboard'))
 const AlertCenter = lazyWithRetry(() => import('./modules/AlertCenter'))
@@ -89,6 +89,9 @@ const KnowledgeBase = lazyWithRetry(() => import('./modules/KnowledgeBase'))
 const AlertRules = lazyWithRetry(() => import('./modules/AlertRules'))
 const DiseaseDetection = lazyWithRetry(() => import('./modules/DiseaseDetection'))
 const PredictiveDashboard = lazyWithRetry(() => import('./modules/PredictiveDashboard'))
+
+// Phase 3: Reports & Analytics
+// const ReportsPro = lazyWithRetry(() => import('./modules/ReportsPro'))
 
 // Loading fallback component with timeout detection
 const LoadingFallback = () => {
@@ -186,10 +189,13 @@ function AppContent() {
   const { theme, getThemeColors } = useTheme();
   const colors = getThemeColors();
 
-  const { view, setView } = useContext(AppViewContext);
+  const { view, setView, editMode, setEditMode } = useContext(AppViewContext);
   const [authenticated, setAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [animals, setAnimals] = useState([]);
+  // Pull crop and finance data from stores for ReportsPro and analytics
+  const crops = useCropStore(state => state.crops || [])
+  const finance = useFinanceStore(state => state.transactions || [])
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -484,6 +490,11 @@ function AppContent() {
               📥 Install App
             </button>
           )}
+          {/* Global Edit Mode Toggle */}
+          <label title="Toggle edit mode" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'rgba(255,255,255,0.2)', borderRadius: 6 }}>
+            <input type="checkbox" checked={editMode} onChange={e=>setEditMode(e.target.checked)} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'white' }}>{editMode ? 'Edit Mode: ON' : 'Edit Mode: OFF'}</span>
+          </label>
           {unreadNotifications > 0 && (
             <div 
               onClick={() => setView('notifications')}
@@ -921,6 +932,20 @@ function AppContent() {
             }}
           >📊 Reports</button>
           <button 
+            className={view==='reportsPro'? 'active':''} 
+            onClick={()=>setView('reportsPro')}
+            style={{
+              background: view==='reportsPro' ? '#8b5cf6' : '#f3f4f6',
+              color: view==='reportsPro' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >💎 Reports Pro</button>
+          <button 
             className={view==='analytics'? 'active':''} 
             onClick={()=>setView('analytics')}
             style={{
@@ -1184,6 +1209,16 @@ function AppContent() {
           </section>
         )}
 
+        {/* Commented out: ReportsPro has React hook issue during lazy loading */}
+        {/* view === 'reportsPro' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><ReportsPro animals={animals} crops={crops} finance={finance} /></ErrorBoundary>
+          </section>
+        ) */}
+
         {view === 'analytics' && (
           <section>
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
@@ -1301,6 +1336,7 @@ function AppContent() {
           </section>
         )}
 
+        {/* Batch ops removed for startup performance
         {view === 'batchops' && (
           <section>
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
@@ -1309,6 +1345,7 @@ function AppContent() {
             <ErrorBoundary><AdvancedBatchOps /></ErrorBoundary>
           </section>
         )}
+        */}
 
         {view === 'customreports' && (
           <section>

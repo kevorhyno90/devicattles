@@ -112,7 +112,9 @@ if ('serviceWorker' in navigator && !isDev && !isCodespaces) {
     }
   })
 } else {
-  console.info('ℹ️ Service Worker skipped - development mode or Codespaces environment')
+  if (import.meta.env.PROD) {
+    console.info('ℹ️ Service Worker skipped - non-supported environment')
+  }
 }
 
 // PWA Install Prompt Handler
@@ -120,16 +122,19 @@ window.deferredInstallPrompt = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
   if (!isDev && !isCodespaces) {
-    console.log('💾 PWA install prompt available');
+    if (import.meta.env.PROD) {
+      console.log('💾 PWA install prompt available');
+    }
     e.preventDefault();
     window.deferredInstallPrompt = e;
-    // Dispatch event for any active listeners to update UI
     window.dispatchEvent(new CustomEvent('pwa-install-available'));
   }
 });
 
 window.addEventListener('appinstalled', () => {
-  console.log('✅ PWA installed successfully');
+  if (import.meta.env.PROD) {
+    console.log('✅ PWA installed successfully');
+  }
   // Clear the prompt once installed
   window.deferredInstallPrompt = null;
   // Dispatch event to hide the install button
@@ -149,7 +154,9 @@ window.installPWA = async () => {
   prompt.prompt();
   const { outcome } = await prompt.userChoice;
   
-  console.log(`PWA install outcome: ${outcome}`);
+  if (import.meta.env.PROD) {
+    console.log(`PWA install outcome: ${outcome}`);
+  }
   
   // The prompt can only be used once, so clear it.
   window.deferredInstallPrompt = null;

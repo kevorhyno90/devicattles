@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import EditableField from '../components/EditableField'
 import Calendar from '../components/Calendar'
 
 const SCHEDULE_TYPES = {
@@ -126,6 +127,29 @@ export default function Schedules() {
   const [inlineData, setInlineData] = useState({})
   const [toast, setToast] = useState(null)
   const [lastChange, setLastChange] = useState(null)
+  function updateEmployeeField(id, field, value){
+    setEmployees(prev => prev.map(e => e.id === id ? { ...e, [field]: value } : e))
+  }
+
+  // Load persisted employees and schedules on mount
+  useEffect(() => {
+    try {
+      const e = localStorage.getItem(EMPLOYEES_KEY)
+      if (e) setEmployees(JSON.parse(e))
+    } catch {}
+    try {
+      const s = localStorage.getItem(SCHEDULES_KEY)
+      if (s) setSchedules(JSON.parse(s))
+    } catch {}
+  }, [])
+
+  // Persist employees and schedules when they change
+  useEffect(() => {
+    try { localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(employees)) } catch {}
+  }, [employees])
+  useEffect(() => {
+    try { localStorage.setItem(SCHEDULES_KEY, JSON.stringify(schedules)) } catch {}
+  }, [schedules])
 
   useEffect(() => {
     const rawSchedules = localStorage.getItem(SCHEDULES_KEY)
@@ -1299,8 +1323,20 @@ export default function Schedules() {
                       ) : (
                         <>
                           <div style={{ flex: 1 }}>
-                            <h4 style={{ margin: '0 0 4px 0', fontSize: 18 }}>{emp.name}</h4>
-                            <div style={{ fontSize: 13, opacity: 0.9 }}>{emp.role}</div>
+                            <h4 style={{ margin: '0 0 4px 0', fontSize: 18 }}>
+                              <EditableField 
+                                value={emp.name}
+                                onChange={(v)=>updateEmployeeField(emp.id,'name',v)}
+                                inputStyle={{ fontSize: 16 }}
+                              />
+                            </h4>
+                            <div style={{ fontSize: 13, opacity: 0.9 }}>
+                              <EditableField 
+                                value={emp.role}
+                                onChange={(v)=>updateEmployeeField(emp.id,'role',v)}
+                                inputStyle={{ fontSize: 12 }}
+                              />
+                            </div>
                             <div style={{ fontSize: 11, opacity: 0.8, marginTop: 4 }}>
                               {emp.id} • Employed {yearsEmployed} years
                             </div>
@@ -1322,16 +1358,45 @@ export default function Schedules() {
                   {/* Contact Info */}
                   <div style={{ padding: 16, borderBottom: '1px solid #eee' }}>
                     <div style={{ fontSize: 12, marginBottom: 6 }}>
-                      <strong>📧 Email:</strong> {emp.email}
+                      <strong>📧 Email:</strong>{' '}
+                      <EditableField 
+                        value={emp.email}
+                        onChange={(v)=>updateEmployeeField(emp.id,'email',v)}
+                        type="email"
+                        inputStyle={{ fontSize: 12, marginLeft: 6 }}
+                      />
                     </div>
                     <div style={{ fontSize: 12, marginBottom: 6 }}>
-                      <strong>📱 Phone:</strong> {emp.phone}
+                      <strong>📱 Phone:</strong>{' '}
+                      <EditableField 
+                        value={emp.phone}
+                        onChange={(v)=>updateEmployeeField(emp.id,'phone',v)}
+                        inputStyle={{ fontSize: 12, marginLeft: 6 }}
+                      />
                     </div>
-                    {emp.address && (
-                      <div style={{ fontSize: 12, marginBottom: 6 }}>
-                        <strong>🏠 Address:</strong> {emp.address}, {emp.city}, {emp.state} {emp.zipCode}
-                      </div>
-                    )}
+                    <div style={{ fontSize: 12, marginBottom: 6 }}>
+                      <strong>🏠 Address:</strong>{' '}
+                      <EditableField 
+                        value={emp.address || ''}
+                        onChange={(v)=>updateEmployeeField(emp.id,'address',v)}
+                        inputStyle={{ fontSize: 12, marginLeft: 6, width: '60%' }}
+                      />{', '}
+                      <EditableField 
+                        value={emp.city || ''}
+                        onChange={(v)=>updateEmployeeField(emp.id,'city',v)}
+                        inputStyle={{ fontSize: 12, marginLeft: 6, width: '20%' }}
+                      />{', '}
+                      <EditableField 
+                        value={emp.state || ''}
+                        onChange={(v)=>updateEmployeeField(emp.id,'state',v)}
+                        inputStyle={{ fontSize: 12, marginLeft: 6, width: '10%' }}
+                      />{' '}
+                      <EditableField 
+                        value={emp.zipCode || ''}
+                        onChange={(v)=>updateEmployeeField(emp.id,'zipCode',v)}
+                        inputStyle={{ fontSize: 12, marginLeft: 6, width: '10%' }}
+                      />
+                    </div>
                     {emp.dateOfBirth && (
                       <div style={{ fontSize: 12, marginBottom: 6 }}>
                         <strong>🎂 DOB:</strong> {new Date(emp.dateOfBirth).toLocaleDateString()}
@@ -1345,27 +1410,48 @@ export default function Schedules() {
                       <strong>📅 Employed Since:</strong> {emp.dateEmployed ? new Date(emp.dateEmployed).toLocaleDateString() : 'N/A'}
                     </div>
                     <div style={{ fontSize: 12, marginBottom: 6 }}>
-                      <strong>💰 Rate:</strong> ${emp.hourlyRate ? emp.hourlyRate.toFixed(2) : '0.00'}/hr
+                      <strong>💰 Rate:</strong>{' '}
+                      <EditableField 
+                        value={emp.hourlyRate ?? 0}
+                        onChange={(v)=>updateEmployeeField(emp.id,'hourlyRate',parseFloat(v)||0)}
+                        type="number"
+                        inputStyle={{ fontSize: 12, width: 80, marginLeft: 6 }}
+                      />/hr
                     </div>
                     <div style={{ fontSize: 12 }}>
-                      <strong>⏰ Hours/Week:</strong> {emp.weeklyHours || 40}
+                      <strong>⏰ Hours/Week:</strong>{' '}
+                      <EditableField 
+                        value={emp.weeklyHours ?? 40}
+                        onChange={(v)=>updateEmployeeField(emp.id,'weeklyHours',parseInt(v)||40)}
+                        type="number"
+                        inputStyle={{ fontSize: 12, width: 80, marginLeft: 6 }}
+                      />
                     </div>
                   </div>
 
                   {/* Emergency Contact */}
-                  {emp.emergencyContact && (
-                    <div style={{ padding: 16, borderBottom: '1px solid #eee' }}>
-                      <div style={{ fontSize: 11, fontWeight: 'bold', color: '#d32f2f', marginBottom: 6 }}>
-                        🚨 EMERGENCY CONTACT
-                      </div>
-                      <div style={{ fontSize: 12, marginBottom: 4 }}>
-                        <strong>{emp.emergencyContact}</strong>
-                      </div>
-                      <div style={{ fontSize: 12 }}>
-                        📞 {emp.emergencyPhone}
-                      </div>
+                  <div style={{ padding: 16, borderBottom: '1px solid #eee' }}>
+                    <div style={{ fontSize: 11, fontWeight: 'bold', color: '#d32f2f', marginBottom: 6 }}>
+                      🚨 EMERGENCY CONTACT
                     </div>
-                  )}
+                    <div style={{ fontSize: 12, marginBottom: 4 }}>
+                      <EditableField 
+                        value={emp.emergencyContact || ''}
+                        onChange={(v)=>updateEmployeeField(emp.id,'emergencyContact',v)}
+                        placeholder="Name"
+                        inputStyle={{ fontSize: 12, width: '60%' }}
+                      />
+                    </div>
+                    <div style={{ fontSize: 12 }}>
+                      📞{' '}
+                      <EditableField 
+                        value={emp.emergencyPhone || ''}
+                        onChange={(v)=>updateEmployeeField(emp.id,'emergencyPhone',v)}
+                        placeholder="Phone"
+                        inputStyle={{ fontSize: 12, width: '40%' }}
+                      />
+                    </div>
+                  </div>
 
                   {/* Leave Balance */}
                   <div style={{ padding: 16, borderBottom: '1px solid #eee', background: onLeaveNow ? '#fff3e0' : '#f0f4ff' }}>

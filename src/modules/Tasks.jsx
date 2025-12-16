@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react'
+import EditableField from '../components/EditableField'
 import { getCurrentUserName, getAllUsers } from '../lib/auth'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 import { useDebounce } from '../lib/useDebounce'
@@ -480,14 +481,34 @@ export default function Tasks(){
                   </div>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                    <h4 style={{ margin: 0, textDecoration: task.done ? 'line-through' : 'none' }}>{task.title}</h4>
+                    <h4 style={{ margin: 0, textDecoration: task.done ? 'line-through' : 'none' }}>
+                      <EditableField 
+                        value={task.title}
+                        onChange={(v)=>updateTask(task.id, { title: v })}
+                        inputStyle={{ fontSize: 16, fontWeight: 700 }}
+                      />
+                    </h4>
                     <span className={`badge ${task.priority === 'Critical' ? 'flag' : task.priority === 'High' ? 'flag' : 'badge'}`}>{task.priority}</span>
                     <span className="badge">{task.category}</span>
                   </div>
                 )}
-                <p style={{ margin: '4px 0', color: 'var(--muted)', fontSize: '14px' }}>{task.description}</p>
+                <p style={{ margin: '4px 0', color: 'var(--muted)', fontSize: '14px' }}>
+                  <EditableField 
+                    value={task.description}
+                    onChange={(v)=>updateTask(task.id, { description: v })}
+                    type="textarea"
+                    inputStyle={{ width: '100%' }}
+                  />
+                </p>
                 <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--muted)' }}>
-                  <span>👤 {task.assignedTo}</span>
+                  <span>
+                    👤{' '}
+                    <EditableField 
+                      value={task.assignedTo}
+                      onChange={(v)=>updateTask(task.id, { assignedTo: v })}
+                      inputStyle={{ fontSize: 12 }}
+                    />
+                  </span>
                   <span>📅 {task.due ? `Due ${task.due}` : 'No due date'}</span>
                   <span>⏱️ {task.estimatedHours}h</span>
                   {task.location && <span>📍 {task.location}</span>}

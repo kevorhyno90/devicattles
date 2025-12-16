@@ -64,9 +64,22 @@ export default defineConfig({
     strictPort: false,
     allowedHosts: true,
     hmr: false, // Disable HMR in Codespaces to avoid WebSocket connection errors
+    fs: {
+      strict: true
+    },
     watch: {
+      // Reduce resource usage to avoid Codespaces restarts
       usePolling: false,
-      interval: 100
+      interval: 300,
+      ignored: [
+        '**/node_modules/**',
+        '**/.git/**',
+        '**/dist/**',
+        '**/.vite/**',
+        'assets/**',
+        'attached_assets/**',
+        'public/assets/**'
+      ]
     }
   },
   preview: {
