@@ -219,19 +219,19 @@ export default function AzollaFarming() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
             <div>
               <label>Pond Name *</label>
-              <input value={pondForm.name} onChange={e => setPondForm({ ...pondForm, name: e.target.value })} placeholder="Pond 1" />
+              <input id="pond-name" name="pondName" value={pondForm.name} onChange={e => setPondForm({ ...pondForm, name: e.target.value })} placeholder="Pond 1" />
             </div>
             <div>
               <label>Size (m²) *</label>
-              <input type="number" step="0.1" value={pondForm.size} onChange={e => setPondForm({ ...pondForm, size: e.target.value })} placeholder="10" />
+              <input type="number" step="0.1" id="pond-size" name="size" value={pondForm.size} onChange={e => setPondForm({ ...pondForm, size: e.target.value })} placeholder="10" />
             </div>
             <div>
               <label>Location</label>
-              <input value={pondForm.location} onChange={e => setPondForm({ ...pondForm, location: e.target.value })} placeholder="North Field" />
+              <input id="pond-location" name="location" value={pondForm.location} onChange={e => setPondForm({ ...pondForm, location: e.target.value })} placeholder="North Field" />
             </div>
             <div>
               <label>Setup Date</label>
-              <input type="date" value={pondForm.setupDate} onChange={e => setPondForm({ ...pondForm, setupDate: e.target.value })} />
+              <input type="date" id="pond-setup-date" name="setupDate" value={pondForm.setupDate} onChange={e => setPondForm({ ...pondForm, setupDate: e.target.value })} />
             </div>
             <div>
               <label>Status</label>
@@ -241,15 +241,15 @@ export default function AzollaFarming() {
             </div>
             <div>
               <label>Expected Yield/Week (kg)</label>
-              <input type="number" step="0.1" value={pondForm.yieldPerWeek} onChange={e => setPondForm({ ...pondForm, yieldPerWeek: e.target.value })} />
+              <input type="number" step="0.1" id="pond-yield-per-week" name="yieldPerWeek" value={pondForm.yieldPerWeek} onChange={e => setPondForm({ ...pondForm, yieldPerWeek: e.target.value })} />
             </div>
             <div>
               <label>Water Temperature (°C)</label>
-              <input type="number" step="0.1" value={pondForm.waterTemp} onChange={e => setPondForm({ ...pondForm, waterTemp: e.target.value })} placeholder="25" />
+              <input type="number" step="0.1" id="pond-water-temp" name="waterTemp" value={pondForm.waterTemp} onChange={e => setPondForm({ ...pondForm, waterTemp: e.target.value })} placeholder="25" />
             </div>
             <div>
               <label>pH Level</label>
-              <input type="number" step="0.1" value={pondForm.pH} onChange={e => setPondForm({ ...pondForm, pH: e.target.value })} placeholder="6.5" />
+              <input type="number" step="0.1" id="pond-ph" name="pH" value={pondForm.pH} onChange={e => setPondForm({ ...pondForm, pH: e.target.value })} placeholder="6.5" />
             </div>
             <div>
               <label>Nutrient Source</label>

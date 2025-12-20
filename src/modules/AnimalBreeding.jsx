@@ -462,11 +462,11 @@ export default function AnimalBreeding({ animals }){
             </div>
             <div>
               <label>Sire ID</label>
-              <input value={sire} onChange={e => setSire(e.target.value)} placeholder="e.g., S-101" />
+              <input id="breeding-sire-id" name="sireId" value={sire} onChange={e => setSire(e.target.value)} placeholder="e.g., S-101" />
             </div>
             <div>
               <label>Sire Name</label>
-              <input value={sireName} onChange={e => setSireName(e.target.value)} placeholder="Bull name" />
+              <input id="breeding-sire-name" name="sireName" value={sireName} onChange={e => setSireName(e.target.value)} placeholder="Bull name" />
             </div>
             <div>
               <label>Method</label>
@@ -476,12 +476,14 @@ export default function AnimalBreeding({ animals }){
             </div>
             <div>
               <label>Technician/Handler</label>
-              <input value={technician} onChange={e => setTechnician(e.target.value)} placeholder="Name" />
+              <input id="breeding-technician" name="technician" value={technician} onChange={e => setTechnician(e.target.value)} placeholder="Name" />
             </div>
             <div>
               <label>Expected Due Date {(event === 'AI' || event === 'Natural Breeding') && '(Auto-calculated)'}</label>
-              <input 
-                type="date" 
+              <input
+                type="date"
+                id="breeding-expected-due"
+                name="expectedDue"
                 value={expectedDue} 
                 onChange={e => setExpectedDue(e.target.value)} 
                 title={animalId && animals ? `Based on ${animals.find(a => a.id === animalId)?.breed || 'breed'} gestation period` : ''}
@@ -489,8 +491,10 @@ export default function AnimalBreeding({ animals }){
             </div>
             <div>
               <label>Return to Heat Date (Auto-calculated)</label>
-              <input 
-                type="date" 
+              <input
+                type="date"
+                id="breeding-return-to-heat"
+                name="returnToHeat"
                 value={returnToHeat} 
                 onChange={e => setReturnToHeat(e.target.value)}
                 style={{ background: '#f0fdf4' }}
@@ -499,7 +503,7 @@ export default function AnimalBreeding({ animals }){
             </div>
             <div>
               <label>Cost (KSH)</label>
-              <input type="number" step="0.01" value={cost} onChange={e => setCost(e.target.value)} placeholder="0.00" />
+              <input type="number" step="0.01" id="breeding-cost" name="cost" value={cost} onChange={e => setCost(e.target.value)} placeholder="0.00" />
             </div>
             <div>
               <label>Status</label>
@@ -637,6 +641,8 @@ export default function AnimalBreeding({ animals }){
                 Bull Name *
                 <input
                   type="text"
+                  id="semen-bull-name"
+                  name="bullName"
                   value={semenForm.bullName}
                   onChange={e => setSemenForm({ ...semenForm, bullName: e.target.value })}
                   placeholder="e.g., Prime Bull"
@@ -647,6 +653,8 @@ export default function AnimalBreeding({ animals }){
                 Bull ID
                 <input
                   type="text"
+                  id="semen-bull-id"
+                  name="bullId"
                   value={semenForm.bullId}
                   onChange={e => setSemenForm({ ...semenForm, bullId: e.target.value })}
                   placeholder="e.g., B-001"
@@ -656,6 +664,8 @@ export default function AnimalBreeding({ animals }){
                 Breed *
                 <input
                   type="text"
+                  id="semen-breed"
+                  name="breed"
                   value={semenForm.breed}
                   onChange={e => setSemenForm({ ...semenForm, breed: e.target.value })}
                   placeholder="e.g., Holstein"
@@ -666,6 +676,8 @@ export default function AnimalBreeding({ animals }){
                 Supplier
                 <input
                   type="text"
+                  id="semen-supplier"
+                  name="supplier"
                   value={semenForm.supplier}
                   onChange={e => setSemenForm({ ...semenForm, supplier: e.target.value })}
                   placeholder="e.g., National Breeding Center"
@@ -675,6 +687,8 @@ export default function AnimalBreeding({ animals }){
                 Batch Number
                 <input
                   type="text"
+                  id="semen-batch-number"
+                  name="batchNumber"
                   value={semenForm.batchNumber}
                   onChange={e => setSemenForm({ ...semenForm, batchNumber: e.target.value })}
                   placeholder="e.g., BATCH-2025-001"
@@ -684,6 +698,8 @@ export default function AnimalBreeding({ animals }){
                 Production Date
                 <input
                   type="date"
+                  id="semen-production-date"
+                  name="productionDate"
                   value={semenForm.productionDate}
                   onChange={e => setSemenForm({ ...semenForm, productionDate: e.target.value })}
                 />
@@ -692,6 +708,8 @@ export default function AnimalBreeding({ animals }){
                 Number of Straws *
                 <input
                   type="number"
+                  id="semen-straws"
+                  name="straws"
                   value={semenForm.straws}
                   onChange={e => setSemenForm({ ...semenForm, straws: e.target.value })}
                   placeholder="0"
@@ -704,6 +722,8 @@ export default function AnimalBreeding({ animals }){
                 <input
                   type="number"
                   step="0.01"
+                  id="semen-price"
+                  name="price"
                   value={semenForm.price}
                   onChange={e => setSemenForm({ ...semenForm, price: e.target.value })}
                   placeholder="0.00"

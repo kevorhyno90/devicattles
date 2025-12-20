@@ -506,6 +506,8 @@ export default function PoultryManagement() {
         <div style={{marginTop:12, marginBottom:8}}>
           <input
             type="text"
+            id="poultry-search"
+            name="search"
             placeholder="Search flocks by name, type, breed, status..."
             value={search}
             onChange={e => setSearch(e.target.value)}

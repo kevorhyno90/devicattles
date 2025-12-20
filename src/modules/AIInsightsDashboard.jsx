@@ -239,6 +239,8 @@ export default function AIInsightsDashboard() {
         <label style={{ display: 'flex', gap: '8px', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
           <input
             type="checkbox"
+            id="show-actioned-insights"
+            name="showActioned"
             checked={showActioned}
             onChange={(e) => setShowActioned(e.target.checked)}
             style={{ cursor: 'pointer' }}

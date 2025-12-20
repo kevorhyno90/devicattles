@@ -262,13 +262,13 @@ export default function CanineManagement({ animals, setAnimals }) {
                 <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
                   <h4>{editingId ? 'Edit Canine' : 'Add New Canine'}</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                    <input type="text" placeholder="Dog name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                    <input type="text" placeholder="Breed" value={formData.breed} onChange={e => setFormData({...formData, breed: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                    <input type="text" id="dog-name" name="dogName" placeholder="Dog name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                    <input type="text" id="dog-breed" name="breed" placeholder="Breed" value={formData.breed} onChange={e => setFormData({...formData, breed: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <label htmlFor="dob" style={{ fontSize: '13px', marginBottom: '4px', fontWeight: '500' }}>Date of Birth</label>
-                      <input id="dob" type="date" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                      <input id="dob" name="dob" type="date" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
                     </div>
-                    <input type="number" placeholder="Weight (kg)" value={formData.weight} onChange={e => setFormData({...formData, weight: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                    <input type="number" id="dog-weight" name="weight" placeholder="Weight (kg)" value={formData.weight} onChange={e => setFormData({...formData, weight: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
                     <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
                       {roles.map(r => <option key={r} value={r}>{r}</option>)}
                     </select>
@@ -449,14 +449,14 @@ export default function CanineManagement({ animals, setAnimals }) {
                   <div style={{ background: 'white', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', marginBottom: '16px' }}>
                     <h4 style={{ marginTop: 0 }}>🏥 Add Health Record</h4>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                      <input type="text" placeholder="Condition/Illness" value={healthForm.condition} onChange={e => setHealthForm({...healthForm, condition: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                      <input type="text" id="health-condition" name="condition" placeholder="Condition/Illness" value={healthForm.condition} onChange={e => setHealthForm({...healthForm, condition: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
                       <select value={healthForm.severity} onChange={e => setHealthForm({...healthForm, severity: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
                         <option>Minor</option>
                         <option>Moderate</option>
                         <option>Severe</option>
                       </select>
-                      <input type="date" value={healthForm.date} onChange={e => setHealthForm({...healthForm, date: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                      <input type="text" placeholder="Veterinarian" value={healthForm.vet} onChange={e => setHealthForm({...healthForm, vet: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                      <input type="date" id="health-date" name="healthDate" value={healthForm.date} onChange={e => setHealthForm({...healthForm, date: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                      <input type="text" id="health-vet" name="veterinarian" placeholder="Veterinarian" value={healthForm.vet} onChange={e => setHealthForm({...healthForm, vet: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
                     </div>
                     <textarea placeholder="Treatment & Notes" value={healthForm.treatment} onChange={e => setHealthForm({...healthForm, treatment: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', minHeight: '80px', marginBottom: '12px', fontFamily: 'inherit' }} />
                     <button onClick={() => addHealthRecord(selectedCanine.id)} style={{ padding: '10px 16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
@@ -500,9 +500,9 @@ export default function CanineManagement({ animals, setAnimals }) {
                         <option>Leptospirosis</option>
                         <option>Other</option>
                       </select>
-                      <input type="date" value={vaccineForm.date} onChange={e => setVaccineForm({...vaccineForm, date: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                      <input type="text" placeholder="Veterinarian" value={vaccineForm.vet} onChange={e => setVaccineForm({...vaccineForm, vet: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                      <input type="date" placeholder="Booster Due" value={vaccineForm.boosterDue} onChange={e => setVaccineForm({...vaccineForm, boosterDue: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                      <input type="date" id="vaccine-date" name="vaccineDate" value={vaccineForm.date} onChange={e => setVaccineForm({...vaccineForm, date: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                      <input type="text" id="vaccine-vet" name="vaccineVeterinarian" placeholder="Veterinarian" value={vaccineForm.vet} onChange={e => setVaccineForm({...vaccineForm, vet: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                      <input type="date" id="vaccine-booster-due" name="boosterDue" placeholder="Booster Due" value={vaccineForm.boosterDue} onChange={e => setVaccineForm({...vaccineForm, boosterDue: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
                     </div>
                     <textarea placeholder="Notes" value={vaccineForm.notes} onChange={e => setVaccineForm({...vaccineForm, notes: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', minHeight: '60px', marginBottom: '12px', fontFamily: 'inherit' }} />
                     <button onClick={() => addVaccineRecord(selectedCanine.id)} style={{ padding: '10px 16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
@@ -539,14 +539,14 @@ export default function CanineManagement({ animals, setAnimals }) {
                   <div style={{ background: 'white', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', marginBottom: '16px' }}>
                     <h4 style={{ marginTop: 0 }}>🍽️ Husbandry Record</h4>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                      <input type="text" placeholder="Feed Type" value={husbandryForm.feedType} onChange={e => setHusbandryForm({...husbandryForm, feedType: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                      <input type="text" placeholder="Quantity per meal" value={husbandryForm.quantity} onChange={e => setHusbandryForm({...husbandryForm, quantity: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                      <input type="text" id="husbandry-feed-type" name="feedType" placeholder="Feed Type" value={husbandryForm.feedType} onChange={e => setHusbandryForm({...husbandryForm, feedType: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                      <input type="text" id="husbandry-quantity" name="quantity" placeholder="Quantity per meal" value={husbandryForm.quantity} onChange={e => setHusbandryForm({...husbandryForm, quantity: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
                       <select value={husbandryForm.frequency} onChange={e => setHusbandryForm({...husbandryForm, frequency: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
                         <option>Once Daily</option>
                         <option>Twice Daily</option>
                         <option>Thrice Daily</option>
                       </select>
-                      <input type="text" placeholder="Housing/Shelter" value={husbandryForm.housing} onChange={e => setHusbandryForm({...husbandryForm, housing: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                      <input type="text" id="husbandry-housing" name="housing" placeholder="Housing/Shelter" value={husbandryForm.housing} onChange={e => setHusbandryForm({...husbandryForm, housing: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
                       <select value={husbandryForm.exercise} onChange={e => setHusbandryForm({...husbandryForm, exercise: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
                         <option>Minimal</option>
                         <option>Moderate</option>
@@ -560,7 +560,7 @@ export default function CanineManagement({ animals, setAnimals }) {
                         <option>As needed</option>
                       </select>
                     </div>
-                    <input type="text" placeholder="Supplements/Vitamins" value={husbandryForm.supplements} onChange={e => setHusbandryForm({...husbandryForm, supplements: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', marginBottom: '12px' }} />
+                    <input type="text" id="husbandry-supplements" name="supplements" placeholder="Supplements/Vitamins" value={husbandryForm.supplements} onChange={e => setHusbandryForm({...husbandryForm, supplements: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', marginBottom: '12px' }} />
                     <button onClick={() => addHusbandryRecord(selectedCanine.id)} style={{ padding: '10px 16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
                       + Log Husbandry
                     </button>

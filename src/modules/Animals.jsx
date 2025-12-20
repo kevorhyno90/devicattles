@@ -1172,51 +1172,51 @@ export default function Animals() {
             <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 600 ? '1fr' : '1fr 1fr', gap: window.innerWidth <= 600 ? 12 : 8 }}>
               <label>
                 Tag
-                <input value={form.tag} onChange={e => setForm({ ...form, tag: e.target.value })} />
+                <input id="animal-tag" name="tag" value={form.tag} onChange={e => setForm({ ...form, tag: e.target.value })} />
                 {errors.tag && <div style={{ color: 'crimson' }}>{errors.tag}</div>}
               </label>
 
               <label>
                 Name *
-                <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+                <input id="animal-name" name="name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
                 {errors.name && <div style={{ color: 'crimson' }}>{errors.name}</div>}
               </label>
 
               <label>
                 Breed
-                <input value={form.breed} onChange={e => setForm({ ...form, breed: e.target.value })} />
+                <input id="animal-breed" name="breed" value={form.breed} onChange={e => setForm({ ...form, breed: e.target.value })} />
               </label>
 
               <label>
                 Color
-                <input value={form.color} onChange={e => setForm({ ...form, color: e.target.value })} />
+                <input id="animal-color" name="color" value={form.color} onChange={e => setForm({ ...form, color: e.target.value })} />
               </label>
 
               <label>
                 DOB
-                <input type="date" value={form.dob} onChange={e => setForm({ ...form, dob: e.target.value })} />
+                <input id="animal-dob" name="dob" type="date" value={form.dob} onChange={e => setForm({ ...form, dob: e.target.value })} />
                 {errors.dob && <div style={{ color: 'crimson' }}>{errors.dob}</div>}
               </label>
 
               <label>
                 Weight (kg)
-                <input type="number" step="0.1" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} />
+                <input id="animal-weight" name="weight" type="number" step="0.1" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} />
                 {errors.weight && <div style={{ color: 'crimson' }}>{errors.weight}</div>}
               </label>
 
               <label>
                 Sire
-                <input value={form.sire} onChange={e => setForm({ ...form, sire: e.target.value })} />
+                <input id="animal-sire" name="sire" value={form.sire} onChange={e => setForm({ ...form, sire: e.target.value })} />
               </label>
 
               <label>
                 Dam
-                <input value={form.dam} onChange={e => setForm({ ...form, dam: e.target.value })} />
+                <input id="animal-dam" name="dam" value={form.dam} onChange={e => setForm({ ...form, dam: e.target.value })} />
               </label>
 
               <label>
                 Sex
-                <select value={form.sex} onChange={e => setForm({ ...form, sex: e.target.value })}>
+                <select id="animal-sex" name="sex" value={form.sex} onChange={e => setForm({ ...form, sex: e.target.value })}>
                   <option value="F">Female</option>
                   <option value="M">Male</option>
                 </select>
@@ -1224,7 +1224,7 @@ export default function Animals() {
 
               <label>
                 Status
-                <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+                <select id="animal-status" name="status" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
                   <option>Active</option>
                   <option>Sold</option>
                   <option>Deceased</option>
@@ -1233,7 +1233,7 @@ export default function Animals() {
 
               <label>
                 Group
-                <select value={form.groupId} onChange={e => setForm({ ...form, groupId: e.target.value })}>
+                <select id="animal-group" name="groupId" value={form.groupId} onChange={e => setForm({ ...form, groupId: e.target.value })}>
                   <option value="">-- No group --</option>
                   {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
@@ -1241,45 +1241,45 @@ export default function Animals() {
 
               <label>
                 Owner
-                <input value={form.owner} onChange={e => setForm({ ...form, owner: e.target.value })} />
+                <input id="animal-owner" name="owner" value={form.owner} onChange={e => setForm({ ...form, owner: e.target.value })} />
               </label>
 
               <label>
                 Registration #
-                <input value={form.registration} onChange={e => setForm({ ...form, registration: e.target.value })} />
+                <input id="animal-registration" name="registration" value={form.registration} onChange={e => setForm({ ...form, registration: e.target.value })} />
               </label>
 
               <label>
                 Tattoo / ID
-                <input value={form.tattoo} onChange={e => setForm({ ...form, tattoo: e.target.value })} />
+                <input id="animal-tattoo" name="tattoo" value={form.tattoo} onChange={e => setForm({ ...form, tattoo: e.target.value })} />
               </label>
 
               <label>
                 Purchase date
-                <input type="date" value={form.purchaseDate} onChange={e => setForm({ ...form, purchaseDate: e.target.value })} />
+                <input id="animal-purchase-date" name="purchaseDate" type="date" value={form.purchaseDate} onChange={e => setForm({ ...form, purchaseDate: e.target.value })} />
                 {errors.purchaseDate && <div style={{ color: 'crimson' }}>{errors.purchaseDate}</div>}
               </label>
 
               <label>
                 Purchase price
-                <input type="number" step="0.01" value={form.purchasePrice} onChange={e => setForm({ ...form, purchasePrice: e.target.value })} />
+                <input id="animal-purchase-price" name="purchasePrice" type="number" step="0.01" value={form.purchasePrice} onChange={e => setForm({ ...form, purchasePrice: e.target.value })} />
                 {errors.purchasePrice && <div style={{ color: 'crimson' }}>{errors.purchasePrice}</div>}
               </label>
 
               <label>
                 Vendor
-                <input value={form.vendor} onChange={e => setForm({ ...form, vendor: e.target.value })} />
+                <input id="animal-vendor" name="vendor" value={form.vendor} onChange={e => setForm({ ...form, vendor: e.target.value })} />
               </label>
 
               <label>
                 Tags (comma separated)
-                <input value={typeof form.tags === 'string' ? form.tags : (form.tags || []).join(', ')} onChange={e => setForm({ ...form, tags: e.target.value })} />
+                <input id="animal-tags" name="tags" value={typeof form.tags === 'string' ? form.tags : (form.tags || []).join(', ')} onChange={e => setForm({ ...form, tags: e.target.value })} />
               </label>
 
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ display: 'block', marginBottom: 6 }}>Photos (up to 5, each ≤ 2 MB)</label>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-                  <input type="file" accept="image/*" multiple onChange={handleFileInput} />
+                  <input id="animal-photos" name="photos" type="file" accept="image/*" multiple onChange={handleFileInput} />
                   <small style={{ color: '#666' }}>Files will be resized to {MAX_DIM}px and compressed.</small>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -1295,12 +1295,12 @@ export default function Animals() {
               </div>
               <label>
                 Photo URL
-                <input value={form.photo} onChange={e => setForm({ ...form, photo: e.target.value })} />
+                <input id="animal-photo-url" name="photo" value={form.photo} onChange={e => setForm({ ...form, photo: e.target.value })} />
               </label>
 
               <label>
                 Pregnancy status
-                <select value={form.pregnancyStatus} onChange={e => setForm({ ...form, pregnancyStatus: e.target.value })}>
+                <select id="animal-pregnancy-status" name="pregnancyStatus" value={form.pregnancyStatus} onChange={e => setForm({ ...form, pregnancyStatus: e.target.value })}>
                   <option>Not Pregnant</option>
                   <option>Pregnant</option>
                   <option>Unknown</option>
@@ -1310,17 +1310,17 @@ export default function Animals() {
 
               <label>
                 Expected due
-                <input type="date" value={form.expectedDue} onChange={e => setForm({ ...form, expectedDue: e.target.value })} />
+                <input id="animal-expected-due" name="expectedDue" type="date" value={form.expectedDue} onChange={e => setForm({ ...form, expectedDue: e.target.value })} />
               </label>
 
               <label>
                 Parity
-                <input type="number" min="0" value={form.parity} onChange={e => setForm({ ...form, parity: e.target.value })} />
+                <input id="animal-parity" name="parity" type="number" min="0" value={form.parity} onChange={e => setForm({ ...form, parity: e.target.value })} />
               </label>
 
               <label>
                 Lactation status
-                <select value={form.lactationStatus} onChange={e => setForm({ ...form, lactationStatus: e.target.value })}>
+                <select id="animal-lactation-status" name="lactationStatus" value={form.lactationStatus} onChange={e => setForm({ ...form, lactationStatus: e.target.value })}>
                   <option>Lactating</option>
                   <option>Dry</option>
                   <option>NA</option>
@@ -1330,7 +1330,7 @@ export default function Animals() {
 
               <label style={{ gridColumn: '1 / -1' }}>
                 Notes
-                <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} />
+                <textarea id="animal-notes" name="notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} />
               </label>
             </div>
             )}
@@ -1341,7 +1341,7 @@ export default function Animals() {
               <h4 style={{ gridColumn: '1 / -1', color: '#059669', marginBottom: 8 }}>📊 Production Metrics</h4>
               
               <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#666', marginTop: 12 }}>Milk Production</h5>
-              <label>Total Lifetime (L)<input type="number" step="0.1" value={form.production?.milk?.totalLifetime || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, totalLifetime: e.target.value } } })} /></label>
+              <label>Total Lifetime (L)<input id="milk-total-lifetime" name="milkTotalLifetime" type="number" step="0.1" value={form.production?.milk?.totalLifetime || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, totalLifetime: e.target.value } } })} /></label>
               <label>Current Lactation (L)<input type="number" step="0.1" value={form.production?.milk?.currentLactation || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, currentLactation: e.target.value } } })} /></label>
               <label>Peak Yield (L/day)<input type="number" step="0.1" value={form.production?.milk?.peakYield || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, peakYield: e.target.value } } })} /></label>
               <label>Average Daily (L)<input type="number" step="0.1" value={form.production?.milk?.averageDaily || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, averageDaily: e.target.value } } })} /></label>
@@ -1384,7 +1384,7 @@ export default function Animals() {
             {formTab === 'health' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <h4 style={{ gridColumn: '1 / -1', color: '#dc2626', marginBottom: 8 }}>🏥 Health Records</h4>
-              <label>Health Status<select value={form.health?.healthStatus || 'Healthy'} onChange={e => setForm({ ...form, health: { ...form.health, healthStatus: e.target.value } })}>
+              <label>Health Status<select id="health-status" name="healthStatus" value={form.health?.healthStatus || 'Healthy'} onChange={e => setForm({ ...form, health: { ...form.health, healthStatus: e.target.value } })}>
                 <option>Excellent</option>
                 <option>Healthy</option>
                 <option>Fair</option>
@@ -1392,10 +1392,10 @@ export default function Animals() {
                 <option>Recovering</option>
                 <option>Critical</option>
               </select></label>
-              <label>Body Condition Score (1-5)<input type="number" step="0.5" min="1" max="5" value={form.health?.bodyConditionScore || ''} onChange={e => setForm({ ...form, health: { ...form.health, bodyConditionScore: e.target.value } })} /></label>
+              <label>Body Condition Score (1-5)<input id="health-body-condition" name="bodyConditionScore" type="number" step="0.5" min="1" max="5" value={form.health?.bodyConditionScore || ''} onChange={e => setForm({ ...form, health: { ...form.health, bodyConditionScore: e.target.value } })} /></label>
               <label>Last Vet Visit<input type="date" value={form.health?.lastVetVisit || ''} onChange={e => setForm({ ...form, health: { ...form.health, lastVetVisit: e.target.value } })} /></label>
               <label>Next Vet Visit<input type="date" value={form.health?.nextVetVisit || ''} onChange={e => setForm({ ...form, health: { ...form.health, nextVetVisit: e.target.value } })} /></label>
-              <label>Quarantine Status<select value={form.health?.quarantineStatus || 'None'} onChange={e => setForm({ ...form, health: { ...form.health, quarantineStatus: e.target.value } })}>
+              <label>Quarantine Status<select id="health-quarantine" name="quarantineStatus" value={form.health?.quarantineStatus || 'None'} onChange={e => setForm({ ...form, health: { ...form.health, quarantineStatus: e.target.value } })}>
                 <option>None</option>
                 <option>Quarantined</option>
                 <option>Isolation</option>
@@ -1439,14 +1439,14 @@ export default function Animals() {
             {formTab === 'behavior' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <h4 style={{ gridColumn: '1 / -1', color: '#ec4899', marginBottom: 8 }}>🎭 Behavior & Temperament</h4>
-              <label>Temperament<select value={form.behavior?.temperament || 'Calm'} onChange={e => setForm({ ...form, behavior: { ...form.behavior, temperament: e.target.value } })}>
+              <label>Temperament<select id="behavior-temperament" name="temperament" value={form.behavior?.temperament || 'Calm'} onChange={e => setForm({ ...form, behavior: { ...form.behavior, temperament: e.target.value } })}>
                 <option>Calm</option>
                 <option>Friendly</option>
                 <option>Nervous</option>
                 <option>Aggressive</option>
                 <option>Docile</option>
               </select></label>
-              <label>Handling Difficulty<select value={form.behavior?.handlingDifficulty || 'Easy'} onChange={e => setForm({ ...form, behavior: { ...form.behavior, handlingDifficulty: e.target.value } })}>
+              <label>Handling Difficulty<select id="behavior-handling" name="handlingDifficulty" value={form.behavior?.handlingDifficulty || 'Easy'} onChange={e => setForm({ ...form, behavior: { ...form.behavior, handlingDifficulty: e.target.value } })}>
                 <option>Easy</option>
                 <option>Moderate</option>
                 <option>Difficult</option>

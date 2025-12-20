@@ -171,6 +171,8 @@ export default function DiseaseDetection() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">1. Select Animal (Optional)</h2>
             <select
+              id="disease-animal"
+              name="selectedAnimal"
               value={selectedAnimal || ''}
               onChange={(e) => {
                 setSelectedAnimal(e.target.value);
@@ -192,6 +194,8 @@ export default function DiseaseDetection() {
                 Or select species:
               </label>
               <select
+                id="disease-species"
+                name="species"
                 value={species}
                 onChange={(e) => setSpecies(e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -232,6 +236,8 @@ export default function DiseaseDetection() {
                       Click to upload or drag and drop
                     </span>
                     <input
+                      id="disease-image-upload"
+                      name="imageUpload"
                       type="file"
                       accept="image/*"
                       onChange={handleImageUpload}
@@ -279,6 +285,8 @@ export default function DiseaseDetection() {
                         }`}
                       >
                         <input
+                          id={`symptom-${symptom.value}`}
+                          name={`symptom_${symptom.value}`}
                           type="checkbox"
                           checked={selectedSymptoms.includes(symptom.value)}
                           onChange={() => toggleSymptom(symptom.value)}
@@ -410,6 +418,8 @@ export default function DiseaseDetection() {
                 ) : (
                   <div>
                     <textarea
+                      id="diagnosis-notes"
+                      name="diagnosisNotes"
                       value={diagnosisNotes}
                       onChange={(e) => setDiagnosisNotes(e.target.value)}
                       placeholder="Add additional notes about the diagnosis, treatment plan, or observations..."

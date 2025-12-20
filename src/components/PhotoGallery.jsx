@@ -170,6 +170,8 @@ export default function PhotoGallery({ entityType, entityId, entityName }) {
               Caption (optional):
             </label>
             <input
+              id="photo-caption"
+              name="photoCaption"
               type="text"
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
@@ -200,6 +202,8 @@ export default function PhotoGallery({ entityType, entityId, entityName }) {
             }}>
               📷 Take Photo
               <input
+                id="photo-camera"
+                name="photoCamera"
                 type="file"
                 accept="image/*"
                 capture="environment"
@@ -224,6 +228,8 @@ export default function PhotoGallery({ entityType, entityId, entityName }) {
             }}>
               🖼️ Choose File
               <input
+                id="photo-file"
+                name="photoFile"
                 type="file"
                 accept="image/*"
                 onChange={handleFileSelect}

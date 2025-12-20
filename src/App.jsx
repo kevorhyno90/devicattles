@@ -1443,7 +1443,11 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <ErrorBoundary><AuditLog /></ErrorBoundary>
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingFallback />}>
+                <AuditLog />
+              </Suspense>
+            </ErrorBoundary>
           </section>
         )}
 

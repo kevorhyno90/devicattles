@@ -518,6 +518,8 @@ export default function IoTSensorDashboard() {
               </label>
               <input
                 type="text"
+                id="device-name"
+                name="deviceName"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Main Barn Scale"
@@ -537,6 +539,8 @@ export default function IoTSensorDashboard() {
               </label>
               <input
                 type="text"
+                id="device-location"
+                name="deviceLocation"
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 placeholder="e.g., South Field"
@@ -554,6 +558,8 @@ export default function IoTSensorDashboard() {
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
                 <input
                   type="checkbox"
+                  id="device-mock-data"
+                  name="mockData"
                   checked={formData.mockData}
                   onChange={(e) => setFormData({ ...formData, mockData: e.target.checked })}
                 />

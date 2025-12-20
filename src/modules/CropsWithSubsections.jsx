@@ -464,6 +464,8 @@ export default function Crops() {
                 <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Crop Name *</label>
                 <input
                   type="text"
+                  id="crop-name"
+                  name="cropName"
                   placeholder="e.g., Premium Alfalfa"
                   value={form.name}
                   onChange={e => setForm({ ...form, name: e.target.value })}
@@ -476,6 +478,8 @@ export default function Crops() {
                 <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Variety/Cultivar</label>
                 <input
                   type="text"
+                  id="crop-variety"
+                  name="variety"
                   placeholder="e.g., Pioneer 1234"
                   value={form.variety}
                   onChange={e => setForm({ ...form, variety: e.target.value })}
@@ -487,6 +491,8 @@ export default function Crops() {
                 <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Field Location</label>
                 <input
                   type="text"
+                  id="crop-field-location"
+                  name="field"
                   placeholder="e.g., North Field A"
                   value={form.field}
                   onChange={e => setForm({ ...form, field: e.target.value })}
@@ -499,6 +505,8 @@ export default function Crops() {
                 <input
                   type="number"
                   step="0.1"
+                  id="crop-area"
+                  name="area"
                   placeholder="0.0"
                   value={form.area}
                   onChange={e => setForm({ ...form, area: e.target.value })}
@@ -609,6 +617,8 @@ export default function Crops() {
                 <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Irrigation Reminder</label>
                 <input
                   type="date"
+                  id="crop-irrigation-reminder"
+                  name="irrigationReminder"
                   value={form.irrigationReminder}
                   onChange={e => setForm({ ...form, irrigationReminder: e.target.value })}
                   style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db' }}
@@ -634,6 +644,8 @@ export default function Crops() {
                 <input
                   type="number"
                   step="0.01"
+                  id="crop-seed-cost"
+                  name="seedCost"
                   placeholder="0.00"
                   value={form.seedCost}
                   onChange={e => setForm({ ...form, seedCost: e.target.value })}
@@ -645,6 +657,8 @@ export default function Crops() {
                 <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Market Destination</label>
                 <input
                   type="text"
+                  id="crop-market-destination"
+                  name="marketDestination"
                   placeholder="e.g., Local Dairy Farms, Grain Elevator"
                   value={form.marketDestination}
                   onChange={e => setForm({ ...form, marketDestination: e.target.value })}

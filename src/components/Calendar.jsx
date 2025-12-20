@@ -567,6 +567,8 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
       {/* Search bar and category filter */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
+          id="calendar-search"
+          name="searchQuery"
           type="text"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
@@ -725,6 +727,8 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
             <div style={{ marginTop: 16, marginBottom: 8 }}>
               <label style={{ fontWeight: '500', color: '#374151', marginRight: 8 }}>Event Color:</label>
               <input
+                id="event-color"
+                name="eventColor"
                 type="color"
                 value={modalEvent.color || categories[modalEvent.category]?.color || '#6b7280'}
                 onChange={e => {

@@ -572,6 +572,7 @@ export default function GeospatialMap() {
                 </label>
                 <input
                   type="text"
+                  id="field-name"
                   name="name"
                   required
                   style={{
@@ -590,6 +591,7 @@ export default function GeospatialMap() {
                 </label>
                 <input
                   type="text"
+                  id="field-crop"
                   name="crop"
                   style={{
                     width: '100%',
@@ -606,6 +608,7 @@ export default function GeospatialMap() {
                   Notes (optional)
                 </label>
                 <textarea
+                  id="field-notes"
                   name="notes"
                   rows="3"
                   style={{

@@ -7,6 +7,35 @@ import { AppViewProvider } from './lib/AppViewContext.jsx';
 import { initializeAudio } from './lib/notifications.js';
 import './styles.css'
 
+// Suppress Zustand and other deprecation warnings before any modules load
+(function() {
+  const zustandWarningRegex = /\[DEPRECATED\].*Zustand|Default export is deprecated.*zustand/i;
+  
+  const suppressWarning = function(originalMethod) {
+    return function(...args) {
+      const message = String(args[0] || '');
+      if (zustandWarningRegex.test(message)) {
+        return; // Suppress Zustand deprecation warning
+      }
+      return originalMethod.apply(console, args);
+    };
+  };
+  
+  // Intercept all console methods to filter warnings
+  console.warn = suppressWarning(console.warn);
+  console.log = suppressWarning(console.log);
+  console.info = suppressWarning(console.info);
+  
+  // Also suppress in error for safety
+  const originalError = console.error;
+  console.error = function(...args) {
+    const message = String(args[0] || '');
+    if (!zustandWarningRegex.test(message)) {
+      originalError.apply(console, args);
+    }
+  };
+})();
+
 // Verify React is available
 if (!React || !React.version) {
   console.error('❌ Critical Error: React is not properly loaded')

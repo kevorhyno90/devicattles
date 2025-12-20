@@ -173,6 +173,44 @@ export default function AnimalTreatment({ animals }){
 
   function remove(id){ if(!confirm('Delete record '+id+'?')) return; setItems(items.filter(i=>i.id!==id)) }
 
+  function startInlineEdit(item) {
+    setInlineEditId(item.id)
+    setInlineData({ treatment: item.treatment, status: item.status, severity: item.severity })
+  }
+
+  function saveInlineEdit() {
+    if (!inlineData.treatment.trim()) {
+      setToast({ message: 'Treatment description required', type: 'error' })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+    const oldItem = items.find(i => i.id === inlineEditId)
+    setLastChange({ action: 'edit', item: oldItem })
+    setItems(items.map(i => i.id === inlineEditId ? { ...i, treatment: inlineData.treatment, status: inlineData.status, severity: inlineData.severity } : i))
+    setInlineEditId(null)
+    setToast({ message: '✓ Updated', type: 'success', showUndo: true })
+    setTimeout(() => setToast(null), 5000)
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null)
+    setInlineData({ treatment: '', status: 'Completed', severity: 'Routine' })
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && e.ctrlKey) saveInlineEdit()
+    if (e.key === 'Escape') cancelInlineEdit()
+  }
+
+  function undoLastChange() {
+    if (!lastChange) return
+    if (lastChange.action === 'edit') {
+      setItems(items.map(i => i.id === lastChange.item.id ? lastChange.item : i))
+    }
+    setToast(null)
+    setLastChange(null)
+  }
+
   const filteredItems = items.filter(item => {
     if(filterAnimal !== 'all' && item.animalId !== filterAnimal) return false
     if(filterType !== 'all' && item.treatmentType !== filterType) return false
@@ -489,7 +527,7 @@ export default function AnimalTreatment({ animals }){
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
             <div>
               <label>Animal *</label>
-              <select value={animalId} onChange={e => setAnimalId(e.target.value)}>
+              <select id="treatment-animal" name="animalId" value={animalId} onChange={e => setAnimalId(e.target.value)}>
                 <option value="">-- Select Animal --</option>
                 {(animals||[]).map(a => (
                   <option key={a.id} value={a.id}>{a.name || a.tag} ({a.breed})</option>
@@ -498,53 +536,53 @@ export default function AnimalTreatment({ animals }){
             </div>
             <div>
               <label>Treatment Type *</label>
-              <select value={treatmentType} onChange={e => setTreatmentType(e.target.value)}>
+              <select id="treatment-type" name="treatmentType" value={treatmentType} onChange={e => setTreatmentType(e.target.value)}>
                 {TREATMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
             <div>
               <label>Severity Level</label>
-              <select value={severity} onChange={e => setSeverity(e.target.value)}>
+              <select id="treatment-severity" name="severity" value={severity} onChange={e => setSeverity(e.target.value)}>
                 {SEVERITY_LEVELS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div style={{ gridColumn: 'span 3' }}>
               <label>Treatment Description *</label>
-              <input value={treatment} onChange={e => setTreatment(e.target.value)} placeholder="e.g., Administered antibiotic for respiratory infection" />
+              <input id="treatment-description" name="treatment" value={treatment} onChange={e => setTreatment(e.target.value)} placeholder="e.g., Administered antibiotic for respiratory infection" />
             </div>
             <div>
               <label>Veterinarian/Handler</label>
-              <input value={veterinarian} onChange={e => setVeterinarian(e.target.value)} placeholder="Dr. Smith" />
+              <input id="treatment-veterinarian" name="veterinarian" value={veterinarian} onChange={e => setVeterinarian(e.target.value)} placeholder="Dr. Smith" />
             </div>
             <div>
               <label>Medication</label>
-              <input value={medication} onChange={e => setMedication(e.target.value)} placeholder="e.g., Penicillin" />
+              <input id="treatment-medication" name="medication" value={medication} onChange={e => setMedication(e.target.value)} placeholder="e.g., Penicillin" />
             </div>
             <div>
               <label>Dosage</label>
-              <input value={dosage} onChange={e => setDosage(e.target.value)} placeholder="e.g., 5ml IM" />
+              <input id="treatment-dosage" name="dosage" value={dosage} onChange={e => setDosage(e.target.value)} placeholder="e.g., 5ml IM" />
             </div>
             <div>
               <label>Cost (KSH)</label>
-              <input type="number" step="0.01" value={cost} onChange={e => setCost(e.target.value)} placeholder="0.00" />
+              <input id="treatment-cost" name="cost" type="number" step="0.01" value={cost} onChange={e => setCost(e.target.value)} placeholder="0.00" />
             </div>
             <div>
               <label>Treatment Duration</label>
-              <input value={duration} onChange={e => setDuration(e.target.value)} placeholder="e.g., 7 days" />
+              <input id="treatment-duration" name="duration" value={duration} onChange={e => setDuration(e.target.value)} placeholder="e.g., 7 days" />
             </div>
             <div>
               <label>Next Due Date</label>
-              <input type="date" value={nextDue} onChange={e => setNextDue(e.target.value)} />
+              <input id="treatment-next-due" name="nextDue" type="date" value={nextDue} onChange={e => setNextDue(e.target.value)} />
             </div>
             <div style={{ gridColumn: 'span 2' }}>
               <label>Status</label>
-              <select value={status} onChange={e => setStatus(e.target.value)}>
+              <select id="treatment-status" name="status" value={status} onChange={e => setStatus(e.target.value)}>
                 {TREATMENT_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div style={{ gridColumn: 'span 3' }}>
               <label>Notes</label>
-              <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Additional medical notes, observations, or instructions..." />
+              <textarea id="treatment-notes" name="notes" value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Additional medical notes, observations, or instructions..." />
             </div>
           </div>
           <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
@@ -556,15 +594,15 @@ export default function AnimalTreatment({ animals }){
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-        <select value={filterAnimal} onChange={e => setFilterAnimal(e.target.value)}>
+        <select id="filter-animal" name="filterAnimal" value={filterAnimal} onChange={e => setFilterAnimal(e.target.value)}>
           <option value="all">All Animals</option>
           {(animals||[]).map(a => <option key={a.id} value={a.id}>{a.name || a.tag}</option>)}
         </select>
-        <select value={filterType} onChange={e => setFilterType(e.target.value)}>
+        <select id="filter-type" name="filterType" value={filterType} onChange={e => setFilterType(e.target.value)}>
           <option value="all">All Types</option>
           {TREATMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+        <select id="filter-status" name="filterStatus" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
           <option value="all">All Statuses</option>
           {TREATMENT_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
@@ -611,11 +649,11 @@ export default function AnimalTreatment({ animals }){
                   {inlineEditId === item.id ? (
                     <div onKeyDown={handleKeyDown} style={{display:'flex',flexDirection:'column',gap:12}}>
                       <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
-                        <input value={inlineData.treatment} onChange={e=>setInlineData({...inlineData,treatment:e.target.value})} placeholder="Treatment" style={{flex:1,minWidth:200}} autoFocus />
-                        <select value={inlineData.status} onChange={e=>setInlineData({...inlineData,status:e.target.value})} style={{width:150}}>
+                        <input id="inline-treatment" name="inlineTreatment" value={inlineData.treatment} onChange={e=>setInlineData({...inlineData,treatment:e.target.value})} placeholder="Treatment" style={{flex:1,minWidth:200}} autoFocus />
+                        <select id="inline-status" name="inlineStatus" value={inlineData.status} onChange={e=>setInlineData({...inlineData,status:e.target.value})} style={{width:150}}>
                           {TREATMENT_STATUS.map(s=><option key={s}>{s}</option>)}
                         </select>
-                        <select value={inlineData.severity} onChange={e=>setInlineData({...inlineData,severity:e.target.value})} style={{width:120}}>
+                        <select id="inline-severity" name="inlineSeverity" value={inlineData.severity} onChange={e=>setInlineData({...inlineData,severity:e.target.value})} style={{width:120}}>
                           {SEVERITY_LEVELS.map(s=><option key={s}>{s}</option>)}
                         </select>
                         <button onClick={saveInlineEdit} style={{background:'#10b981',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✓ Save</button>

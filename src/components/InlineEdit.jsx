@@ -51,6 +51,8 @@ export const InlineEditField = ({ value, onSave, type = 'text', placeholder = 'C
     return (
       <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
         <input
+          id={`inline-edit-${field}`}
+          name={field}
           type={type}
           value={editValue}
           onChange={(e) => setValue(e.target.value)}

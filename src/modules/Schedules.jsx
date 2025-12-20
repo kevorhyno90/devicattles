@@ -1963,6 +1963,8 @@ export default function Schedules() {
               <div>
                 <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Title *</label>
                 <input
+                  id="schedule-title"
+                  name="title"
                   value={formData.title}
                   onChange={e => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g., Morning Milking"
@@ -1973,6 +1975,8 @@ export default function Schedules() {
               <div>
                 <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Description</label>
                 <textarea
+                  id="schedule-description"
+                  name="description"
                   value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Detailed description of the task"
@@ -2042,6 +2046,8 @@ export default function Schedules() {
                   <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Date</label>
                   <input
                     type="date"
+                    id="schedule-start-date"
+                    name="startDate"
                     value={formData.startDate}
                     onChange={e => setFormData({ ...formData, startDate: e.target.value })}
                     style={{ width: '100%', padding: 8 }}
@@ -2052,6 +2058,8 @@ export default function Schedules() {
                   <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Time</label>
                   <input
                     type="time"
+                    id="schedule-start-time"
+                    name="startTime"
                     value={formData.startTime}
                     onChange={e => setFormData({ ...formData, startTime: e.target.value })}
                     style={{ width: '100%', padding: 8 }}
@@ -2062,6 +2070,8 @@ export default function Schedules() {
                   <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Duration (min)</label>
                   <input
                     type="number"
+                    id="schedule-duration"
+                    name="duration"
                     value={formData.duration}
                     onChange={e => setFormData({ ...formData, duration: parseInt(e.target.value) || 60 })}
                     style={{ width: '100%', padding: 8 }}
@@ -2095,6 +2105,8 @@ export default function Schedules() {
               <div>
                 <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Location</label>
                 <input
+                  id="schedule-location"
+                  name="location"
                   value={formData.location}
                   onChange={e => setFormData({ ...formData, location: e.target.value })}
                   placeholder="e.g., Barn A, North Pasture"
@@ -2108,6 +2120,8 @@ export default function Schedules() {
                 </label>
                 <input
                   type="number"
+                  id="schedule-reminder-minutes"
+                  name="reminderMinutes"
                   value={formData.reminderMinutes}
                   onChange={e => setFormData({ ...formData, reminderMinutes: parseInt(e.target.value) || 30 })}
                   style={{ width: '100%', padding: 8 }}
@@ -2117,6 +2131,8 @@ export default function Schedules() {
               <div>
                 <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Notes</label>
                 <textarea
+                  id="schedule-notes"
+                  name="notes"
                   value={formData.notes}
                   onChange={e => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Additional notes or instructions"
@@ -2170,6 +2186,8 @@ export default function Schedules() {
               <div>
                 <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Name *</label>
                 <input
+                  id="employee-name"
+                  name="employeeName"
                   value={employeeForm.name}
                   onChange={e => setEmployeeForm({ ...employeeForm, name: e.target.value })}
                   placeholder="Employee name"
@@ -2180,6 +2198,8 @@ export default function Schedules() {
               <div>
                 <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Role</label>
                 <input
+                  id="employee-role"
+                  name="employeeRole"
                   value={employeeForm.role}
                   onChange={e => setEmployeeForm({ ...employeeForm, role: e.target.value })}
                   placeholder="e.g., Farm Manager, Animal Handler"
@@ -2191,6 +2211,8 @@ export default function Schedules() {
                 <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Email</label>
                 <input
                   type="email"
+                  id="employee-email"
+                  name="employeeEmail"
                   value={employeeForm.email}
                   onChange={e => setEmployeeForm({ ...employeeForm, email: e.target.value })}
                   placeholder="email@example.com"
@@ -2202,6 +2224,8 @@ export default function Schedules() {
                 <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Phone</label>
                 <input
                   type="tel"
+                  id="employee-phone"
+                  name="employeePhone"
                   value={employeeForm.phone}
                   onChange={e => setEmployeeForm({ ...employeeForm, phone: e.target.value })}
                   placeholder="555-0000"
@@ -2213,6 +2237,8 @@ export default function Schedules() {
                 <div>
                   <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Emergency Contact</label>
                   <input
+                    id="employee-emergency-contact"
+                    name="emergencyContact"
                     value={employeeForm.emergencyContact}
                     onChange={e => setEmployeeForm({ ...employeeForm, emergencyContact: e.target.value })}
                     placeholder="Contact name"
@@ -2223,6 +2249,8 @@ export default function Schedules() {
                   <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Emergency Phone</label>
                   <input
                     type="tel"
+                    id="employee-emergency-phone"
+                    name="emergencyPhone"
                     value={employeeForm.emergencyPhone}
                     onChange={e => setEmployeeForm({ ...employeeForm, emergencyPhone: e.target.value })}
                     placeholder="555-0000"
@@ -2234,6 +2262,8 @@ export default function Schedules() {
               <div>
                 <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Address</label>
                 <input
+                  id="employee-address"
+                  name="address"
                   value={employeeForm.address}
                   onChange={e => setEmployeeForm({ ...employeeForm, address: e.target.value })}
                   placeholder="Street address"
@@ -2245,6 +2275,8 @@ export default function Schedules() {
                 <div>
                   <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>City</label>
                   <input
+                    id="employee-city"
+                    name="city"
                     value={employeeForm.city}
                     onChange={e => setEmployeeForm({ ...employeeForm, city: e.target.value })}
                     placeholder="City"
@@ -2254,6 +2286,8 @@ export default function Schedules() {
                 <div>
                   <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>State</label>
                   <input
+                    id="employee-state"
+                    name="state"
                     value={employeeForm.state}
                     onChange={e => setEmployeeForm({ ...employeeForm, state: e.target.value })}
                     placeholder="State"
@@ -2263,6 +2297,8 @@ export default function Schedules() {
                 <div>
                   <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>ZIP</label>
                   <input
+                    id="employee-zip-code"
+                    name="zipCode"
                     value={employeeForm.zipCode}
                     onChange={e => setEmployeeForm({ ...employeeForm, zipCode: e.target.value })}
                     placeholder="ZIP"
@@ -2276,6 +2312,8 @@ export default function Schedules() {
                   <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Date Employed</label>
                   <input
                     type="date"
+                    id="employee-date-employed"
+                    name="dateEmployed"
                     value={employeeForm.dateEmployed}
                     onChange={e => setEmployeeForm({ ...employeeForm, dateEmployed: e.target.value })}
                     style={{ width: '100%', padding: 8 }}
@@ -2285,6 +2323,8 @@ export default function Schedules() {
                   <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Date of Birth</label>
                   <input
                     type="date"
+                    id="employee-date-of-birth"
+                    name="dateOfBirth"
                     value={employeeForm.dateOfBirth}
                     onChange={e => setEmployeeForm({ ...employeeForm, dateOfBirth: e.target.value })}
                     style={{ width: '100%', padding: 8 }}
@@ -2298,6 +2338,8 @@ export default function Schedules() {
                   <input
                     type="number"
                     step="0.01"
+                    id="employee-hourly-rate"
+                    name="hourlyRate"
                     value={employeeForm.hourlyRate}
                     onChange={e => setEmployeeForm({ ...employeeForm, hourlyRate: parseFloat(e.target.value) || 0 })}
                     style={{ width: '100%', padding: 8 }}
@@ -2307,6 +2349,8 @@ export default function Schedules() {
                   <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>Weekly Hours</label>
                   <input
                     type="number"
+                    id="employee-weekly-hours"
+                    name="weeklyHours"
                     value={employeeForm.weeklyHours}
                     onChange={e => setEmployeeForm({ ...employeeForm, weeklyHours: parseInt(e.target.value) || 40 })}
                     style={{ width: '100%', padding: 8 }}

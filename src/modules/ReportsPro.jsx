@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { loadData } from '../lib/storage'
 import { formatCurrency } from '../lib/currency'
 import { calculateFeedEfficiency, calculateAnimalROI } from '../lib/advancedAnalytics'
@@ -6,6 +6,7 @@ import { calculateFeedEfficiency, calculateAnimalROI } from '../lib/advancedAnal
 /**
  * ReportsPro - Personal Farm Analytics & Reports
  * Feed costs, animal ROI, health trends, predictions
+ * Optimized with useCallback and useMemo to prevent INP warnings
  */
 export default function ReportsPro({ animals = [], crops = [], finance = [] }) {
   const [activeTab, setActiveTab] = useState('feedCosts')
@@ -32,7 +33,7 @@ export default function ReportsPro({ animals = [], crops = [], finance = [] }) {
         finance: financeData
       })
       
-      calculateStats(feedingEvents || [], animalData, financeData)
+      calculateStatsOptimized(feedingEvents || [], animalData, financeData)
     } catch (err) {
       console.error('Error loading report data:', err)
       setData({ feedingEvents: [], animals, finance })
@@ -41,61 +42,64 @@ export default function ReportsPro({ animals = [], crops = [], finance = [] }) {
     }
   }
 
-  const calculateStats = (feeding, animalList, financeData) => {
-    // Get date range
-    const now = new Date()
-    let startDate = new Date()
-    
-    if (dateRange === 'week') startDate.setDate(now.getDate() - 7)
-    else if (dateRange === 'month') startDate.setMonth(now.getMonth() - 1)
-    else if (dateRange === 'quarter') startDate.setMonth(now.getMonth() - 3)
-    else if (dateRange === 'year') startDate.setFullYear(now.getFullYear() - 1)
-
-    const filtered = feeding.filter(f => new Date(f.date) >= startDate)
-    const newStats = {}
-
-    // Feed costs
-    const totalFeedCost = filtered.reduce((sum, f) => sum + (f.cost || 0), 0)
-    const totalFeedQty = filtered.reduce((sum, f) => sum + (f.quantity || 0), 0)
-    const avgCostPerKg = totalFeedQty > 0 ? totalFeedCost / totalFeedQty : 0
-
-    newStats.feed = {
-      totalCost: totalFeedCost,
-      totalQuantity: totalFeedQty,
-      avgCostPerKg,
-      eventCount: filtered.length,
-      byCost: aggregateByFeedType(filtered, 'cost'),
-      byQuantity: aggregateByFeedType(filtered, 'quantity')
-    }
-
-    // Animal ROI
-    newStats.animalROI = []
-    for (const animal of animalList) {
-      const roi = calculateAnimalROI(animal, filtered, financeData)
-      newStats.animalROI.push({ animal, roi })
-    }
-
-    // Health metrics
-    newStats.health = {
-      totalAnimals: animalList.length,
-      withRecords: animalList.filter(a => a.treatments?.length > 0).length,
-      avgAge: animalList.length > 0 
-        ? (animalList.reduce((sum, a) => sum + (calculateAge(a) || 0), 0) / animalList.length).toFixed(1)
-        : 0
-    }
-
-    setStats(newStats)
-  }
-
-  const aggregateByFeedType = (events, key) => {
+  const aggregateByFeedType = useCallback((events, key) => {
     const agg = {}
     events.forEach(e => {
       agg[e.feedType] = (agg[e.feedType] || 0) + (e[key] || 0)
     })
     return agg
-  }
+  }, [])
 
-  const calculateAge = (animal) => {
+  const calculateStatsOptimized = useCallback((feeding, animalList, financeData) => {
+    // Defer heavy calculation to next microtask to avoid blocking UI
+    Promise.resolve().then(() => {
+      // Get date range
+      const now = new Date()
+      let startDate = new Date()
+      
+      if (dateRange === 'week') startDate.setDate(now.getDate() - 7)
+      else if (dateRange === 'month') startDate.setMonth(now.getMonth() - 1)
+      else if (dateRange === 'quarter') startDate.setMonth(now.getMonth() - 3)
+      else if (dateRange === 'year') startDate.setFullYear(now.getFullYear() - 1)
+
+      const filtered = feeding.filter(f => new Date(f.date) >= startDate)
+      const newStats = {}
+
+      // Feed costs
+      const totalFeedCost = filtered.reduce((sum, f) => sum + (f.cost || 0), 0)
+      const totalFeedQty = filtered.reduce((sum, f) => sum + (f.quantity || 0), 0)
+      const avgCostPerKg = totalFeedQty > 0 ? totalFeedCost / totalFeedQty : 0
+
+      newStats.feed = {
+        totalCost: totalFeedCost,
+        totalQuantity: totalFeedQty,
+        avgCostPerKg,
+        eventCount: filtered.length,
+        byCost: aggregateByFeedType(filtered, 'cost'),
+        byQuantity: aggregateByFeedType(filtered, 'quantity')
+      }
+
+      // Animal ROI
+      newStats.animalROI = []
+      for (const animal of animalList) {
+        const roi = calculateAnimalROI(animal, filtered, financeData)
+        newStats.animalROI.push({ animal, roi })
+      }
+
+      // Health metrics
+      newStats.health = {
+        totalAnimals: animalList.length,
+        withRecords: animalList.filter(a => a.treatments?.length > 0).length,
+        avgAge: animalList.length > 0 
+          ? (animalList.reduce((sum, a) => sum + (calculateAge(a) || 0), 0) / animalList.length).toFixed(1)
+          : 0
+      }
+
+      setStats(newStats)
+    })
+  }, [dateRange, aggregateByFeedType])
+
+  const calculateAge = useCallback((animal) => {
     if (!animal.dob) return null
     const today = new Date()
     const birth = new Date(animal.dob)
@@ -103,17 +107,25 @@ export default function ReportsPro({ animals = [], crops = [], finance = [] }) {
     const monthDiff = today.getMonth() - birth.getMonth()
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--
     return age
-  }
+  }, [])
 
-  const exportCSV = () => {
+  const handleDateRangeChange = useCallback((range) => {
+    setDateRange(range)
+  }, [])
+
+  const handleTabChange = useCallback((tab) => {
+    setActiveTab(tab)
+  }, [])
+
+  const exportCSV = useCallback(() => {
     if (activeTab === 'feedCosts' && stats.feed) {
       exportFeedCostsCSV()
     } else if (activeTab === 'animalROI' && stats.animalROI) {
       exportAnimalROICSV()
     }
-  }
+  }, [activeTab, stats.feed, stats.animalROI])
 
-  const exportFeedCostsCSV = () => {
+  const exportFeedCostsCSV = useCallback(() => {
     const rows = [
       ['Feed Cost Report', dateRange.toUpperCase()],
       [],
@@ -140,9 +152,9 @@ export default function ReportsPro({ animals = [], crops = [], finance = [] }) {
     })
 
     downloadCSV(rows, `feed-costs-${dateRange}-${new Date().toISOString().slice(0, 10)}.csv`)
-  }
+  }, [stats.feed, dateRange])
 
-  const exportAnimalROICSV = () => {
+  const exportAnimalROICSV = useCallback(() => {
     const rows = [
       ['Animal ROI Report', dateRange.toUpperCase()],
       [],
@@ -160,9 +172,9 @@ export default function ReportsPro({ animals = [], crops = [], finance = [] }) {
     })
 
     downloadCSV(rows, `animal-roi-${dateRange}-${new Date().toISOString().slice(0, 10)}.csv`)
-  }
+  }, [stats.animalROI, dateRange])
 
-  const downloadCSV = (rows, filename) => {
+  const downloadCSV = useCallback((rows, filename) => {
     const csv = rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
@@ -173,7 +185,7 @@ export default function ReportsPro({ animals = [], crops = [], finance = [] }) {
     a.click()
     a.remove()
     URL.revokeObjectURL(url)
-  }
+  }, [])
 
   if (loading) {
     return (
@@ -197,7 +209,7 @@ export default function ReportsPro({ animals = [], crops = [], finance = [] }) {
         {['week', 'month', 'quarter', 'year'].map(range => (
           <button
             key={range}
-            onClick={() => setDateRange(range)}
+            onClick={() => handleDateRangeChange(range)}
             style={{
               padding: '8px 16px',
               border: 'none',
@@ -224,7 +236,7 @@ export default function ReportsPro({ animals = [], crops = [], finance = [] }) {
         ].map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
             style={{
               padding: '12px 16px',
               border: 'none',

@@ -159,6 +159,8 @@ export default function GlobalSearch({ isOpen, onClose }) {
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="relative">
             <input
+              id="global-search"
+              name="search"
               ref={inputRef}
               type="text"
               value={searchTerm}
