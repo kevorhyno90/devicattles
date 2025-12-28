@@ -1801,7 +1801,7 @@ export default function Schedules() {
                     })}
                   </div>
 
-                  {/* Daily Summary by Time Slot */}
+
                   <div style={{ 
                     background: '#f9f9f9', 
                     padding: 12,

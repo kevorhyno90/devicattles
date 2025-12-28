@@ -12,7 +12,7 @@
 
 import { saveData, loadData } from './storage';
 import { showNotification } from './notifications';
-import { logAction } from './audit';
+import { logAction, ACTIONS } from './audit';
 
 export class AlertRuleEngine {
   constructor() {
@@ -79,9 +79,8 @@ export class AlertRuleEngine {
     this.rules.push(newRule);
     this.saveRules();
 
-    logAction('rule_created', {
+    logAction(ACTIONS.CREATE, 'alert_rule', newRule.id, {
       ruleName: newRule.name,
-      ruleId: newRule.id,
       category: newRule.category
     });
 
@@ -105,9 +104,8 @@ export class AlertRuleEngine {
 
     this.saveRules();
 
-    logAction('rule_updated', {
+    logAction(ACTIONS.UPDATE, 'alert_rule', ruleId, {
       ruleName: this.rules[index].name,
-      ruleId: ruleId,
       changes: Object.keys(updates)
     });
 
@@ -125,9 +123,8 @@ export class AlertRuleEngine {
     this.rules.splice(index, 1);
     this.saveRules();
 
-    logAction('rule_deleted', {
-      ruleName: rule.name,
-      ruleId: ruleId
+    logAction(ACTIONS.DELETE, 'alert_rule', ruleId, {
+      ruleName: rule.name
     });
 
     return true;
@@ -544,18 +541,6 @@ export const OPERATORS = {
   between: { label: 'between', value: 'between' },
   exists: { label: 'exists', value: 'exists' },
   empty: { label: 'is empty', value: 'empty' }
-};
-
-/**
- * Available actions
- */
-export const ACTIONS = {
-  notify: 'notify',
-  email: 'email',
-  sms: 'sms',
-  webhook: 'webhook',
-  updateRecord: 'updateRecord',
-  createTask: 'createTask'
 };
 
 /**

@@ -469,7 +469,6 @@ export function getDashboardData() {
     azolla: getAzollaStats(),
     bsf: getBSFStats(),
     // Animal submodules
-    poultry: getPoultryStats(),
     canines: getCanineStats(),
     pets: getPetStats(),
     calves: getCalfStats(),
@@ -621,32 +620,7 @@ export function getBSFStats() {
 }
 
 /**
- * Get poultry statistics
- */
-export function getPoultryStats() {
-  try {
-    const poultry = loadData('poultry', [])
-    const byType = {}
-    const eggs = loadData('eggProduction', [])
-    
-    poultry.forEach(p => {
-      const type = p.breed || p.type || 'Unknown'
-      byType[type] = (byType[type] || 0) + 1
-    })
-    
-    const totalEggs = eggs.reduce((sum, e) => sum + (parseFloat(e.quantity) || 0), 0)
-    
-    return {
-      total: poultry.length,
-      byType,
-      totalEggs,
-      activeFlocks: poultry.filter(p => p.status === 'Active').length
-    }
-  } catch (error) {
-    console.error('Error getting poultry stats:', error)
-    return { total: 0, byType: {}, totalEggs: 0, activeFlocks: 0 }
-  }
-}
+
 
 /**
  * Get canine statistics

@@ -20,7 +20,26 @@ const STORES = {
   milkYield: 'milkYield',
   diets: 'diets',
   rations: 'rations',
-  alert_rules: 'alert_rules'
+  alert_rules: 'alert_rules',
+  // Poultry module stores
+  flocks: 'flocks',
+  poultry: 'poultry',
+  egg_production: 'egg_production',
+  poultry_vaccination: 'poultry_vaccination',
+  poultry_health: 'poultry_health',
+  poultry_treatment: 'poultry_treatment',
+  // Added for calf management
+  'calf:management': 'calf:management',
+  'calf:feeding': 'calf:feeding',
+  'calf:health': 'calf:health',
+  // Ensure stores exist for normalized keys
+  'calf:management': 'calf:management',
+  'calf:feeding': 'calf:feeding',
+  'calf:health': 'calf:health',
+  // Add full DataLayer keys for compatibility
+  'cattalytics:calf:management': 'cattalytics:calf:management',
+  'cattalytics:calf:feeding': 'cattalytics:calf:feeding',
+  'cattalytics:calf:health': 'cattalytics:calf:health'
 }
 
 let db = null
@@ -30,8 +49,10 @@ let useIndexedDB = true
 // DataLayer passes keys like 'cattalytics:animals'.
 // IndexedDB stores are created without the prefix (e.g., 'animals').
 function normalizeStoreName(storeName) {
+  // Always return the full key after 'cattalytics:' for compatibility
   if (typeof storeName === 'string' && storeName.startsWith('cattalytics:')) {
-    return storeName.split(':').slice(1).join(':');
+    // For keys like 'cattalytics:calf:management', return 'calf:management'
+    return storeName.replace(/^cattalytics:/, '');
   }
   return storeName;
 }
@@ -64,8 +85,22 @@ async function initDB() {
     request.onupgradeneeded = (event) => {
       const database = event.target.result
 
-      // Create object stores for each data type
-      Object.values(STORES).forEach(storeName => {
+      // Create stores for both normalized and full keys (with and without 'cattalytics:' prefix)
+      const allStoreNames = Array.from(
+        new Set(
+          Object.values(STORES)
+            .reduce((arr, name) => {
+              if (typeof name === 'string') {
+                arr.push(name)
+                if (name.startsWith('cattalytics:')) {
+                  arr.push(name.replace(/^cattalytics:/, ''))
+                }
+              }
+              return arr
+            }, [])
+        )
+      )
+      allStoreNames.forEach(storeName => {
         if (!database.objectStoreNames.contains(storeName)) {
           database.createObjectStore(storeName, { keyPath: 'id' })
         }
@@ -202,9 +237,10 @@ export async function deleteData(storeName) {
   try {
     // Clear IndexedDB
     if (useIndexedDB && db) {
+      const idbStore = normalizeStoreName(storeName)
       await new Promise((resolve, reject) => {
-        const transaction = db.transaction([storeName], 'readwrite')
-        const store = transaction.objectStore(storeName)
+        const transaction = db.transaction([idbStore], 'readwrite')
+        const store = transaction.objectStore(idbStore)
         store.clear()
         transaction.oncomplete = () => resolve()
         transaction.onerror = () => reject(transaction.error)

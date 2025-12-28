@@ -479,25 +479,29 @@ export function getOverdueReminders() {
 // ============================================
 
 /**
- * Start automatic reminder checking
+ * Start automatic reminder checking (singleton)
  */
+let reminderCheckerIntervalId = null;
 export function startReminderChecker() {
+  // Prevent multiple intervals
+  if (reminderCheckerIntervalId !== null) {
+    return reminderCheckerIntervalId;
+  }
   // Check every 5 minutes
-  const intervalId = setInterval(() => {
+  reminderCheckerIntervalId = setInterval(() => {
     checkDueReminders();
   }, 5 * 60 * 1000);
-  
   // Initial check
   checkDueReminders();
-  
-  return intervalId;
+  return reminderCheckerIntervalId;
 }
 
 /**
  * Stop automatic reminder checking
  */
-export function stopReminderChecker(intervalId) {
-  if (intervalId) {
-    clearInterval(intervalId);
+export function stopReminderChecker() {
+  if (reminderCheckerIntervalId !== null) {
+    clearInterval(reminderCheckerIntervalId);
+    reminderCheckerIntervalId = null;
   }
 }

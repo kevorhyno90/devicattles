@@ -4,8 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
     <title>Devins Farm — Comprehensive Farm Management System</title>
-    <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials" />
-    <meta name="theme-color" content="#2b8c3e" />
+    <meta name="description" content="Farm management system for livestock, crops, and operations. No ads, no tracking." />
+    
+    <!-- Ads Policy - This site does not show ads -->
+    <meta name="ads" content="none" />
+    <meta name="monetization" content="none" />
+    
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://firebasestorage.googleapis.com https://maps.googleapis.com https://*.gstatic.com https://www.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://firebasestorage.googleapis.com https://api.openweathermap.org wss://*.firebaseio.com;">
+    
+    <meta name="theme-color" content="#10b981" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1f2937" />
     
     <!-- PWA Meta Tags -->
@@ -16,7 +24,7 @@
     
     <!-- Android/Chrome -->
     <meta name="application-name" content="Devins Farm" />
-    <meta name="msapplication-TileColor" content="#2b8c3e" />
+    <meta name="msapplication-TileColor" content="#10b981" />
     <meta name="msapplication-tap-highlight" content="no" />
     
     <!-- Performance & Touch Optimization -->
@@ -24,13 +32,36 @@
     <meta name="HandheldFriendly" content="true" />
     <meta name="MobileOptimized" content="width" />
     
+    <!-- Offline support -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
     <!-- Favicon served from public/ (SVG file) -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
     
-    <!-- Preconnect to improve performance -->
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin />
+    <!-- Preconnect to improve performance - add more domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
+    <link rel="dns-prefetch" href="https://www.gstatic.com" />
+    
+    <!-- Inline critical CSS for faster initial render -->
+    <!-- Preload provider modules for faster initial load -->
+    <link rel="modulepreload" href="/src/lib/theme.jsx" />
+    <link rel="modulepreload" href="/src/lib/AppViewContext.jsx" />
+    <style>
+      /* Reset and base styles */
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+      
+      /* Optimize font loading */
+      @font-face {
+        font-family: system-ui;
+        font-display: swap;
+      }
+    </style>
   </head>
   <body>
     <div id="root">
@@ -50,16 +81,41 @@
     </div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
-      // Recommended async loader for Google Maps JS API
+      // Detect hard reload (Ctrl+Shift+R) for optimization
+      (function() {
+        // Only load manifest in production or non-Codespaces environment
+        const isCodespaces = window.location.hostname.includes('github.dev') || 
+                            window.location.hostname.includes('githubpreview.dev');
+        
+        if (!isCodespaces) {
+          const link = document.createElement('link');
+          link.rel = 'manifest';
+          link.href = '/manifest.webmanifest';
+          document.head.appendChild(link);
+        }
+        
+        // Detect hard reload
+        const perfData = window.performance.getEntriesByType('navigation')[0];
+        const isHardReload = perfData && perfData.type === 'reload';
+        if (isHardReload) {
+          window.__HARD_RELOAD__ = true;
+        }
+      })();
+      
+      // Defer Google Maps loading to not block app startup
       window.initMap = function() {
         // Callback for when Maps API is loaded
       };
-      (function() {
-        const script = document.createElement('script');
-        script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDaWQosYNtS0V_S2R7R1xVAPMmpGsXY4Vk&callback=initMap&loading=async';
-        script.async = true;
-        document.body.appendChild(script);
-      })();
+      
+      setTimeout(() => {
+        if (!window.google || !window.google.maps) {
+          const script = document.createElement('script');
+          script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDaWQosYNtS0V_S2R7R1xVAPMmpGsXY4Vk&callback=initMap&loading=async';
+          script.async = true;
+          script.defer = true;
+          document.body.appendChild(script);
+        }
+      }, 2000);
     </script>
   </body>
 </html>

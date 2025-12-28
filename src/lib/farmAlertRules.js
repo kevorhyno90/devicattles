@@ -206,21 +206,16 @@ export function installAllRules(engine) {
     return 0;
   }
 
-  console.log(`📋 FARM_ALERT_RULES contains ${FARM_ALERT_RULES.length} rules`);
-  
-  // Check how many rules are already in the engine
+  // Silently check how many rules are already in the engine
   const existingRules = engine.getAllRules();
-  console.log(`📊 Engine currently has ${existingRules.length} rules`);
   
   // Only add if the engine is empty or doesn't have all rules
   if (existingRules.length === FARM_ALERT_RULES.length) {
-    console.log(`✅ All ${FARM_ALERT_RULES.length} rules already installed, skipping...`);
     return FARM_ALERT_RULES.length;
   }
   
   // Clear old rules if we have extras (prevents tripling on hot reload)
   if (existingRules.length > FARM_ALERT_RULES.length) {
-    console.log(`🗑️ Clearing ${existingRules.length} old rules to prevent duplicates...`);
     for (const rule of existingRules) {
       engine.rules = engine.rules.filter(r => r.id !== rule.id);
     }
@@ -240,7 +235,6 @@ export function installAllRules(engine) {
   const allRules = engine.getAllRules();
   const installedCount = allRules.length;
   
-  console.log(`✅ Installed ${installedCount}/${FARM_ALERT_RULES.length} alert rules`);
   return installedCount;
 }
 

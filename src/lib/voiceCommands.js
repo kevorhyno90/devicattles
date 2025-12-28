@@ -1,6 +1,6 @@
 import { loadData, saveData } from './storage'
 import { showNotification } from './notifications'
-import { logAction } from './audit'
+import { logAction, ACTIONS } from './audit'
 import { getCurrentWeather, getFarmLocation } from './weatherApi'
 
 /**
@@ -140,7 +140,7 @@ export function processVoiceCommand(transcript, onNavigate) {
     if (match) {
       try {
         const result = handler(match, onNavigate)
-        logAction('voice_command', {
+        logAction(ACTIONS.CREATE, 'voice_command', Date.now().toString(), {
           command: transcript,
           category,
           success: true

@@ -79,7 +79,7 @@ const DEFAULT_ENHANCED_SETTINGS = {
     encryptData: false,
     showSensitiveData: true,
     twoFactorAuth: false,
-    auditLog: true,
+    // auditLog removed
     dataSharing: false
   },
   

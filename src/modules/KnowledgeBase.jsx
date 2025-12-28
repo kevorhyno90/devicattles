@@ -932,11 +932,6 @@ const sampleTips = [
     title: 'Use Mobile Features',
     description: 'Take advantage of voice commands, photo logging, and offline mode. Mobile-first farming saves time and improves record accuracy.'
   },
-  {
-    id: 8,
-    icon: '🤝',
-    title: 'Join the Community',
-    description: 'Connect with other farmers in the Community module. Share experiences, get advice, and stay informed about local disease outbreaks and market trends.'
-  }
+
 ]
 

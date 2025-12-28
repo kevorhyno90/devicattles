@@ -470,7 +470,7 @@ export class PredictiveAnalytics {
       const trend = slope > 0.1 ? 'increasing' : slope < -0.1 ? 'decreasing' : 'stable';
 
       // Log prediction
-      logAction('prediction_made', {
+      logAction(ACTIONS.CREATE, 'prediction', `milk-${animalId}-${Date.now()}`, {
         type: 'milk_yield',
         animalId,
         daysAhead,

@@ -3,7 +3,7 @@
  * Complete data backup to file and restore functionality
  */
 
-import { logAction, ACTIONS, ENTITIES } from './audit'
+// import { logAction, ACTIONS, ENTITIES } from './audit' // audit log removed
 
 /**
  * Get all app data for backup
@@ -33,7 +33,7 @@ export function getAllData() {
       uiSettings: JSON.parse(localStorage.getItem('devinsfarm:ui:settings') || 'null')
     },
     users: JSON.parse(localStorage.getItem('devinsfarm:users') || '[]'),
-    audit: JSON.parse(localStorage.getItem('devinsfarm:audit') || '[]')
+    // audit: JSON.parse(localStorage.getItem('devinsfarm:audit') || '[]') // audit log removed
   }
   
   return data
@@ -58,7 +58,7 @@ export function createBackup(options = {}) {
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
     
-    logAction(ACTIONS.EXPORT, ENTITIES.OTHER, null, { operation: 'Full Backup', filename })
+    // logAction removed
     
     return { success: true, filename, size: blob.size }
   } catch (error) {

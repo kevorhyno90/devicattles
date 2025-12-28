@@ -216,6 +216,7 @@ export default function EnhancedSettings() {
         }
       }
       // Advanced audit logging for every settings change
+      // ...existing code...
       try {
         // Dynamically import logAction from audit.js
         import('../lib/audit').then(({ logAction, ACTIONS, ENTITIES }) => {
@@ -233,6 +234,7 @@ export default function EnhancedSettings() {
       } catch (err) {
         // Fail silently for audit logging
       }
+      // ...existing code...
       return updated
     })
   }

@@ -25,16 +25,15 @@ export default function Dashboard({ onNavigate }) {
   const [cacheStats, setCacheStats] = useState(null)
   const [predictions, setPredictions] = useState(null)
   const [alertsSummary, setAlertsSummary] = useState(null)
-  const [voiceSupported, setVoiceSupported] = useState(false)
   const [weather, setWeather] = useState(null)
   const [showCustomizer, setShowCustomizer] = useState(false)
   const [quickActionsTitle, setQuickActionsTitle] = useState('⚡ Quick Actions')
   const [qaLabels, setQaLabels] = useState({
     alerts: '🔔 Smart Alerts',
-    voice: '🎤 Voice Control',
     weather: '🌤️ Weather',
-    iot: '📟 IoT Devices',
+    // Removed: iot
     market: '💰 Market Prices'
+    // Removed: voice, disease, audit
   })
 
   // Persist quick actions edits
@@ -53,11 +52,7 @@ export default function Dashboard({ onNavigate }) {
     } catch {}
   }, [quickActionsTitle, qaLabels])
 
-  // Check voice support
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-    setVoiceSupported(!!SpeechRecognition)
-  }, [])
+  // Voice control removed
 
   useEffect(() => {
     loadDashboard()
@@ -1224,22 +1219,12 @@ export default function Dashboard({ onNavigate }) {
           <button onClick={() => onNavigate && onNavigate('alerts')} className="btn-primary" style={{ background: '#dc2626' }}>
             <EditableField value={qaLabels.alerts} onChange={(v)=>setQaLabels(l=>({ ...l, alerts: v }))} inputStyle={{ fontWeight: 600 }} />
           </button>
-          {voiceSupported && (
-            <button onClick={() => onNavigate && onNavigate('voice')} className="btn-primary" style={{ background: '#7c3aed' }}>
-              <EditableField value={qaLabels.voice} onChange={(v)=>setQaLabels(l=>({ ...l, voice: v }))} inputStyle={{ fontWeight: 600 }} />
-            </button>
-          )}
+          {/* Voice, disease, and audit quick actions removed */}
           <button onClick={() => onNavigate && onNavigate('weather')} className="btn-primary" style={{ background: '#0ea5e9' }}>
             <EditableField value={qaLabels.weather} onChange={(v)=>setQaLabels(l=>({ ...l, weather: v }))} inputStyle={{ fontWeight: 600 }} />
           </button>
-          <button onClick={() => onNavigate && onNavigate('iot')} className="btn-primary" style={{ background: '#8b5cf6' }}>
-            <EditableField value={qaLabels.iot} onChange={(v)=>setQaLabels(l=>({ ...l, iot: v }))} inputStyle={{ fontWeight: 600 }} />
-          </button>
           <button onClick={() => onNavigate && onNavigate('market')} className="btn-primary" style={{ background: '#10b981' }}>
             <EditableField value={qaLabels.market} onChange={(v)=>setQaLabels(l=>({ ...l, market: v }))} inputStyle={{ fontWeight: 600 }} />
-          </button>
-          <button onClick={() => onNavigate && onNavigate('farm3d')} className="btn-primary" style={{ background: '#ec4899' }}>
-            🗺️ 3D Farm View
           </button>
           <button onClick={() => onNavigate && onNavigate('timeline')} className="btn-primary" style={{ background: '#f59e0b' }}>
             📅 Timeline Planner
@@ -1247,15 +1232,7 @@ export default function Dashboard({ onNavigate }) {
           <button onClick={() => onNavigate && onNavigate('photos')} className="btn-primary" style={{ background: '#a855f7' }}>
             📸 Photo Gallery
           </button>
-          <button onClick={() => onNavigate && onNavigate('geomap')} className="btn-primary" style={{ background: '#10b981' }}>
-            🌍 Geospatial Map
-          </button>
-          <button onClick={() => onNavigate && onNavigate('predictions')} className="btn-primary" style={{ background: '#8b5cf6' }}>
-            🔮 Predictions
-          </button>
-          <button onClick={() => onNavigate && onNavigate('aiinsights')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}>
-            🤖 AI Insights
-          </button>
+
           <button onClick={() => onNavigate && onNavigate('alertcenter')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', border: 'none' }}>
             🔔 Alert Center
           </button>
@@ -1274,27 +1251,14 @@ export default function Dashboard({ onNavigate }) {
           <button onClick={() => onNavigate && onNavigate('activityfeed')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #14b8a6 100%)', border: 'none' }}>
             📊 Activity Feed
           </button>
-          <button onClick={() => onNavigate && onNavigate('iotsensors')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)', border: 'none' }}>
-            🔌 IoT Sensors
-          </button>
-          <button onClick={() => onNavigate && onNavigate('animal-health')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', border: 'none' }}>
-            🏥 Animal Health
-          </button>
-          <button onClick={() => onNavigate && onNavigate('health-analytics')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none' }}>
-            📊 Health Analytics
-          </button>
+          {/* Animal Health and Health Analytics quick actions removed */}
           <button onClick={() => onNavigate && onNavigate('store-demo')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', border: 'none' }}>
             🏪 Store Demo
           </button>
           <button onClick={() => onNavigate && onNavigate('marketplace')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', border: 'none' }}>
             🛒 Marketplace
           </button>
-          <button onClick={() => onNavigate && onNavigate('community')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none' }}>
-            👥 Community
-          </button>
-          <button onClick={() => onNavigate && onNavigate('knowledge')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', border: 'none' }}>
-            📚 Knowledge Base
-          </button>
+
           <button onClick={() => onNavigate && onNavigate('animals')} className="btn-primary">
             ➕ Add Animal
           </button>

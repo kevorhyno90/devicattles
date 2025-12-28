@@ -1448,7 +1448,56 @@ export default function AnimalFeeding({ animals }){
         <div className="card" style={{ padding: 40, textAlign: 'center' }}>
           <div style={{ fontSize: 48 }}>📊</div>
           <h4>Reports & Analytics</h4>
-          <p style={{ color: '#666' }}>Feed cost analysis, nutrient balance reports coming soon</p>
+          <div style={{ margin: '24px 0' }}>
+            <h5 style={{ marginBottom: 12 }}>Feed Cost Analysis</h5>
+            <table style={{ margin: '0 auto', borderCollapse: 'collapse', minWidth: 320 }}>
+              <thead>
+                <tr style={{ background: '#f3f4f6' }}>
+                  <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Feed Type</th>
+                  <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Total Cost</th>
+                  <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Avg. Cost/Day</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Example data, replace with real feed data */}
+                <tr>
+                  <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>Hay</td>
+                  <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>$120</td>
+                  <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>$4.00</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>Silage</td>
+                  <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>$90</td>
+                  <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>$3.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style={{ margin: '24px 0' }}>
+            <h5 style={{ marginBottom: 12 }}>Nutrient Balance Report</h5>
+            <table style={{ margin: '0 auto', borderCollapse: 'collapse', minWidth: 320 }}>
+              <thead>
+                <tr style={{ background: '#f3f4f6' }}>
+                  <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Nutrient</th>
+                  <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Target</th>
+                  <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Actual</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Example data, replace with real nutrient data */}
+                <tr>
+                  <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>Protein (%)</td>
+                  <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>16</td>
+                  <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>15.2</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>Energy (MJ)</td>
+                  <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>10</td>
+                  <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>9.7</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
       

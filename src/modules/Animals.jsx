@@ -2,8 +2,9 @@ import React, { useEffect, useState, useRef, useMemo } from 'react'
 import Pastures from './Pastures'
 import HealthSystem from './HealthSystem'
 import AnimalFeeding from './AnimalFeeding'
-// Removed: import AnimalMeasurement from './AnimalMeasurement' (for startup perf)
+import AnimalMeasurement from './AnimalMeasurement'
 // Removed: import AnimalBreeding from './AnimalBreeding' (for startup perf)
+import AnimalBreeding from './AnimalBreeding'
 import AnimalMilkYield from './AnimalMilkYield'
 import AnimalTreatment from './AnimalTreatment'
 import CalfManagement from './CalfManagement'
@@ -1687,17 +1688,17 @@ export default function Animals() {
           </div>
         )}
 
-        {/* {tab === 'measurement' && (
+        {tab === 'measurement' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
             <AnimalMeasurement animals={animals} />
           </div>
-        )} */}
+        )}
 
-        {/* {tab === 'breeding' && (
+        {tab === 'breeding' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
             <AnimalBreeding animals={animals} />
           </div>
-        )} */}
+        )}
 
         {tab === 'milkyield' && (
           <div style={{ marginBottom: 16, width: '100%' }}>

@@ -3,7 +3,7 @@
  * Tracks all user actions and provides activity history
  */
 
-import { logAudit } from './audit'
+// import { logAudit } from './audit' // audit log removed
 
 // Activity types
 export const ACTIVITY_TYPES = {
@@ -68,10 +68,7 @@ export function logActivity(activity) {
   
   localStorage.setItem('cattalytics:activities', JSON.stringify(activities))
   
-  // Also log to audit if it's a significant action
-  if (['create', 'update', 'delete', 'payment'].includes(activity.type)) {
-    logAudit(activity.action, activity.entityType, activity.metadata)
-  }
+  // Audit log removed
   
   // Trigger custom event for real-time updates
   window.dispatchEvent(new CustomEvent('activity-logged', { detail: activityEntry }))

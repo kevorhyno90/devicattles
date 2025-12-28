@@ -1,18 +1,22 @@
 import React, { useState, useEffect, lazy, Suspense, useContext } from 'react'
-import { requestNotificationPermission, listenForMessages } from './lib/firebaseMessaging'
+// Defer heavy Firebase imports until after initial render
+// import { requestNotificationPermission, listenForMessages } from './lib/firebaseMessaging'
 import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme'
-import OfflineIndicator from './components/OfflineIndicator'
-import InAppNotification from './components/InAppNotification'
-import BottomNav from './components/BottomNav'
-import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp'
+// Lazy load heavy components to reduce initial bundle
+const OfflineIndicator = lazy(() => import('./components/OfflineIndicator'))
+const InAppNotification = lazy(() => import('./components/InAppNotification'))
+const BottomNav = lazy(() => import('./components/BottomNav'))
+const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsHelp'))
+const GlobalSearch = lazy(() => import('./components/GlobalSearch'))
 import { AppViewProvider, AppViewContext } from './lib/AppViewContext.jsx';
 import SwipeHandler from './components/SwipeHandler'
 import ErrorBoundary from './components/ErrorBoundary'
-import GlobalSearch from './components/GlobalSearch'
-import { DataLayer } from './lib/dataLayer'
-import { initGlobalErrorHandler } from './lib/errorHandler'
+// Defer DataLayer and error handler to avoid heavy initialization
+// import { DataLayer } from './lib/dataLayer'
+// import { initGlobalErrorHandler } from './lib/errorHandler'
 import ToastContainer from './components/ToastContainer'
-import { useAnimalStore, useCropStore, useFinanceStore, useTaskStore, useInventoryStore, useUIStore } from './stores'
+// Lazy load stores to improve initial load time
+// import { useAnimalStore, useCropStore, useFinanceStore, useTaskStore, useInventoryStore, useUIStore } from './stores'
 
 // Helper function to retry failed lazy loads (important for Android Chrome)
 const lazyWithRetry = (importFunc) => {
@@ -34,6 +38,8 @@ const lazyWithRetry = (importFunc) => {
   })
 }
 
+
+
 // Lazy load all modules with retry logic
 const Dashboard = lazyWithRetry(() => import('./modules/Dashboard'))
 const NotificationCenter = lazyWithRetry(() => import('./modules/NotificationCenter'))
@@ -49,7 +55,7 @@ const Groups = lazyWithRetry(() => import('./modules/Groups'))
 const Pastures = lazyWithRetry(() => import('./modules/Pastures'))
 const HealthSystem = lazyWithRetry(() => import('./modules/HealthSystem'))
 const Login = lazyWithRetry(() => import('./modules/Login'))
-const AuditLog = lazyWithRetry(() => import('./modules/AuditLog'))
+// AuditLog import removed
 const BackupRestore = lazyWithRetry(() => import('./modules/BackupRestore'))
 const SyncSettings = lazyWithRetry(() => import('./modules/SyncSettings'))
 const AdvancedAnalytics = lazyWithRetry(() => import('./modules/AdvancedAnalytics'))
@@ -59,39 +65,35 @@ const AdditionalReports = lazyWithRetry(() => import('./modules/AdditionalReport
 const PetManagement = lazyWithRetry(() => import('./modules/PetManagement'))
 const CanineManagement = lazyWithRetry(() => import('./modules/CanineManagement'))
 const CalendarView = lazyWithRetry(() => import('./modules/CalendarView'))
-const FarmMap = lazyWithRetry(() => import('./modules/FarmMap'))
 const SmartAlerts = lazyWithRetry(() => import('./modules/SmartAlerts'))
-const VoiceCommandCenter = lazyWithRetry(() => import('./modules/VoiceCommandCenter'))
 const WeatherDashboard = lazyWithRetry(() => import('./modules/WeatherDashboard'))
-const IoTDevices = lazyWithRetry(() => import('./modules/IoTDevices'))
 const MarketPrices = lazyWithRetry(() => import('./modules/MarketPrices'))
-const Farm3D = lazyWithRetry(() => import('./modules/Farm3D'))
 const TimelinePlanner = lazyWithRetry(() => import('./modules/TimelinePlanner'))
 const PhotoGalleryAdvanced = lazyWithRetry(() => import('./modules/PhotoGalleryAdvanced'))
-const GeospatialMap = lazyWithRetry(() => import('./modules/GeospatialMap'))
-const PredictiveAnalytics = lazyWithRetry(() => import('./modules/PredictiveAnalytics'))
+// const GeospatialMap = lazyWithRetry(() => import('./modules/GeospatialMap')) // Module removed
+// const PredictiveAnalytics = lazyWithRetry(() => import('./modules/PredictiveAnalytics')) // Module removed
 // Removed for startup performance: const AdvancedBatchOps = lazyWithRetry(() => import('./modules/AdvancedBatchOps'))
 const CustomReportBuilder = lazyWithRetry(() => import('./modules/CustomReportBuilder'))
 const AIInsightsDashboard = lazyWithRetry(() => import('./modules/AIInsightsDashboard'))
 const AlertCenter = lazyWithRetry(() => import('./modules/AlertCenter'))
 const MobileSettings = lazyWithRetry(() => import('./modules/MobileSettings'))
-const DashboardBuilder = lazyWithRetry(() => import('./modules/DashboardBuilder'))
+// const DashboardBuilder = lazyWithRetry(() => import('./modules/DashboardBuilder')) // Module removed
 const ActivityFeed = lazyWithRetry(() => import('./modules/ActivityFeed'))
-const IoTSensorDashboard = lazyWithRetry(() => import('./modules/IoTSensorDashboard'))
-const AnimalHealthTracker = lazyWithRetry(() => import('./modules/AnimalHealthTracker'))
+
+
 const HealthAnalyticsDashboard = lazyWithRetry(() => import('./modules/HealthAnalyticsDashboard'))
-const StoreDemo = lazyWithRetry(() => import('./modules/StoreDemo'))
+// const StoreDemo = lazyWithRetry(() => import('./modules/StoreDemo')) // Module removed
 const Marketplace = lazyWithRetry(() => import('./modules/Marketplace'))
-const Community = lazyWithRetry(() => import('./modules/Community'))
-const KnowledgeBase = lazyWithRetry(() => import('./modules/KnowledgeBase'))
+
+
 
 // Phase 2: Smart Features UI Modules
 const AlertRules = lazyWithRetry(() => import('./modules/AlertRules'))
-const DiseaseDetection = lazyWithRetry(() => import('./modules/DiseaseDetection'))
-const PredictiveDashboard = lazyWithRetry(() => import('./modules/PredictiveDashboard'))
+// const DiseaseDetection = lazyWithRetry(() => import('./modules/DiseaseDetection')) // Module removed
+// const PredictiveDashboard = lazyWithRetry(() => import('./modules/PredictiveDashboard')) // Module removed
 
 // Phase 3: Reports & Analytics
-// const ReportsPro = lazyWithRetry(() => import('./modules/ReportsPro'))
+
 
 // Loading fallback component with timeout detection
 const LoadingFallback = () => {
@@ -175,14 +177,17 @@ const LoadingFallback = () => {
     </div>
   )
 }
+
+// Import critical auth/settings functions (needed immediately)
 import { isAuthenticated, getCurrentSession, logout, getCurrentUserName, getCurrentUserRole } from './lib/auth'
-import { logAction, ACTIONS, ENTITIES } from './lib/audit'
 import { isAuthRequired, getDefaultUser } from './lib/appSettings'
-import { startReminderChecker, stopReminderChecker, getUnreadCount } from './lib/notifications'
-import { checkAllAutoNotifications } from './lib/autoNotifications'
-import { initSync, setupAutoSync } from './lib/sync'
-import { alertRuleEngine } from './lib/alertRuleEngine'
-import { installAllRules } from './lib/farmAlertRules'
+// Defer heavy lib imports to dynamic loading when possible
+// import { logAction, ACTIONS, ENTITIES } from './lib/audit'
+// import { startReminderChecker, stopReminderChecker, getUnreadCount } from './lib/notifications'
+// import { checkAllAutoNotifications } from './lib/autoNotifications'
+// import { initSync, setupAutoSync } from './lib/sync'
+// import { alertRuleEngine } from './lib/alertRuleEngine'
+// import { installAllRules } from './lib/farmAlertRules'
 
 // App content component that uses theme
 function AppContent() {
@@ -193,9 +198,11 @@ function AppContent() {
   const [authenticated, setAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [animals, setAnimals] = useState([]);
-  // Pull crop and finance data from stores for ReportsPro and analytics
-  const crops = useCropStore(state => state.crops || [])
-  const finance = useFinanceStore(state => state.transactions || [])
+  const [crops, setCrops] = useState([]);
+  const [finance, setFinance] = useState([]);
+  // Stores are lazy-loaded only when needed by specific modules
+  // const crops = useCropStore(state => state.crops || [])
+  // const finance = useFinanceStore(state => state.transactions || [])
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -206,10 +213,13 @@ function AppContent() {
   const defaultSettings = { backgroundOn: false, background: 'bg-farm.svg', logo: 'jr-farm-logo.svg', uploadedLogo: '', theme: 'catalytics' }
   const [settings, setSettings] = useState(defaultSettings)
 
-  // Initialize error handler and data layer on mount
+  // Initialize error handler and data layer on mount (dynamically imported for better performance)
   useEffect(() => {
-    initGlobalErrorHandler();
-    DataLayer.initialize().catch(console.error);
+    // Defer heavy initialization to not block initial render
+    Promise.all([
+      import('./lib/errorHandler').then(m => m.initGlobalErrorHandler()),
+      import('./lib/dataLayer').then(m => m.DataLayer.initialize())
+    ]).catch(console.error);
   }, []);
 
   // Keyboard shortcut for global search (Ctrl/Cmd + K)
@@ -258,106 +268,150 @@ function AppContent() {
     }
   };
 
-  // Request notification permission and listen for messages on startup
+  // Request notification permission and listen for messages on startup (lazy loaded)
   // NOTE: Only initialize listener if permission already granted
   // Don't auto-request permission (must be user-initiated)
   useEffect(() => {
-    // Check if permission already granted
-    if ('Notification' in window && Notification.permission === 'granted') {
-      requestNotificationPermission().then(token => {
-        if (token) {
-          listenForMessages((payload) => {
-            console.log('📬 Foreground notification:', payload);
+    // Defer to not block initial render
+    const timer = setTimeout(() => {
+      // Check if permission already granted
+      if ('Notification' in window && Notification.permission === 'granted') {
+        // Dynamically import Firebase messaging to reduce initial bundle
+        import('./lib/firebaseMessaging').then(({ requestNotificationPermission, listenForMessages }) => {
+          requestNotificationPermission().then(token => {
+            if (token) {
+              listenForMessages((payload) => {
+                console.log('📬 Foreground notification:', payload);
+              });
+            }
           });
-        }
-      });
-    } else {
-      console.info('ℹ️ Notifications not yet enabled. Enable from Notification Center or Settings.');
-    }
+        }).catch(err => console.warn('Firebase messaging not available:', err));
+      }
+    }, 1000); // Defer by 1 second
+    
+    return () => clearTimeout(timer);
   }, []);
 
-  // Check authentication on mount
+  // Check authentication on mount (with dynamic imports)
   useEffect(() => {
-    // If auth is not required (personal mode), auto-login as default user
-    if (!isAuthRequired()) {
-      const defaultUser = getDefaultUser()
-      setCurrentUser(defaultUser)
-      setAuthenticated(true)
-    } else if (isAuthenticated()) {
-      const session = getCurrentSession()
-      setCurrentUser(session)
-      setAuthenticated(true)
-    }
+    import('./lib/appSettings').then(({ isAuthRequired, getDefaultUser }) => {
+      import('./lib/auth').then(({ isAuthenticated, getCurrentSession }) => {
+        // If auth is not required (personal mode), auto-login as default user
+        if (!isAuthRequired()) {
+          const defaultUser = getDefaultUser()
+          setCurrentUser(defaultUser)
+          setAuthenticated(true)
+        } else if (isAuthenticated()) {
+          const session = getCurrentSession()
+          setCurrentUser(session)
+          setAuthenticated(true)
+        }
+      });
+    });
   }, [])
 
-  // Start notification/reminder checker and sync
+  // Start notification/reminder checker and sync (deferred for performance)
   useEffect(() => {
     if (authenticated) {
-      // Run initial check
-      checkAllAutoNotifications()
-      
-      const intervalId = startReminderChecker()
-      
-      // Update unread count
-      const updateUnreadCount = () => {
-        setUnreadNotifications(getUnreadCount())
-      }
-      
-      updateUnreadCount()
-      const countInterval = setInterval(updateUnreadCount, 30000) // Every 30 seconds
-      
-      // Check auto notifications every hour
-      const autoCheckInterval = setInterval(checkAllAutoNotifications, 60 * 60 * 1000)
-      
-      // Listen for new notifications
-      window.addEventListener('newNotification', updateUnreadCount)
-      
-      // Initialize sync if configured - wrapped in try-catch
-      try {
-        initSync()
-        setupAutoSync()
-      } catch (error) {
-        console.warn('Sync initialization failed (optional feature):', error)
-      }
-      
-      // Phase 2: Initialize smart alert rules
-      try {
-        console.log('🔔 Initializing smart alert rules...')
-        installAllRules(alertRuleEngine)
-        alertRuleEngine.evaluateAllRules()
-        const alertInterval = setInterval(() => {
-          alertRuleEngine.evaluateAllRules()
-        }, 5 * 60 * 1000) // Every 5 minutes
-        
-        // Cleanup alert interval
-        return () => {
-          stopReminderChecker(intervalId)
-          clearInterval(countInterval)
-          clearInterval(autoCheckInterval)
-          clearInterval(alertInterval)
-          window.removeEventListener('newNotification', updateUnreadCount)
-        }
-      } catch (error) {
-        console.warn('Alert rules initialization failed (optional feature):', error)
-      }
-      
-      return () => {
-        stopReminderChecker(intervalId)
-        clearInterval(countInterval)
-        clearInterval(autoCheckInterval)
-        window.removeEventListener('newNotification', updateUnreadCount)
-      }
-    }
-  }, [authenticated])
+      // Defer heavy initialization by 500ms to let UI render first
+      const initTimeout = setTimeout(async () => {
+        // Dynamically import all notification/sync modules
+        const [
+          { checkAllAutoNotifications },
+          { startReminderChecker, stopReminderChecker, getUnreadCount },
+          { initSync, setupAutoSync },
+          { alertRuleEngine },
+          { installAllRules }
+        ] = await Promise.all([
+          import('./lib/autoNotifications'),
+          import('./lib/notifications'),
+          import('./lib/sync'),
+          import('./lib/alertRuleEngine'),
+          import('./lib/farmAlertRules')
+        ]);
 
-  // Load animals for passing to health system and groups
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('cattalytics:animals');
-      if (stored) setAnimals(JSON.parse(stored));
-    } catch (e) {
-      setAnimals([]);
+        // Always stop any previous reminder checker before starting a new one
+        stopReminderChecker();
+
+        // Run initial check
+        checkAllAutoNotifications();
+
+        const intervalId = startReminderChecker();
+
+        // Update unread count
+        const updateUnreadCount = () => {
+          setUnreadNotifications(getUnreadCount());
+        };
+
+        updateUnreadCount();
+        const countInterval = setInterval(updateUnreadCount, 30000); // Every 30 seconds
+
+        // Check auto notifications every hour
+        const autoCheckInterval = setInterval(checkAllAutoNotifications, 60 * 60 * 1000);
+
+        // Listen for new notifications
+        window.addEventListener('newNotification', updateUnreadCount);
+
+        // Initialize sync if configured - wrapped in try-catch
+        try {
+          initSync();
+          setupAutoSync();
+        } catch (error) {
+          console.warn('Sync initialization failed (optional feature):', error);
+        }
+
+        // Phase 2: Initialize smart alert rules (deferred)
+        setTimeout(() => {
+          try {
+            installAllRules(alertRuleEngine);
+            alertRuleEngine.evaluateAllRules();
+            const alertInterval = setInterval(() => {
+              alertRuleEngine.evaluateAllRules();
+            }, 5 * 60 * 1000); // Every 5 minutes
+
+            // Store alert interval for cleanup
+            window.__alertInterval = alertInterval;
+          } catch (error) {
+            console.warn('Alert rules initialization failed (optional feature):', error);
+          }
+        }, 2000); // Defer alerts by 2 seconds
+
+        // Store intervals for cleanup
+        window.__notificationIntervals = { intervalId, countInterval, autoCheckInterval, stopReminderChecker };
+      }, 500);
+
+      return () => {
+        clearTimeout(initTimeout);
+        if (window.__notificationIntervals) {
+          const { countInterval, autoCheckInterval, stopReminderChecker } = window.__notificationIntervals;
+          stopReminderChecker();
+          clearInterval(countInterval);
+          clearInterval(autoCheckInterval);
+          window.removeEventListener('newNotification', () => setUnreadNotifications(0));
+        }
+        if (window.__alertInterval) {
+          clearInterval(window.__alertInterval);
+        }
+      };
     }
+  }, [authenticated]);
+
+  // Load animals for passing to health system and groups (deferred)
+  useEffect(() => {
+    // Defer animal loading to not block initial render
+    const timer = setTimeout(() => {
+      try {
+        const stored = localStorage.getItem('cattalytics:animals');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setAnimals(parsed);
+        }
+      } catch (e) {
+        setAnimals([]);
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [view]); // Reload when view changes to keep animals fresh
   
   // Load UI settings
@@ -410,7 +464,12 @@ function AppContent() {
     setAuthenticated(true)
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    const [{ logAction, ACTIONS, ENTITIES }, { logout }] = await Promise.all([
+      import('./lib/audit'),
+      import('./lib/auth')
+    ]);
+    
     logAction(ACTIONS.LOGOUT, ENTITIES.USER, currentUser?.userId || 'unknown', {
       username: currentUser?.username
     })
@@ -614,22 +673,6 @@ function AppContent() {
             🔔 Smart Alerts
           </button>
           <button 
-            className={view==='voice'? 'active':''} 
-            onClick={()=>setView('voice')}
-            style={{
-              background: view==='voice' ? '#7c3aed' : '#f3f4f6',
-              color: view==='voice' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >
-            🎤 Voice Control
-          </button>
-          <button 
             className={view==='alert-rules'? 'active':''} 
             onClick={()=>setView('alert-rules')}
             style={{
@@ -645,38 +688,7 @@ function AppContent() {
           >
             🔔 Alert Rules
           </button>
-          <button 
-            className={view==='disease-detection'? 'active':''} 
-            onClick={()=>setView('disease-detection')}
-            style={{
-              background: view==='disease-detection' ? '#ef4444' : '#f3f4f6',
-              color: view==='disease-detection' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >
-            🔬 Disease Detection
-          </button>
-          <button 
-            className={view==='predictive-dashboard'? 'active':''} 
-            onClick={()=>setView('predictive-dashboard')}
-            style={{
-              background: view==='predictive-dashboard' ? '#8b5cf6' : '#f3f4f6',
-              color: view==='predictive-dashboard' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >
-            📊 Predictions
-          </button>
+
           <button 
             className={view==='weather'? 'active':''} 
             onClick={()=>setView('weather')}
@@ -693,22 +705,7 @@ function AppContent() {
           >
             🌤️ Weather
           </button>
-          <button 
-            className={view==='iot'? 'active':''} 
-            onClick={()=>setView('iot')}
-            style={{
-              background: view==='iot' ? '#8b5cf6' : '#f3f4f6',
-              color: view==='iot' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >
-            📟 IoT Devices
-          </button>
+
           <button 
             className={view==='market'? 'active':''} 
             onClick={()=>setView('market')}
@@ -725,22 +722,7 @@ function AppContent() {
           >
             💰 Market Prices
           </button>
-          <button 
-            className={view==='farm3d'? 'active':''} 
-            onClick={()=>setView('farm3d')}
-            style={{
-              background: view==='farm3d' ? '#ec4899' : '#f3f4f6',
-              color: view==='farm3d' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >
-            🗺️ 3D Farm
-          </button>
+          {/* Farm3D button removed */}
           <button 
             className={view==='timeline'? 'active':''} 
             onClick={()=>setView('timeline')}
@@ -773,38 +755,7 @@ function AppContent() {
           >
             📸 Photos
           </button>
-          <button 
-            className={view==='geomap'? 'active':''} 
-            onClick={()=>setView('geomap')}
-            style={{
-              background: view==='geomap' ? '#10b981' : '#f3f4f6',
-              color: view==='geomap' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >
-            🌍 GeoMap
-          </button>
-          <button 
-            className={view==='predictions'? 'active':''} 
-            onClick={()=>setView('predictions')}
-            style={{
-              background: view==='predictions' ? '#8b5cf6' : '#f3f4f6',
-              color: view==='predictions' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >
-            🔮 Predictions
-          </button>
+
           <button 
             className={view==='animals'? 'active':''} 
             onClick={()=>setView('animals')}
@@ -931,20 +882,7 @@ function AppContent() {
               fontWeight: '500'
             }}
           >📊 Reports</button>
-          <button 
-            className={view==='reportsPro'? 'active':''} 
-            onClick={()=>setView('reportsPro')}
-            style={{
-              background: view==='reportsPro' ? '#8b5cf6' : '#f3f4f6',
-              color: view==='reportsPro' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >💎 Reports Pro</button>
+
           <button 
             className={view==='analytics'? 'active':''} 
             onClick={()=>setView('analytics')}
@@ -987,20 +925,7 @@ function AppContent() {
               fontWeight: '500'
             }}
           >⚡ Bulk Ops</button>
-          <button 
-            className={view==='audit'? 'active':''} 
-            onClick={()=>setView('audit')}
-            style={{
-              background: view==='audit' ? '#059669' : '#f3f4f6',
-              color: view==='audit' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >📋 Audit Log</button>
+          {/* Audit Log button removed */}
           <button 
             className={view==='backup'? 'active':''} 
             onClick={()=>setView('backup')}
@@ -1034,8 +959,7 @@ function AppContent() {
           <div style={{ marginLeft: 'auto' }}>
             <ThemeToggleButton />
           </div>
-        </nav>
-
+      </nav>
       <main>
         <Suspense fallback={<LoadingFallback />}>
           {view === 'dashboard' && (
@@ -1055,6 +979,7 @@ function AppContent() {
                 <button onClick={() => setView('animals')} style={{ padding: '8px 16px', background: '#059669', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
                   🐄 Livestock
                 </button>
+                {/* Poultry button removed */}
                 <button onClick={() => setView('pets')} style={{ padding: '8px 16px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
                   🐾 Pets
                 </button>
@@ -1097,7 +1022,7 @@ function AppContent() {
               <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
                 ← Back to Dashboard
               </button>
-              <ErrorBoundary><AnimalHealthTracker onNavigate={setView} /></ErrorBoundary>
+
             </section>
           )}
 
@@ -1110,14 +1035,7 @@ function AppContent() {
             </section>
           )}
 
-          {view === 'store-demo' && (
-            <section>
-              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                ← Back to Dashboard
-              </button>
-              <ErrorBoundary><StoreDemo /></ErrorBoundary>
-            </section>
-          )}
+          {/* StoreDemo view removed */}
 
           {view === 'marketplace' && (
             <section>
@@ -1128,23 +1046,8 @@ function AppContent() {
             </section>
           )}
 
-          {view === 'community' && (
-            <section>
-              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                ← Back to Dashboard
-              </button>
-              <ErrorBoundary><Community /></ErrorBoundary>
-            </section>
-          )}
 
-          {view === 'knowledge' && (
-            <section>
-              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                ← Back to Dashboard
-              </button>
-              <ErrorBoundary><KnowledgeBase /></ErrorBoundary>
-            </section>
-          )}
+          {/* Community and Knowledge Base views removed */}
 
           {view === 'tasks' && (
             <section>
@@ -1191,14 +1094,6 @@ function AppContent() {
           </section>
         )}
 
-        {view === 'farmmap' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><FarmMap /></ErrorBoundary>
-          </section>
-        )}
 
         {view === 'reports' && (
           <section>
@@ -1209,15 +1104,7 @@ function AppContent() {
           </section>
         )}
 
-        {/* Commented out: ReportsPro has React hook issue during lazy loading */}
-        {/* view === 'reportsPro' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><ReportsPro animals={animals} crops={crops} finance={finance} /></ErrorBoundary>
-          </section>
-        ) */}
+
 
         {view === 'analytics' && (
           <section>
@@ -1255,14 +1142,6 @@ function AppContent() {
           </section>
         )}
 
-        {view === 'voice' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><VoiceCommandCenter onNavigate={setView} /></ErrorBoundary>
-          </section>
-        )}
 
         {view === 'weather' && (
           <section>
@@ -1273,14 +1152,6 @@ function AppContent() {
           </section>
         )}
 
-        {view === 'iot' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><IoTDevices /></ErrorBoundary>
-          </section>
-        )}
 
         {view === 'market' && (
           <section>
@@ -1291,14 +1162,7 @@ function AppContent() {
           </section>
         )}
 
-        {view === 'farm3d' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><Farm3D /></ErrorBoundary>
-          </section>
-        )}
+        {/* Farm3D view removed */}
 
         {view === 'timeline' && (
           <section>
@@ -1318,23 +1182,9 @@ function AppContent() {
           </section>
         )}
 
-        {view === 'geomap' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><GeospatialMap /></ErrorBoundary>
-          </section>
-        )}
+        {/* GeospatialMap view removed */}
 
-        {view === 'predictions' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><PredictiveAnalytics /></ErrorBoundary>
-          </section>
-        )}
+        {/* PredictiveAnalytics view removed */}
 
         {/* Batch ops removed for startup performance
         {view === 'batchops' && (
@@ -1383,14 +1233,7 @@ function AppContent() {
           </section>
         )}
 
-        {view === 'dashboardbuilder' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><DashboardBuilder /></ErrorBoundary>
-          </section>
-        )}
+        {/* DashboardBuilder view removed */}
 
         {view === 'activityfeed' && (
           <section>
@@ -1401,14 +1244,7 @@ function AppContent() {
           </section>
         )}
 
-        {view === 'iotsensors' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><IoTSensorDashboard /></ErrorBoundary>
-          </section>
-        )}
+
 
         {/* Phase 2: Smart Features UI Routes */}
         {view === 'alert-rules' && (
@@ -1420,36 +1256,11 @@ function AppContent() {
           </section>
         )}
 
-        {view === 'disease-detection' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><DiseaseDetection /></ErrorBoundary>
-          </section>
-        )}
+        {/* ...existing code... */}
 
-        {view === 'predictive-dashboard' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><PredictiveDashboard /></ErrorBoundary>
-          </section>
-        )}
+        {/* PredictiveDashboard view removed */}
 
-        {view === 'audit' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary>
-              <Suspense fallback={<LoadingFallback />}>
-                <AuditLog />
-              </Suspense>
-            </ErrorBoundary>
-          </section>
-        )}
+        {/* Audit Log view removed */}
 
         {view === 'backup' && (
           <section>
@@ -1684,24 +1495,33 @@ function AppContent() {
         <small>© Devins Farm — Comprehensive Farm Management System</small>
       </footer>
 
-
       {/* In-app notification banner */}
-      <InAppNotification />
+      <Suspense fallback={<div></div>}>
+        <InAppNotification />
+      </Suspense>
 
       {/* Global Search Modal */}
-      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <Suspense fallback={<div></div>}>
+        <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      </Suspense>
 
       {/* Keyboard Shortcuts Help */}
-      <KeyboardShortcutsHelp />
+      <Suspense fallback={<div></div>}>
+        <KeyboardShortcutsHelp />
+      </Suspense>
 
       {/* Mobile Bottom Navigation */}
-      <BottomNav />
+      <Suspense fallback={<div></div>}>
+        <BottomNav />
+      </Suspense>
 
       {/* Swipe gesture navigation */}
       <SwipeHandler />
 
       {/* Offline indicator */}
-      <OfflineIndicator />
+      <Suspense fallback={<div></div>}>
+        <OfflineIndicator />
+      </Suspense>
       
       {/* Toast notifications */}
       <ToastContainer />
@@ -1709,7 +1529,13 @@ function AppContent() {
   )
 }
 
-// Wrapper component (ThemeProvider is in main.jsx)
+// Wrapper with AppShell for fast initial render
+import AppShell from './components/AppShell'
+
 export default function App() {
-  return <AppContent />
+  return (
+    <Suspense fallback={<AppShell />}>
+      <AppContent />
+    </Suspense>
+  )
 }

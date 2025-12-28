@@ -40,8 +40,7 @@ function analyzeHealthInsights(animals) {
       category: InsightCategory.HEALTH,
       priority: needsVaccination.length > 5 ? InsightPriority.HIGH : InsightPriority.MEDIUM,
       title: `${needsVaccination.length} animals need vaccination`,
-      description: `${needsVaccination.length} animals haven't been vaccinated in over 6 months. Schedule vaccinations to prevent disease outbreaks.`,
-      impact: `Reduces disease risk by up to 80%`,
+      // Disease detection removed
       action: 'Schedule vaccinations',
       affectedCount: needsVaccination.length,
       affectedIds: needsVaccination.map(a => a.id),
@@ -60,7 +59,7 @@ function analyzeHealthInsights(animals) {
       priority: InsightPriority.CRITICAL,
       title: `${sickAnimals.length} animals require immediate attention`,
       description: `${sickAnimals.length} animals are marked as sick and need veterinary care.`,
-      impact: `Prevents spread of disease and reduces mortality risk`,
+      // Disease detection removed
       action: 'Contact veterinarian immediately',
       affectedCount: sickAnimals.length,
       affectedIds: sickAnimals.map(a => a.id),

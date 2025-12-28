@@ -190,7 +190,7 @@ export default function HealthSystem({ animals = [] }){
       // vitals
       (p.vitals||[]).forEach(v=> rows.push(['vital', v.createdAt || v.date || '', p.id, p.name || '', v.weight ?? '', v.temp ?? '', v.hr ?? '', v.notes || '']))
       // vaccinations
-      (p.vaccinations||[]).forEach(v=> rows.push(['vaccination', v.createdAt || v.date || '', p.id, p.name || '', v.vaccine || '', v.lot || '', '', v.notes || '']))
+      (p.vaccinations||[]).forEach(v=> rows.push(['vaccination', v.createdAt || v.date || '', p.id, p.name || '', v.vaccine || '', '', '', v.notes || '']))
       // medications
       (p.medications||[]).forEach(m=> rows.push(['medication', m.createdAt || m.date || '', p.id, p.name || '', m.drug || '', m.dose || '', '', m.notes || '']))
       // notes
@@ -512,20 +512,18 @@ function AddSoapNoteForm({ onAdd }){
 function VaccinationForm({ onAdd }){
   const [vaccine, setVaccine] = useState('')
   const [date, setDate] = useState('')
-  const [lot, setLot] = useState('')
   return (
-    <form onSubmit={e=>{ e.preventDefault(); onAdd({ vaccine, date, lot }); setVaccine(''); setDate(''); setLot('') }} style={{ marginTop:8 }}>
+    <form onSubmit={e=>{ e.preventDefault(); onAdd({ vaccine, date }); setVaccine(''); setDate('') }} style={{ marginTop:8 }}>
       <div style={{ display:'flex', gap:8 }}>
         <input placeholder='Vaccine' value={vaccine} onChange={e=>setVaccine(e.target.value)} />
         <input type='date' value={date} onChange={e=>setDate(e.target.value)} />
-        <input placeholder='Lot' value={lot} onChange={e=>setLot(e.target.value)} />
         <button type='submit'>Add</button>
       </div>
     </form>
   )
 }
 
-function VaccinationList({ items=[] }){ return (<ul>{items.map(i=> <li key={i.id}>{i.date||i.createdAt} — {i.vaccine} {i.lot? `(lot ${i.lot})` : ''}</li>)}</ul>) }
+function VaccinationList({ items=[] }){ return (<ul>{items.map(i=> <li key={i.id}>{i.date||i.createdAt} — {i.vaccine}</li>)}</ul>) }
 
 function MedicationForm({ onAdd }){
   const [drug, setDrug] = useState('')
@@ -806,7 +804,7 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
 
     const notesHtml = sectionRows('Notes', p.notes||[], n=> `<tr><td style="padding:6px;border:1px solid #eee"><strong>${esc(n.createdAt||n.date||'')}</strong><div>${esc(n.subjective||'')}</div><div>${esc(n.objective||'')}</div><div>${esc(n.assessment||'')}</div><div>${esc(n.plan||'')}</div></td></tr>`)
     const vitalsHtml = sectionRows('Vitals', p.vitals||[], v=> `<tr><td style="padding:6px;border:1px solid #eee">${esc(v.createdAt||v.date||'')} — Weight: ${esc(v.weight)} kg • Temp: ${esc(v.temp)} °C • HR: ${esc(v.hr)} • ${esc(v.notes||'')}</td></tr>`)
-    const vaccHtml = sectionRows('Vaccinations', p.vaccinations||[], v=> `<tr><td style="padding:6px;border:1px solid #eee">${esc(v.date||v.createdAt||'')} — ${esc(v.vaccine||'')} ${(v.lot? ' (lot '+esc(v.lot)+')' : '')}</td></tr>`)
+    const vaccHtml = sectionRows('Vaccinations', p.vaccinations||[], v=> `<tr><td style="padding:6px;border:1px solid #eee">${esc(v.date||v.createdAt||'')} — ${esc(v.vaccine||'')}</td></tr>`)
     const medsHtml = sectionRows('Medications', p.medications||[], m=> `<tr><td style="padding:6px;border:1px solid #eee">${esc(m.createdAt||m.date||'')} — ${esc(m.drug||m.name||'')} — ${esc(m.dose||'')}</td></tr>`)
     const attachHtml = sectionRows('Attachments', p.attachments||[], a=> `<tr><td style="padding:6px;border:1px solid #eee">${esc(a.filename||'file')} — ${esc(a.createdAt||'')}<div>${a.dataUrl? `<img src="${a.dataUrl}" style="max-width:320px;display:block;margin-top:6px"/>` : ''}</div></td></tr>`)
     const apptsHtml = sectionRows('Appointments', appts, a=> `<tr><td style="padding:6px;border:1px solid #eee">${esc(a.when||a.createdAt||'')} — ${esc(a.reason||'')} — ${esc(a.status||'')}</td></tr>`)
@@ -914,7 +912,7 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
 
       pushSection('Notes', p.notes||[], n=> `${n.createdAt || ''} — ${n.subjective || ''} ${n.objective ? '\nObj: '+n.objective : ''} ${n.assessment ? '\nAssess: '+n.assessment : ''} ${n.plan ? '\nPlan: '+n.plan : ''}`)
       pushSection('Vitals', p.vitals||[], v=> `${v.createdAt || ''} — Weight: ${v.weight ?? ''} kg — Temp: ${v.temp ?? ''} °C — HR: ${v.hr ?? ''} bpm — ${v.notes || ''}`)
-      pushSection('Vaccinations', p.vaccinations||[], v=> `${v.createdAt || v.date || ''} — ${v.vaccine || ''} ${v.lot ? '(lot '+v.lot+')' : ''}`)
+      pushSection('Vaccinations', p.vaccinations||[], v=> `${v.createdAt || v.date || ''} — ${v.vaccine || ''}`)
       pushSection('Medications', p.medications||[], m=> `${m.createdAt || ''} — ${m.drug || m.name || ''} — ${m.dose || ''}`)
       pushSection('Attachments', p.attachments||[], a=> `${a.createdAt || ''} — ${a.filename || ''}`)
       pushSection('Appointments', appointments.filter(a=> a.patientId === p.id), a=> `${a.when || a.createdAt || ''} — ${a.reason || ''} — ${a.status || ''}`)
@@ -1053,12 +1051,12 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
           return [date, it.patientId || '', patient.name || '', d.weight ?? '', d.temp ?? '', d.hr ?? '', d.notes || '']
         })
       } else if(section === 'vaccinations'){
-        headers = ['date','patientId','patientName','vaccine','lot','notes']
+        headers = ['date','patientId','patientName','vaccine','notes']
         rows = items.map(it=>{
           const d = it.data || {}
           const patient = patients.find(p=>p.id===it.patientId) || {}
           const date = d.createdAt || d.date || ''
-          return [date, it.patientId || '', patient.name || '', d.vaccine || d.vaccineName || '', d.lot || '', d.notes || '']
+          return [date, it.patientId || '', patient.name || '', d.vaccine || d.vaccineName || '', d.notes || '']
         })
       } else if(section === 'medications'){
         headers = ['date','patientId','patientName','drug','dose','notes']

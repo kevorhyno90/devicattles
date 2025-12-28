@@ -71,7 +71,7 @@
 ## 🚀 Future Enhancements
 
 - Automated reminders and notifications
-- Integration with weighing scales and sensors
+
 - Barcode/RFID tag scanning
 - Photo documentation
 - Batch operations for multiple animals

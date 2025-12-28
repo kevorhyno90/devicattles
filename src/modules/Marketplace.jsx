@@ -802,22 +802,35 @@ export default function Marketplace() {
               onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              {/* Image placeholder */}
-              <div 
-                style={{ 
-                  height: 180, 
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 64,
-                  color: 'white'
-                }}
-              >
-                {listing.category === 'Livestock' ? '🐄' : 
-                 listing.category === 'Equipment' ? '🚜' : 
-                 listing.category === 'Jobs' ? '👷' : '📦'}
-              </div>
+              {listing.imageUrl ? (
+                <img 
+                  src={listing.imageUrl} 
+                  alt={listing.title || 'Listing image'}
+                  style={{
+                    height: 180,
+                    width: '100%',
+                    objectFit: 'cover',
+                    borderRadius: 8,
+                  }}
+                />
+              ) : (
+                <div 
+                  style={{ 
+                    height: 180, 
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 64,
+                    color: 'white',
+                    borderRadius: 8
+                  }}
+                >
+                  {listing.category === 'Livestock' ? '🐄' : 
+                   listing.category === 'Equipment' ? '🚜' : 
+                   listing.category === 'Jobs' ? '👷' : '📦'}
+                </div>
+              )}
               
               <div style={{ padding: 15 }}>
                 {/* Header */}
@@ -995,24 +1008,37 @@ export default function Marketplace() {
               </button>
             </div>
             
-            {/* Large image placeholder */}
-            <div 
-              style={{ 
-                height: 300, 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: 8,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 120,
-                color: 'white',
-                marginBottom: 20
-              }}
-            >
-              {selectedListing.category === 'Livestock' ? '🐄' : 
-               selectedListing.category === 'Equipment' ? '🚜' : 
-               selectedListing.category === 'Jobs' ? '👷' : '📦'}
-            </div>
+            {selectedListing.imageUrl ? (
+              <img 
+                src={selectedListing.imageUrl} 
+                alt={selectedListing.title || 'Listing image'}
+                style={{
+                  height: 300,
+                  width: '100%',
+                  objectFit: 'cover',
+                  borderRadius: 8,
+                  marginBottom: 20
+                }}
+              />
+            ) : (
+              <div 
+                style={{ 
+                  height: 300, 
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  borderRadius: 8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 120,
+                  color: 'white',
+                  marginBottom: 20
+                }}
+              >
+                {selectedListing.category === 'Livestock' ? '🐄' : 
+                 selectedListing.category === 'Equipment' ? '🚜' : 
+                 selectedListing.category === 'Jobs' ? '👷' : '📦'}
+              </div>
+            )}
             
             {/* Price */}
             <div style={{ 

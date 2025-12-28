@@ -444,25 +444,32 @@ export default function DashboardCustomizer({ onClose }) {
                     )}
                   </div>
 
-                  {/* Widget Content Placeholder */}
+                  {/* Widget Content */}
                   <div style={{
                     height: '100%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#9ca3af',
+                    color: '#374151',
                     fontSize: 13,
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    background: '#f3f4f6',
+                    borderRadius: 6,
+                    minHeight: 60
                   }}>
                     {previewMode ? (
                       <WidgetPreview widget={widget} />
                     ) : (
-                      <div>
-                        <div>{widgetDef.description}</div>
-                        <div style={{ marginTop: 8, fontSize: 11 }}>
-                          Size: {widget.w}x{widget.h} • Position: ({widget.x}, {widget.y})
+                      widgetDef && widgetDef.render ? (
+                        widgetDef.render(widget)
+                      ) : (
+                        <div>
+                          <div>{widgetDef.description}</div>
+                          <div style={{ marginTop: 8, fontSize: 11 }}>
+                            Size: {widget.w}x{widget.h} • Position: ({widget.x}, {widget.y})
+                          </div>
                         </div>
-                      </div>
+                      )
                     )}
                   </div>
 

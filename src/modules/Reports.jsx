@@ -299,7 +299,7 @@ export default function Reports(){
         const finance = JSON.parse(localStorage.getItem('cattalytics:finance') || '[]')
         const crops = JSON.parse(localStorage.getItem('cattalytics:crops') || '[]')
         const cropPest = JSON.parse(localStorage.getItem('cattalytics:cropPest') || '[]')
-        const cropDisease = JSON.parse(localStorage.getItem('cattalytics:cropDisease') || '[]')
+        // Crop disease management removed
         const resources = JSON.parse(localStorage.getItem('devinsfarm:resources') || '[]')
         const schedules = JSON.parse(localStorage.getItem('cattalytics:schedules') || '[]')
         const groups = JSON.parse(localStorage.getItem('cattalytics:groups') || '[]')
@@ -326,7 +326,7 @@ export default function Reports(){
         const canineManagement = JSON.parse(localStorage.getItem('cattalytics:canineManagement') || '[]')
         const poultryManagement = JSON.parse(localStorage.getItem('cattalytics:poultryManagement') || '[]')
         const petManagement = JSON.parse(localStorage.getItem('cattalytics:petManagement') || '[]')
-        setItems({ animals, tasks, finance, crops, cropPest, cropDisease, resources, schedules, groups, pastures, health, feeding, measurements, breeding, milkYield, treatments, semen, inventory, poultry, flocks, azolla, bsf, additionalReports, animalBreeding, animalFeeding, animalMeasurement, animalMilkYield, animalTreatment, calfManagement, canineManagement, poultryManagement, petManagement })
+        setItems({ animals, tasks, finance, crops, cropPest, resources, schedules, groups, pastures, health, feeding, measurements, breeding, milkYield, treatments, semen, inventory, poultry, flocks, azolla, bsf, additionalReports, animalBreeding, animalFeeding, animalMeasurement, animalMilkYield, animalTreatment, calfManagement, canineManagement, poultryManagement, petManagement })
       }catch(e){ setItems({ animals:[], tasks:[], finance:[], crops:[], resources:[], schedules:[], groups:[], pastures:[], health:[], feeding:[], measurements:[], breeding:[], milkYield:[], treatments:[], semen:[], inventory:[], poultry:[], flocks:[], azolla:[], bsf:[], additionalReports:[], animalBreeding:[], animalFeeding:[], animalMeasurement:[], animalMilkYield:[], animalTreatment:[], calfManagement:[], canineManagement:[], poultryManagement:[], petManagement:[] }) }
     }, [])
 
@@ -363,7 +363,7 @@ export default function Reports(){
     if(section === 'finance') return (m.finance||[]).map(f=> ({ id: f.id || Math.random().toString(36).slice(2,8), data: f, type:'finance' }))
     if(section === 'crops') return (m.crops||[]).map(c=> ({ id: c.id || c.name || Math.random().toString(36).slice(2,8), data: c, type:'crop' }))
     if(section === 'cropPest') return (m.cropPest||[]).map(p=> ({ id: p.id || p.cropId || Math.random().toString(36).slice(2,8), data: p, type:'cropPest' }))
-    if(section === 'cropDisease') return (m.cropDisease||[]).map(d=> ({ id: d.id || d.cropId || Math.random().toString(36).slice(2,8), data: d, type:'cropDisease' }))
+    // Crop disease management removed
     if(section === 'resources') return (m.resources||[]).map(r=> ({ id: r.id || r.name || Math.random().toString(36).slice(2,8), data: r, type:'resource' }))
     if(section === 'schedules') return (m.schedules||[]).map(s=> ({ id: s.id || s.title || Math.random().toString(36).slice(2,8), data: s, type:'schedule' }))
     if(section === 'groups') return (m.groups||[]).map(g=> ({ id: g.id || g.name || Math.random().toString(36).slice(2,8), data: g, type:'group' }))
@@ -474,7 +474,7 @@ export default function Reports(){
                 <option value="cropTreatment">Crop Treatment</option>
                 <option value="cropYield">Crop Yield</option>
                 <option value="cropPest">Crop Pest Management</option>
-                <option value="cropDisease">Crop Disease Management</option>
+                {/* Crop Disease Management removed */}
                 <option value="pastures">Pastures</option>
                 <option value="azolla">Azolla Farming</option>
                 <option value="bsf">BSF Farming</option>
@@ -485,7 +485,7 @@ export default function Reports(){
                 <option value="tasks">Tasks</option>
                 <option value="schedules">Schedules</option>
                 <option value="groups">Groups</option>
-                <option value="audit">Audit Log</option>
+                {/* Audit Log removed */}
                 <option value="backup">Backup & Restore</option>
                 <option value="bulk">Bulk Operations</option>
               </optgroup>
@@ -496,7 +496,6 @@ export default function Reports(){
               <optgroup label="Other Modules">
                 <option value="calendar">Calendar</option>
                 <option value="photoGallery">Photo Gallery</option>
-                <option value="voiceInput">Voice Input</option>
                 <option value="advancedAnalytics">Advanced Analytics</option>
                 <option value="additionalReports">Additional Reports</option>
               </optgroup>
@@ -636,7 +635,7 @@ export default function Reports(){
             <optgroup label="Crops & Land">
               <option value="crops">Crops</option>
               <option value="cropPest">Crop Pest Management</option>
-              <option value="cropDisease">Crop Disease Management</option>
+              {/* Crop Disease Management removed */}
               <option value="pastures">Pastures</option>
             </optgroup>
             <optgroup label="Management">

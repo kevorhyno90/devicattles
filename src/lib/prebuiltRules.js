@@ -22,7 +22,7 @@ export const PREBUILT_RULES = {
     conditions: [
       {
         type: 'animal',
-        field: 'lastHealthCheck.disease',
+        // disease detection removed
         operator: 'includes',
         value: 'mastitis'
       },
@@ -136,7 +136,7 @@ export const PREBUILT_RULES = {
     conditions: [
       {
         type: 'animal',
-        field: 'lastHealthCheck.disease',
+        // disease detection removed
         operator: 'includes',
         value: 'respiratory'
       }

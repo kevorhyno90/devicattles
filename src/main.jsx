@@ -2,9 +2,11 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
-import { ThemeProvider } from './lib/theme';
-import { AppViewProvider } from './lib/AppViewContext.jsx';
-import { initializeAudio } from './lib/notifications.js';
+// Defer ThemeProvider and AppViewProvider to reduce initial bundle
+// import { ThemeProvider } from './lib/theme';
+// import { AppViewProvider } from './lib/AppViewContext.jsx';
+// Defer audio initialization to avoid blocking initial render
+// import { initializeAudio } from './lib/notifications.js';
 import './styles.css'
 
 // Suppress Zustand and other deprecation warnings before any modules load
@@ -43,12 +45,16 @@ if (!React || !React.version) {
   throw new Error('React is not available')
 }
 
-// Initialize the audio context for notification sounds
-try {
-  initializeAudio();
-} catch (e) {
-  console.warn('⚠️ Audio initialization failed (optional):', e)
-}
+// Defer audio initialization to after app loads
+setTimeout(() => {
+  import('./lib/notifications.js').then(({ initializeAudio }) => {
+    try {
+      initializeAudio();
+    } catch (e) {
+      console.warn('⚠️ Audio initialization failed (optional):', e)
+    }
+  }).catch(() => {});
+}, 100);
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {
@@ -56,8 +62,56 @@ if (!rootElement) {
   throw new Error('Root element with id="root" not found in index.html')
 }
 
+// Initial minimal render to show UI immediately
+const root = createRoot(rootElement);
+
+
+let loadingTimeout;
 try {
-  createRoot(rootElement).render(
+  root.render(
+    <React.StrictMode>
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true
+        }}
+      >
+        <div id="initial-loading" style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          flexDirection: 'column',
+          gap: '16px'
+        }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: '4px solid #e5e7eb',
+            borderTopColor: '#059669',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite'
+          }}></div>
+          <div id="loading-message" style={{ color: '#059669', fontSize: '16px', fontWeight: '600' }}>Loading...</div>
+        </div>
+      </BrowserRouter>
+    </React.StrictMode>
+  );
+  // If providers take >2s, show a more informative message
+  loadingTimeout = setTimeout(() => {
+    const msg = document.getElementById('loading-message');
+    if (msg) {
+      msg.textContent = 'Still loading... (slow network or large modules)';
+    }
+  }, 2000);
+
+  // Dynamically load providers after initial paint for faster load
+Promise.all([
+  import('./lib/theme'),
+  import('./lib/AppViewContext.jsx')
+]).then(([{ ThemeProvider }, { AppViewProvider }]) => {
+  clearTimeout(loadingTimeout);
+  root.render(
     <React.StrictMode>
       <BrowserRouter
         future={{
@@ -73,6 +127,11 @@ try {
       </BrowserRouter>
     </React.StrictMode>
   );
+}).catch(err => {
+  clearTimeout(loadingTimeout);
+  console.error('❌ Failed to load app providers:', err)
+  document.body.innerHTML = '<div style="padding: 20px; background: #dc2626; color: white;"><h1>Error</h1><p>Failed to load providers. Please refresh.</p></div>'
+});
 } catch (e) {
   console.error('❌ Failed to render React app:', e)
   document.body.innerHTML = '<div style="padding: 20px; background: #dc2626; color: white;"><h1>Error</h1><p>Failed to load application. Error: ' + e.message + '</p></div>'
@@ -85,31 +144,45 @@ const isDev = import.meta.env.DEV
 const isCodespaces = window.location.hostname.includes('github.dev') || window.location.hostname.includes('githubpreview.dev')
 
 if ('serviceWorker' in navigator && !isDev && !isCodespaces) {
-  window.addEventListener('load', async () => {
-    try {
-      // First, unregister any existing service workers to clear stale cache
-      const registrations = await navigator.serviceWorker.getRegistrations()
-      for (let reg of registrations) {
-        try {
-          await reg.unregister()
-          console.log('🔄 Unregistered old service worker')
-        } catch (e) {
-          console.warn('Failed to unregister service worker:', e)
+  // Defer SW registration even more to not interfere with hard reloads
+  window.addEventListener('load', () => {
+    // Skip SW registration completely on hard reload to speed up
+    if (window.__HARD_RELOAD__) {
+      console.log('⚡ Skipping SW registration on hard reload for speed');
+      return;
+    }
+    
+    // Use setTimeout to ensure SW registration doesn't block rendering
+    setTimeout(async () => {
+      try {
+        // Check if we need to clear old caches (only on first install or major update)
+        const SW_VERSION = '1.0.0';
+        const storedVersion = localStorage.getItem('sw-version');
+      
+      if (storedVersion !== SW_VERSION) {
+        console.log('🔄 Clearing old caches for update');
+        const registrations = await navigator.serviceWorker.getRegistrations()
+        for (let reg of registrations) {
+          try {
+            await reg.unregister()
+          } catch (e) {
+            console.warn('Failed to unregister service worker:', e)
+          }
         }
+        
+        if ('caches' in window) {
+          const cacheNames = await caches.keys()
+          for (let cacheName of cacheNames) {
+            await caches.delete(cacheName)
+          }
+        }
+        localStorage.setItem('sw-version', SW_VERSION);
       }
       
-      // Clear all caches
-      if ('caches' in window) {
-        const cacheNames = await caches.keys()
-        for (let cacheName of cacheNames) {
-          await caches.delete(cacheName)
-          console.log(`🔄 Cleared cache: ${cacheName}`)
-        }
-      }
-      
-      // Now register the fresh service worker
-      const reg = await navigator.serviceWorker.register(import.meta.env.BASE_URL + 'sw.js', {
-        scope: import.meta.env.BASE_URL
+      // Register the service worker
+      const reg = await navigator.serviceWorker.register('/sw.js', {
+        scope: '/',
+        updateViaCache: 'none'
       })
       
       console.log('✅ Service Worker registered successfully')
@@ -125,20 +198,31 @@ if ('serviceWorker' in navigator && !isDev && !isCodespaces) {
         newSW.addEventListener('statechange', () => {
           if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
             console.log('🔄 New service worker update available')
-            // New update available. Ask it to activate.
-            try { newSW.postMessage({ type: 'SKIP_WAITING' }) } catch(e){}
+            // Show user-friendly update notification
+            if (window.showToast) {
+              window.showToast('Update available! Reload to get the latest version.', 'info');
+            }
           }
         })
       })
 
-      // When the new SW takes control, reload to fetch the fresh assets
+      // Only reload on controller change if user initiated it
+      let userInitiatedReload = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('🔄 Reloading page with new service worker')
-        try { window.location.reload() } catch (e) {}
+        if (userInitiatedReload) {
+          window.location.reload()
+        }
       })
-    } catch (err) {
-      console.info('ℹ️ Service worker not available in this environment')
-    }
+      
+      // Check for updates periodically
+      setInterval(() => {
+        reg.update().catch(() => {});
+      }, 60 * 60 * 1000); // Check every hour
+      
+      } catch (err) {
+        console.warn('⚠️ Service worker registration failed:', err)
+      }
+    }, 1000); // Delay SW registration by 1 second
   })
 } else {
   if (import.meta.env.PROD) {

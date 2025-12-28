@@ -477,7 +477,7 @@ export function getSmartRecommendations() {
       title: '🏥 Improve Health Tracking',
       message: `${animalsWithoutHealthRecords.length} animals have no health records. Regular monitoring prevents issues`,
       priority: PRIORITY.MEDIUM,
-      benefit: 'Early disease detection'
+      // disease detection removed
     })
   }
   

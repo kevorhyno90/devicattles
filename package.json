@@ -14,7 +14,8 @@
     "preview": "vite preview",
     "deploy:vercel": "vercel --prod",
     "deploy:firebase": "npm run build && firebase deploy --only hosting",
-    "deploy:gh-pages": "npm run build && gh-pages -d dist"
+    "deploy:gh-pages": "npm run build && gh-pages -d dist",
+    "test": "jest --env=jsdom"
   },
   "dependencies": {
     "chart.js": "^4.5.1",
@@ -24,6 +25,9 @@
     "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.2",
     "leaflet": "^1.9.4",
+    "mobx": "^6.15.0",
+    "mobx-react-lite": "^4.1.1",
+    "mqtt": "^5.14.1",
     "papaparse": "^5.4.1",
     "pwa-asset-generator": "^8.1.2",
     "qrcode": "^1.5.3",
@@ -36,11 +40,17 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-react": "^7.28.5",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vite-pwa/assets-generator": "^1.0.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "babel-jest": "^30.2.0",
     "gh-pages": "^6.3.0",
+    "jest": "^30.2.0",
     "terser": "^5.36.0",
     "vite": "^7.2.4",
     "vite-plugin-pwa": "^1.1.0"

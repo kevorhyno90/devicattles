@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline Test - Devins Farm</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f3f4f6;
+    }
+    .card {
+      background: white;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #111827;
+      margin-top: 0;
+    }
+    .status {
+      padding: 12px;
+      border-radius: 6px;
+      margin: 10px 0;
+      font-weight: 500;
+    }
+    .online {
+      background: #d1fae5;
+      color: #065f46;
+      border-left: 4px solid #10b981;
+    }
+    .offline {
+      background: #fee2e2;
+      color: #991b1b;
+      border-left: 4px solid #dc2626;
+    }
+    button {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #059669;
+    }
+    .info {
+      background: #e0f2fe;
+      padding: 12px;
+      border-radius: 6px;
+      margin: 10px 0;
+      color: #075985;
+      border-left: 4px solid #0284c7;
+    }
+    pre {
+      background: #f9fafb;
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔌 PWA Offline Test</h1>
+    <div id="status" class="status"></div>
+    
+    <div class="info">
+      <strong>Test Instructions:</strong>
+      <ol>
+        <li>Ensure you have loaded the main app at least once</li>
+        <li>Turn on Airplane Mode or disable your network</li>
+        <li>Try to navigate to the main app</li>
+        <li>Check the status indicators below</li>
+      </ol>
+    </div>
+    
+    <h2>Current Status</h2>
+    <div>
+      <strong>Online Status:</strong> <span id="onlineStatus">Checking...</span><br>
+      <strong>Service Worker:</strong> <span id="swStatus">Checking...</span><br>
+      <strong>Cache Status:</strong> <span id="cacheStatus">Checking...</span><br>
+      <strong>LocalStorage:</strong> <span id="localStorageStatus">Checking...</span><br>
+      <strong>IndexedDB:</strong> <span id="indexedDBStatus">Checking...</span><br>
+    </div>
+    
+    <h2>Actions</h2>
+    <button onclick="checkStatus()">🔄 Refresh Status</button>
+    <button onclick="testCache()">🗂️ Test Cache</button>
+    <button onclick="clearCache()">🗑️ Clear Cache</button>
+    <button onclick="window.location.href='/'">🏠 Go to App</button>
+    
+    <h2>Details</h2>
+    <pre id="details">Loading...</pre>
+  </div>
+
+  <script>
+    function updateOnlineStatus() {
+      const status = document.getElementById('status');
+      const onlineStatus = document.getElementById('onlineStatus');
+      
+      if (navigator.onLine) {
+        status.className = 'status online';
+        status.textContent = '✅ You are ONLINE';
+        onlineStatus.textContent = '✅ Online';
+      } else {
+        status.className = 'status offline';
+        status.textContent = '📡 You are OFFLINE';
+        onlineStatus.textContent = '❌ Offline';
+      }
+    }
+
+    async function checkServiceWorker() {
+      const swStatus = document.getElementById('swStatus');
+      
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          swStatus.textContent = '✅ Active';
+          swStatus.style.color = '#059669';
+        } else {
+          swStatus.textContent = '⚠️ Not Registered';
+          swStatus.style.color = '#d97706';
+        }
+      } else {
+        swStatus.textContent = '❌ Not Supported';
+        swStatus.style.color = '#dc2626';
+      }
+    }
+
+    async function checkCache() {
+      const cacheStatus = document.getElementById('cacheStatus');
+      
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        if (cacheNames.length > 0) {
+          cacheStatus.textContent = `✅ ${cacheNames.length} cache(s)`;
+          cacheStatus.style.color = '#059669';
+        } else {
+          cacheStatus.textContent = '⚠️ No caches found';
+          cacheStatus.style.color = '#d97706';
+        }
+      } else {
+        cacheStatus.textContent = '❌ Not Supported';
+        cacheStatus.style.color = '#dc2626';
+      }
+    }
+
+    function checkLocalStorage() {
+      const localStorageStatus = document.getElementById('localStorageStatus');
+      
+      try {
+        const test = '__test__';
+        localStorage.setItem(test, test);
+        localStorage.removeItem(test);
+        
+        const keys = Object.keys(localStorage);
+        localStorageStatus.textContent = `✅ ${keys.length} items`;
+        localStorageStatus.style.color = '#059669';
+      } catch(e) {
+        localStorageStatus.textContent = '❌ Not Available';
+        localStorageStatus.style.color = '#dc2626';
+      }
+    }
+
+    async function checkIndexedDB() {
+      const indexedDBStatus = document.getElementById('indexedDBStatus');
+      
+      if ('indexedDB' in window) {
+        try {
+          const dbs = await indexedDB.databases();
+          indexedDBStatus.textContent = `✅ ${dbs.length} database(s)`;
+          indexedDBStatus.style.color = '#059669';
+        } catch(e) {
+          indexedDBStatus.textContent = '⚠️ Available but unable to list';
+          indexedDBStatus.style.color = '#d97706';
+        }
+      } else {
+        indexedDBStatus.textContent = '❌ Not Supported';
+        indexedDBStatus.style.color = '#dc2626';
+      }
+    }
+
+    async function updateDetails() {
+      const details = document.getElementById('details');
+      const info = {
+        navigator: {
+          onLine: navigator.onLine,
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+        },
+        window: {
+          location: window.location.href,
+          isSecureContext: window.isSecureContext,
+        },
+        features: {
+          serviceWorker: 'serviceWorker' in navigator,
+          caches: 'caches' in window,
+          indexedDB: 'indexedDB' in window,
+          localStorage: typeof Storage !== 'undefined',
+        }
+      };
+      
+      details.textContent = JSON.stringify(info, null, 2);
+    }
+
+    async function checkStatus() {
+      updateOnlineStatus();
+      await checkServiceWorker();
+      await checkCache();
+      checkLocalStorage();
+      await checkIndexedDB();
+      await updateDetails();
+    }
+
+    async function testCache() {
+      if ('caches' in window) {
+        const cache = await caches.open('test-cache');
+        await cache.put(new Request('/test'), new Response('Test data'));
+        alert('Test cache entry created!');
+        checkStatus();
+      } else {
+        alert('Cache API not supported');
+      }
+    }
+
+    async function clearCache() {
+      if (confirm('This will clear all caches. Continue?')) {
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          for (const name of cacheNames) {
+            await caches.delete(name);
+          }
+          alert(`Cleared ${cacheNames.length} cache(s)`);
+          checkStatus();
+        }
+      }
+    }
+
+    // Listen for online/offline events
+    window.addEventListener('online', checkStatus);
+    window.addEventListener('offline', checkStatus);
+
+    // Initial check
+    checkStatus();
+    setInterval(checkStatus, 5000); // Update every 5 seconds
+  </script>
+</body>
+</html>

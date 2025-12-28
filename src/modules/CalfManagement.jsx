@@ -1,9 +1,36 @@
+  // Export to CSV (simple placeholder)
+  function exportToCSV(type) {
+    let rows = []
+    let headers = []
+    if (type === 'calves') {
+      headers = Object.keys(calves[0] || {})
+      rows = calves
+    } else if (type === 'feeding') {
+      headers = Object.keys(feedingRecords[0] || {})
+      rows = feedingRecords
+    } else if (type === 'health') {
+      headers = Object.keys(healthRecords[0] || {})
+      rows = healthRecords
+    }
+    if (!rows.length) return alert('No data to export')
+    const csv = [headers.join(',')].concat(rows.map(r => headers.map(h => JSON.stringify(r[h] ?? '')).join(','))).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${type}_export_${new Date().toISOString().slice(0,10)}.csv`
+    document.body.appendChild(a)
+    a.click()
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url) }, 100)
+  }
 import React, { useState, useEffect } from 'react'
 import DataLayer from '../lib/dataLayer'
 import ErrorBoundary from '../components/ErrorBoundary'
 import { formatCurrency } from '../lib/currency'
 import { addMilkExpense, getMilkTotals } from '../lib/finance'
 import { getMilkExpenses } from '../lib/finance'
+import CalfOverviewRow from './CalfOverviewRow'
+import { LineChart, BarChart } from '../components/Charts'
 
 const HEALTH_STATUS = ['Healthy', 'Sick', 'Under Treatment', 'Quarantine', 'Recovered']
 const HOUSING_TYPES = ['Individual Pen', 'Group Pen', 'Hutch', 'Barn', 'Free Range']
@@ -17,6 +44,9 @@ function CalfManagement({ animals }) {
   const [healthRecords, setHealthRecords] = useState([])
   const [search, setSearch] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+  // Batch selection state
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchIds, setSelectedBatchIds] = useState([])
   const [selectedCalf, setSelectedCalf] = useState(null)
   const [activeTab, setActiveTab] = useState('overview')
   const [editingCalfId, setEditingCalfId] = useState(null)
@@ -61,21 +91,32 @@ function CalfManagement({ animals }) {
   const [healthForm, setHealthForm] = useState({
     calfId: '', date: new Date().toISOString().slice(0, 10),
     type: 'Vaccination', treatment: '', diagnosis: '',
-    medication: '', dosage: '', veterinarian: '', cost: '', nextVisit: '', notes: ''
+    medication: '', dosage: '', veterinarian: '', cost: '', nextVisit: '', notes: '',
+    recurring: false, recurrenceInterval: '', recurrenceUnit: 'days',
+    vaccinationSchedule: '', alertBeforeDays: 2
   })
 
   // Inline edit state
   const [inlineEditId, setInlineEditId] = useState(null)
   const [inlineData, setInlineData] = useState({})
 
+  const [error, setError] = useState(null)
   useEffect(() => {
     async function fetchCalves() {
-      if (search.trim()) {
-        const results = await DataLayer.createEntity('cattalytics:calf:management', 'Calf').search(search, ['name', 'tag', 'breed', 'status'])
-        setCalves(results)
-      } else {
-        const all = await DataLayer.createEntity('cattalytics:calf:management', 'Calf').getAll()
-        setCalves(all)
+      try {
+        if (search.trim()) {
+          const results = await DataLayer.createEntity('cattalytics:calf:management', 'Calf').search(search, ['name', 'tag', 'breed', 'status'])
+          setCalves(results)
+        } else {
+          const all = await DataLayer.createEntity('cattalytics:calf:management', 'Calf').getAll()
+          setCalves(all)
+        }
+        setError(null)
+      } catch (err) {
+        setError(err.message || String(err))
+        setCalves([])
+        // Also log to console for debugging
+        console.error('CalfManagement fetchCalves error:', err)
       }
     }
     fetchCalves()
@@ -83,16 +124,28 @@ function CalfManagement({ animals }) {
 
   useEffect(() => {
     async function fetchFeeding() {
-      const all = await DataLayer.createEntity('cattalytics:calf:feeding', 'Feeding').getAll()
-      setFeedingRecords(all)
+      try {
+        const all = await DataLayer.createEntity('cattalytics:calf:feeding', 'Feeding').getAll()
+        setFeedingRecords(all)
+      } catch (err) {
+        setError(err.message || String(err))
+        setFeedingRecords([])
+        console.error('CalfManagement fetchFeeding error:', err)
+      }
     }
     fetchFeeding()
   }, [])
 
   useEffect(() => {
     async function fetchHealth() {
-      const all = await DataLayer.createEntity('cattalytics:calf:health', 'Health').getAll()
-      setHealthRecords(all)
+      try {
+        const all = await DataLayer.createEntity('cattalytics:calf:health', 'Health').getAll()
+        setHealthRecords(all)
+      } catch (err) {
+        setError(err.message || String(err))
+        setHealthRecords([])
+        console.error('CalfManagement fetchHealth error:', err)
+      }
     }
     fetchHealth()
   }, [])
@@ -251,29 +304,249 @@ function CalfManagement({ animals }) {
   const avgBirthWeight = calves.length ? calves.reduce((sum, c) => sum + (parseFloat(c.birthWeight) || 0), 0) / calves.length : 0
   const sickCalves = calves.filter(c => c.healthStatus === 'Sick' || c.healthStatus === 'Under Treatment')
 
+  // Batch select handlers
+  function toggleBatchMode() {
+    setBatchMode(!batchMode)
+    setSelectedBatchIds([])
+  }
+  function handleBatchSelect(id) {
+    setSelectedBatchIds(ids => ids.includes(id) ? ids.filter(i => i !== id) : [...ids, id])
+  }
+  function handleBatchSelectAll() {
+    if (selectedBatchIds.length === calves.length) setSelectedBatchIds([])
+    else setSelectedBatchIds(calves.map(c => c.id))
+  }
+  function handleBatchDelete() {
+    if (!window.confirm('Delete selected calves?')) return
+    setCalves(calves.filter(c => !selectedBatchIds.includes(c.id)))
+    setSelectedBatchIds([])
+  }
+  // Batch edit placeholder (could open a modal for batch editing fields)
+  function handleBatchEdit() {
+    alert('Batch edit not implemented yet. This would open a modal to edit fields for all selected calves.')
+  }
   return (
     <ErrorBoundary>
       <section>
         <h2>Calf Management</h2>
-        <div style={{marginTop:12, marginBottom:8}}>
-          <input
-            type="text"
-            placeholder="Search calves by name, tag, breed, status..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ width: '100%', padding: '6px 10px', borderRadius: 4, border: '1px solid #ddd' }}
-          />
+        {error && (
+          <div style={{ color: 'crimson', margin: '12px 0', fontWeight: 600 }}>
+            Error: {error}
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+          <button onClick={() => setActiveTab('overview')} className={activeTab === 'overview' ? 'active' : ''}>Overview</button>
+          <button onClick={() => setActiveTab('add')} className={activeTab === 'add' ? 'active' : ''}>Add Calf</button>
+          <button onClick={() => setActiveTab('feeding')} className={activeTab === 'feeding' ? 'active' : ''}>Feeding</button>
+          <button onClick={() => setActiveTab('health')} className={activeTab === 'health' ? 'active' : ''}>Health</button>
         </div>
-        <div style={{marginTop:12, maxHeight:400, overflowY:'auto'}}>
-          {calves.map(calf => (
-            <div key={calf.id} style={{borderBottom:'1px solid #eee', padding:16}}>
-                {/* Render calf details and inline edit logic here */}
-                <strong>{calf.name}</strong> <em>({calf.tag})</em> - {calf.breed} - {calf.status}
-                {/* ...existing inline edit, delete, etc. buttons... */}
+        {activeTab === 'overview' && (
+          <>
+            <div style={{marginTop:12, marginBottom:8, display:'flex', alignItems:'center', gap:8}}>
+              <input
+                type="text"
+                placeholder="Search calves by name, tag, breed, status..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: 4, border: '1px solid #ddd' }}
+              />
+              <button onClick={toggleBatchMode} style={{marginLeft:8}}>{batchMode ? 'Cancel Batch' : 'Batch Ops'}</button>
+            </div>
+            {/* Analytics section for big farm: growth, feeding, health summaries */}
+            <div style={{display:'flex',gap:24,marginBottom:16,flexWrap:'wrap'}}>
+              <div style={{background:'#f3f4f6',padding:12,borderRadius:8,minWidth:220,position:'relative'}}>
+                <strong>Total Calves:</strong> {calves.length}<br/>
+                <button style={{position:'absolute',top:8,right:8,fontSize:12}} onClick={() => exportToCSV('calves')}>Export CSV</button>
+                <strong>Weaned:</strong> {weanedCalves.length}<br/>
+                <strong>Sick:</strong> {sickCalves.length}<br/>
+                <strong>Avg Birth Wt:</strong> {avgBirthWeight.toFixed(2)} kg
               </div>
-          ))}
-        </div>
-        {/* ...existing forms, feeding, health, and toast logic... */}
+              <div style={{background:'#f3f4f6',padding:12,borderRadius:8,minWidth:220,position:'relative'}}>
+                <strong>Feeding Records:</strong> {feedingRecords.length}<br/>
+                <button style={{position:'absolute',top:8,right:8,fontSize:12}} onClick={() => exportToCSV('feeding')}>Export CSV</button>
+                <div style={{marginTop:8}}>
+                  <BarChart
+                    data={feedingRecords.map(r => ({ label: r.date, value: parseFloat(r.quantityKg) || 0 }))}
+                    title="Milk/Feed Quantity (kg)"
+                    xLabel="Date"
+                    yLabel="Quantity (kg)"
+                    color="#059669"
+                    height={180}
+                  />
+                </div>
+              </div>
+              <div style={{background:'#f3f4f6',padding:12,borderRadius:8,minWidth:220,position:'relative'}}>
+                <strong>Health Records:</strong> {healthRecords.length}<br/>
+                <button style={{position:'absolute',top:8,right:8,fontSize:12}} onClick={() => exportToCSV('health')}>Export CSV</button>
+                <div style={{marginTop:8}}>
+                  <BarChart
+                    data={healthRecords.map(r => ({ label: r.date, value: r.cost ? parseFloat(r.cost) : 0 }))}
+                    title="Health Costs (KSH)"
+                    xLabel="Date"
+                    yLabel="Cost (KSH)"
+                    color="#ef4444"
+                    height={180}
+                  />
+                </div>
+              </div>
+            </div>
+            {batchMode && (
+              <div style={{marginBottom:8, display:'flex', gap:8}}>
+                <button onClick={handleBatchSelectAll}>{selectedBatchIds.length === calves.length ? 'Unselect All' : 'Select All'}</button>
+                <button onClick={handleBatchEdit} disabled={selectedBatchIds.length === 0}>Batch Edit</button>
+                <button onClick={handleBatchDelete} disabled={selectedBatchIds.length === 0} style={{color:'crimson'}}>Batch Delete</button>
+                <span style={{marginLeft:8}}>{selectedBatchIds.length} selected</span>
+              </div>
+            )}
+            <div style={{marginTop:12, maxHeight:400, overflowY:'auto'}}>
+              {calves.length === 0 ? (
+                <div style={{ color: '#888', textAlign: 'center', padding: 32 }}>No calves found. Click "Add Calf" to create your first record.</div>
+              ) : (
+                calves.map(calf => (
+                  <CalfOverviewRow key={calf.id} calf={calf} batchMode={batchMode} selected={selectedBatchIds.includes(calf.id)} onBatchSelect={() => handleBatchSelect(calf.id)} />
+                ))
+              )}
+            </div>
+
+          </>
+        )}
+        {activeTab === 'add' && (
+          <form onSubmit={e => { e.preventDefault(); addCalf(formData); setActiveTab('overview'); }} style={{ background: '#f0fdf4', padding: 16, borderRadius: 8, marginTop: 16 }}>
+            <h3>Add New Calf</h3>
+            <label>Name</label>
+            <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+            <label>Tag</label>
+            <input type="text" value={formData.tag} onChange={e => setFormData({ ...formData, tag: e.target.value })} required />
+            <label>Date of Birth</label>
+            <input type="date" value={formData.dob} onChange={e => setFormData({ ...formData, dob: e.target.value })} required />
+            <label>Breed</label>
+            <input type="text" value={formData.breed} onChange={e => setFormData({ ...formData, breed: e.target.value })} />
+            <label>Sex</label>
+            <select value={formData.sex} onChange={e => setFormData({ ...formData, sex: e.target.value })}>
+              <option value="F">Female</option>
+              <option value="M">Male</option>
+            </select>
+            <label>Birth Weight (kg)</label>
+            <input type="number" value={formData.birthWeight} onChange={e => setFormData({ ...formData, birthWeight: e.target.value })} />
+            <label>Notes</label>
+            <textarea value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} />
+            <button type="submit" style={{ marginTop: 12, background: '#22c55e', color: 'white', padding: '8px 16px', border: 'none', borderRadius: 4 }}>Save Calf</button>
+          </form>
+        )}
+        {activeTab === 'feeding' && (
+          <div style={{ marginTop: 16 }}>
+            <h3>Feeding Records</h3>
+            <form onSubmit={e => { e.preventDefault(); addFeeding(); }} style={{ background: '#f0fdf4', padding: 16, borderRadius: 8, marginBottom: 24 }}>
+              <label>Calf</label>
+              <select value={feedingForm.calfId} onChange={e => setFeedingForm({ ...feedingForm, calfId: e.target.value })} required>
+                <option value="">Select Calf</option>
+                {calves.map(calf => (
+                  <option key={calf.id} value={calf.id}>{calf.name} ({calf.tag})</option>
+                ))}
+              </select>
+              <label>Date</label>
+              <input type="date" value={feedingForm.date} onChange={e => setFeedingForm({ ...feedingForm, date: e.target.value })} required />
+              <label>Feed Type</label>
+              <input type="text" value={feedingForm.feedType} onChange={e => setFeedingForm({ ...feedingForm, feedType: e.target.value })} />
+              <label>Quantity (kg)</label>
+              <input type="number" value={feedingForm.quantityKg} onChange={e => setFeedingForm({ ...feedingForm, quantityKg: e.target.value })} />
+              <label>Quantity (liters)</label>
+              <input type="number" value={feedingForm.quantityLiters} onChange={e => setFeedingForm({ ...feedingForm, quantityLiters: e.target.value })} />
+              <label>Method</label>
+              <select value={feedingForm.method} onChange={e => setFeedingForm({ ...feedingForm, method: e.target.value })}>
+                {FEEDING_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+              <label>Notes</label>
+              <input type="text" value={feedingForm.notes} onChange={e => setFeedingForm({ ...feedingForm, notes: e.target.value })} />
+              <button type="submit" style={{ marginTop: 12, background: '#22c55e', color: 'white', padding: '8px 16px', border: 'none', borderRadius: 4 }}>{editingFeedingId ? 'Update' : 'Add'} Feeding</button>
+              {editingFeedingId && <button type="button" onClick={cancelEditFeeding} style={{ marginLeft: 8 }}>Cancel</button>}
+            </form>
+            <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+              {feedingRecords.length === 0 ? (
+                <div style={{ color: '#888', textAlign: 'center', padding: 32 }}>No feeding records found.</div>
+              ) : (
+                feedingRecords.map(record => {
+                  const calf = calves.find(c => c.id === record.calfId)
+                  return (
+                    <div key={record.id} style={{ borderBottom: '1px solid #eee', padding: 12 }}>
+                      <strong>{calf ? calf.name : 'Unknown Calf'}</strong> | {record.date} | {record.feedType} | {record.quantityKg} kg / {record.quantityLiters} L | {record.method}
+                      <span style={{ marginLeft: 8, color: '#888' }}>{record.notes}</span>
+                      <button style={{ marginLeft: 12 }} onClick={() => startEditFeeding(record)}>Edit</button>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+        )}
+        {activeTab === 'health' && (
+          <div style={{ marginTop: 16 }}>
+            <h3>Health Records</h3>
+            <form onSubmit={e => { e.preventDefault(); addHealth(); }} style={{ background: '#f0fdf4', padding: 16, borderRadius: 8, marginBottom: 24 }}>
+              <label>Calf</label>
+              <select value={healthForm.calfId} onChange={e => setHealthForm({ ...healthForm, calfId: e.target.value })} required>
+                <option value="">Select Calf</option>
+                {calves.map(calf => (
+                  <option key={calf.id} value={calf.id}>{calf.name} ({calf.tag})</option>
+                ))}
+              </select>
+              <label>Date</label>
+              <input type="date" value={healthForm.date} onChange={e => setHealthForm({ ...healthForm, date: e.target.value })} required />
+              <label>Type</label>
+              <input type="text" value={healthForm.type} onChange={e => setHealthForm({ ...healthForm, type: e.target.value })} />
+              <label>Treatment</label>
+              <input type="text" value={healthForm.treatment} onChange={e => setHealthForm({ ...healthForm, treatment: e.target.value })} />
+              <label>Diagnosis</label>
+              <input type="text" value={healthForm.diagnosis} onChange={e => setHealthForm({ ...healthForm, diagnosis: e.target.value })} />
+              <label>Medication</label>
+              <input type="text" value={healthForm.medication} onChange={e => setHealthForm({ ...healthForm, medication: e.target.value })} />
+              <label>Dosage</label>
+              <input type="text" value={healthForm.dosage} onChange={e => setHealthForm({ ...healthForm, dosage: e.target.value })} />
+              <label>Veterinarian</label>
+              <input type="text" value={healthForm.veterinarian} onChange={e => setHealthForm({ ...healthForm, veterinarian: e.target.value })} />
+              <label>Cost</label>
+              <input type="number" value={healthForm.cost} onChange={e => setHealthForm({ ...healthForm, cost: e.target.value })} />
+              <label>Notes</label>
+              <input type="text" value={healthForm.notes} onChange={e => setHealthForm({ ...healthForm, notes: e.target.value })} />
+              <div style={{display:'flex',gap:8,marginTop:8}}>
+                <label><input type="checkbox" checked={healthForm.recurring} onChange={e => setHealthForm(f => ({...f, recurring: e.target.checked}))}/> Recurring</label>
+                {healthForm.recurring && (
+                  <>
+                    <input type="number" min="1" placeholder="Interval" value={healthForm.recurrenceInterval} onChange={e => setHealthForm(f => ({...f, recurrenceInterval: e.target.value}))} style={{width:60}} />
+                    <select value={healthForm.recurrenceUnit} onChange={e => setHealthForm(f => ({...f, recurrenceUnit: e.target.value}))}>
+                      <option value="days">Days</option>
+                      <option value="weeks">Weeks</option>
+                      <option value="months">Months</option>
+                    </select>
+                  </>
+                )}
+                <input type="text" placeholder="Vaccination Schedule (e.g. FMD, BQ)" value={healthForm.vaccinationSchedule} onChange={e => setHealthForm(f => ({...f, vaccinationSchedule: e.target.value}))} />
+                <input type="number" min="0" placeholder="Alert Before (days)" value={healthForm.alertBeforeDays} onChange={e => setHealthForm(f => ({...f, alertBeforeDays: e.target.value}))} style={{width:80}} />
+              </div>
+              <button type="submit" style={{ marginTop: 12, background: '#22c55e', color: 'white', padding: '8px 16px', border: 'none', borderRadius: 4 }}>{editingHealthId ? 'Update' : 'Add'} Health</button>
+              {editingHealthId && <button type="button" onClick={cancelEditHealth} style={{ marginLeft: 8 }}>Cancel</button>}
+            </form>
+            <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+              {healthRecords.length === 0 ? (
+                <div style={{ color: '#888', textAlign: 'center', padding: 32 }}>No health records found.</div>
+              ) : (
+                healthRecords.map(record => {
+                  const calf = calves.find(c => c.id === record.calfId)
+                  return (
+                    <div key={record.id} style={{ borderBottom: '1px solid #eee', padding: 12 }}>
+                      <strong>{calf ? calf.name : 'Unknown Calf'}</strong> | {record.date} | {record.type} | {record.treatment} | {record.diagnosis}
+                      {record.recurring && <span style={{marginLeft:8,color:'#0a0'}}>Recurring: every {record.recurrenceInterval} {record.recurrenceUnit}</span>}
+                      {record.vaccinationSchedule && <span style={{marginLeft:8,color:'#06c'}}>Vaccine: {record.vaccinationSchedule}</span>}
+                      {record.alertBeforeDays ? <span style={{marginLeft:8,color:'#c60'}}>Alert {record.alertBeforeDays}d before</span> : null}
+                      <span style={{ marginLeft: 8, color: '#888' }}>{record.notes}</span>
+                      <button style={{ marginLeft: 12 }} onClick={() => startEditHealth(record)}>Edit</button>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+        )}
       </section>
     </ErrorBoundary>
   )
