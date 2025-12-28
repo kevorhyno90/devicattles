@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { exportToCSV, exportToJSON } from '../lib/exportImport'
+import { useUIStore } from '../stores/uiStore'
 import { 
   getAllSmartAlerts,
   getAlertsSummary,
@@ -13,6 +15,12 @@ export default function AlertCenter() {
   const [showDismissed, setShowDismissed] = useState(false)
   const [loading, setLoading] = useState(true)
   const [expandedAlert, setExpandedAlert] = useState(null)
+  const [search, setSearch] = useState('')
+  const [selectedAlerts, setSelectedAlerts] = useState([])
+  const [notifEmail, setNotifEmail] = useState('')
+  const [notifPush, setNotifPush] = useState(false)
+  const showSuccess = useUIStore((state) => state.showSuccess)
+  const showError = useUIStore((state) => state.showError)
 
   useEffect(() => {
     loadAlerts()
@@ -58,15 +66,19 @@ export default function AlertCenter() {
 
   const getFilteredAlerts = () => {
     let filtered = [...alerts]
-    
     if (filterType !== 'all') {
       filtered = filtered.filter(a => a.category === filterType)
     }
-    
     if (filterPriority !== 'all') {
       filtered = filtered.filter(a => a.priority === filterPriority)
     }
-    
+    if (search.trim()) {
+      const s = search.trim().toLowerCase();
+      filtered = filtered.filter(a =>
+        (a.title && a.title.toLowerCase().includes(s)) ||
+        (a.message && a.message.toLowerCase().includes(s))
+      );
+    }
     return filtered
   }
 
@@ -95,6 +107,7 @@ export default function AlertCenter() {
   }
 
   const filteredAlerts = getFilteredAlerts()
+  const activeAlerts = filteredAlerts
   const summary = getAlertsSummary()
   const criticalCount = alerts.filter(a => a.priority === 'critical').length
   const highCount = alerts.filter(a => a.priority === 'high').length
@@ -174,7 +187,7 @@ export default function AlertCenter() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters, Search, Export, Notification Settings, Bulk Actions */}
       <div style={{ 
         background: 'white', 
         padding: '16px', 
@@ -186,6 +199,93 @@ export default function AlertCenter() {
         flexWrap: 'wrap',
         alignItems: 'center'
       }}>
+                {/* Search */}
+                <input
+                  type="text"
+                  placeholder="Search alerts..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  style={{
+                    padding: '6px 12px',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    minWidth: 180
+                  }}
+                />
+
+                {/* Export */}
+                <button
+                  onClick={() => {
+                    if (!filteredAlerts.length) { showError('No alerts to export'); return; }
+                    exportToCSV(filteredAlerts, 'alerts.csv');
+                    showSuccess('Exported CSV!');
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    background: '#0ea5e9',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  ⬇️ Export CSV
+                </button>
+                <button
+                  onClick={() => {
+                    if (!filteredAlerts.length) { showError('No alerts to export'); return; }
+                    exportToJSON(filteredAlerts, 'alerts.json');
+                    showSuccess('Exported JSON!');
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    background: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  ⬇️ Export JSON
+                </button>
+
+                {/* Notification Settings */}
+                <input
+                  type="email"
+                  placeholder="Notification email"
+                  value={notifEmail}
+                  onChange={e => setNotifEmail(e.target.value)}
+                  style={{ padding: '6px 12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px', minWidth: 180 }}
+                />
+                <label style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <input type="checkbox" checked={notifPush} onChange={e => setNotifPush(e.target.checked)} /> Push Notifications
+                </label>
+                <button
+                  onClick={() => {
+                    if (!notifEmail && !notifPush) { showError('Set at least one notification method'); return; }
+                    showSuccess('Notification settings saved! (Backend integration needed)');
+                  }}
+                  style={{ padding: '6px 12px', background: '#6366f1', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '500', cursor: 'pointer' }}
+                >
+                  💾 Save Notification Settings
+                </button>
+
+                {/* Bulk Actions */}
+                <button
+                  onClick={() => {
+                    if (!filteredAlerts.length) { showError('No alerts to dismiss'); return; }
+                    filteredAlerts.forEach(a => dismissAlert(a.id));
+                    showSuccess('All filtered alerts dismissed!');
+                  }}
+                  style={{ padding: '6px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '500', cursor: 'pointer' }}
+                >
+                  ✓ Dismiss All Filtered
+                </button>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>Type:</span>
           <select

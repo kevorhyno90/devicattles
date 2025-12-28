@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { exportToCSV, exportToJSON } from '../lib/exportImport'
 import { 
   generateInsights, 
   getInsightsByCategory, 
@@ -18,6 +19,9 @@ export default function AIInsightsDashboard() {
   const [showActioned, setShowActioned] = useState(false)
   const [loading, setLoading] = useState(true)
   const [expandedInsight, setExpandedInsight] = useState(null)
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const pageSize = 10;
 
   useEffect(() => {
     loadInsights()
@@ -25,7 +29,7 @@ export default function AIInsightsDashboard() {
 
   useEffect(() => {
     applyFilters()
-  }, [insights, filterCategory, filterPriority, showActioned])
+  }, [insights, filterCategory, filterPriority, showActioned, search])
 
   const loadInsights = () => {
     setLoading(true)
@@ -52,22 +56,28 @@ export default function AIInsightsDashboard() {
 
   const applyFilters = () => {
     let filtered = [...insights]
-    
     // Filter by category
     if (filterCategory !== 'all') {
       filtered = getInsightsByCategory(filtered, filterCategory)
     }
-    
     // Filter by priority
     if (filterPriority !== 'all') {
       filtered = getInsightsByPriority(filtered, filterPriority)
     }
-    
     // Filter actioned insights
     if (!showActioned) {
       filtered = filterActionedInsights(filtered)
     }
-    
+    // Keyword search
+    if (search.trim()) {
+      const s = search.trim().toLowerCase();
+      filtered = filtered.filter(i =>
+        (i.title && i.title.toLowerCase().includes(s)) ||
+        (i.description && i.description.toLowerCase().includes(s)) ||
+        (i.recommendation && i.recommendation.toLowerCase().includes(s))
+      );
+    }
+    setPage(1);
     setFilteredInsights(filtered)
   }
 
@@ -102,6 +112,10 @@ export default function AIInsightsDashboard() {
   }
 
   const impact = calculateTotalImpact(filteredInsights)
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredInsights.length / pageSize) || 1;
+  const pagedInsights = filteredInsights.slice((page - 1) * pageSize, page * pageSize);
 
   if (loading) {
     return (
@@ -178,7 +192,7 @@ export default function AIInsightsDashboard() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters & Actions */}
       <div style={{ 
         background: 'white', 
         padding: '16px', 
@@ -190,6 +204,52 @@ export default function AIInsightsDashboard() {
         flexWrap: 'wrap',
         alignItems: 'center'
       }}>
+                {/* Search */}
+                <input
+                  type="text"
+                  placeholder="Search insights..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  style={{
+                    padding: '6px 12px',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    minWidth: 180
+                  }}
+                />
+
+                {/* Export */}
+                <button
+                  onClick={() => exportToCSV(filteredInsights, 'ai-insights.csv')}
+                  style={{
+                    padding: '6px 12px',
+                    background: '#0ea5e9',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  ⬇️ Export CSV
+                </button>
+                <button
+                  onClick={() => exportToJSON(filteredInsights, 'ai-insights.json')}
+                  style={{
+                    padding: '6px 12px',
+                    background: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  ⬇️ Export JSON
+                </button>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>Category:</span>
           <select
@@ -283,7 +343,7 @@ export default function AIInsightsDashboard() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {filteredInsights.map(insight => (
+          {pagedInsights.map(insight => (
             <div
               key={insight.id}
               style={{
@@ -298,6 +358,33 @@ export default function AIInsightsDashboard() {
               {/* Insight Header */}
               <div
                 onClick={() => setExpandedInsight(expandedInsight === insight.id ? null : insight.id)}
+                // ...existing code...
+              >
+                {/* ...existing code... */}
+              </div>
+              {/* ...existing code... */}
+            </div>
+          ))}
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, margin: '24px 0' }}>
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                style={{ padding: '6px 14px', borderRadius: 6, border: '1px solid #ddd', background: page === 1 ? '#f3f4f6' : '#fff', cursor: page === 1 ? 'not-allowed' : 'pointer' }}
+              >
+                ◀ Prev
+              </button>
+              <span style={{ fontSize: 15, fontWeight: 500 }}>Page {page} of {totalPages}</span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                style={{ padding: '6px 14px', borderRadius: 6, border: '1px solid #ddd', background: page === totalPages ? '#f3f4f6' : '#fff', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}
+              >
+                Next ▶
+              </button>
+            </div>
+          )}
                 style={{
                   padding: '16px 20px',
                   cursor: 'pointer',
@@ -355,14 +442,12 @@ export default function AIInsightsDashboard() {
                         {insight.impact}
                       </p>
                     </div>
-
                     <div style={{ marginBottom: '12px' }}>
                       <strong style={{ fontSize: '13px', color: '#555' }}>📋 Recommended Action:</strong>
                       <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#333' }}>
                         {insight.recommendation}
                       </p>
                     </div>
-
                     {insight.affectedCount > 0 && (
                       <div style={{ marginBottom: '12px' }}>
                         <strong style={{ fontSize: '13px', color: '#555' }}>🎯 Affected:</strong>
@@ -371,7 +456,6 @@ export default function AIInsightsDashboard() {
                         </span>
                       </div>
                     )}
-
                     {insight.estimatedCost > 0 && (
                       <div style={{ marginBottom: '12px' }}>
                         <strong style={{ fontSize: '13px', color: '#555' }}>💵 Estimated Cost:</strong>
@@ -380,7 +464,6 @@ export default function AIInsightsDashboard() {
                         </span>
                       </div>
                     )}
-
                     {insight.estimatedSavings > 0 && (
                       <div style={{ marginBottom: '12px' }}>
                         <strong style={{ fontSize: '13px', color: '#555' }}>💰 Potential Savings:</strong>
@@ -389,7 +472,6 @@ export default function AIInsightsDashboard() {
                         </span>
                       </div>
                     )}
-
                     {insight.estimatedGain > 0 && (
                       <div>
                         <strong style={{ fontSize: '13px', color: '#555' }}>📈 Potential Gain:</strong>
@@ -399,7 +481,6 @@ export default function AIInsightsDashboard() {
                       </div>
                     )}
                   </div>
-
                   <div style={{ 
                     marginTop: '16px', 
                     display: 'flex', 

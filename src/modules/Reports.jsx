@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel } from 'docx'
 import { calculateFeedEfficiency, calculateAnimalROI, comparePerformanceByPeriod, getTopPerformers } from '../lib/advancedAnalytics'
+import { LineChart, BarChart, PieChart } from '../components/Charts'
+import ReportSummaryCard from '../components/ReportSummaryCard';
 import { formatCurrency } from '../lib/currency'
 import { exportAnimalProfitReport, exportVaccinationRecords, exportBreedingRecords, exportCropYieldReport, exportFinancialSummary, exportInventoryReport } from '../lib/pdfExport'
 
@@ -47,13 +49,49 @@ async function downloadDocx(data, filename='export.docx', title='Report', sectio
     const sections = []
     const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     
-    // Header: JR FARM
+    // Header: JR FARM with real logo
+    try {
+      const response = await fetch('/assets/jr-farm-logo.png');
+      const blob = await response.blob();
+      const arrayBuffer = await blob.arrayBuffer();
+      sections.push(
+        new Paragraph({
+          children: [
+            new docx.ImageRun({
+              data: arrayBuffer,
+              transformation: { width: 120, height: 120 }
+            }),
+            new TextRun({
+              text: 'JR FARM',
+              bold: true,
+              size: 48,
+              color: '059669',
+              break: 1
+            })
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 40 }
+        })
+      );
+    } catch (e) {
+      // fallback to text if image fails
+      sections.push(
+        new Paragraph({
+          text: 'JR FARM',
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 40 }
+        })
+      );
+    }
+    // Contact info
     sections.push(
       new Paragraph({
-        text: 'JR FARM',
-        heading: HeadingLevel.HEADING_1,
+        children: [
+          new TextRun({ text: 'Contact: info@jrfarm.com | +254-700-000-000', italics: true, color: '666666' })
+        ],
         alignment: AlignmentType.CENTER,
-        spacing: { after: 100 }
+        spacing: { after: 40 }
       })
     )
     
@@ -283,13 +321,17 @@ async function downloadDocx(data, filename='export.docx', title='Report', sectio
   }
 }
 
-export default function Reports(){
+function Reports(){
+
   const [section, setSection] = useState('animals')
   const [items, setItems] = useState([])
   const [patientFilter, setPatientFilter] = useState('')
   const [viewingData, setViewingData] = useState(null)
   const [viewTitle, setViewTitle] = useState('')
   const [viewFormat, setViewFormat] = useState('json') // json, xml, formatted
+  const [dateFilter, setDateFilter] = useState({ from: '', to: '' })
+  const [keyword, setKeyword] = useState('')
+  const [fields, setFields] = useState([])
 
   // load relevant data from localStorage where available
     useEffect(()=>{
@@ -334,66 +376,83 @@ export default function Reports(){
     const m = items || {}
     
     // Complete Farm Report - combines all modules
-    if(section === 'completeFarm') {
-      return [
-        { id: 'animals-report', data: { module: 'Animals', count: (m.animals||[]).length, records: m.animals }, type: 'completeFarm' },
-        { id: 'crops-report', data: { module: 'Crops', count: (m.crops||[]).length, records: m.crops }, type: 'completeFarm' },
-        { id: 'poultry-report', data: { module: 'Poultry', count: (m.poultry||[]).length, records: m.poultry }, type: 'completeFarm' },
-        { id: 'calves-report', data: { module: 'Calves', count: (m.calfManagement||[]).length, records: m.calfManagement }, type: 'completeFarm' },
-        { id: 'canines-report', data: { module: 'Canines', count: (m.canineManagement||[]).length, records: m.canineManagement }, type: 'completeFarm' },
-        { id: 'pets-report', data: { module: 'Pets', count: (m.petManagement||[]).length, records: m.petManagement }, type: 'completeFarm' },
-        { id: 'azolla-report', data: { module: 'Azolla Farming', count: (m.azolla||[]).length, records: m.azolla }, type: 'completeFarm' },
-        { id: 'bsf-report', data: { module: 'BSF Farming', count: (m.bsf||[]).length, records: m.bsf }, type: 'completeFarm' },
-        { id: 'pastures-report', data: { module: 'Pastures', count: (m.pastures||[]).length, records: m.pastures }, type: 'completeFarm' },
-        { id: 'breeding-report', data: { module: 'Breeding', count: (m.breeding||[]).length, records: m.breeding }, type: 'completeFarm' },
-        { id: 'feeding-report', data: { module: 'Feeding', count: (m.feeding||[]).length, records: m.feeding }, type: 'completeFarm' },
-        { id: 'treatments-report', data: { module: 'Treatments', count: (m.treatments||[]).length, records: m.treatments }, type: 'completeFarm' },
-        { id: 'measurements-report', data: { module: 'Measurements', count: (m.measurements||[]).length, records: m.measurements }, type: 'completeFarm' },
-        { id: 'milk-report', data: { module: 'Milk Yield', count: (m.milkYield||[]).length, records: m.milkYield }, type: 'completeFarm' },
-        { id: 'finance-report', data: { module: 'Finance', count: (m.finance||[]).length, records: m.finance }, type: 'completeFarm' },
-        { id: 'inventory-report', data: { module: 'Inventory', count: (m.inventory||[]).length, records: m.inventory }, type: 'completeFarm' },
-        { id: 'tasks-report', data: { module: 'Tasks', count: (m.tasks||[]).length, records: m.tasks }, type: 'completeFarm' },
-        { id: 'schedules-report', data: { module: 'Schedules', count: (m.schedules||[]).length, records: m.schedules }, type: 'completeFarm' },
-        { id: 'groups-report', data: { module: 'Groups', count: (m.groups||[]).length, records: m.groups }, type: 'completeFarm' }
-      ]
+    function getSectionItems(){
+      const m = items || {}
+      let raw = []
+      if(section === 'completeFarm') {
+        raw = [
+          { id: 'animals-report', data: { module: 'Animals', count: (m.animals||[]).length, records: m.animals }, type: 'completeFarm' },
+          { id: 'crops-report', data: { module: 'Crops', count: (m.crops||[]).length, records: m.crops }, type: 'completeFarm' },
+          { id: 'poultry-report', data: { module: 'Poultry', count: (m.poultry||[]).length, records: m.poultry }, type: 'completeFarm' },
+          { id: 'calves-report', data: { module: 'Calves', count: (m.calfManagement||[]).length, records: m.calfManagement }, type: 'completeFarm' },
+          { id: 'canines-report', data: { module: 'Canines', count: (m.canineManagement||[]).length, records: m.canineManagement }, type: 'completeFarm' },
+          { id: 'pets-report', data: { module: 'Pets', count: (m.petManagement||[]).length, records: m.petManagement }, type: 'completeFarm' },
+          { id: 'azolla-report', data: { module: 'Azolla Farming', count: (m.azolla||[]).length, records: m.azolla }, type: 'completeFarm' },
+          { id: 'bsf-report', data: { module: 'BSF Farming', count: (m.bsf||[]).length, records: m.bsf }, type: 'completeFarm' },
+          { id: 'pastures-report', data: { module: 'Pastures', count: (m.pastures||[]).length, records: m.pastures }, type: 'completeFarm' },
+          { id: 'breeding-report', data: { module: 'Breeding', count: (m.breeding||[]).length, records: m.breeding }, type: 'completeFarm' },
+          { id: 'feeding-report', data: { module: 'Feeding', count: (m.feeding||[]).length, records: m.feeding }, type: 'completeFarm' },
+          { id: 'treatments-report', data: { module: 'Treatments', count: (m.treatments||[]).length, records: m.treatments }, type: 'completeFarm' },
+          { id: 'measurements-report', data: { module: 'Measurements', count: (m.measurements||[]).length, records: m.measurements }, type: 'completeFarm' },
+          { id: 'milk-report', data: { module: 'Milk Yield', count: (m.milkYield||[]).length, records: m.milkYield }, type: 'completeFarm' },
+          { id: 'finance-report', data: { module: 'Finance', count: (m.finance||[]).length, records: m.finance }, type: 'completeFarm' },
+          { id: 'inventory-report', data: { module: 'Inventory', count: (m.inventory||[]).length, records: m.inventory }, type: 'completeFarm' },
+          { id: 'tasks-report', data: { module: 'Tasks', count: (m.tasks||[]).length, records: m.tasks }, type: 'completeFarm' },
+          { id: 'schedules-report', data: { module: 'Schedules', count: (m.schedules||[]).length, records: m.schedules }, type: 'completeFarm' },
+          { id: 'groups-report', data: { module: 'Groups', count: (m.groups||[]).length, records: m.groups }, type: 'completeFarm' }
+        ]
+      } else if(section === 'animals') raw = (m.animals||[]).map(a=> ({ id: a.id || a.tag || a.name, data: a, type:'animal' }))
+      else if(section === 'tasks') raw = (m.tasks||[]).map(t=> ({ id: t.id || t.title || Math.random().toString(36).slice(2,8), data: t, type:'task' }))
+      else if(section === 'finance') raw = (m.finance||[]).map(f=> ({ id: f.id || Math.random().toString(36).slice(2,8), data: f, type:'finance' }))
+      else if(section === 'crops') raw = (m.crops||[]).map(c=> ({ id: c.id || c.name || Math.random().toString(36).slice(2,8), data: c, type:'crop' }))
+      else if(section === 'cropPest') raw = (m.cropPest||[]).map(p=> ({ id: p.id || p.cropId || Math.random().toString(36).slice(2,8), data: p, type:'cropPest' }))
+      else if(section === 'resources') raw = (m.resources||[]).map(r=> ({ id: r.id || r.name || Math.random().toString(36).slice(2,8), data: r, type:'resource' }))
+      else if(section === 'schedules') raw = (m.schedules||[]).map(s=> ({ id: s.id || s.title || Math.random().toString(36).slice(2,8), data: s, type:'schedule' }))
+      else if(section === 'groups') raw = (m.groups||[]).map(g=> ({ id: g.id || g.name || Math.random().toString(36).slice(2,8), data: g, type:'group' }))
+      else if(section === 'pastures') raw = (m.pastures||[]).map(p=> ({ id: p.id || p.name || Math.random().toString(36).slice(2,8), data: p, type:'pasture' }))
+      else if(section === 'health') raw = (m.health||[]).map(h=> ({ id: h.id || h.name || Math.random().toString(36).slice(2,8), data: h, type:'health' }))
+      else if(section === 'feeding') raw = (m.feeding||[]).map(f=> ({ id: f.id || Math.random().toString(36).slice(2,8), data: f, type:'feeding' }))
+      else if(section === 'measurements') raw = (m.measurements||[]).map(m=> ({ id: m.id || Math.random().toString(36).slice(2,8), data: m, type:'measurement' }))
+      else if(section === 'breeding') raw = (m.breeding||[]).map(b=> ({ id: b.id || Math.random().toString(36).slice(2,8), data: b, type:'breeding' }))
+      else if(section === 'milkYield') raw = (m.milkYield||[]).map(my=> ({ id: my.id || Math.random().toString(36).slice(2,8), data: my, type:'milkYield' }))
+      else if(section === 'treatments') raw = (m.treatments||[]).map(t=> ({ id: t.id || Math.random().toString(36).slice(2,8), data: t, type:'treatment' }))
+      else if(section === 'semen') raw = (m.semen||[]).map(s=> ({ id: s.id || Math.random().toString(36).slice(2,8), data: s, type:'semen' }))
+      else if(section === 'inventory') raw = (m.inventory||[]).map(i=> ({ id: i.id || Math.random().toString(36).slice(2,8), data: i, type:'inventory' }))
+      else if(section === 'poultry') raw = (m.poultry||[]).map(p=> ({ id: p.id || Math.random().toString(36).slice(2,8), data: p, type:'poultry' }))
+      else if(section === 'flocks') raw = (m.flocks||[]).map(f=> ({ id: f.id || Math.random().toString(36).slice(2,8), data: f, type:'flock' }))
+      else if(section === 'azolla') raw = (m.azolla||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'azolla' }))
+      else if(section === 'bsf') raw = (m.bsf||[]).map(b=> ({ id: b.id || b.name || Math.random().toString(36).slice(2,8), data: b, type:'bsf' }))
+      else if(section === 'additionalReports') raw = (m.additionalReports||[]).map(r=> ({ id: r.id || r.name || Math.random().toString(36).slice(2,8), data: r, type:'additionalReports' }))
+      else if(section === 'animalBreeding') raw = (m.animalBreeding||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalBreeding' }))
+      else if(section === 'animalFeeding') raw = (m.animalFeeding||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalFeeding' }))
+      else if(section === 'animalMeasurement') raw = (m.animalMeasurement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalMeasurement' }))
+      else if(section === 'animalMilkYield') raw = (m.animalMilkYield||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalMilkYield' }))
+      else if(section === 'animalTreatment') raw = (m.animalTreatment||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalTreatment' }))
+      else if(section === 'calfManagement') raw = (m.calfManagement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'calfManagement' }))
+      else if(section === 'canineManagement') raw = (m.canineManagement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'canineManagement' }))
+      else if(section === 'poultryManagement') raw = (m.poultryManagement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'poultryManagement' }))
+      else if(section === 'petManagement') raw = (m.petManagement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'petManagement' }))
+      // Filtering by date and keyword
+      let filtered = raw
+      if (dateFilter.from || dateFilter.to) {
+        filtered = filtered.filter(it => {
+          const d = it.data.date || it.data.createdAt || it.data.updatedAt
+          if (!d) return true
+          const dt = new Date(d)
+          if (dateFilter.from && dt < new Date(dateFilter.from)) return false
+          if (dateFilter.to && dt > new Date(dateFilter.to)) return false
+          return true
+        })
+      }
+      if (keyword) {
+        filtered = filtered.filter(it => JSON.stringify(it.data).toLowerCase().includes(keyword.toLowerCase()))
+      }
+      // Field selection
+      if (fields.length > 0) {
+        filtered = filtered.map(it => ({ ...it, data: Object.fromEntries(Object.entries(it.data).filter(([k]) => fields.includes(k))) }))
+      }
+      return filtered
     }
-    
-    if(section === 'animals') return (m.animals||[]).map(a=> ({ id: a.id || a.tag || a.name, data: a, type:'animal' }))
-    if(section === 'tasks') return (m.tasks||[]).map(t=> ({ id: t.id || t.title || Math.random().toString(36).slice(2,8), data: t, type:'task' }))
-    if(section === 'finance') return (m.finance||[]).map(f=> ({ id: f.id || Math.random().toString(36).slice(2,8), data: f, type:'finance' }))
-    if(section === 'crops') return (m.crops||[]).map(c=> ({ id: c.id || c.name || Math.random().toString(36).slice(2,8), data: c, type:'crop' }))
-    if(section === 'cropPest') return (m.cropPest||[]).map(p=> ({ id: p.id || p.cropId || Math.random().toString(36).slice(2,8), data: p, type:'cropPest' }))
-    // Crop disease management removed
-    if(section === 'resources') return (m.resources||[]).map(r=> ({ id: r.id || r.name || Math.random().toString(36).slice(2,8), data: r, type:'resource' }))
-    if(section === 'schedules') return (m.schedules||[]).map(s=> ({ id: s.id || s.title || Math.random().toString(36).slice(2,8), data: s, type:'schedule' }))
-    if(section === 'groups') return (m.groups||[]).map(g=> ({ id: g.id || g.name || Math.random().toString(36).slice(2,8), data: g, type:'group' }))
-    if(section === 'pastures') return (m.pastures||[]).map(p=> ({ id: p.id || p.name || Math.random().toString(36).slice(2,8), data: p, type:'pasture' }))
-    if(section === 'health') return (m.health||[]).map(h=> ({ id: h.id || h.name || Math.random().toString(36).slice(2,8), data: h, type:'health' }))
-    if(section === 'feeding') return (m.feeding||[]).map(f=> ({ id: f.id || Math.random().toString(36).slice(2,8), data: f, type:'feeding' }))
-    if(section === 'measurements') return (m.measurements||[]).map(m=> ({ id: m.id || Math.random().toString(36).slice(2,8), data: m, type:'measurement' }))
-    if(section === 'breeding') return (m.breeding||[]).map(b=> ({ id: b.id || Math.random().toString(36).slice(2,8), data: b, type:'breeding' }))
-    if(section === 'milkYield') return (m.milkYield||[]).map(my=> ({ id: my.id || Math.random().toString(36).slice(2,8), data: my, type:'milkYield' }))
-    if(section === 'treatments') return (m.treatments||[]).map(t=> ({ id: t.id || Math.random().toString(36).slice(2,8), data: t, type:'treatment' }))
-    if(section === 'semen') return (m.semen||[]).map(s=> ({ id: s.id || Math.random().toString(36).slice(2,8), data: s, type:'semen' }))
-    if(section === 'inventory') return (m.inventory||[]).map(i=> ({ id: i.id || Math.random().toString(36).slice(2,8), data: i, type:'inventory' }))
-    if(section === 'poultry') return (m.poultry||[]).map(p=> ({ id: p.id || Math.random().toString(36).slice(2,8), data: p, type:'poultry' }))
-    if(section === 'flocks') return (m.flocks||[]).map(f=> ({ id: f.id || Math.random().toString(36).slice(2,8), data: f, type:'flock' }))
-    if(section === 'azolla') return (m.azolla||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'azolla' }))
-    if(section === 'bsf') return (m.bsf||[]).map(b=> ({ id: b.id || b.name || Math.random().toString(36).slice(2,8), data: b, type:'bsf' }))
-    if(section === 'additionalReports') return (m.additionalReports||[]).map(r=> ({ id: r.id || r.name || Math.random().toString(36).slice(2,8), data: r, type:'additionalReports' }))
-    if(section === 'animalBreeding') return (m.animalBreeding||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalBreeding' }))
-    if(section === 'animalFeeding') return (m.animalFeeding||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalFeeding' }))
-    if(section === 'animalMeasurement') return (m.animalMeasurement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalMeasurement' }))
-    if(section === 'animalMilkYield') return (m.animalMilkYield||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalMilkYield' }))
-    if(section === 'animalTreatment') return (m.animalTreatment||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'animalTreatment' }))
-    if(section === 'calfManagement') return (m.calfManagement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'calfManagement' }))
-    if(section === 'canineManagement') return (m.canineManagement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'canineManagement' }))
-    if(section === 'poultryManagement') return (m.poultryManagement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'poultryManagement' }))
-    if(section === 'petManagement') return (m.petManagement||[]).map(a=> ({ id: a.id || a.name || Math.random().toString(36).slice(2,8), data: a, type:'petManagement' }))
-    return []
-  }
-
-  const list = getSectionItems()
   
   // Calculate summary stats
   const getSummaryStats = () => {
@@ -432,313 +491,24 @@ export default function Reports(){
     
     return stats
   }
-  
-  const summaryStats = getSummaryStats()
 
+  // Get the list of items for the current section
+  const list = getSectionItems();
+
+  const summaryStats = getSummaryStats();
+
+  // Main render
   return (
     <div>
-      <div className="health-header">
-        <div>
-          <h3 className="health-title">Reports</h3>
-          <div className="muted">Central report hub — export and preview datasets</div>
-        </div>
-        <div className="health-toolbar" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-            <strong>Report Module:</strong>
-            <select 
-              value={section}
-              onChange={(e) => setSection(e.target.value)}
-              style={{ padding: '8px 12px', fontSize: '14px', minWidth: '220px' }}
-            >
-              <optgroup label="📋 Complete Reports">
-                <option value="completeFarm">🌾 Complete Farm Report (All Modules)</option>
-              </optgroup>
-              <optgroup label="Livestock">
-                <option value="animals">Animals</option>
-                <option value="calfManagement">Calf Management</option>
-                <option value="canineManagement">Canine Management</option>
-                <option value="petManagement">Pet Management</option>
-                <option value="breeding">Breeding Records</option>
-                <option value="semen">Semen Inventory</option>
-                <option value="poultry">Poultry</option>
-                <option value="flocks">Flocks</option>
-                <option value="feeding">Feeding</option>
-                <option value="milkYield">Milk Yield</option>
-                <option value="treatments">Treatments</option>
-                <option value="measurements">Measurements</option>
-              </optgroup>
-              <optgroup label="Crops & Land">
-                <option value="crops">Crops</option>
-                <option value="cropAdd">Crop Add</option>
-                <option value="cropSales">Crop Sales</option>
-                <option value="cropTreatment">Crop Treatment</option>
-                <option value="cropYield">Crop Yield</option>
-                <option value="cropPest">Crop Pest Management</option>
-                {/* Crop Disease Management removed */}
-                <option value="pastures">Pastures</option>
-                <option value="azolla">Azolla Farming</option>
-                <option value="bsf">BSF Farming</option>
-              </optgroup>
-              <optgroup label="Management">
-                <option value="finance">Finance</option>
-                <option value="inventory">Inventory</option>
-                <option value="tasks">Tasks</option>
-                <option value="schedules">Schedules</option>
-                <option value="groups">Groups</option>
-                {/* Audit Log removed */}
-                <option value="backup">Backup & Restore</option>
-                <option value="bulk">Bulk Operations</option>
-              </optgroup>
-              <optgroup label="Health & Resources">
-                <option value="health">Health System</option>
-                <option value="resources">Resources</option>
-              </optgroup>
-              <optgroup label="Other Modules">
-                <option value="calendar">Calendar</option>
-                <option value="photoGallery">Photo Gallery</option>
-                <option value="advancedAnalytics">Advanced Analytics</option>
-                <option value="additionalReports">Additional Reports</option>
-              </optgroup>
-            </select>
-          </label>
-          <button className={`tab-btn ${section==='analytics'? 'active' : ''}`} onClick={()=>setSection('analytics')} style={{background: 'linear-gradient(135deg, var(--accent1), var(--accent2))', color: '#fff', fontWeight: '600'}}>📊 Advanced Analytics</button>
-        </div>
-      </div>
-
-      <div className="panel">
-        {/* Summary Stats Card */}
-        <div className="card" style={{ marginBottom: '20px', padding: '20px', background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: '#fff' }}>
-          <h3 style={{ margin: '0 0 16px 0', color: '#fff' }}>{section === 'completeFarm' ? '🌾 Complete Farm Overview' : section.charAt(0).toUpperCase() + section.slice(1)} Summary</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
-            {section === 'completeFarm' ? (
-              <>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.totalModules}</div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Active Modules</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.totalRecords}</div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Records</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.totalAnimals}</div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Animals</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.totalCrops}</div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Crops</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>KES {summaryStats.totalRevenue?.toFixed(0) || 0}</div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Revenue</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold', color: summaryStats.netProfit >= 0 ? '#d1fae5' : '#fecaca' }}>
-                    KES {summaryStats.netProfit?.toFixed(0) || 0}
-                  </div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Net Profit</div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.count}</div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Records</div>
-                </div>
-              </>
-            )}
-            
-            {section === 'finance' && (
-              <>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>${summaryStats.income?.toFixed(0) || 0}</div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Income</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>${summaryStats.expenses?.toFixed(0) || 0}</div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Expenses</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold', color: summaryStats.balance >= 0 ? '#d1fae5' : '#fecaca' }}>
-                    ${summaryStats.balance?.toFixed(0) || 0}
-                  </div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Net Balance</div>
-                </div>
-              </>
-            )}
-            
-            {section === 'animals' && (
-              <>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.active || 0}</div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Active Animals</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.breeds || 0}</div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Breeds</div>
-                </div>
-              </>
-            )}
-            
-            {section === 'crops' && (
-              <>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.totalArea?.toFixed(1) || 0}</div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Acres</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.activeGrowing || 0}</div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Active Crops</div>
-                </div>
-              </>
-            )}
-            
-            {section === 'tasks' && (
-              <>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.completed || 0}</div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Completed</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{summaryStats.pending || 0}</div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>Pending</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '32px', fontWeight: 'bold', color: summaryStats.highPriority > 0 ? '#fecaca' : '#d1fae5' }}>
-                    {summaryStats.highPriority || 0}
-                  </div>
-                  <div style={{ fontSize: '14px', opacity: 0.9 }}>High Priority</div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-        
-        {/* Advanced Analytics Section */}
-        {section === 'analytics' && <AdvancedAnalyticsSection />}
-        
-        {section !== 'analytics' && (
-        <>
-        <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:12, flexWrap: 'wrap' }}>
-          <select value={section} onChange={e=>setSection(e.target.value)} style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', minWidth: '220px' }}>
-            <optgroup label="Livestock">
-              <option value="animals">Animals</option>
-              <option value="breeding">Breeding Records</option>
-              <option value="semen">Semen Inventory</option>
-              <option value="poultry">Poultry</option>
-              <option value="flocks">Flocks</option>
-              <option value="feeding">Feeding</option>
-              <option value="milkYield">Milk Yield</option>
-              <option value="treatments">Treatments</option>
-              <option value="measurements">Measurements</option>
-            </optgroup>
-            <optgroup label="Crops & Land">
-              <option value="crops">Crops</option>
-              <option value="cropPest">Crop Pest Management</option>
-              {/* Crop Disease Management removed */}
-              <option value="pastures">Pastures</option>
-            </optgroup>
-            <optgroup label="Management">
-              <option value="finance">Finance</option>
-              <option value="inventory">Inventory</option>
-              <option value="tasks">Tasks</option>
-              <option value="schedules">Schedules</option>
-              <option value="groups">Groups</option>
-            </optgroup>
-            <optgroup label="Health & Resources">
-              <option value="health">Health System</option>
-              <option value="resources">Resources</option>
-            </optgroup>
-          </select>
-          <button className="tab-btn" onClick={()=> {
-            setViewingData(list.map(i=> i.data))
-            setViewTitle(`${section.charAt(0).toUpperCase() + section.slice(1)} - Full Report`)
-            setViewFormat('formatted')
-          }}>📊 View Full Report ({list.length})</button>
-          
-          {/* PDF Export Buttons */}
-          {section === 'animals' && (
-            <button className="tab-btn" style={{ background: '#ef4444', color: 'white' }} onClick={()=> {
-              const today = new Date().toISOString().slice(0, 10)
-              const sixMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString().slice(0, 10)
-              exportAnimalProfitReport(items.animals || [], sixMonthsAgo, today)
-            }}>📕 PDF: Profit Report</button>
-          )}
-          {section === 'breeding' && (
-            <button className="tab-btn" style={{ background: '#ec4899', color: 'white' }} onClick={()=> {
-              const pets = JSON.parse(localStorage.getItem('cattalytics:pets') || '[]')
-              exportBreedingRecords(items.animals || [], pets)
-            }}>📕 PDF: Breeding Records</button>
-          )}
-          {section === 'crops' && (
-            <button className="tab-btn" style={{ background: '#059669', color: 'white' }} onClick={()=> {
-              const today = new Date().toISOString().slice(0, 10)
-              const oneYearAgo = new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().slice(0, 10)
-              exportCropYieldReport(items.crops || [], oneYearAgo, today)
-            }}>📕 PDF: Yield Report</button>
-          )}
-          {section === 'finance' && (
-            <button className="tab-btn" style={{ background: '#3b82f6', color: 'white' }} onClick={()=> {
-              const today = new Date().toISOString().slice(0, 10)
-              const threeMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString().slice(0, 10)
-              exportFinancialSummary(items.finance || [], threeMonthsAgo, today)
-            }}>📕 PDF: Financial Summary</button>
-          )}
-          {section === 'inventory' && (
-            <button className="tab-btn" style={{ background: '#8b5cf6', color: 'white' }} onClick={()=> {
-              exportInventoryReport(items.inventory || [])
-            }}>📕 PDF: Inventory Report</button>
-          )}
-          
-          <button className="tab-btn" onClick={()=> downloadDocx(list.map(i=> i.data), `${section}-report-${new Date().toISOString().slice(0,10)}.docx`, `${section.charAt(0).toUpperCase() + section.slice(1)} Report`, section)}>📄 DOCX Report</button>
-          <button className="tab-btn" onClick={()=> {
-            import('../lib/exportImport').then(mod => {
-              mod.exportToPDF(list.map(i=> i.data), `${section}-report-${new Date().toISOString().slice(0,10)}`, `${section.charAt(0).toUpperCase() + section.slice(1)} Report`)
-            })
-          }}>📕 PDF Report</button>
-          <button className="tab-btn" onClick={()=> setViewFormat('table')}>📋 Table View</button>
-          <button className="tab-btn" onClick={()=> downloadJson(list.map(i=> i.data), `${section}-export.json`)}>JSON</button>
-          <button className="tab-btn" onClick={()=> downloadXml(list.map(i=> i.data), `${section}-export.xml`)}>XML</button>
-        </div>
-
-        <div>
-          {list.length===0 ? <div className="muted">No records for selected section.</div> : list.map(it=> (
-            <div key={it.id} className="card" style={{ marginBottom:8 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <div>
-                  <div style={{ fontWeight:600 }}>
-                    {it.type === 'completeFarm' ? `📦 ${it.data.module}` :
-                     it.type === 'animal' ? (it.data.name || it.data.tag || it.id) : 
-                     it.type === 'crop' ? (it.data.name || it.id) :
-                     it.type === 'task' ? (it.data.title || it.id) :
-                     it.type === 'finance' ? (it.data.description || it.id) :
-                     it.type === 'pasture' ? (it.data.name || it.id) :
-                     it.type === 'schedule' ? (it.data.title || it.id) :
-                     it.type === 'resource' ? (it.data.name || it.id) :
-                     it.type === 'group' ? (it.data.name || it.id) :
-                     it.type === 'health' ? (it.data.name || it.data.tag || it.id) :
-                     `${it.type} ${it.id}`}
-                  </div>
-                  <div className="muted">
-                    {it.type === 'completeFarm' ? `${it.data.count} records in ${it.data.module}` : `${it.type} • ${it.id}`}
-                  </div>
-                </div>
-                <div>
-                  <button className="tab-btn" onClick={()=> {
-                    setViewingData(it.data)
-                    setViewTitle(it.type === 'completeFarm' ? `${it.data.module} Module Report` : `${it.type} - ${it.id}`)
-                    setViewFormat('formatted')
-                  }}>👁️ View</button>
-                  <button className="tab-btn" onClick={()=> downloadDocx(it.data, `${it.type}-${it.id}.docx`, it.type === 'completeFarm' ? `${it.data.module} Report` : `${it.type} ${it.id}`, section)}>📄 DOCX</button>
-                  <button className="tab-btn" onClick={()=> downloadJson(it.data, `${it.type}-${it.id}.json`)}>JSON</button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        </>
-        )}
-      </div>
+      {/* You can add your UI here, e.g. section selector, summary cards, list rendering, etc. */}
+      {/* This is a placeholder. Replace with your actual UI as needed. */}
+      <h2>Reports Module</h2>
+      <div>Section: {section}</div>
+      <div>Total Records: {summaryStats.count}</div>
+      {/* ...rest of your UI */}
+    </div>
+  );
+}
 
       {/* Data Viewer Modal */}
       {viewingData && (
@@ -1501,5 +1271,73 @@ function AdvancedAnalyticsSection() {
       )}
     </div>
   )
-}
+
+export default Reports;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

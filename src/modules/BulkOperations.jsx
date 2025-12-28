@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react'
+import { useUIStore } from '../stores/uiStore'
 import { importFromCSV, importFromJSON, exportToCSV, exportToJSON } from '../lib/exportImport'
 
 export default function BulkOperations() {
@@ -8,33 +9,42 @@ export default function BulkOperations() {
   const [loading, setLoading] = useState(false)
   const fileInputRef = useRef(null)
 
+  const showSuccess = useUIStore((state) => state.showSuccess)
+  const showError = useUIStore((state) => state.showError)
+  const showInfo = useUIStore((state) => state.showInfo)
+
   // Bulk animal operations
   const handleBulkAnimalImport = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
     
     setLoading(true)
+    showInfo('Importing file...')
     const ext = file.name.split('.').pop()?.toLowerCase()
     
     if (ext === 'json') {
       importFromJSON(file, (data, error) => {
         setLoading(false)
         if (error) {
-          alert('Import failed: ' + error.message)
+          showError('Import failed: ' + error.message)
+          setLoading(false)
           return
         }
         setPreview(data)
         setBulkData(data)
+        showSuccess(`Imported ${data.length} records!`)
       })
     } else if (ext === 'csv') {
       importFromCSV(file, (data, error) => {
         setLoading(false)
         if (error) {
-          alert('Import failed: ' + error.message)
+          showError('Import failed: ' + error.message)
+          setLoading(false)
           return
         }
         setPreview(data)
         setBulkData(data)
+        showSuccess(`Imported ${data.length} records!`)
       })
     }
   }
@@ -49,7 +59,7 @@ export default function BulkOperations() {
     const merged = [...existing, ...bulkData]
     localStorage.setItem(storageKey, JSON.stringify(merged))
     
-    alert(`✅ Successfully imported ${bulkData.length} records!`)
+    showSuccess(`Successfully imported ${bulkData.length} records!`)
     setBulkData([])
     setPreview(null)
     fileInputRef.current.value = ''
@@ -62,7 +72,7 @@ export default function BulkOperations() {
     const animals = JSON.parse(localStorage.getItem(storageKey) || '[]')
     
     if (!animals.length) {
-      alert('No animals to edit')
+      showError('No animals to edit')
       return
     }
 
@@ -74,11 +84,11 @@ export default function BulkOperations() {
     
     if (action === '1') {
       const confirm = window.confirm(`Mark ${animals.length} animals as Sold?`)
-      if (!confirm) return
+      if (!confirm) { showInfo('Bulk edit cancelled'); return }
       updated = animals.map(a => ({ ...a, status: 'Sold' }))
     } else if (action === '2') {
       const confirm = window.confirm(`Mark ${animals.length} animals as Inactive?`)
-      if (!confirm) return
+      if (!confirm) { showInfo('Bulk edit cancelled'); return }
       updated = animals.map(a => ({ ...a, status: 'Inactive' }))
     } else if (action === '3') {
       updated = animals.map(a => ({ ...a, healthAlerts: [] }))
@@ -89,7 +99,7 @@ export default function BulkOperations() {
     }
     
     localStorage.setItem(storageKey, JSON.stringify(updated))
-    alert(`✅ Updated ${updated.length} animals!`)
+    showSuccess(`Updated ${updated.length} animals!`)
     window.location.reload()
   }
 
@@ -99,7 +109,7 @@ export default function BulkOperations() {
     const expenses = JSON.parse(localStorage.getItem(storageKey) || '[]')
     
     if (!expenses.length) {
-      alert('No transactions to edit')
+      showError('No transactions to edit')
       return
     }
 
@@ -122,7 +132,7 @@ export default function BulkOperations() {
     }
     
     localStorage.setItem(storageKey, JSON.stringify(updated))
-    alert(`✅ Updated ${updated.length} transactions!`)
+    showSuccess(`Updated ${updated.length} transactions!`)
     window.location.reload()
   }
 
@@ -140,11 +150,11 @@ export default function BulkOperations() {
       toDelete = data.filter(item => item[key.trim()] === value.trim())
     }
     
-    if (!confirm(`Delete ${toDelete.length} records? This cannot be undone!`)) return
+    if (!confirm(`Delete ${toDelete.length} records? This cannot be undone!`)) { showInfo('Bulk delete cancelled'); return }
     
     const updated = data.filter(item => !toDelete.includes(item))
     localStorage.setItem(storageKey, JSON.stringify(updated))
-    alert(`✅ Deleted ${toDelete.length} records!`)
+    showSuccess(`Deleted ${toDelete.length} records!`)
     window.location.reload()
   }
 
@@ -154,16 +164,28 @@ export default function BulkOperations() {
     const data = JSON.parse(localStorage.getItem(storageKey) || '[]')
     
     if (!data.length) {
-      alert('No data to export')
+      showError('No data to export')
       return
     }
     
     const format = prompt('Export format:\n1. JSON\n2. CSV\nEnter number:', '1')
     
     if (format === '1') {
-      exportToJSON(data, `${activeTab}_export.json`)
+      showInfo('Exporting JSON...')
+      setLoading(true)
+      setTimeout(() => {
+        exportToJSON(data, `${activeTab}_export.json`)
+        setLoading(false)
+        showSuccess('Exported JSON!')
+      }, Math.min(2000, data.length * 2))
     } else if (format === '2') {
-      exportToCSV(data, `${activeTab}_export.csv`)
+      showInfo('Exporting CSV...')
+      setLoading(true)
+      setTimeout(() => {
+        exportToCSV(data, `${activeTab}_export.csv`)
+        setLoading(false)
+        showSuccess('Exported CSV!')
+      }, Math.min(2000, data.length * 2))
     }
   }
 
@@ -312,11 +334,15 @@ export default function BulkOperations() {
                   const storageKey = activeTab === 'animals' ? 'cattalytics:animals' : activeTab === 'expenses' ? 'cattalytics:finance' : 'cattalytics:tasks';
                   const data = JSON.parse(localStorage.getItem(storageKey) || '[]');
                   if (!data.length) {
-                    alert('No data to export');
+                    showError('No data to export');
                     return;
                   }
+                  showInfo('Exporting Word...');
+                  setLoading(true);
                   import('../lib/exportImport').then(mod => {
                     mod.exportToDocx(data, `${activeTab}_export.docx`, `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Export Report`);
+                    setLoading(false);
+                    showSuccess('Exported Word!');
                   });
                 }}
                 style={{

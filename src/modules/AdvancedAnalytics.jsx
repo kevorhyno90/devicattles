@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { LineChart, BarChart, PieChart } from '../components/Charts'
 import { formatCurrency } from '../lib/currency'
+import { movingAverage, linearRegression } from '../lib/analyticsPredict'
+import { exportToCSV, exportToJSON } from '../lib/exportImport'
+import { useUIStore } from '../stores/uiStore'
 
 export default function AdvancedAnalytics() {
   const [animals, setAnimals] = useState([])
@@ -10,6 +13,10 @@ export default function AdvancedAnalytics() {
   const [crops, setCrops] = useState([])
   const [selectedPeriod, setSelectedPeriod] = useState('6months')
   const [selectedAnimal, setSelectedAnimal] = useState('all')
+  const [showPrediction, setShowPrediction] = useState(true)
+  const [showTrend, setShowTrend] = useState(false)
+  const [correlation, setCorrelation] = useState(null)
+  const showSuccess = useUIStore((state) => state.showSuccess)
 
   useEffect(() => {
     loadData()
@@ -134,6 +141,39 @@ export default function AdvancedAnalytics() {
   const animalDistribution = getAnimalDistribution()
   const statusDistribution = getStatusDistribution()
 
+  // Predictive analytics: moving average and trend line for milk
+  const milkMA = showPrediction ? movingAverage(milkData, 3) : [];
+  const milkTrend = showTrend ? linearRegression(milkData) : [];
+
+  // Correlation: milk yield vs. feed cost (if available)
+  useEffect(() => {
+    // Simple correlation: sum of milk vs. sum of feed expenses by month
+    try {
+      const feed = transactions.filter(t => t.type === 'expense' && t.category === 'Feed');
+      const byMonth = {};
+      milkYield.forEach(m => {
+        const month = (m.date || m.milkingDate || '').substring(0, 7);
+        if (!month) return;
+        byMonth[month] = byMonth[month] || { milk: 0, feed: 0 };
+        byMonth[month].milk += parseFloat(m.quantity || m.totalQuantity || 0);
+      });
+      feed.forEach(f => {
+        const month = (f.date || '').substring(0, 7);
+        if (!month) return;
+        byMonth[month] = byMonth[month] || { milk: 0, feed: 0 };
+        byMonth[month].feed += Math.abs(parseFloat(f.amount || 0));
+      });
+      const corrData = Object.keys(byMonth).sort().map(month => ({
+        month,
+        milk: byMonth[month].milk,
+        feed: byMonth[month].feed
+      }));
+      setCorrelation(corrData.length > 0 ? corrData : null);
+    } catch {
+      setCorrelation(null);
+    }
+  }, [transactions, milkYield]);
+
   const incomeData = financialData.map(d => ({ label: d.month, value: d.income / 1000 }))
   const expenseData = financialData.map(d => ({ label: d.month, value: d.expense / 1000 }))
   const profitData = financialData.map(d => ({ label: d.month, value: d.profit / 1000 }))
@@ -145,8 +185,24 @@ export default function AdvancedAnalytics() {
         <p style={{ color: '#6b7280', margin: 0 }}>Visual insights and trends for your farm data</p>
       </div>
 
-      {/* Filters */}
+      {/* Filters & Export */}
       <div className="card" style={{ padding: '16px', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
+                  <label style={{ fontSize: 13 }}>
+                    <input type="checkbox" checked={showPrediction} onChange={e => setShowPrediction(e.target.checked)} /> Show Moving Average
+                  </label>
+                  <label style={{ fontSize: 13 }}>
+                    <input type="checkbox" checked={showTrend} onChange={e => setShowTrend(e.target.checked)} /> Show Trend Line
+                  </label>
+                  <button
+                    onClick={() => { exportToCSV(milkData, 'milk_trend.csv'); showSuccess('Exported Milk Data!'); }}
+                    style={{ padding: '6px 12px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '500', cursor: 'pointer' }}
+                  >⬇️ Export Milk CSV</button>
+                  <button
+                    onClick={() => { exportToJSON(milkData, 'milk_trend.json'); showSuccess('Exported Milk Data!'); }}
+                    style={{ padding: '6px 12px', background: '#059669', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '500', cursor: 'pointer' }}
+                  >⬇️ Export Milk JSON</button>
+                </div>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
           <label style={{ fontSize: '14px', fontWeight: '500' }}>
             Period:
@@ -181,7 +237,7 @@ export default function AdvancedAnalytics() {
       {/* Charts Grid */}
       <div style={{ display: 'grid', gap: '24px' }}>
         
-        {/* Milk Production Trend */}
+        {/* Milk Production Trend + Predictive */}
         {milkData.length > 0 && (
           <div className="card" style={{ padding: '20px' }}>
             <LineChart
@@ -192,6 +248,33 @@ export default function AdvancedAnalytics() {
               color="#059669"
               width={Math.min(window.innerWidth - 100, 800)}
               height={300}
+              extraLines={[
+                showPrediction && milkMA.length > 0 ? { data: milkMA, color: '#3b82f6', label: 'Moving Avg' } : null,
+                showTrend && milkTrend.length > 0 ? { data: milkTrend, color: '#f59e0b', label: 'Trend Line' } : null
+              ].filter(Boolean)}
+            />
+          </div>
+        )}
+        {/* Correlation Visualization */}
+        {correlation && correlation.length > 0 && (
+          <div className="card" style={{ padding: '20px' }}>
+            <BarChart
+              data={correlation.map(d => ({ label: d.month, value: d.milk }))}
+              title="Milk Yield vs Feed Cost (Milk)"
+              xLabel="Month"
+              yLabel="Milk (L)"
+              color="#059669"
+              width={Math.min(window.innerWidth - 140, 700)}
+              height={180}
+            />
+            <BarChart
+              data={correlation.map(d => ({ label: d.month, value: d.feed }))}
+              title="Milk Yield vs Feed Cost (Feed)"
+              xLabel="Month"
+              yLabel="Feed Cost (KSH)"
+              color="#ef4444"
+              width={Math.min(window.innerWidth - 140, 700)}
+              height={180}
             />
           </div>
         )}

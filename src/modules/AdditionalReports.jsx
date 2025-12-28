@@ -1,23 +1,38 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { exportToCSV, exportToJSON } from '../lib/exportImport'
+import { useUIStore } from '../stores/uiStore'
 import { formatCurrency } from '../lib/currency'
 import { Document, Packer, Paragraph, AlignmentType, HeadingLevel } from 'docx'
 
 export default function AdditionalReports() {
   const [activeReport, setActiveReport] = useState('health')
+  const [scheduleEmail, setScheduleEmail] = useState('')
+  const [scheduleTime, setScheduleTime] = useState('')
+  const showSuccess = useUIStore((state) => state.showSuccess)
+  const showError = useUIStore((state) => state.showError)
   const [reportData, setReportData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
+  // Add more report types here
+  const reportTypes = [
+    { id: 'health', label: '🏥 Herd Health' },
+    { id: 'breeding', label: '👶 Breeding' },
+    { id: 'feed', label: '🌾 Feed Analysis' },
+    { id: 'mortality', label: '⚰️ Mortality' },
+    { id: 'growth', label: '📈 Growth Trends' },
+    { id: 'finance', label: '💰 Financial Summary' }
+  ];
+
   const generateReport = useCallback((type) => {
     setLoading(true)
     setError(null)
-    
+
+    let data = {}
     try {
       const animals = JSON.parse(localStorage.getItem('cattalytics:animals') || '[]')
       const finance = JSON.parse(localStorage.getItem('cattalytics:finance') || '[]')
-      
-      let data = {}
-      
+
       if (type === 'health') {
         const healthSummary = {
           totalAnimals: animals.length,
@@ -46,7 +61,7 @@ export default function AdditionalReports() {
       } else if (type === 'breeding') {
         const females = animals.filter(a => a.sex === 'F')
         const breedingAnimals = females.filter(a => a.pregnancyStatus === 'Pregnant' || a.pregnancyStatus === 'Recently Bred')
-        
+
         data = {
           type: 'breeding',
           summary: {
@@ -66,7 +81,7 @@ export default function AdditionalReports() {
       } else if (type === 'feed') {
         const feedExpenses = finance.filter(f => f.category === 'Feed' || (f.type === 'expense' && !f.category))
         const totalFeedCost = feedExpenses.reduce((sum, f) => sum + Math.abs(f.amount || 0), 0)
-        
+
         data = {
           type: 'feed',
           summary: {
@@ -83,15 +98,62 @@ export default function AdditionalReports() {
             vendor: f.vendor || 'N/A'
           }))
         }
+      } else if (type === 'mortality') {
+        // Example: Mortality report
+        const deaths = animals.filter(a => a.status === 'Dead' || a.status === 'Deceased')
+        data = {
+          type: 'mortality',
+          summary: {
+            totalDeaths: deaths.length,
+            totalAnimals: animals.length,
+            mortalityRate: animals.length > 0 ? ((deaths.length / animals.length) * 100).toFixed(2) + '%' : '0%'
+          },
+          animals: deaths.map(a => ({
+            id: a.id,
+            name: a.name,
+            breed: a.breed,
+            age: a.dob ? new Date().getFullYear() - new Date(a.dob).getFullYear() : 'Unknown',
+            dateOfDeath: a.dateOfDeath || 'Unknown',
+            cause: a.causeOfDeath || 'Unknown'
+          }))
+        }
+      } else if (type === 'growth') {
+        // Example: Growth Trends report
+        data = {
+          type: 'growth',
+          summary: {
+            totalAnimals: animals.length,
+            avgGrowth: animals.length > 0 ? (animals.reduce((sum, a) => sum + (a.growthRate || 0), 0) / animals.length).toFixed(2) : 0
+          },
+          animals: animals.map(a => ({
+            id: a.id,
+            name: a.name,
+            breed: a.breed,
+            growthRate: a.growthRate || 'N/A',
+            age: a.dob ? new Date().getFullYear() - new Date(a.dob).getFullYear() : 'Unknown',
+            status: a.status
+          }))
+        }
+      } else if (type === 'finance') {
+        // Example: Financial Summary report
+        const income = finance.filter(f => f.type === 'income').reduce((sum, f) => sum + Math.abs(f.amount || 0), 0)
+        const expenses = finance.filter(f => f.type === 'expense').reduce((sum, f) => sum + Math.abs(f.amount || 0), 0)
+        data = {
+          type: 'finance',
+          summary: {
+            totalIncome: income,
+            totalExpenses: expenses,
+            net: income - expenses
+          },
+          transactions: finance.slice(-50)
+        }
       }
-      
       setReportData(data)
     } catch (err) {
       console.error('Error generating report:', err)
       setError(err.message)
       setReportData(null)
     }
-    
     setLoading(false)
   }, [])
 
@@ -130,7 +192,7 @@ export default function AdditionalReports() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch (err) {
-      alert('Error downloading report: ' + err.message)
+      showError('Error downloading report: ' + err.message)
     }
   }
 
@@ -145,11 +207,7 @@ export default function AdditionalReports() {
       )}
 
       <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', borderBottom: '2px solid #e5e7eb' }}>
-        {[
-          { id: 'health', label: '🏥 Herd Health' },
-          { id: 'breeding', label: '👶 Breeding' },
-          { id: 'feed', label: '🌾 Feed Analysis' }
-        ].map(tab => (
+        {reportTypes.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveReport(tab.id)}
@@ -179,7 +237,7 @@ export default function AdditionalReports() {
         </div>
       ) : (
         <>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px', gap: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px', gap: '10px', flexWrap: 'wrap' }}>
             <button
               onClick={downloadReport}
               style={{
@@ -194,6 +252,75 @@ export default function AdditionalReports() {
             >
               📥 Download DOCX
             </button>
+            <button
+              onClick={() => {
+                if (!reportData) return;
+                if (reportData.animals) exportToCSV(reportData.animals, `${activeReport}_report.csv`)
+                else if (reportData.transactions) exportToCSV(reportData.transactions, `${activeReport}_report.csv`)
+                else if (reportData.expenses) exportToCSV(reportData.expenses, `${activeReport}_report.csv`)
+                showSuccess('Exported CSV!')
+              }}
+              style={{
+                padding: '10px 20px',
+                background: '#0ea5e9',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '600'
+              }}
+            >
+              ⬇️ Export CSV
+            </button>
+            <button
+              onClick={() => {
+                if (!reportData) return;
+                if (reportData.animals) exportToJSON(reportData.animals, `${activeReport}_report.json`)
+                else if (reportData.transactions) exportToJSON(reportData.transactions, `${activeReport}_report.json`)
+                else if (reportData.expenses) exportToJSON(reportData.expenses, `${activeReport}_report.json`)
+                showSuccess('Exported JSON!')
+              }}
+              style={{
+                padding: '10px 20px',
+                background: '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '600'
+              }}
+            >
+              ⬇️ Export JSON
+            </button>
+          </div>
+          {/* Scheduled/Automatic Report UI */}
+          <div style={{ background: '#f1f5f9', padding: '16px', borderRadius: '8px', marginBottom: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <input
+              type="email"
+              placeholder="Email for scheduled report"
+              value={scheduleEmail}
+              onChange={e => setScheduleEmail(e.target.value)}
+              style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', minWidth: 220 }}
+            />
+            <input
+              type="time"
+              placeholder="Time (24h)"
+              value={scheduleTime}
+              onChange={e => setScheduleTime(e.target.value)}
+              style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', minWidth: 120 }}
+            />
+            <button
+              onClick={() => {
+                if (!scheduleEmail || !scheduleTime) { showError('Enter email and time'); return; }
+                showSuccess('Scheduled! (Backend integration required)');
+              }}
+              style={{ padding: '8px 16px', background: '#6366f1', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}
+            >
+              ⏰ Schedule Email
+            </button>
+            <span style={{ fontSize: '13px', color: '#666' }}>
+              (This is a UI placeholder. Backend integration needed for real scheduling.)
+            </span>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '30px' }}>

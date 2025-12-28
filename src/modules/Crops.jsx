@@ -33,8 +33,80 @@ const COMPLIANCE_TYPES = ['Pesticide Application', 'Fertilizer Application', 'Or
 const SUSTAINABILITY_METRICS = ['Carbon Footprint', 'Water Usage', 'Soil Health', 'Biodiversity', 'Energy Usage', 'Nutrient Efficiency', 'Erosion Control', 'Pollinator Support']
 
 // Memoized Crop Card Component for better performance
-const CropCard = React.memo(({ crop, onViewDetails, onDelete }) => (
-  <div className="card" style={{ padding: '20px' }}>
+import { LineChart } from '../components/Charts'
+import { useEffect, useState } from 'react'
+import { getCurrentWeather } from '../lib/weatherApi'
+const CropCard = React.memo(({ crop, onViewDetails, onDelete }) => {
+  const [weather, setWeather] = useState(null)
+  useEffect(() => {
+    if (crop.gpsCoordinates && crop.gpsCoordinates.lat && crop.gpsCoordinates.lng) {
+      getCurrentWeather(`${crop.gpsCoordinates.lat},${crop.gpsCoordinates.lng}`).then(setWeather)
+    } else if (crop.field) {
+      getCurrentWeather(crop.field).then(setWeather)
+    }
+  }, [crop.gpsCoordinates, crop.field])
+
+  return (
+    <div className="card" style={{ padding: '20px' }}>
+      {/* Sustainability Metrics */}
+      {crop.sustainabilityMetrics && Object.keys(crop.sustainabilityMetrics).length > 0 && (
+        <div style={{ marginBottom: 8, fontSize: 13, color: '#059669' }}>
+          <strong>🌱 Sustainability:</strong>
+          {Object.entries(crop.sustainabilityMetrics).map(([metric, value]) => (
+            <span key={metric} style={{ marginLeft: 8 }}>{metric}: {value}</span>
+          ))}
+        </div>
+      )}
+      {/* Field Mapping */}
+      {crop.gpsCoordinates && crop.gpsCoordinates.lat && crop.gpsCoordinates.lng && (
+        <div style={{ marginBottom: 8 }}>
+          <iframe
+            title="Field Map"
+            width="100%"
+            height="120"
+            style={{ border: 0, borderRadius: 8 }}
+            loading="lazy"
+            allowFullScreen
+            src={`https://www.openstreetmap.org/export/embed.html?bbox=${crop.gpsCoordinates.lng-0.002},${crop.gpsCoordinates.lat-0.002},${crop.gpsCoordinates.lng+0.002},${crop.gpsCoordinates.lat+0.002}&layer=mapnik&marker=${crop.gpsCoordinates.lat},${crop.gpsCoordinates.lng}`}
+          ></iframe>
+        </div>
+      )}
+      {/* Weather Integration */}
+      {weather && (
+        <div style={{ marginBottom: 8, fontSize: 13, color: '#2563eb', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>🌦️ <strong>Weather:</strong> {weather.weather?.[0]?.description || 'N/A'}, {weather.main?.temp}°C</span>
+        </div>
+      )}
+    {/* Health Trend Chart */}
+    <div style={{ marginBottom: 12 }}>
+      <LineChart
+        data={(crop.healthMonitoring || [
+          { date: crop.planted, value: crop.healthScore || 80 },
+          { date: crop.expectedHarvest, value: crop.healthScore || 80 }
+        ]).map(h => ({ label: h.date, value: h.value }))}
+        width={300}
+        height={100}
+        title="Health Trend"
+        xLabel="Date"
+        yLabel="Score"
+        color="#059669"
+      />
+    </div>
+    {/* Yield Trend Chart */}
+    <div style={{ marginBottom: 12 }}>
+      <LineChart
+        data={(crop.yieldRecords || [
+          { date: crop.planted, value: 0 },
+          { date: crop.expectedHarvest, value: crop.actualHarvest ? Number(crop.actualHarvest) : 0 }
+        ]).map(y => ({ label: y.date, value: y.value }))}
+        width={300}
+        height={100}
+        title="Yield Trend"
+        xLabel="Date"
+        yLabel="Yield"
+        color="#f59e0b"
+      />
+    </div>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <div style={{ flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>

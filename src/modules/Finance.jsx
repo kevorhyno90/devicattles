@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react'
 import EditableField from '../components/EditableField'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
+import { BarChart, PieChart } from '../components/Charts'
+import PhotoGallery from '../components/PhotoGallery'
 import { getFinancialSummary } from '../lib/moduleIntegration'
 import { useDebounce } from '../lib/useDebounce'
 import VirtualizedList from '../components/VirtualizedList'
@@ -59,7 +61,8 @@ export default function Finance(){
   // Form states
   const [formData, setFormData] = useState({
     amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', 
-    description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10)
+    description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10),
+    attachments: [] // For receipt/photo attachments
   })
 
   const fileInputRef = useRef(null)
@@ -362,6 +365,28 @@ export default function Finance(){
     return categoryObj ? categoryObj.subcategories : []
   }
 
+  // Trend analytics data
+  const monthlyTotals = useMemo(() => {
+    const byMonth = {}
+    items.forEach(i => {
+      const ym = i.date ? i.date.slice(0,7) : 'Unknown'
+      if (!byMonth[ym]) byMonth[ym] = { income: 0, expense: 0 }
+      if (i.amount >= 0) byMonth[ym].income += i.amount
+      else byMonth[ym].expense += Math.abs(i.amount)
+    })
+    return Object.entries(byMonth).map(([label, v]) => ({ label, value: v.income - v.expense, income: v.income, expense: v.expense }))
+  }, [items])
+
+  const categoryBreakdown = useMemo(() => {
+    const byCat = {}
+    items.forEach(i => {
+      const cat = i.category || 'Other'
+      if (!byCat[cat]) byCat[cat] = 0
+      byCat[cat] += Math.abs(i.amount)
+    })
+    return Object.entries(byCat).map(([label, value]) => ({ label, value }))
+  }, [items])
+
   return (
     <section>
       <div style={{ marginBottom: '24px' }}>
@@ -384,6 +409,16 @@ export default function Finance(){
         </div>
         
         {/* Financial Stats */}
+                {/* Trend Analytics */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', marginBottom: 24 }}>
+                  <div style={{ flex: 1, minWidth: 320 }}>
+                    <BarChart data={monthlyTotals.map(m => ({ label: m.label, value: m.income }))} title="Monthly Income" yLabel="KES" color="#059669" />
+                    <BarChart data={monthlyTotals.map(m => ({ label: m.label, value: m.expense }))} title="Monthly Expenses" yLabel="KES" color="#dc2626" />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 320 }}>
+                    <PieChart data={categoryBreakdown} title="By Category" />
+                  </div>
+                </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
           <div className="card" style={{ padding: '20px', background: '#f0fdf4' }}>
             <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#15803d' }}>Total Income</h3>
@@ -640,8 +675,12 @@ export default function Finance(){
               </div>
             ) : (
               // Display Mode
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                                    {/* Receipt/Photo Attachments */}
+                                    <div style={{ margin: '8px 0' }}>
+                                      <PhotoGallery entityType="finance" entityId={entry.id} entityName={entry.description} />
+                                    </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
                     <h4 style={{ margin: 0 }}>
                       <EditableField 

@@ -20,6 +20,7 @@ import { generateQRCodeDataURL, printQRTag, batchPrintQRTags } from '../lib/qrco
 import { useDebounce } from '../lib/useDebounce'
 import { perfMonitor } from '../lib/performanceUtils'
 import VirtualizedList from '../components/VirtualizedList'
+import { LineChart } from '../components/Charts'
 
 // Realized Animals component: HTML5 controls, inline validation, unique tag checks,
 // realistic sample data, and non-placeholder behavior.
@@ -1029,6 +1030,22 @@ export default function Animals() {
                       
                       {isExp && (
                         <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #e5e7eb', fontSize: '0.9rem' }}>
+                          {/* Weight Trend Chart */}
+                          <div style={{ marginBottom: 16 }}>
+                            <LineChart
+                              data={(a.weightHistory || [
+                                { date: '2025-01-01', value: a.weight ? a.weight - 10 : 0 },
+                                { date: '2025-02-01', value: a.weight ? a.weight - 5 : 0 },
+                                { date: '2025-03-01', value: a.weight || 0 }
+                              ]).map(w => ({ label: w.date, value: w.value }))}
+                              width={350}
+                              height={120}
+                              title="Weight Trend"
+                              xLabel="Date"
+                              yLabel="Weight (kg)"
+                              color="#3b82f6"
+                            />
+                          </div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
                             {a.dob && <div><strong>DOB:</strong> {a.dob}</div>}
                             {a.weight && <div><strong>Weight:</strong> {a.weight} kg</div>}

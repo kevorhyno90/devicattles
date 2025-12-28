@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { LineChart, BarChart, PieChart } from '../components/Charts'
+import { exportToCSV, exportToExcel, exportToPDF } from '../lib/exportUtils'
 import EditableField from '../components/EditableField'
 import {
   getDashboardData,
@@ -18,6 +20,45 @@ import { loadData } from '../lib/storage'
 import DashboardCustomizer from '../components/DashboardCustomizer'
 
 export default function Dashboard({ onNavigate }) {
+  // ...existing code...
+
+  // Actionable insights logic (moved inside Dashboard to access state/variables)
+  function getInsights(metric) {
+    if (metric === 'netProfit') {
+      if (netProfit < 0) return '⚠️ Net profit is negative. Review expenses and optimize costs.'
+      if (netProfit < 10000) return 'ℹ️ Net profit is below peer average. Consider increasing revenue streams.'
+      return '✅ Net profit is healthy. Keep monitoring for improvements.'
+    }
+    if (metric === 'totalIncome') {
+      if (totalIncome < 15000) return '⚠️ Income is low. Explore new sales channels or increase production.'
+      return '✅ Income is on track.'
+    }
+    if (metric === 'totalExpenses') {
+      if (totalExpenses > 10000) return '⚠️ Expenses are high. Audit major cost drivers.'
+      return '✅ Expenses are within normal range.'
+    }
+    if (metric === 'milkProduction') {
+      if (milkProduction && milkProduction.totalMilk < 1000) return '⚠️ Milk production is low. Check animal health and feed quality.'
+      return '✅ Milk production is good.'
+    }
+    if (metric === 'feedCosts') {
+      if (feedCosts && feedCosts.trend === 'increasing') return '⚠️ Feed costs are rising. Negotiate with suppliers or optimize rations.'
+      return '✅ Feed costs are stable.'
+    }
+    if (metric === 'cropYield') {
+      if (cropYield && cropYield.totalYield < 500) return '⚠️ Crop yield is low. Review soil health and irrigation.'
+      return '✅ Crop yield is satisfactory.'
+    }
+    if (metric === 'inventory') {
+      if (inventory && inventory.criticalStock > 0) return '⚠️ Critical inventory items are low. Reorder soon.'
+      return '✅ Inventory levels are healthy.'
+    }
+    if (metric === 'tasks') {
+      if (tasks && tasks.completionRate < 90) return '⚠️ Task completion rate is low. Improve task management.'
+      return '✅ Task completion is excellent.'
+    }
+    return ''
+  }
   const [dashboardData, setDashboardData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState('month')
@@ -35,6 +76,45 @@ export default function Dashboard({ onNavigate }) {
     market: '💰 Market Prices'
     // Removed: voice, disease, audit
   })
+
+  // Chart/Benchmarking state
+  const [selectedMetric, setSelectedMetric] = useState('netProfit')
+  const [comparePeriod, setComparePeriod] = useState('previousMonth')
+  const [selectedMetrics, setSelectedMetrics] = useState(['netProfit', 'totalIncome', 'totalExpenses'])
+  const [customTimeframe, setCustomTimeframe] = useState('6m')
+  const [reportLayout, setReportLayout] = useState('vertical')
+  const [scheduleEmail, setScheduleEmail] = useState(false)
+  const [emailAddress, setEmailAddress] = useState('')
+  const [scheduleFrequency, setScheduleFrequency] = useState('weekly')
+  const metricOptions = [
+    { value: 'netProfit', label: 'Net Profit' },
+    { value: 'totalIncome', label: 'Total Income' },
+    { value: 'totalExpenses', label: 'Total Expenses' },
+    { value: 'milkProduction', label: 'Milk Production' },
+    { value: 'feedCosts', label: 'Feed Costs' },
+    { value: 'cropYield', label: 'Crop Yield' },
+    { value: 'inventory', label: 'Inventory Alerts' },
+    { value: 'tasks', label: 'Tasks Completion' },
+  ]
+  const compareOptions = [
+    { value: 'previousMonth', label: 'Previous Month' },
+    { value: 'previousYear', label: 'Previous Year' },
+    { value: 'none', label: 'No Comparison' },
+  ]
+  const timeframeOptions = [
+    { value: '3m', label: 'Last 3 Months' },
+    { value: '6m', label: 'Last 6 Months' },
+    { value: '12m', label: 'Last 12 Months' },
+  ]
+  const layoutOptions = [
+    { value: 'vertical', label: 'Vertical' },
+    { value: 'horizontal', label: 'Horizontal' },
+  ]
+  const frequencyOptions = [
+    { value: 'daily', label: 'Daily' },
+    { value: 'weekly', label: 'Weekly' },
+    { value: 'monthly', label: 'Monthly' },
+  ]
 
   // Persist quick actions edits
   useEffect(() => {
@@ -142,8 +222,246 @@ export default function Dashboard({ onNavigate }) {
   const netProfit = totalIncome - totalExpenses
   const profitMargin = totalIncome > 0 ? ((netProfit / totalIncome) * 100) : 0
 
+  // Prepare chart data for selected metric
+  function getMetricChartData(metric) {
+    // Example: Replace with real historical/benchmarking data
+    // Here, we use dummy data for demonstration
+    if (metric === 'netProfit') {
+      return [
+        { label: 'Jan', value: 12000 },
+        { label: 'Feb', value: 15000 },
+        { label: 'Mar', value: 11000 },
+        { label: 'Apr', value: 17000 },
+        { label: 'May', value: 14000 },
+        { label: 'Jun', value: netProfit },
+      ]
+    }
+    if (metric === 'totalIncome') {
+      return [
+        { label: 'Jan', value: 20000 },
+        { label: 'Feb', value: 22000 },
+        { label: 'Mar', value: 21000 },
+        { label: 'Apr', value: 25000 },
+        { label: 'May', value: 23000 },
+        { label: 'Jun', value: totalIncome },
+      ]
+    }
+    if (metric === 'totalExpenses') {
+      return [
+        { label: 'Jan', value: 8000 },
+        { label: 'Feb', value: 7000 },
+        { label: 'Mar', value: 10000 },
+        { label: 'Apr', value: 8000 },
+        { label: 'May', value: 9000 },
+        { label: 'Jun', value: totalExpenses },
+      ]
+    }
+    if (metric === 'milkProduction') {
+      return [
+        { label: 'Jan', value: 1200 },
+        { label: 'Feb', value: 1300 },
+        { label: 'Mar', value: 1100 },
+        { label: 'Apr', value: 1400 },
+        { label: 'May', value: 1350 },
+        { label: 'Jun', value: milkProduction.totalMilk },
+      ]
+    }
+    if (metric === 'feedCosts') {
+      return [
+        { label: 'Jan', value: 3000 },
+        { label: 'Feb', value: 3200 },
+        { label: 'Mar', value: 3100 },
+        { label: 'Apr', value: 3500 },
+        { label: 'May', value: 3300 },
+        { label: 'Jun', value: feedCosts.avgMonthly },
+      ]
+    }
+    if (metric === 'cropYield') {
+      return [
+        { label: 'Jan', value: 500 },
+        { label: 'Feb', value: 600 },
+        { label: 'Mar', value: 550 },
+        { label: 'Apr', value: 700 },
+        { label: 'May', value: 650 },
+        { label: 'Jun', value: cropYield.totalYield },
+      ]
+    }
+    if (metric === 'inventory') {
+      return [
+        { label: 'Jan', value: 2 },
+        { label: 'Feb', value: 1 },
+        { label: 'Mar', value: 3 },
+        { label: 'Apr', value: 2 },
+        { label: 'May', value: 1 },
+        { label: 'Jun', value: inventory.totalAlerts },
+      ]
+    }
+    if (metric === 'tasks') {
+      return [
+        { label: 'Jan', value: 90 },
+        { label: 'Feb', value: 92 },
+        { label: 'Mar', value: 88 },
+        { label: 'Apr', value: 95 },
+        { label: 'May', value: 93 },
+        { label: 'Jun', value: tasks.completionRate },
+      ]
+    }
+    return []
+  }
+
   return (
     <div className="dashboard">
+      {/* Interactive Chart & Benchmarking Section */}
+      <div className="dashboard-section card" style={{ marginBottom: 24, padding: 20 }}>
+        <h2 style={{ fontSize: 20, marginBottom: 12 }}>📈 Analytics, Benchmarking, Custom Reports & Scheduling</h2>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
+          <label>
+            Metrics:
+            <select multiple value={selectedMetrics} onChange={e => setSelectedMetrics(Array.from(e.target.selectedOptions, o => o.value))} style={{ marginLeft: 8, minWidth: 160, height: 70 }}>
+              {metricOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Timeframe:
+            <select value={customTimeframe} onChange={e => setCustomTimeframe(e.target.value)} style={{ marginLeft: 8 }}>
+              {timeframeOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Layout:
+            <select value={reportLayout} onChange={e => setReportLayout(e.target.value)} style={{ marginLeft: 8 }}>
+              {layoutOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Compare:
+            <select value={comparePeriod} onChange={e => setComparePeriod(e.target.value)} style={{ marginLeft: 8 }}>
+              {compareOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Goal:
+            <input
+              type="number"
+              value={localStorage.getItem('dashboard:goal:' + selectedMetric) || ''}
+              onChange={e => {
+                localStorage.setItem('dashboard:goal:' + selectedMetric, e.target.value)
+                setSelectedMetric(selectedMetric)
+              }}
+              style={{ marginLeft: 8, width: 100 }}
+              placeholder="Set goal"
+            />
+          </label>
+        </div>
+        {/* Scheduling UI */}
+        <div style={{ marginBottom: 12, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+          <label>
+            <input type="checkbox" checked={scheduleEmail} onChange={e => setScheduleEmail(e.target.checked)} />
+            <span style={{ marginLeft: 6 }}>Schedule Email Report</span>
+          </label>
+          {scheduleEmail && (
+            <>
+              <input type="email" value={emailAddress} onChange={e => setEmailAddress(e.target.value)} placeholder="Email address" style={{ marginLeft: 8, width: 200 }} />
+              <select value={scheduleFrequency} onChange={e => setScheduleFrequency(e.target.value)} style={{ marginLeft: 8 }}>
+                {frequencyOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <button className="btn-primary" style={{ marginLeft: 8 }} onClick={() => {
+                // Save schedule to localStorage (replace with backend integration as needed)
+                localStorage.setItem('dashboard:reportSchedule', JSON.stringify({ email: emailAddress, frequency: scheduleFrequency, metrics: selectedMetrics, timeframe: customTimeframe, layout: reportLayout }))
+                alert('Report schedule saved! (Demo only)')
+              }}>Save Schedule</button>
+            </>
+          )}
+        </div>
+        {/* Render charts for all selected metrics */}
+        <div style={{ display: reportLayout === 'horizontal' ? 'flex' : 'block', gap: 24 }}>
+          {selectedMetrics.map(metric => (
+            <div key={metric} style={{ flex: 1, minWidth: 350 }}>
+              <LineChart
+                data={getMetricChartData(metric)}
+                width={reportLayout === 'horizontal' ? 350 : 700}
+                height={320}
+                title={metricOptions.find(opt => opt.value === metric)?.label + ' Trend'}
+                xLabel="Month"
+                yLabel="Value"
+                color="#059669"
+              />
+              {/* Actionable Insights */}
+              <div style={{ marginTop: 8, fontSize: 15, color: '#0f172a', background: '#f1f5f9', padding: 8, borderRadius: 8 }}>
+                <strong>Insight:</strong> {getInsights(metric)}
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Actionable Insights */}
+        <div style={{ marginTop: 16, fontSize: 15, color: '#0f172a', background: '#f1f5f9', padding: 12, borderRadius: 8 }}>
+          <strong>Insight:</strong> {getInsights(selectedMetric)}
+        </div>
+          {/* Export Buttons for all selected metrics */}
+          <div style={{ marginTop: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            {selectedMetrics.map(metric => (
+              <div key={metric} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={{ fontWeight: 600 }}>{metricOptions.find(opt => opt.value === metric)?.label}:</span>
+                <button className="btn-secondary" onClick={() => {
+                  const data = getMetricChartData(metric)
+                  const rows = [
+                    ['Month', 'Value'],
+                    ...data.map(d => [d.label, d.value])
+                  ]
+                  exportToCSV(`${metric}-trend.csv`, rows)
+                }}>CSV</button>
+                <button className="btn-secondary" onClick={async () => {
+                  const data = getMetricChartData(metric)
+                  const rows = [
+                    ['Month', 'Value'],
+                    ...data.map(d => [d.label, d.value])
+                  ]
+                  await exportToExcel(`${metric}-trend.xlsx`, rows)
+                }}>Excel</button>
+                <button className="btn-secondary" onClick={async () => {
+                  const data = getMetricChartData(metric)
+                  const rows = [
+                    ['Month', 'Value'],
+                    ...data.map(d => [d.label, d.value])
+                  ]
+                  await exportToPDF(`${metric}-trend.pdf`, rows, `${metricOptions.find(opt => opt.value === metric)?.label} Trend`)
+                }}>PDF</button>
+              </div>
+            ))}
+          </div>
+        {/* Peer Benchmarking (dummy data for now) */}
+        <div style={{ marginTop: 12, fontSize: 14, color: '#374151' }}>
+          <strong>Peer Average:</strong> {
+            (() => {
+              // Dummy peer averages for demonstration
+              const peerAverages = {
+                netProfit: 13000,
+                totalIncome: 21000,
+                totalExpenses: 8500,
+                milkProduction: 1250,
+                feedCosts: 3200,
+                cropYield: 600,
+                inventory: 2,
+                tasks: 92,
+              }
+              return peerAverages[selectedMetric] || 'N/A'
+            })()
+          }
+          {localStorage.getItem('dashboard:goal:' + selectedMetric) && (
+            <span style={{ marginLeft: 16 }}><strong>Goal:</strong> {localStorage.getItem('dashboard:goal:' + selectedMetric)}</span>
+          )}
+        </div>
+      </div>
       <div className="dashboard-header">
         <h1>📊 Farm Dashboard</h1>
         <div className="dashboard-controls">

@@ -89,21 +89,20 @@ export default function PhotoGallery({ entityType, entityId, entityName }) {
   }
 
   async function handleFileSelect(event) {
-    const file = event.target.files[0]
-    if (!file) return
-
+    const files = Array.from(event.target.files)
+    if (!files.length) return
     setLoading(true)
     try {
-      const { dataUrl } = await fileToDataUrl(file, { maxDim: 1920, quality: 0.85 })
-      
-      await savePhoto({
-        entityType,
-        entityId,
-        dataUrl,
-        caption: caption || `${entityName} - ${new Date().toLocaleDateString()}`,
-        timestamp: Date.now()
-      })
-
+      for (const file of files) {
+        const { dataUrl } = await fileToDataUrl(file, { maxDim: 1920, quality: 0.85 })
+        await savePhoto({
+          entityType,
+          entityId,
+          dataUrl,
+          caption: caption || `${entityName} - ${new Date().toLocaleDateString()}`,
+          timestamp: Date.now()
+        })
+      }
       setCaption('')
       setShowUpload(false)
       await loadPhotos()
@@ -232,6 +231,7 @@ export default function PhotoGallery({ entityType, entityId, entityName }) {
                 name="photoFile"
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleFileSelect}
                 style={{ display: 'none' }}
                 disabled={loading}

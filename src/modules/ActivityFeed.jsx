@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { exportToCSV, exportToJSON } from '../lib/exportImport'
+import { useUIStore } from '../stores/uiStore'
 import { getActivities, getActivityStats } from '../lib/activityLogger'
 
 export default function ActivityFeed() {
@@ -8,6 +10,9 @@ export default function ActivityFeed() {
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState(null)
   const [displayCount, setDisplayCount] = useState(20)
+  const [search, setSearch] = useState('')
+  const showSuccess = useUIStore((state) => state.showSuccess)
+  const showError = useUIStore((state) => state.showError)
 
   useEffect(() => {
     loadActivities()
@@ -93,18 +98,15 @@ export default function ActivityFeed() {
 
   const getFilteredActivities = () => {
     let filtered = activities
-
     // Filter by type
     if (filter !== 'all') {
       filtered = filtered.filter(a => a.type === filter)
     }
-
     // Filter by time range
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-
     if (timeRange !== 'all') {
       filtered = filtered.filter(a => {
         const activityDate = new Date(a.timestamp)
@@ -114,7 +116,15 @@ export default function ActivityFeed() {
         return true
       })
     }
-
+    // Search filter
+    if (search.trim()) {
+      const s = search.trim().toLowerCase();
+      filtered = filtered.filter(a =>
+        (a.description && a.description.toLowerCase().includes(s)) ||
+        (a.action && a.action.toLowerCase().includes(s)) ||
+        (a.userName && a.userName.toLowerCase().includes(s))
+      );
+    }
     return filtered
   }
 
@@ -184,7 +194,7 @@ export default function ActivityFeed() {
         </p>
       </div>
 
-      {/* Filters */}
+      {/* Filters & Actions */}
       <div style={{
         background: 'white',
         borderRadius: '12px',
@@ -196,6 +206,62 @@ export default function ActivityFeed() {
         flexWrap: 'wrap',
         alignItems: 'center'
       }}>
+                {/* Search */}
+                <input
+                  type="text"
+                  placeholder="Search activities..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  style={{
+                    padding: '6px 12px',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    minWidth: 180
+                  }}
+                />
+
+                {/* Export */}
+                <button
+                  onClick={() => {
+                    const filtered = getFilteredActivities();
+                    if (!filtered.length) { showError('No activities to export'); return; }
+                    exportToCSV(filtered, 'activity-feed.csv');
+                    showSuccess('Exported CSV!');
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    background: '#0ea5e9',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  ⬇️ Export CSV
+                </button>
+                <button
+                  onClick={() => {
+                    const filtered = getFilteredActivities();
+                    if (!filtered.length) { showError('No activities to export'); return; }
+                    exportToJSON(filtered, 'activity-feed.json');
+                    showSuccess('Exported JSON!');
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    background: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  ⬇️ Export JSON
+                </button>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>Type:</span>
           <select
