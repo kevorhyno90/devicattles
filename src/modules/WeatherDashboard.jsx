@@ -21,7 +21,9 @@ export default function WeatherDashboard({ onNavigate }) {
   const [advice, setAdvice] = useState([])
   const [sunAdvice, setSunAdvice] = useState(null)
   const [activities, setActivities] = useState({})
-  const [location, setLocation] = useState(getFarmLocation())
+  // Chepilat, Kenya coordinates (lat: -0.68333, lon: 35.08333)
+  const DEFAULT_LOCATION = '-0.68333,35.08333';
+  const [location, setLocation] = useState(DEFAULT_LOCATION)
   const [apiKey, setApiKey] = useState(localStorage.getItem('cattalytics:weather:apikey') || '')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -61,10 +63,22 @@ export default function WeatherDashboard({ onNavigate }) {
   }, [location, apiKey])
 
   // Save location
+  // Validate location format: "City,CountryCode" or "lat,lon"
+  const isValidLocation = (loc) => {
+    if (!loc || typeof loc !== 'string') return false;
+    // Coordinates: -1.2921,36.8219
+    const coordRegex = /^-?\d{1,3}\.\d+,-?\d{1,3}\.\d+$/;
+    // City,Country: Chebilat,KE (prefer coordinates for reliability)
+    const cityCountryRegex = /^[A-Za-z\s]+,[A-Za-z]{2,3}$/;
+    return coordRegex.test(loc.trim()) || cityCountryRegex.test(loc.trim());
+  };
+
+  // Always set location to Chebilat coordinates
   const handleSaveLocation = () => {
-    saveFarmLocation(location)
-    setEditingLocation(false)
-    loadWeather()
+    setLocation(DEFAULT_LOCATION);
+    saveFarmLocation(DEFAULT_LOCATION);
+    setEditingLocation(false);
+    loadWeather();
   }
 
   // Save API key
@@ -150,59 +164,8 @@ export default function WeatherDashboard({ onNavigate }) {
         </div>
       </div>
 
-      {/* Location Editor */}
-      {editingLocation && (
-        <div style={{
-          padding: '15px',
-          background: '#f5f5f5',
-          borderRadius: '8px',
-          marginBottom: '20px'
-        }}>
-          <h3>Set Farm Location</h3>
-          <p style={{ fontSize: '14px', color: '#666', marginBottom: '10px' }}>
-            Enter city name (e.g., "Nairobi,KE") or coordinates (e.g., "-1.2921,36.8219")
-          </p>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Nairobi,KE"
-              style={{
-                flex: 1,
-                padding: '8px',
-                border: '1px solid #ddd',
-                borderRadius: '4px'
-              }}
-            />
-            <button
-              onClick={handleSaveLocation}
-              style={{
-                padding: '8px 16px',
-                background: '#4CAF50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              Save
-            </button>
-            <button
-              onClick={() => setEditingLocation(false)}
-              style={{
-                padding: '8px 16px',
-                background: '#999',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+      {/* Location is fixed to Nyaronde,KE. Location editing is disabled. */}
+          {/* Location is fixed to Nyaronde,KE. Location editing is disabled. */}
       )}
 
       {/* API Key Editor */}

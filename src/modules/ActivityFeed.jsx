@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { exportToCSV, exportToJSON } from '../lib/exportImport'
-import { useUIStore } from '../stores/uiStore'
+import useUIStore from '../stores/uiStore'
 import { getActivities, getActivityStats } from '../lib/activityLogger'
 
 export default function ActivityFeed() {

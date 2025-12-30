@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { exportToCSV, exportToJSON } from '../lib/exportImport'
-import { useUIStore } from '../stores/uiStore'
+import useUIStore from '../stores/uiStore'
 import { formatCurrency } from '../lib/currency'
 import { Document, Packer, Paragraph, AlignmentType, HeadingLevel } from 'docx'
 

@@ -1,3 +1,22 @@
+/* Notification settings and types text color for theme visibility */
+.setting-item span,
+.notification-content h3,
+.notification-content p,
+.notification-date {
+  color: var(--accent1);
+}
+.app.theme-dark .setting-item span,
+.app.theme-contrast .setting-item span,
+.app.theme-dark .notification-content h3,
+.app.theme-dark .notification-content p,
+.app.theme-dark .notification-date,
+.app.theme-contrast .notification-content h3,
+.app.theme-contrast .notification-content p,
+.app.theme-contrast .notification-date {
+  color: #ffd700 !important;
+  background: transparent !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
 :root{
         --accent1:#ff8a00;
         --accent2:#ff2d55;
@@ -508,7 +527,7 @@ body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica
 }
 
 .notification-settings {
-  background: white;
+  background: var(--card-bg);
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -517,6 +536,7 @@ body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica
 .notification-settings h2 {
   margin: 0 0 20px 0;
   font-size: 1.3rem;
+  color: inherit;
 }
 
 .settings-grid {
@@ -548,6 +568,22 @@ body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica
 .setting-item span {
   font-size: 14px;
   font-weight: 500;
+  color: inherit;
+}
+.app.theme-dark .setting-item span, .app.theme-contrast .setting-item span {
+  color: #ffd700 !important; /* Bright yellow for visibility */
+  background: transparent !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.notification-content h3, .notification-content p, .notification-date {
+  color: inherit;
+}
+.app.theme-dark .notification-content h3, .app.theme-dark .notification-content p, .app.theme-dark .notification-date,
+.app.theme-contrast .notification-content h3, .app.theme-contrast .notification-content p, .app.theme-contrast .notification-date {
+  color: #ffd700 !important; /* Bright yellow for visibility */
+  background: transparent !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
 }
 
 /* Backup & Restore Styles */

@@ -3,7 +3,7 @@ import { LineChart, BarChart, PieChart } from '../components/Charts'
 import { formatCurrency } from '../lib/currency'
 import { movingAverage, linearRegression } from '../lib/analyticsPredict'
 import { exportToCSV, exportToJSON } from '../lib/exportImport'
-import { useUIStore } from '../stores/uiStore'
+import useUIStore from '../stores/uiStore'
 
 export default function AdvancedAnalytics() {
   const [animals, setAnimals] = useState([])

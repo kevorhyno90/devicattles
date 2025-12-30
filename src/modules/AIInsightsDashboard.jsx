@@ -1,85 +1,80 @@
+import React, { useState } from 'react';
+
+// Dummy data for demonstration
+const dummyInsights = [
+  {
+    id: 1,
+    title: 'Livestock Health Alert',
+    description: 'Detected abnormal temperature in cattle group A.',
+    impact: 'Potential disease outbreak.',
+    recommendation: 'Isolate affected animals and consult a vet.',
+    affectedCount: 5,
+    estimatedCost: 200,
+    priority: 'high',
+    category: 'health',
+  },
+      <h2 style={{ marginBottom: 24 }}>AI-Powered Insights</h2>
+      {insights.length === 0 ? (
+        <div style={{ textAlign: 'center', color: '#666', padding: 40 }}>
+          <div style={{ fontSize: 48 }}>🎉</div>
+          <p>No insights available.</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {insights.map((insight) => (
+            <div
+              key={insight.id}
+              style={{
+                background: '#fff',
+                borderRadius: 12,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                borderLeft: `4px solid ${getPriorityColor(insight.priority)}`,
+                marginBottom: 8,
+                padding: 20,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <span style={{ fontSize: 32 }}>{getCategoryIcon(insight.category)}</span>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ margin: 0 }}>{insight.title}</h3>
+                  <p style={{ margin: '4px 0', color: '#555' }}>{insight.description}</p>
+                </div>
+                <button
+                  onClick={() => setExpandedInsight(expandedInsight === insight.id ? null : insight.id)}
+                  style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}
+                  aria-label="Expand details"
+                >
+                  {expandedInsight === insight.id ? '▼' : '▶'}
+                </button>
+              </div>
+              {expandedInsight === insight.id && (
+                <div style={{ marginTop: 16, borderTop: '1px solid #eee', paddingTop: 16 }}>
+                  <div><strong>Impact:</strong> {insight.impact}</div>
+                  <div><strong>Recommendation:</strong> {insight.recommendation}</div>
+                  {insight.affectedCount > 0 && (
+                    <div><strong>Affected:</strong> {insight.affectedCount} animals</div>
+                  )}
+                  {insight.estimatedCost > 0 && (
+                    <div><strong>Estimated Cost:</strong> ${insight.estimatedCost}</div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 import React, { useState, useEffect } from 'react'
 import { exportToCSV, exportToJSON } from '../lib/exportImport'
 import { 
   generateInsights, 
   getInsightsByCategory, 
   getInsightsByPriority,
-  calculateTotalImpact,
-  markInsightActioned,
-  filterActionedInsights,
-  InsightCategory,
-  InsightPriority
+  calculateTotalImpact
 } from '../lib/aiInsights'
 
-export default function AIInsightsDashboard() {
-  const [insights, setInsights] = useState([])
-  const [filteredInsights, setFilteredInsights] = useState([])
-  const [filterCategory, setFilterCategory] = useState('all')
-  const [filterPriority, setFilterPriority] = useState('all')
-  const [showActioned, setShowActioned] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [expandedInsight, setExpandedInsight] = useState(null)
-  const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
-  const pageSize = 10;
-
-  useEffect(() => {
-    loadInsights()
-  }, [])
-
-  useEffect(() => {
-    applyFilters()
-  }, [insights, filterCategory, filterPriority, showActioned, search])
-
-  const loadInsights = () => {
-    setLoading(true)
-    
-    // Load all data
-    const animals = JSON.parse(localStorage.getItem('cattalytics:animals') || '[]')
-    const finances = JSON.parse(localStorage.getItem('cattalytics:finance') || '[]')
-    const tasks = JSON.parse(localStorage.getItem('cattalytics:tasks') || '[]')
-    const milkRecords = JSON.parse(localStorage.getItem('cattalytics:milk-yield') || '[]')
-    const crops = JSON.parse(localStorage.getItem('cattalytics:crops') || '[]')
-    
-    // Generate insights
-    const allInsights = generateInsights({
-      animals,
-      finances,
-      tasks,
-      milkRecords,
-      crops
-    })
-    
-    setInsights(allInsights)
-    setLoading(false)
-  }
-
-  const applyFilters = () => {
-    let filtered = [...insights]
-    // Filter by category
-    if (filterCategory !== 'all') {
-      filtered = getInsightsByCategory(filtered, filterCategory)
-    }
-    // Filter by priority
-    if (filterPriority !== 'all') {
-      filtered = getInsightsByPriority(filtered, filterPriority)
-    }
-    // Filter actioned insights
-    if (!showActioned) {
-      filtered = filterActionedInsights(filtered)
-    }
-    // Keyword search
-    if (search.trim()) {
-      const s = search.trim().toLowerCase();
-      filtered = filtered.filter(i =>
-        (i.title && i.title.toLowerCase().includes(s)) ||
-        (i.description && i.description.toLowerCase().includes(s)) ||
-        (i.recommendation && i.recommendation.toLowerCase().includes(s))
-      );
-    }
-    setPage(1);
-    setFilteredInsights(filtered)
-  }
 
   const handleAction = (insightId) => {
     markInsightActioned(insightId)
@@ -95,121 +90,26 @@ export default function AIInsightsDashboard() {
       info: '#6b7280'
     }
     return colors[priority] || '#6b7280'
-  }
-
-  const getCategoryIcon = (category) => {
-    const icons = {
-      health: '🏥',
-      finance: '💰',
-      productivity: '📈',
-      efficiency: '⚡',
-      prediction: '🔮',
-      alert: '⚠️',
-      optimization: '🎯',
-      trend: '📊'
-    }
-    return icons[category] || '💡'
-  }
-
-  const impact = calculateTotalImpact(filteredInsights)
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredInsights.length / pageSize) || 1;
-  const pagedInsights = filteredInsights.slice((page - 1) * pageSize, page * pageSize);
-
-  if (loading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🤖</div>
-        <div>Analyzing your farm data...</div>
-      </div>
-    )
-  }
-
-  return (
-    <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '700', color: '#111' }}>
-          🤖 AI-Powered Insights
-        </h1>
-        <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
-          Intelligent recommendations based on your farm data
-        </p>
-      </div>
-
-      {/* Impact Summary */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-        gap: '16px',
-        marginBottom: '24px'
-      }}>
-        <div style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white',
-          padding: '20px',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ fontSize: '12px', opacity: 0.9, marginBottom: '4px' }}>Total Insights</div>
-          <div style={{ fontSize: '32px', fontWeight: '700' }}>{filteredInsights.length}</div>
-        </div>
-        
-        <div style={{
-          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-          color: 'white',
-          padding: '20px',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ fontSize: '12px', opacity: 0.9, marginBottom: '4px' }}>Critical/High Priority</div>
-          <div style={{ fontSize: '32px', fontWeight: '700' }}>
-            {filteredInsights.filter(i => i.priority === 'critical' || i.priority === 'high').length}
-          </div>
-        </div>
-        
-        <div style={{
-          background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-          color: 'white',
-          padding: '20px',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ fontSize: '12px', opacity: 0.9, marginBottom: '4px' }}>Potential Savings</div>
-          <div style={{ fontSize: '32px', fontWeight: '700' }}>${impact.savings.toFixed(0)}</div>
-        </div>
-        
-        <div style={{
-          background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-          color: 'white',
-          padding: '20px',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ fontSize: '12px', opacity: 0.9, marginBottom: '4px' }}>Potential Gains</div>
-          <div style={{ fontSize: '32px', fontWeight: '700' }}>${impact.gains.toFixed(0)}</div>
-        </div>
-      </div>
-
-      {/* Filters & Actions */}
-      <div style={{ 
-        background: 'white', 
-        padding: '16px', 
-        borderRadius: '8px', 
-        marginBottom: '20px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        display: 'flex',
-        gap: '12px',
-        flexWrap: 'wrap',
-        alignItems: 'center'
-      }}>
-                {/* Search */}
-                <input
-                  type="text"
-                  placeholder="Search insights..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
+                    }}>
+                      <button
+                        onClick={() => handleAction(insight.id)}
+                        style={{
+                          padding: '8px 16px',
+                          background: '#10b981',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '500'
+                        }}
+                      >
+                        ✓ Mark as Actioned
+                      </button>
+                    </div>
+                  </div>
+                </React.Fragment>
+              )}
                   style={{
                     padding: '6px 12px',
                     border: '1px solid #ddd',

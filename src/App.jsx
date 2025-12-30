@@ -49,7 +49,7 @@ const Tasks = lazyWithRetry(() => import('./modules/Tasks'))
 const Finance = lazyWithRetry(() => import('./modules/Finance'))
 const Schedules = lazyWithRetry(() => import('./modules/Schedules'))
 const Crops = lazyWithRetry(() => import('./modules/CropsWithSubsections'))
-const Reports = lazyWithRetry(() => import('./modules/Reports'))
+import ReportModule from './components/ReportModule.jsx'
 const Inventory = lazyWithRetry(() => import('./modules/Inventory'))
 const Groups = lazyWithRetry(() => import('./modules/Groups'))
 const Pastures = lazyWithRetry(() => import('./modules/Pastures'))
@@ -74,7 +74,7 @@ const PhotoGalleryAdvanced = lazyWithRetry(() => import('./modules/PhotoGalleryA
 // const PredictiveAnalytics = lazyWithRetry(() => import('./modules/PredictiveAnalytics')) // Module removed
 // Removed for startup performance: const AdvancedBatchOps = lazyWithRetry(() => import('./modules/AdvancedBatchOps'))
 const CustomReportBuilder = lazyWithRetry(() => import('./modules/CustomReportBuilder'))
-const AIInsightsDashboard = lazyWithRetry(() => import('./modules/AIInsightsDashboard'))
+// const AIInsightsDashboard = lazyWithRetry(() => import('./modules/AIInsightsDashboard'))
 const AlertCenter = lazyWithRetry(() => import('./modules/AlertCenter'))
 const MobileSettings = lazyWithRetry(() => import('./modules/MobileSettings'))
 // const DashboardBuilder = lazyWithRetry(() => import('./modules/DashboardBuilder')) // Module removed
@@ -1100,7 +1100,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <ErrorBoundary><Reports /></ErrorBoundary>
+            <ErrorBoundary><ReportModule /></ErrorBoundary>
           </section>
         )}
 
@@ -1206,14 +1206,7 @@ function AppContent() {
           </section>
         )}
 
-        {view === 'aiinsights' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><AIInsightsDashboard /></ErrorBoundary>
-          </section>
-        )}
+        {/* AIInsightsDashboard removed */}
 
         {view === 'alertcenter' && (
           <section>

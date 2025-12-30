@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import { useUIStore } from '../stores/uiStore'
+import useUIStore from '../stores/uiStore'
 import { importFromCSV, importFromJSON, exportToCSV, exportToJSON } from '../lib/exportImport'
 
 export default function BulkOperations() {
