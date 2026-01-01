@@ -16,6 +16,7 @@ import PhotoGallery from '../components/PhotoGallery'
 import { fileToDataUrl, estimateDataUrlSize, uid } from '../lib/image'
 import { logAnimalActivity } from '../lib/activityLogger'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
+import { savePhoto, deletePhoto, getPhotosByEntity } from '../lib/photoAnalysis'
 import { generateQRCodeDataURL, printQRTag, batchPrintQRTags } from '../lib/qrcode'
 import { useDebounce } from '../lib/useDebounce'
 import { perfMonitor } from '../lib/performanceUtils'
@@ -295,13 +296,16 @@ export default function Animals() {
     setForm(f => ({ ...f, photos: (f.photos || []).filter(p => p.id !== photoId) }))
   }
 
-  function saveAnimal(e) {
+  async function saveAnimal(e) {
     e && e.preventDefault()
     const candidate = { ...form }
     if (!candidate.tag || !candidate.tag.trim()) candidate.tag = 'TAG' + (1000 + Math.floor(Math.random() * 9000))
     const eobj = validateAnimal(candidate)
     setErrors(eobj)
     if (Object.keys(eobj).length) return
+
+    const animalId = editingId || 'A-' + (1000 + Math.floor(Math.random() * 900000))
+    const groupName = groups.find(g => g.id === candidate.groupId)?.name || 'livestock'
 
     if (editingId) {
       // Update existing animal - regenerate QR code with updated data
@@ -325,7 +329,7 @@ export default function Animals() {
       logAnimalActivity('updated', `Updated animal: ${updatedAnimal.name || updatedAnimal.tag}`, updatedAnimal)
     } else {
       // Create new animal - generate ID and QR code
-      const id = 'A-' + (1000 + Math.floor(Math.random() * 900000))
+      const id = animalId
       // normalize tags: accept comma-separated string or array
       if (candidate.tags && typeof candidate.tags === 'string') candidate.tags = candidate.tags.split(',').map(t => t.trim()).filter(Boolean)
       
@@ -345,6 +349,42 @@ export default function Animals() {
       // Log activity
       logAnimalActivity('created', `Added new animal: ${newAnimal.name || newAnimal.tag}`, newAnimal)
     }
+
+    // Sync photos to gallery
+    try {
+      // Sync main photo
+      if (candidate.photo && candidate.photo.startsWith('data:image')) {
+        const blob = await fetch(candidate.photo).then(r => r.blob())
+        const file = new File([blob], `${candidate.name || candidate.tag}_main.jpg`, { type: 'image/jpeg' })
+        await savePhoto(file, {
+          category: 'animals',
+          tags: [groupName.toLowerCase(), (candidate.breed || '').toLowerCase(), (candidate.sex || '').toLowerCase()].filter(Boolean),
+          entityType: groupName.toLowerCase(),
+          entityId: animalId,
+          entityName: candidate.name || candidate.tag
+        })
+      }
+
+      // Sync additional photos array
+      if (candidate.photos && Array.isArray(candidate.photos)) {
+        for (const photo of candidate.photos) {
+          if (photo.dataUrl && photo.dataUrl.startsWith('data:image')) {
+            const blob = await fetch(photo.dataUrl).then(r => r.blob())
+            const file = new File([blob], photo.filename || `${candidate.name}_${photo.id}.jpg`, { type: 'image/jpeg' })
+            await savePhoto(file, {
+              category: 'animals',
+              tags: [groupName.toLowerCase(), (candidate.breed || '').toLowerCase(), photo.filename].filter(Boolean),
+              entityType: groupName.toLowerCase(),
+              entityId: animalId,
+              entityName: candidate.name || candidate.tag
+            })
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error syncing photos to gallery:', error)
+    }
+
     resetForm()
     setTab('list')
   }
@@ -360,6 +400,15 @@ export default function Animals() {
     if (!window.confirm('Delete animal ' + id + '?')) return
     
     setAnimals(animals.filter(a => a.id !== id))
+    
+    // Delete associated photos from gallery
+    try {
+      const groupName = groups.find(g => g.id === animal?.groupId)?.name || 'livestock'
+      const photos = getPhotosByEntity(groupName.toLowerCase(), id)
+      photos.forEach(photo => deletePhoto(photo.id))
+    } catch (error) {
+      console.error('Error deleting animal photos:', error)
+    }
     
     // Log activity
     if (animal) {

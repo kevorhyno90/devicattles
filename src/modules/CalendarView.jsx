@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { getPetTasks, getPetSchedules } from '../lib/moduleIntegration'
 
 export default function CalendarView() {
   const [view, setView] = useState('month') // month, week, day
@@ -127,26 +126,7 @@ export default function CalendarView() {
         }
       })
 
-      // Load pet tasks and schedules
-      const petTasks = getPetTasks()
-      petTasks.forEach(task => {
-        allEvents.push({
-          ...task,
-          type: 'pet-task',
-          date: task.dueDate,
-          time: '09:00',
-          color: '#8b5cf6'
-        })
-      })
-
-      const petSchedules = getPetSchedules()
-      petSchedules.forEach(schedule => {
-        allEvents.push({
-          ...schedule,
-          type: 'pet-schedule',
-          color: '#6366f1'
-        })
-      })
+      // Load schedules from other modules
 
       setEvents(allEvents)
     } catch (e) {

@@ -4,10 +4,71 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    chunkSizeWarningLimit: 1000, // Increase warning limit to 1000kB
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug']
+      }
+    },
+    cssCodeSplit: true,
+    assetsInlineLimit: 4096, // Inline assets < 4kb
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core vendor chunks - keep small
+          'react-vendor': ['react', 'react-dom'],
+          'router': ['react-router-dom'],
+          // Separate heavy libraries - load on demand only
+          'charts': ['chart.js', 'react-chartjs-2'],
+          'firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth', 'firebase/analytics', 'firebase/messaging'],
+          'state': ['zustand'],
+          // Very heavy libraries - must be separate
+          'pdf-lib': ['jspdf', 'jspdf-autotable'],
+          'docx-lib': ['docx'],
+          'html2canvas-lib': ['html2canvas'],
+          // Split components by feature for better granularity
+          'analytics-libs': ['papaparse'],
+          // Add more large libs as needed
+        },
+        // Better chunk naming for debugging
+        chunkFileNames: (chunkInfo) => {
+          // Create descriptive names for module chunks
+          const name = chunkInfo.name;
+          if (name.includes('node_modules')) {
+            return 'assets/vendor-[name]-[hash].js';
+          }
+          if (name.includes('modules')) {
+            return 'assets/module-[name]-[hash].js';
+          }
+          if (name.includes('components')) {
+            return 'assets/component-[name]-[hash].js';
+          }
+          return 'assets/[name]-[hash].js';
+        }
+      }
+    },
+    modulePreload: {
+      polyfill: true,
+      resolveDependencies: (filename, deps, { hostId, hostType }) => {
+        // Only preload critical dependencies
+        return deps.filter(dep => {
+          // Preload only react and core routing
+          return dep.includes('react') || dep.includes('router');
+        });
+      }
+    },
+    sourcemap: false
+  },
   // Set the base path for deployment to a subdirectory (GitHub Pages)
   // For Vercel, use root path
   base: '/',
-  
+
   optimizeDeps: {
     include: [
       'react', 
@@ -24,6 +85,7 @@ export default defineConfig({
     // Force optimization even on hard reload
     force: false
   },
+
 
   plugins: [
     react(),

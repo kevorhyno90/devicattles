@@ -243,6 +243,7 @@ export default function EnhancedSettings() {
     { id: 'farm', icon: '🏡', label: 'Farm Info' },
     { id: 'regional', icon: '🌍', label: 'Regional' },
     { id: 'notifications', icon: '🔔', label: 'Notifications' },
+    { id: 'integrations', icon: '🔗', label: 'Integrations' },
     { id: 'data', icon: '💾', label: 'Data' },
     { id: 'security', icon: '🔐', label: 'Security' },
     { id: 'system', icon: '⚙️', label: 'System' },
@@ -489,6 +490,7 @@ export default function EnhancedSettings() {
         {activeTab === 'farm' && <FarmInfoTab settings={settings.farmInfo} updateSection={updateSection} canEdit={canEdit} />}
         {activeTab === 'regional' && <RegionalTab settings={settings.regional} updateSection={updateSection} canEdit={canEdit} />}
         {activeTab === 'notifications' && <NotificationsTab settings={settings.notifications} updateSection={updateSection} canEdit={canEdit} />}
+        {activeTab === 'integrations' && <IntegrationsTab settings={settings.integrations} updateSection={updateSection} canEdit={canEdit} />}
         {activeTab === 'data' && <DataManagementTab settings={settings.dataManagement} updateSection={updateSection} canEdit={canEdit} />}
         {activeTab === 'security' && <SecurityTab settings={settings.security} updateSection={updateSection} canEdit={canEdit} />}
         {activeTab === 'system' && <SystemTab settings={settings.system} updateSection={updateSection} canEdit={canEdit} />}
@@ -792,6 +794,119 @@ function NotificationsTab({ settings, updateSection }) {
       </div>
     </div>
   )
+}
+
+function IntegrationsTab({ settings, updateSection, canEdit }) {
+  const [weatherApiKey, setWeatherApiKey] = React.useState(localStorage.getItem('cattalytics:weather:apikey') || '');
+  const [saved, setSaved] = React.useState(false);
+
+  const handleSaveWeatherKey = () => {
+    if (weatherApiKey.trim()) {
+      localStorage.setItem('cattalytics:weather:apikey', weatherApiKey);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } else {
+      localStorage.removeItem('cattalytics:weather:apikey');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    }
+  };
+
+  return (
+    <div style={{ display: 'grid', gap: '20px' }}>
+      <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700' }}>🔗 Third-Party Integrations</h3>
+      
+      {saved && (
+        <div style={{ background: '#dcfce7', border: '1px solid #86efac', color: '#166534', padding: '12px', borderRadius: '6px' }}>
+          ✓ Integration settings saved successfully!
+        </div>
+      )}
+
+      <div style={{ background: '#f3f4f6', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+        <h4 style={{ margin: '0 0 12px', fontSize: '1rem', fontWeight: '600' }}>🌤️ Weather Service</h4>
+        <p style={{ color: '#6b7280', margin: '0 0 12px', fontSize: '0.9rem' }}>
+          Get real-time weather data for your farm. Get a free API key from{' '}
+          <a href="https://openweathermap.org/api" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+            OpenWeatherMap
+          </a>
+        </p>
+        
+        <div style={{ marginBottom: '12px' }}>
+          <label style={{ display: 'block', fontWeight: '600', marginBottom: '6px', fontSize: '0.9rem' }}>
+            OpenWeatherMap API Key
+          </label>
+          <input
+            type="password"
+            value={weatherApiKey}
+            onChange={(e) => setWeatherApiKey(e.target.value)}
+            placeholder="Enter your API key (leave empty for demo mode)"
+            disabled={!canEdit}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '6px',
+              border: '1px solid #d1d5db',
+              fontFamily: 'monospace',
+              fontSize: '0.9rem',
+              opacity: canEdit ? 1 : 0.6,
+              cursor: canEdit ? 'text' : 'not-allowed'
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={handleSaveWeatherKey}
+            disabled={!canEdit}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              background: canEdit ? '#3b82f6' : '#d1d5db',
+              color: '#fff',
+              border: 'none',
+              cursor: canEdit ? 'pointer' : 'not-allowed',
+              fontWeight: '500',
+              fontSize: '0.9rem'
+            }}
+          >
+            💾 Save API Key
+          </button>
+          {weatherApiKey && (
+            <button
+              onClick={() => {
+                setWeatherApiKey('');
+                localStorage.removeItem('cattalytics:weather:apikey');
+              }}
+              disabled={!canEdit}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '6px',
+                background: canEdit ? '#ef4444' : '#d1d5db',
+                color: '#fff',
+                border: 'none',
+                cursor: canEdit ? 'pointer' : 'not-allowed',
+                fontWeight: '500',
+                fontSize: '0.9rem'
+              }}
+            >
+              🗑️ Clear
+            </button>
+          )}
+        </div>
+
+        <div style={{ marginTop: '12px', padding: '8px', background: '#fef3c7', borderRadius: '4px', fontSize: '0.85rem', color: '#92400e' }}>
+          📌 <strong>Tip:</strong> Without an API key, weather data will use demo mode with placeholder values.
+        </div>
+      </div>
+
+      <div style={{ background: '#f3f4f6', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+        <h4 style={{ margin: '0 0 12px', fontSize: '1rem', fontWeight: '600' }}>📦 More Integrations Coming</h4>
+        <p style={{ color: '#6b7280', margin: 0, fontSize: '0.9rem' }}>
+          Support for additional services like SMS, email, and data analytics will be added soon.
+        </p>
+      </div>
+    </div>
+  );
 }
 
 function DataManagementTab({ settings, updateSection }) {

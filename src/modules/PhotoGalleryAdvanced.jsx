@@ -7,11 +7,14 @@ import {
   getPhotosByTag,
   deletePhoto,
   updatePhotoMetadata,
+  replacePhotoImage,
   getPhotoStats,
   getAllTags,
   exportPhotoMetadata,
   compressImage
 } from '../lib/photoAnalysis'
+
+const SAMPLE_SEED_KEY = 'devinsfarm:samplePhotosAdded'
 
 /**
  * Advanced Photo Gallery with AI Tagging
@@ -27,10 +30,22 @@ export default function PhotoGalleryAdvanced() {
   const [allTags, setAllTags] = useState([])
   const [uploading, setUploading] = useState(false)
   const [viewMode, setViewMode] = useState('grid') // grid, list
+  const [hoveredPhotoId, setHoveredPhotoId] = useState(null)
+  const [editingPhoto, setEditingPhoto] = useState(null)
+  const [editForm, setEditForm] = useState({ filename: '', category: 'general', tags: '' })
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState(new Set())
+  const [bulkTags, setBulkTags] = useState('')
+  const [replacing, setReplacing] = useState(false)
   const fileInputRef = useRef(null)
+  const replaceInputRef = useRef(null)
 
   useEffect(() => {
     loadPhotos()
+    const existing = getAllPhotos()
+    if (existing.length === 0 && !localStorage.getItem(SAMPLE_SEED_KEY)) {
+      seedSamplePhotos()
+    }
   }, [])
 
   useEffect(() => {
@@ -42,6 +57,7 @@ export default function PhotoGalleryAdvanced() {
     setPhotos(allPhotos)
     setStats(getPhotoStats())
     setAllTags(getAllTags())
+    setSelectedPhotoIds(prev => new Set([...prev].filter(id => allPhotos.some(p => p.id === id))))
   }
 
   const filterPhotos = () => {
@@ -68,6 +84,31 @@ export default function PhotoGalleryAdvanced() {
     )
 
     setFilteredPhotos(filtered)
+  }
+
+  const toggleSelectionMode = () => {
+    setSelectionMode(prev => {
+      if (prev) {
+        setSelectedPhotoIds(new Set())
+      }
+      return !prev
+    })
+  }
+
+  const togglePhotoSelection = (photoId) => {
+    setSelectedPhotoIds(prev => {
+      const next = new Set(prev)
+      if (next.has(photoId)) {
+        next.delete(photoId)
+      } else {
+        next.add(photoId)
+      }
+      return next
+    })
+  }
+
+  const selectAllFiltered = () => {
+    setSelectedPhotoIds(new Set(filteredPhotos.map(p => p.id)))
   }
 
   const handleFileSelect = async (e) => {
@@ -105,6 +146,102 @@ export default function PhotoGalleryAdvanced() {
       deletePhoto(photoId)
       loadPhotos()
       setSelectedPhoto(null)
+      if (editingPhoto && editingPhoto.id === photoId) {
+        setEditingPhoto(null)
+      }
+      setSelectedPhotoIds(prev => {
+        const next = new Set(prev)
+        next.delete(photoId)
+        return next
+      })
+    }
+  }
+
+  const handleEditPhoto = (photo) => {
+    setEditingPhoto(photo)
+    setEditForm({
+      filename: photo.filename || '',
+      category: photo.category || 'general',
+      tags: photo.tags ? photo.tags.join(', ') : ''
+    })
+  }
+
+  const handleSaveEdit = () => {
+    if (!editingPhoto) return
+    const payload = {
+      filename: editForm.filename || editingPhoto.filename,
+      category: editForm.category || 'general',
+      tags: editForm.tags
+        ? editForm.tags.split(',').map(t => t.trim()).filter(Boolean)
+        : []
+    }
+    updatePhotoMetadata(editingPhoto.id, payload)
+    loadPhotos()
+    setEditingPhoto(null)
+    setSelectedPhoto(prev => (prev && prev.id === editingPhoto.id ? { ...prev, ...payload } : prev))
+  }
+
+  const handleApplyBulkTags = () => {
+    if (!bulkTags || selectedPhotoIds.size === 0) return
+    const newTags = bulkTags.split(',').map(t => t.trim()).filter(Boolean)
+    if (newTags.length === 0) return
+
+    selectedPhotoIds.forEach(id => {
+      const target = photos.find(p => p.id === id)
+      if (!target) return
+      const mergedTags = Array.from(new Set([...(target.tags || []), ...newTags]))
+      updatePhotoMetadata(id, { tags: mergedTags })
+    })
+
+    setBulkTags('')
+    setSelectionMode(false)
+    setSelectedPhotoIds(new Set())
+    loadPhotos()
+  }
+
+  const handleReplaceImage = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file || !editingPhoto) return
+
+    setReplacing(true)
+    try {
+      const updated = await replacePhotoImage(editingPhoto.id, file)
+      loadPhotos()
+      setEditingPhoto(updated)
+      setSelectedPhoto(prev => (prev && prev.id === updated.id ? updated : prev))
+      alert('Image replaced successfully')
+    } catch (error) {
+      console.error('Replace error:', error)
+      alert('Failed to replace image. Please try again.')
+    } finally {
+      if (replaceInputRef.current) {
+        replaceInputRef.current.value = ''
+      }
+      setReplacing(false)
+    }
+  }
+
+  const seedSamplePhotos = async () => {
+    const samples = [
+      { url: '/assets/sample-photo-1.svg', filename: 'sample-photo-1.svg', category: 'animals' },
+      { url: '/assets/sample-photo-2.svg', filename: 'sample-photo-2.svg', category: 'facilities' }
+    ]
+
+    setUploading(true)
+    try {
+      for (const sample of samples) {
+        const res = await fetch(sample.url)
+        if (!res.ok) continue
+        const blob = await res.blob()
+        const file = new File([blob], sample.filename, { type: blob.type || 'image/svg+xml' })
+        await savePhoto(file, { category: sample.category, tags: ['sample'] })
+      }
+      localStorage.setItem(SAMPLE_SEED_KEY, 'true')
+      loadPhotos()
+    } catch (error) {
+      console.error('Seed sample photos error:', error)
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -211,6 +348,47 @@ export default function PhotoGalleryAdvanced() {
             📥 Export Metadata
           </button>
 
+          {/* Selection mode */}
+          <button
+            onClick={toggleSelectionMode}
+            style={{
+              padding: '10px 16px',
+              background: selectionMode ? '#10b981' : '#f3f4f6',
+              color: selectionMode ? 'white' : '#1f2937',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            {selectionMode ? '✅ Done Selecting' : '🧮 Select Photos'}
+          </button>
+
+          {selectionMode && (
+            <button
+              onClick={selectAllFiltered}
+              style={{
+                padding: '10px 16px',
+                background: '#111827',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              Select Filtered ({filteredPhotos.length})
+            </button>
+          )}
+
+          {selectionMode && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6b7280', fontSize: '13px' }}>
+              {selectedPhotoIds.size} selected
+            </div>
+          )}
+
           {/* View mode */}
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
             <button
@@ -243,6 +421,25 @@ export default function PhotoGalleryAdvanced() {
             </button>
           </div>
         </div>
+
+        {selectionMode && (
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
+            <input
+              type="text"
+              value={bulkTags}
+              onChange={(e) => setBulkTags(e.target.value)}
+              placeholder="Add tags to selected (comma separated)"
+              style={{ flex: 1, minWidth: '240px', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px' }}
+            />
+            <button
+              onClick={handleApplyBulkTags}
+              disabled={!bulkTags || selectedPhotoIds.size === 0}
+              style={{ padding: '10px 16px', background: (!bulkTags || selectedPhotoIds.size === 0) ? '#9ca3af' : '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: (!bulkTags || selectedPhotoIds.size === 0) ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '600' }}
+            >
+              Apply Tags
+            </button>
+          </div>
+        )}
 
         {/* Search */}
         <div style={{ marginBottom: '16px' }}>
@@ -334,21 +531,23 @@ export default function PhotoGalleryAdvanced() {
       ) : viewMode === 'grid' ? (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))',
           gap: '16px'
         }}>
           {filteredPhotos.map(photo => (
             <div
               key={photo.id}
-              onClick={() => setSelectedPhoto(photo)}
+              onClick={() => selectionMode ? togglePhotoSelection(photo.id) : setSelectedPhoto(photo)}
+              onMouseEnter={() => setHoveredPhotoId(photo.id)}
+              onMouseLeave={() => setHoveredPhotoId(null)}
               style={{
                 background: 'white',
                 borderRadius: '8px',
                 overflow: 'hidden',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                 cursor: 'pointer',
-                transition: 'transform 0.2s',
-                ':hover': { transform: 'scale(1.05)' }
+                transition: 'transform 0.15s',
+                position: 'relative'
               }}
             >
               <img
@@ -356,41 +555,71 @@ export default function PhotoGalleryAdvanced() {
                 alt={photo.filename}
                 style={{
                   width: '100%',
-                  height: '200px',
+                  height: '150px',
                   objectFit: 'cover'
                 }}
               />
-              <div style={{ padding: '12px' }}>
-                <div style={{ fontSize: '13px', fontWeight: '500', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {selectionMode && (
+                <input
+                  type="checkbox"
+                  checked={selectedPhotoIds.has(photo.id)}
+                  onChange={(e) => { e.stopPropagation(); togglePhotoSelection(photo.id) }}
+                  style={{ position: 'absolute', top: '10px', left: '10px', width: '16px', height: '16px' }}
+                />
+              )}
+              <div style={{ padding: '10px' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {photo.filename}
                 </div>
-                <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '8px', textTransform: 'capitalize' }}>
+                <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'capitalize' }}>
                   {photo.category}
                 </div>
-                {photo.tags && photo.tags.length > 0 && (
-                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                    {photo.tags.slice(0, 3).map(tag => (
-                      <span
-                        key={tag}
-                        style={{
-                          fontSize: '10px',
-                          padding: '2px 6px',
-                          background: '#f3f4f6',
-                          borderRadius: '3px',
-                          color: '#6b7280'
-                        }}
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                    {photo.tags.length > 3 && (
-                      <span style={{ fontSize: '10px', color: '#6b7280' }}>
-                        +{photo.tags.length - 3}
-                      </span>
+              </div>
+
+              {hoveredPhotoId === photo.id && (
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.6)',
+                  color: 'white',
+                  padding: '10px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  fontSize: '11px'
+                }}>
+                  <div>
+                    <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{photo.filename}</div>
+                    <div style={{ opacity: 0.9 }}>{photo.category}</div>
+                    <div style={{ opacity: 0.9 }}>{photo.analysis?.width}×{photo.analysis?.height}px · {(photo.analysis?.size / 1024).toFixed(0)} KB</div>
+                    {photo.metadata?.uploadDate && (
+                      <div style={{ opacity: 0.85 }}>Uploaded {new Date(photo.metadata.uploadDate).toLocaleDateString()}</div>
                     )}
                   </div>
-                )}
-              </div>
+                  {photo.tags && photo.tags.length > 0 && (
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                      {photo.tags.slice(0, 4).map(tag => (
+                        <span key={tag} style={{ background: 'rgba(255,255,255,0.15)', padding: '3px 6px', borderRadius: '4px' }}>#{tag}</span>
+                      ))}
+                      {photo.tags.length > 4 && <span>+{photo.tags.length - 4}</span>}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleEditPhoto(photo) }}
+                      style={{ padding: '6px 10px', background: 'rgba(255,255,255,0.15)', color: 'white', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeletePhoto(photo.id) }}
+                      style={{ padding: '6px 10px', background: 'rgba(239,68,68,0.85)', color: 'white', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -399,18 +628,28 @@ export default function PhotoGalleryAdvanced() {
           {filteredPhotos.map((photo, index) => (
             <div
               key={photo.id}
-              onClick={() => setSelectedPhoto(photo)}
+              onClick={() => selectionMode ? togglePhotoSelection(photo.id) : setSelectedPhoto(photo)}
               style={{
-                display: 'flex',
-                gap: '16px',
+                display: 'grid',
+                gridTemplateColumns: selectionMode ? 'auto auto 1fr auto' : 'auto 1fr auto',
+                gap: '12px',
                 padding: '16px',
                 borderBottom: index < filteredPhotos.length - 1 ? '1px solid #e5e7eb' : 'none',
                 cursor: 'pointer',
-                transition: 'background 0.2s'
+                transition: 'background 0.2s',
+                alignItems: 'center'
               }}
               onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
             >
+              {selectionMode && (
+                <input
+                  type="checkbox"
+                  checked={selectedPhotoIds.has(photo.id)}
+                  onChange={(e) => { e.stopPropagation(); togglePhotoSelection(photo.id) }}
+                  style={{ width: '16px', height: '16px' }}
+                />
+              )}
               <img
                 src={photo.base64}
                 alt={photo.filename}
@@ -421,15 +660,13 @@ export default function PhotoGalleryAdvanced() {
                   borderRadius: '6px'
                 }}
               />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>
-                  {photo.filename}
-                </div>
-                <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ fontSize: '14px', fontWeight: '500' }}>{photo.filename}</div>
+                <div style={{ fontSize: '12px', color: '#6b7280' }}>
                   {photo.analysis.width} × {photo.analysis.height} • {(photo.analysis.size / 1024).toFixed(0)} KB • {photo.category}
                 </div>
                 {photo.tags && photo.tags.length > 0 && (
-                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {photo.tags.map(tag => (
                       <span
                         key={tag}
@@ -447,8 +684,24 @@ export default function PhotoGalleryAdvanced() {
                   </div>
                 )}
               </div>
-              <div style={{ fontSize: '11px', color: '#6b7280' }}>
-                {new Date(photo.metadata.uploadDate).toLocaleDateString()}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                  {new Date(photo.metadata.uploadDate).toLocaleDateString()}
+                </div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleEditPhoto(photo) }}
+                    style={{ padding: '6px 10px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}
+                  >
+                    ✏️ Edit
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDeletePhoto(photo.id) }}
+                    style={{ padding: '6px 10px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -509,6 +762,20 @@ export default function PhotoGalleryAdvanced() {
                   }}
                 >
                   🗑️ Delete
+                </button>
+                <button
+                  onClick={() => handleEditPhoto(selectedPhoto)}
+                  style={{
+                    padding: '6px 12px',
+                    background: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '13px'
+                  }}
+                >
+                  ✏️ Edit
                 </button>
                 <button
                   onClick={() => setSelectedPhoto(null)}
@@ -607,6 +874,102 @@ export default function PhotoGalleryAdvanced() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {editingPhoto && (
+        <div
+          onClick={() => setEditingPhoto(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1100,
+            padding: '20px'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'white',
+              borderRadius: '10px',
+              padding: '20px',
+              width: '100%',
+              maxWidth: '480px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.15)'
+            }}
+          >
+            <h3 style={{ margin: '0 0 12px', fontSize: '18px' }}>Edit Photo</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', marginBottom: '12px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Filename</label>
+                <input
+                  type="text"
+                  value={editForm.filename}
+                  onChange={(e) => setEditForm({ ...editForm, filename: e.target.value })}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Category</label>
+                <select
+                  value={editForm.category}
+                  onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', background: 'white' }}
+                >
+                  {categories.filter(c => c !== 'all').map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Tags (comma separated)</label>
+                <input
+                  type="text"
+                  value={editForm.tags}
+                  onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })}
+                  placeholder="e.g., goat, pasture, vaccine"
+                  style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }}
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '12px' }}>
+              <button
+                onClick={() => replaceInputRef.current?.click()}
+                disabled={replacing}
+                style={{ padding: '10px 14px', background: replacing ? '#9ca3af' : '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: replacing ? 'not-allowed' : 'pointer' }}
+              >
+                {replacing ? 'Replacing…' : '♻️ Replace Image'}
+              </button>
+              <span style={{ fontSize: '12px', color: '#6b7280' }}>Re-run analysis and keep existing tags.</span>
+              <input
+                ref={replaceInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleReplaceImage}
+                style={{ display: 'none' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setEditingPhoto(null)}
+                style={{ padding: '10px 14px', background: '#e5e7eb', color: '#1f2937', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
+              >
+                ✖️ Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                style={{ padding: '10px 14px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                💾 Save
+              </button>
             </div>
           </div>
         </div>

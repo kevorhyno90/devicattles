@@ -193,6 +193,50 @@ export default function BackupRestore() {
               <div className="stat-value">{stats.treatments}</div>
               <div className="stat-label">Treatments</div>
             </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.crops || 0}</div>
+              <div className="stat-label">Crops</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.equipment || 0}</div>
+              <div className="stat-label">Equipment</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.flocks || 0}</div>
+              <div className="stat-label">Poultry Flocks</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.poultry || 0}</div>
+              <div className="stat-label">Poultry Records</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.egg_production || 0}</div>
+              <div className="stat-label">Egg Production</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.calfManagement || 0}</div>
+              <div className="stat-label">Calves</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.goats || 0}</div>
+              <div className="stat-label">Goats</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.kids || 0}</div>
+              <div className="stat-label">Kids</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.pastures || 0}</div>
+              <div className="stat-label">Pastures</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.photos || 0}</div>
+              <div className="stat-label">Photos</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.notes || 0}</div>
+              <div className="stat-label">Notes</div>
+            </div>
           </div>
           {stats.lastBackup && (
             <p className="last-backup">
@@ -210,15 +254,23 @@ export default function BackupRestore() {
         <div className="backup-info">
           <h4>What's included in the backup:</h4>
           <ul>
-            <li>✅ All animal records and history</li>
-            <li>✅ Financial transactions</li>
-            <li>✅ Inventory items</li>
-            <li>✅ Tasks and schedules</li>
-            <li>✅ Crops and yields</li>
-            <li>✅ Treatments and breeding records</li>
-            <li>✅ Feed records and measurements</li>
-            <li>✅ Groups, pastures, and equipment</li>
-            <li>✅ All settings and preferences</li>
+            <li>✅ All animal records (livestock, goats, kids, calves)</li>
+            <li>✅ Poultry management (flocks, birds, egg production, health records)</li>
+            <li>✅ Crop records and field data</li>
+            <li>✅ Financial transactions and records</li>
+            <li>✅ Inventory items and equipment</li>
+            <li>✅ Tasks, schedules, and reminders</li>
+            <li>✅ Health records (treatments, vaccinations, breeding)</li>
+            <li>✅ Feed records (diets, rations, feeding schedules)</li>
+            <li>✅ Milk yield records</li>
+            <li>✅ Measurements and monitoring data</li>
+            <li>✅ Notifications and alert rules</li>
+            <li>✅ Activity logs and history</li>
+            <li>✅ Photo gallery and media</li>
+            <li>✅ Notes and documents</li>
+            <li>✅ Land management (groups, pastures)</li>
+            <li>✅ All settings and preferences (currency, language, UI, notifications)</li>
+            <li>✅ User accounts and access control</li>
           </ul>
         </div>
         <button onClick={handleCreateBackup} className="btn-backup">

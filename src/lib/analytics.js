@@ -470,7 +470,6 @@ export function getDashboardData() {
     bsf: getBSFStats(),
     // Animal submodules
     canines: getCanineStats(),
-    pets: getPetStats(),
     calves: getCalfStats(),
     // Resource management
     pastures: getPastureStats(),
@@ -645,30 +644,6 @@ export function getCanineStats() {
     return { total: 0, active: 0, byPurpose: {} }
   }
 }
-
-/**
- * Get pet statistics
- */
-export function getPetStats() {
-  try {
-    const pets = loadData('pets', [])
-    const byType = {}
-    
-    pets.forEach(p => {
-      const type = p.species || p.type || 'Unknown'
-      byType[type] = (byType[type] || 0) + 1
-    })
-    
-    return {
-      total: pets.length,
-      byType
-    }
-  } catch (error) {
-    console.error('Error getting pet stats:', error)
-    return { total: 0, byType: {} }
-  }
-}
-
 /**
  * Get calf statistics
  */

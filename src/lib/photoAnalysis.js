@@ -281,7 +281,14 @@ export function updatePhotoMetadata(photoId, updates) {
   
   if (photo) {
     photo.metadata = { ...photo.metadata, ...updates.metadata }
-    photo.tags = updates.tags || photo.tags
+    if (updates.filename) {
+      photo.filename = updates.filename
+    }
+    if (Array.isArray(updates.tags)) {
+      photo.tags = updates.tags
+    } else if (updates.tags) {
+      photo.tags = updates.tags
+    }
     photo.category = updates.category || photo.category
     
     localStorage.setItem('devinsfarm:photos', JSON.stringify(photos))
@@ -289,6 +296,39 @@ export function updatePhotoMetadata(photoId, updates) {
   }
   
   return null
+}
+
+/**
+ * Replace the underlying image file while preserving metadata
+ */
+export async function replacePhotoImage(photoId, newFile) {
+  const photos = getAllPhotos()
+  const photoIndex = photos.findIndex(p => p.id === photoId)
+
+  if (photoIndex === -1) return null
+
+  // Compress and analyze the new image for consistency with uploads
+  const compressed = await compressImage(newFile, 1200, 0.8)
+  const analysis = await analyzeImage(compressed)
+  const base64 = await fileToBase64(compressed)
+
+  const existingPhoto = photos[photoIndex]
+  const mergedTags = Array.from(new Set([...(analysis.autoTags || []), ...(existingPhoto.tags || [])]))
+
+  photos[photoIndex] = {
+    ...existingPhoto,
+    base64,
+    analysis,
+    filename: newFile.name,
+    tags: mergedTags,
+    metadata: {
+      ...existingPhoto.metadata,
+      replacedAt: new Date().toISOString()
+    }
+  }
+
+  localStorage.setItem('devinsfarm:photos', JSON.stringify(photos))
+  return photos[photoIndex]
 }
 
 /**

@@ -84,13 +84,12 @@ export async function getCurrentWeather(location, apiKey = null) {
   try {
     // Use OpenWeatherMap API
     const baseUrl = 'https://api.openweathermap.org/data/2.5/weather'
-    // Priority: passed apiKey > env variable > localStorage > demo
-    const key = apiKey || import.meta.env.VITE_WEATHER_API_KEY || localStorage.getItem('cattalytics:weather:apikey') || 'demo'
+    // Priority: passed apiKey > localStorage > hardcoded > env variable
+    const key = apiKey || localStorage.getItem('cattalytics:weather:apikey') || 'e8b82472e1785fe426645d7d39359924' || import.meta.env.VITE_WEATHER_API_KEY
     let url
     
-    // Skip if using demo key (will fail with 401), return mock data instead
-    if (key === 'demo') {
-      console.info('⚠️ Weather: Using demo mode (use a real API key for live data)');
+    // If no valid API key, return mock data
+    if (!key || key === 'demo') {
       return getMockWeatherData(location);
     }
     if (location.includes(',')) {
@@ -193,9 +192,13 @@ export async function getCurrentWeather(location, apiKey = null) {
 export async function getWeatherForecast(location, apiKey = null) {
   try {
     const baseUrl = 'https://api.openweathermap.org/data/2.5/forecast'
-    // Priority: passed apiKey > env variable > localStorage > demo
-    const key = apiKey || import.meta.env.VITE_WEATHER_API_KEY || localStorage.getItem('cattalytics:weather:apikey') || 'demo'
+    // Priority: passed apiKey > localStorage > hardcoded > env variable
+    const key = apiKey || localStorage.getItem('cattalytics:weather:apikey') || 'e8b82472e1785fe426645d7d39359924' || import.meta.env.VITE_WEATHER_API_KEY
     
+    // If no valid API key, return empty forecast
+    if (!key || key === 'demo') {
+      return { dailyForecasts: {} }
+    }
     let url
     if (location.includes(',')) {
       const [part1, part2] = location.split(',')

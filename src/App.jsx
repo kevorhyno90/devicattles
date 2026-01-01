@@ -1,23 +1,4 @@
 import React, { useState, useEffect, lazy, Suspense, useContext } from 'react'
-// Defer heavy Firebase imports until after initial render
-// import { requestNotificationPermission, listenForMessages } from './lib/firebaseMessaging'
-import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme'
-// Lazy load heavy components to reduce initial bundle
-const OfflineIndicator = lazy(() => import('./components/OfflineIndicator'))
-const InAppNotification = lazy(() => import('./components/InAppNotification'))
-const BottomNav = lazy(() => import('./components/BottomNav'))
-const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsHelp'))
-const GlobalSearch = lazy(() => import('./components/GlobalSearch'))
-import { AppViewProvider, AppViewContext } from './lib/AppViewContext.jsx';
-import SwipeHandler from './components/SwipeHandler'
-import ErrorBoundary from './components/ErrorBoundary'
-// Defer DataLayer and error handler to avoid heavy initialization
-// import { DataLayer } from './lib/dataLayer'
-// import { initGlobalErrorHandler } from './lib/errorHandler'
-import ToastContainer from './components/ToastContainer'
-// Lazy load stores to improve initial load time
-// import { useAnimalStore, useCropStore, useFinanceStore, useTaskStore, useInventoryStore, useUIStore } from './stores'
-
 // Helper function to retry failed lazy loads (important for Android Chrome)
 const lazyWithRetry = (importFunc) => {
   return lazy(() => {
@@ -37,6 +18,27 @@ const lazyWithRetry = (importFunc) => {
     })
   })
 }
+// Defer heavy Firebase imports until after initial render
+// import { requestNotificationPermission, listenForMessages } from './lib/firebaseMessaging'
+import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme'
+// Lazy load heavy components to reduce initial bundle
+const OfflineIndicator = lazyWithRetry(() => import('./components/OfflineIndicator'))
+const InAppNotification = lazyWithRetry(() => import('./components/InAppNotification'))
+const BottomNav = lazyWithRetry(() => import('./components/BottomNav'))
+const KeyboardShortcutsHelp = lazyWithRetry(() => import('./components/KeyboardShortcutsHelp'))
+const GlobalSearch = lazyWithRetry(() => import('./components/GlobalSearch'))
+import { AppViewProvider, AppViewContext } from './lib/AppViewContext.jsx';
+import SwipeHandler from './components/SwipeHandler'
+import ErrorBoundary from './components/ErrorBoundary'
+// Defer DataLayer and error handler to avoid heavy initialization
+// import { DataLayer } from './lib/dataLayer'
+// import { initGlobalErrorHandler } from './lib/errorHandler'
+import ToastContainer from './components/ToastContainer'
+// Lazy load stores to improve initial load time
+// import { useAnimalStore, useCropStore, useFinanceStore, useTaskStore, useInventoryStore, useUIStore } from './stores'
+
+const GoatModule = lazyWithRetry(() => import('./modules/GoatModule'))
+const Notes = lazyWithRetry(() => import('./modules/Notes'))
 
 
 
@@ -62,7 +64,6 @@ const AdvancedAnalytics = lazyWithRetry(() => import('./modules/AdvancedAnalytic
 const EnhancedSettings = lazyWithRetry(() => import('./modules/EnhancedSettings'))
 const BulkOperations = lazyWithRetry(() => import('./modules/BulkOperations'))
 const AdditionalReports = lazyWithRetry(() => import('./modules/AdditionalReports'))
-const PetManagement = lazyWithRetry(() => import('./modules/PetManagement'))
 const CanineManagement = lazyWithRetry(() => import('./modules/CanineManagement'))
 const CalendarView = lazyWithRetry(() => import('./modules/CalendarView'))
 const SmartAlerts = lazyWithRetry(() => import('./modules/SmartAlerts'))
@@ -207,6 +208,7 @@ function AppContent() {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  // Add GoatModule view
   
   // UI branding/settings - must be declared before any conditional returns
   const SETTINGS_KEY = 'devinsfarm:ui:settings'
@@ -756,6 +758,21 @@ function AppContent() {
             📸 Photos
           </button>
 
+            <button 
+              className={view==='notes'? 'active':''} 
+              onClick={()=>setView('notes')}
+              style={{
+                background: view==='notes' ? '#10b981' : '#f3f4f6',
+                color: view==='notes' ? '#fff' : '#1f2937',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >🗒️ Notes</button>
+
           <button 
             className={view==='animals'? 'active':''} 
             onClick={()=>setView('animals')}
@@ -770,6 +787,20 @@ function AppContent() {
               fontWeight: '500'
             }}
           >🐄 Livestock</button>
+          <button
+            className={view==='goats' ? 'active' : ''}
+            onClick={() => setView('goats')}
+            style={{
+              background: view==='goats' ? '#059669' : '#f3f4f6',
+              color: view==='goats' ? '#fff' : '#1f2937',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >🐐 Goats</button>
           <button 
             className={view==='pastures'? 'active':''} 
             onClick={()=>setView('pastures')}
@@ -980,9 +1011,6 @@ function AppContent() {
                   🐄 Livestock
                 </button>
                 {/* Poultry button removed */}
-                <button onClick={() => setView('pets')} style={{ padding: '8px 16px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                  🐾 Pets
-                </button>
                 <button onClick={() => setView('canines')} style={{ padding: '8px 16px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
                   🐕 Canines
                 </button>
@@ -999,12 +1027,12 @@ function AppContent() {
             </section>
           )}
 
-          {view === 'pets' && (
+          {view === 'goats' && (
             <section>
-              <button onClick={() => setView('animals')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                ← Back to Livestock
+              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                ← Back to Dashboard
               </button>
-              <ErrorBoundary><PetManagement /></ErrorBoundary>
+              <ErrorBoundary><GoatModule /></ErrorBoundary>
             </section>
           )}
 
@@ -1048,6 +1076,15 @@ function AppContent() {
 
 
           {/* Community and Knowledge Base views removed */}
+
+          {view === 'notes' && (
+            <section>
+              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                ← Back to Dashboard
+              </button>
+              <ErrorBoundary><Notes /></ErrorBoundary>
+            </section>
+          )}
 
           {view === 'tasks' && (
             <section>

@@ -935,18 +935,6 @@ export default function Dashboard({ onNavigate }) {
             </div>
           )}
           
-          {/* Pets */}
-          {pets && pets.total > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fdba74', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('pets')}>
-              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🐾</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Pets</div>
-              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#ea580c' }}>{pets.total}</div>
-              <div style={{ fontSize: '11px', color: '#ea580c' }}>
-                {Object.keys(pets.byType).length} species
-              </div>
-            </div>
-          )}
-          
           {/* Calves */}
           {calves && calves.total > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fca5a5', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('calves')}>

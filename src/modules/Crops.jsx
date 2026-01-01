@@ -3,6 +3,7 @@ import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON
 import { useDebounce } from '../lib/useDebounce'
 import VirtualizedList from '../components/VirtualizedList'
 import { logCropActivity } from '../lib/activityLogger'
+import { savePhoto, deletePhoto, getPhotosByEntity } from '../lib/photoAnalysis'
 
 const SAMPLE = [
   { id: 'C-001', name: 'Premium Alfalfa', variety: 'Vernal', planted: '2025-03-15', plantDate: '2025-03-15', expectedHarvest: '2025-07-15', area: 5.2, field: 'North Field A', status: 'Growing', soilType: 'Clay Loam', irrigationType: 'Sprinkler', seedCost: 450, actualHarvest: '', notes: '', healthScore: 90, stressLevel: 'Low', diseaseRisk: 'Low', pestPressure: 'Low', treatments: [], yieldRecords: [], soilTests: [], irrigationRecords: [], pestManagement: [], fieldOperations: [], healthMonitoring: [], scoutingReports: [], diseaseMonitoring: [], weatherData: [], complianceRecords: [], sustainabilityMetrics: {}, riskAssessment: {}, gpsCoordinates: { lat: 40.7128, lng: -74.0060 }, seedingRate: 25, rowSpacing: 7, plantingDepth: 0.5, cultivar: 'Vernal', certificationLevel: 'Certified Organic', marketDestination: 'Local Dairy Farms', contractPrice: 0, insuranceCoverage: true },
@@ -169,7 +170,7 @@ export default function Crops(){
     name: '', variety: '', field: '', area: '', planted: '', expectedHarvest: '',
     soilType: 'Loam', irrigationType: 'Sprinkler', status: 'Planned', certificationLevel: 'Conventional',
     seedingRate: '', rowSpacing: '', plantingDepth: '', marketDestination: '', contractPrice: '',
-    insuranceCoverage: false, gpsLat: '', gpsLng: ''
+    insuranceCoverage: false, gpsLat: '', gpsLng: '', photos: []
   })
 
   useEffect(()=>{
@@ -192,7 +193,7 @@ export default function Crops(){
     }
   }, [items])
 
-  function add(){
+  async function add(){
     if(!formData.name.trim() || !formData.area) return
     const id = 'C-' + Math.floor(1000 + Math.random()*9000)
     const newCrop = {
@@ -219,11 +220,33 @@ export default function Crops(){
     }
     setItems([...items, newCrop])
     logCropActivity('created', `Planted ${newCrop.name} in ${newCrop.field} (${newCrop.area} acres)`, newCrop)
+
+    // Sync photos to gallery
+    try {
+      if (formData.photos && Array.isArray(formData.photos)) {
+        for (const photoData of formData.photos) {
+          if (photoData && photoData.startsWith('data:image')) {
+            const blob = await fetch(photoData).then(r => r.blob())
+            const file = new File([blob], `${newCrop.name}_${newCrop.field}.jpg`, { type: 'image/jpeg' })
+            await savePhoto(file, {
+              category: 'crops',
+              tags: [newCrop.name.toLowerCase(), newCrop.variety.toLowerCase(), newCrop.field.toLowerCase(), newCrop.status.toLowerCase()].filter(Boolean),
+              entityType: 'crop',
+              entityId: id,
+              entityName: `${newCrop.name} - ${newCrop.field}`
+            })
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error syncing crop photos to gallery:', error)
+    }
+
     setFormData({ 
       name: '', variety: '', field: '', area: '', planted: '', expectedHarvest: '',
       soilType: 'Loam', irrigationType: 'Sprinkler', status: 'Planned', certificationLevel: 'Conventional',
       seedingRate: '', rowSpacing: '', plantingDepth: '', marketDestination: '', contractPrice: '',
-      insuranceCoverage: false, gpsLat: '', gpsLng: ''
+      insuranceCoverage: false, gpsLat: '', gpsLng: '', photos: []
     })
     setShowAddForm(false)
   }
@@ -232,6 +255,15 @@ export default function Crops(){
     if(!confirm('Delete crop '+id+'?')) return
     const crop = items.find(i => i.id === id)
     setItems(items.filter(i=>i.id!==id))
+
+    // Delete associated photos from gallery
+    try {
+      const photos = getPhotosByEntity('crop', id)
+      photos.forEach(photo => deletePhoto(photo.id))
+    } catch (error) {
+      console.error('Error deleting crop photos:', error)
+    }
+
     if(crop) {
       logCropActivity('deleted', `Removed crop: ${crop.name} from ${crop.field}`, crop)
     }

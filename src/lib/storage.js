@@ -28,18 +28,10 @@ const STORES = {
   poultry_vaccination: 'poultry_vaccination',
   poultry_health: 'poultry_health',
   poultry_treatment: 'poultry_treatment',
-  // Added for calf management
+  // Calf management stores
   'calf:management': 'calf:management',
   'calf:feeding': 'calf:feeding',
-  'calf:health': 'calf:health',
-  // Ensure stores exist for normalized keys
-  'calf:management': 'calf:management',
-  'calf:feeding': 'calf:feeding',
-  'calf:health': 'calf:health',
-  // Add full DataLayer keys for compatibility
-  'cattalytics:calf:management': 'cattalytics:calf:management',
-  'cattalytics:calf:feeding': 'cattalytics:calf:feeding',
-  'cattalytics:calf:health': 'cattalytics:calf:health'
+  'calf:health': 'calf:health'
 }
 
 let db = null
@@ -49,9 +41,7 @@ let useIndexedDB = true
 // DataLayer passes keys like 'cattalytics:animals'.
 // IndexedDB stores are created without the prefix (e.g., 'animals').
 function normalizeStoreName(storeName) {
-  // Always return the full key after 'cattalytics:' for compatibility
   if (typeof storeName === 'string' && storeName.startsWith('cattalytics:')) {
-    // For keys like 'cattalytics:calf:management', return 'calf:management'
     return storeName.replace(/^cattalytics:/, '');
   }
   return storeName;
@@ -85,24 +75,11 @@ async function initDB() {
     request.onupgradeneeded = (event) => {
       const database = event.target.result
 
-      // Create stores for both normalized and full keys (with and without 'cattalytics:' prefix)
-      const allStoreNames = Array.from(
-        new Set(
-          Object.values(STORES)
-            .reduce((arr, name) => {
-              if (typeof name === 'string') {
-                arr.push(name)
-                if (name.startsWith('cattalytics:')) {
-                  arr.push(name.replace(/^cattalytics:/, ''))
-                }
-              }
-              return arr
-            }, [])
-        )
-      )
-      allStoreNames.forEach(storeName => {
-        if (!database.objectStoreNames.contains(storeName)) {
-          database.createObjectStore(storeName, { keyPath: 'id' })
+      // Create all defined stores
+      Object.keys(STORES).forEach(storeName => {
+        const normalizedName = normalizeStoreName(storeName)
+        if (!database.objectStoreNames.contains(normalizedName)) {
+          database.createObjectStore(normalizedName, { keyPath: 'id' })
         }
       })
     }
@@ -166,18 +143,28 @@ async function saveToIndexedDB(storeName, data) {
   if (!db) throw new Error('Database not initialized')
 
   return new Promise((resolve, reject) => {
-    const idbStore = normalizeStoreName(storeName)
-    const transaction = db.transaction([idbStore], 'readwrite')
-    const store = transaction.objectStore(idbStore)
+    try {
+      const idbStore = normalizeStoreName(storeName)
+      
+      // Check if store exists
+      if (!db.objectStoreNames.contains(idbStore)) {
+        throw new Error(`Store "${idbStore}" not found in IndexedDB`)
+      }
+      
+      const transaction = db.transaction([idbStore], 'readwrite')
+      const store = transaction.objectStore(idbStore)
 
-    // Clear existing data
-    store.clear()
+      // Clear existing data
+      store.clear()
 
-    // Add all items
-    data.forEach(item => store.add(item))
+      // Add all items
+      data.forEach(item => store.add(item))
 
-    transaction.oncomplete = () => resolve(true)
-    transaction.onerror = () => reject(transaction.error)
+      transaction.oncomplete = () => resolve(true)
+      transaction.onerror = () => reject(transaction.error)
+    } catch (err) {
+      reject(err)
+    }
   })
 }
 
@@ -185,13 +172,23 @@ async function loadFromIndexedDB(storeName) {
   if (!db) throw new Error('Database not initialized')
 
   return new Promise((resolve, reject) => {
-    const idbStore = normalizeStoreName(storeName)
-    const transaction = db.transaction([idbStore], 'readonly')
-    const store = transaction.objectStore(idbStore)
-    const request = store.getAll()
+    try {
+      const idbStore = normalizeStoreName(storeName)
+      
+      // Check if store exists before attempting transaction
+      if (!db.objectStoreNames.contains(idbStore)) {
+        throw new Error(`Store "${idbStore}" not found in IndexedDB`)
+      }
+      
+      const transaction = db.transaction([idbStore], 'readonly')
+      const store = transaction.objectStore(idbStore)
+      const request = store.getAll()
 
-    request.onsuccess = () => resolve(request.result || [])
-    request.onerror = () => reject(request.error)
+      request.onsuccess = () => resolve(request.result || [])
+      request.onerror = () => reject(request.error)
+    } catch (err) {
+      reject(err)
+    }
   })
 }
 
