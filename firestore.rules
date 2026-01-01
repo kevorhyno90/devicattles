@@ -12,5 +12,19 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null;
     }
+    
+    // Farm data collections - allow authenticated users
+    match /{collection}/{document=**} {
+      allow read, write: if request.auth != null &&
+        collection in [
+          'animals', 'crops', 'tasks', 'finance', 'inventory', 'equipment',
+          'treatments', 'breeding', 'feeding', 'diets', 'rations', 'milkYield',
+          'measurements', 'flocks', 'poultry', 'egg_production', 'poultry_vaccination',
+          'poultry_health', 'poultry_treatment', 'calfManagement', 'calfFeeding',
+          'calfHealth', 'goats', 'kids', 'groups', 'pastures', 'notifications',
+          'alert_rules', 'activities', 'photos', 'notes', 'transactions',
+          'calf:management', 'calf:feeding', 'calf:health'
+        ];
+    }
   }
 }
