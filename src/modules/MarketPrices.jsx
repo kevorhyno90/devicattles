@@ -8,29 +8,6 @@ import {
   COMMODITY_CATEGORIES
 } from '../lib/marketPrices'
 import { Line } from 'react-chartjs-2'
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js'
-
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-)
 
 export default function MarketPrices() {
   const [prices, setPrices] = useState({})
@@ -49,6 +26,29 @@ export default function MarketPrices() {
     // Auto-refresh every 4 hours
     const interval = setInterval(loadPrices, 4 * 60 * 60 * 1000)
     return () => clearInterval(interval)
+  }, [])
+
+  // register chart.js components lazily to avoid bundling chart.js into main
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const ChartJS = await import('chart.js')
+        ChartJS.Chart.register(
+          ChartJS.CategoryScale,
+          ChartJS.LinearScale,
+          ChartJS.PointElement,
+          ChartJS.LineElement,
+          ChartJS.Title,
+          ChartJS.Tooltip,
+          ChartJS.Legend,
+          ChartJS.Filler
+        )
+      } catch (e) {
+        if (mounted) console.warn('Failed to load chart.js dynamically', e)
+      }
+    })()
+    return () => { mounted = false }
   }, [])
   
   useEffect(() => {

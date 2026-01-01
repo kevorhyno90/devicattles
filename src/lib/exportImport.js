@@ -1,8 +1,10 @@
-// Export to Word (docx)
-import { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun } from 'docx'
+// Export to Word (docx) - loaded dynamically to avoid large initial bundle
 
 export async function exportToDocx(data, filename = 'export.docx', title = 'Export Report', headers = null) {
   try {
+    // load docx lazily
+    const docx = await import('docx')
+    const { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun } = docx
     if (!data || data.length === 0) {
       alert('No data to export')
       return

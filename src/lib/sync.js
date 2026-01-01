@@ -119,7 +119,15 @@ export async function syncToFirebase(collectionName, data) {
     const batch = writeBatch(db)
     const collectionRef = collection(db, userPath, collectionName)
 
-    for (const item of data) {
+    // Normalize `data` to an iterable array. Some callers save objects
+    // (e.g., keyed maps) into localStorage — handle those gracefully.
+    let items = []
+    if (data == null) items = []
+    else if (Array.isArray(data)) items = data
+    else if (typeof data === 'object') items = Object.values(data)
+    else items = [data]
+
+    for (const item of items) {
       if (!item.id) {
         console.warn(`Skipping item in ${collectionName} without an ID`)
         continue
@@ -402,8 +410,13 @@ export function setupAutoSync() {
     if (key.startsWith('devinsfarm:') || key.startsWith('cattalytics:')) {
       const collectionName = key.replace('devinsfarm:', '').replace('cattalytics:', '')
       try {
-        const data = JSON.parse(value)
-        syncToFirebase(collectionName, data)
+        const parsed = JSON.parse(value)
+        // Normalize parsed to array or object values before syncing
+        let toSync
+        if (Array.isArray(parsed)) toSync = parsed
+        else if (parsed && typeof parsed === 'object') toSync = Object.values(parsed)
+        else toSync = [parsed]
+        syncToFirebase(collectionName, toSync)
       } catch (e) {
         // Not JSON, skip
       }

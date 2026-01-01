@@ -20,14 +20,19 @@ const lazyWithRetry = (importFunc) => {
 }
 // Defer heavy Firebase imports until after initial render
 // import { requestNotificationPermission, listenForMessages } from './lib/firebaseMessaging'
-import { ThemeProvider, useTheme, ThemeToggleButton } from './lib/theme'
+// Avoid importing theme provider/hooks and AppViewContext at module load
+// to prevent them from being bundled into the initial chunk. We'll read
+// theme colors from CSS variables at render time and obtain the
+// `AppViewContext` from `window` after the dynamic provider is loaded.
 // Lazy load heavy components to reduce initial bundle
 const OfflineIndicator = lazyWithRetry(() => import('./components/OfflineIndicator'))
 const InAppNotification = lazyWithRetry(() => import('./components/InAppNotification'))
 const BottomNav = lazyWithRetry(() => import('./components/BottomNav'))
 const KeyboardShortcutsHelp = lazyWithRetry(() => import('./components/KeyboardShortcutsHelp'))
 const GlobalSearch = lazyWithRetry(() => import('./components/GlobalSearch'))
-import { AppViewProvider, AppViewContext } from './lib/AppViewContext.jsx';
+// AppViewContext will be available on `window.AppViewContext` after
+// `main.jsx` dynamically imports the provider. Use a fallback context
+// when not present to keep hooks stable.
 import SwipeHandler from './components/SwipeHandler'
 import ErrorBoundary from './components/ErrorBoundary'
 // Defer DataLayer and error handler to avoid heavy initialization
@@ -192,10 +197,34 @@ import { isAuthRequired, getDefaultUser } from './lib/appSettings'
 
 // App content component that uses theme
 function AppContent() {
-  const { theme, getThemeColors } = useTheme();
-  const colors = getThemeColors();
+  const getColorsFromCSS = () => {
+    if (typeof window === 'undefined' || !window.getComputedStyle) return {
+      bg: { primary: '#ffffff', secondary: '#f9fafb', tertiary: '#f3f4f6', elevated: '#ffffff' },
+      text: { primary: '#1f2937', secondary: '#6b7280', tertiary: '#9ca3af', inverse: '#ffffff' },
+      border: { primary: '#e5e7eb', secondary: '#d1d5db', focus: '#3b82f6' },
+      action: { primary: '#3b82f6', primaryHover: '#2563eb', success: '#10b981', successHover: '#059669', danger: '#ef4444', dangerHover: '#dc2626', warning: '#f59e0b', warningHover: '#d97706', purple: '#8b5cf6', purpleHover: '#7c3aed' },
+      shadow: { sm: '0 1px 2px 0 rgba(0,0,0,0.05)', md: '0 4px 6px -1px rgba(0,0,0,0.1)', lg: '0 10px 15px -3px rgba(0,0,0,0.1)', xl: '0 20px 25px -5px rgba(0,0,0,0.1)' },
+      chart: { primary: '#3b82f6', secondary: '#10b981', tertiary: '#f59e0b', quaternary: '#ef4444', quinary: '#8b5cf6', senary: '#06b6d4' }
+    }
 
-  const { view, setView, editMode, setEditMode } = useContext(AppViewContext);
+    const s = getComputedStyle(document.documentElement)
+    const v = (name, fallback='') => s.getPropertyValue(name).trim() || fallback
+
+    return {
+      bg: { primary: v('--bg-primary', '#ffffff'), secondary: v('--bg-secondary', '#f9fafb'), tertiary: v('--bg-tertiary', '#f3f4f6'), elevated: v('--bg-elevated', '#ffffff') },
+      text: { primary: v('--text-primary', '#1f2937'), secondary: v('--text-secondary', '#6b7280'), tertiary: v('--text-tertiary', '#9ca3af'), inverse: v('--text-inverse', '#ffffff') },
+      border: { primary: v('--border-primary', '#e5e7eb'), secondary: v('--border-secondary', '#d1d5db'), focus: v('--border-focus', '#3b82f6') },
+      action: { primary: v('--action-primary', '#3b82f6'), primaryHover: v('--action-primary-hover', '#2563eb'), success: v('--action-success', '#10b981'), successHover: v('--action-success-hover', '#059669'), danger: v('--action-danger', '#ef4444'), dangerHover: v('--action-danger-hover', '#dc2626'), warning: v('--action-warning', '#f59e0b'), warningHover: v('--action-warning-hover', '#d97706'), purple: v('--action-purple', '#8b5cf6'), purpleHover: v('--action-purple-hover', '#7c3aed') },
+      shadow: { sm: v('--shadow-sm', '0 1px 2px 0 rgba(0,0,0,0.05)'), md: v('--shadow-md', '0 4px 6px -1px rgba(0,0,0,0.1)'), lg: v('--shadow-lg', '0 10px 15px -3px rgba(0,0,0,0.1)'), xl: v('--shadow-xl', '0 20px 25px -5px rgba(0,0,0,0.1)') },
+      chart: { primary: v('--chart-primary', '#3b82f6'), secondary: v('--chart-secondary', '#10b981'), tertiary: v('--chart-tertiary', '#f59e0b'), quaternary: v('--chart-quaternary', '#ef4444'), quinary: v('--chart-quinary', '#8b5cf6'), senary: v('--chart-senary', '#06b6d4') }
+    }
+  }
+
+  const colors = getColorsFromCSS();
+
+  const AppViewContextLocal = (typeof window !== 'undefined' && window.AppViewContext) ? window.AppViewContext : React.createContext({ view: 'dashboard', setView: () => {}, editMode: false, setEditMode: () => {} });
+  const { view, setView, editMode, setEditMode } = useContext(AppViewContextLocal);
+  const ThemeToggle = (typeof window !== 'undefined' && window.ThemeToggleButton) ? window.ThemeToggleButton : null;
   const [authenticated, setAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [animals, setAnimals] = useState([]);
@@ -208,6 +237,7 @@ function AppContent() {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [deniedStores, setDeniedStores] = useState([]);
   // Add GoatModule view
   
   // UI branding/settings - must be declared before any conditional returns
@@ -253,6 +283,30 @@ function AppContent() {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
+
+  // Poll for any Firestore permission-denied stores to show aggregated banner
+  useEffect(() => {
+    let mounted = true
+    const checkDenied = async () => {
+      try {
+        if (typeof window !== 'undefined' && window.__firestorePermissionDeniedStores) {
+          const arr = Array.from(window.__firestorePermissionDeniedStores || [])
+          if (mounted) setDeniedStores(arr)
+          return
+        }
+        const mod = await import('./lib/firebaseSync').catch(() => null)
+        if (mod && typeof mod.getFirestorePermissionDeniedStores === 'function') {
+          const arr = mod.getFirestorePermissionDeniedStores() || []
+          if (mounted) setDeniedStores(arr)
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    checkDenied()
+    const iv = setInterval(checkDenied, 2000)
+    return () => { mounted = false; clearInterval(iv) }
+  }, [])
 
   // Handle install button click
   const handleInstallClick = () => {
@@ -988,10 +1042,34 @@ function AppContent() {
           
           {/* Theme Toggle Button */}
           <div style={{ marginLeft: 'auto' }}>
-            <ThemeToggleButton />
+            {ThemeToggle ? <ThemeToggle /> : (
+              <button onClick={() => {}} style={{ padding: '8px 12px', borderRadius: '6px', border: 'none', background: colors.bg.tertiary, color: colors.text.primary }}>
+                Theme
+              </button>
+            )}
           </div>
       </nav>
       <main>
+        {deniedStores && deniedStores.length > 0 && (
+          <div style={{ margin: '12px', padding: '12px 16px', borderRadius: 8, background: '#fffbeb', border: '1px solid #f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ color: '#92400e', fontWeight: 600 }}>
+              ⚠️ Some features disabled: {deniedStores.length} store{deniedStores.length>1?'s':''} unavailable — {deniedStores.slice(0,5).join(', ')}{deniedStores.length>5? '...' : ''}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={async () => {
+                try {
+                  if (typeof window !== 'undefined' && window.__firestorePermissionDeniedStores) {
+                    window.__firestorePermissionDeniedStores.clear()
+                  }
+                  const mod = await import('./lib/firebaseSync')
+                  if (mod && typeof mod.startFirestoreSync === 'function') mod.startFirestoreSync()
+                  setDeniedStores([])
+                } catch (e) { console.warn('Retry sync failed', e) }
+              }} style={{ background: '#f59e0b', color: 'white', border: 'none', padding: '8px 12px', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}>Retry Sync</button>
+              <button onClick={() => setView('login')} style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 12px', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}>Sign in</button>
+            </div>
+          </div>
+        )}
         <Suspense fallback={<LoadingFallback />}>
           {view === 'dashboard' && (
             <>

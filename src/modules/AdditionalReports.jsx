@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { exportToCSV, exportToJSON } from '../lib/exportImport'
 import useUIStore from '../stores/uiStore'
 import { formatCurrency } from '../lib/currency'
-import { Document, Packer, Paragraph, AlignmentType, HeadingLevel } from 'docx'
+// Load `docx` dynamically when creating DOCX exports to avoid bundling it into the main chunk
 
 export default function AdditionalReports() {
   const [activeReport, setActiveReport] = useState('health')
@@ -167,20 +167,23 @@ export default function AdditionalReports() {
     try {
       const title = activeReport === 'health' ? 'Herd Health Report' : activeReport === 'breeding' ? 'Breeding Report' : 'Feed Cost Analysis'
       const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-      
+
+      const docx = await import('docx')
+      const { Document, Packer, Paragraph, AlignmentType, HeadingLevel } = docx
+
       const sections = [
         new Paragraph({ text: 'JR FARM', heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, spacing: { after: 100 } }),
         new Paragraph({ text: title, alignment: AlignmentType.CENTER, spacing: { after: 50 } }),
         new Paragraph({ text: `Date: ${today}`, alignment: AlignmentType.CENTER, spacing: { after: 300 } })
       ]
-      
+
       Object.entries(reportData.summary || {}).forEach(([key, value]) => {
         sections.push(new Paragraph({
           text: `${key}: ${value}`,
           spacing: { after: 100 }
         }))
       })
-      
+
       const doc = new Document({ sections: [{ children: sections }] })
       const blob = await Packer.toBlob(doc)
       const url = URL.createObjectURL(blob)

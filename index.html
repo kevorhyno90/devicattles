@@ -32,10 +32,8 @@
     <meta name="HandheldFriendly" content="true" />
     <meta name="MobileOptimized" content="width" />
     
-    <!-- Offline support -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
+    <!-- Offline support - rely on HTTP cache headers for static assets -->
+    <!-- Removed client-side no-cache meta tags to allow proper caching of static bundles -->
     
     <!-- Favicon served from public/ (SVG file) -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

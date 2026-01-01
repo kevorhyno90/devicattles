@@ -110,12 +110,53 @@ Promise.all([
   import('./lib/theme'),
   import('./lib/AppViewContext.jsx'),
   import('./lib/firebaseSync')
-]).then(([{ ThemeProvider }, { AppViewProvider }, { startFirestoreSync }]) => {
+]).then(async ([{ ThemeProvider, ThemeToggleButton }, { AppViewProvider, AppViewContext }, { startFirestoreSync }]) => {
+  // Expose the context object globally so the App can reference it without
+  // importing the module eagerly (helps keep the initial bundle smaller).
+  if (typeof window !== 'undefined' && AppViewContext) {
+    try { window.AppViewContext = AppViewContext } catch(e) {}
+  }
+  if (typeof window !== 'undefined' && ThemeToggleButton) {
+    try { window.ThemeToggleButton = ThemeToggleButton } catch(e) {}
+  }
   clearTimeout(loadingTimeout);
 
   // Kick off Firestore sync (noop if Firebase not configured)
   try {
-    startFirestoreSync();
+    // Diagnostic probe: log Firebase auth state and configured STORES, and delay sync until auth ready
+    try {
+      const firebaseMod = await import('./lib/firebase')
+      const storageMod = await import('./lib/storage')
+      const { auth } = firebaseMod
+      const { STORES } = storageMod
+      console.info('Firestore diagnostic - STORES:', Object.keys(STORES))
+      if (auth) {
+        const user = auth.currentUser
+        console.info('Firestore diagnostic - currentUser:', user ? { uid: user.uid, email: user.email } : null)
+        try {
+          // Start sync only after a user is authenticated to avoid permission-denied errors
+          const unsubscribe = auth.onAuthStateChanged(u => {
+            console.info('Firestore diagnostic - onAuthStateChanged:', u ? { uid: u.uid, email: u.email } : null)
+            if (u) {
+              try { startFirestoreSync() } catch (e) { console.warn('Firestore sync start failed:', e) }
+              try { if (typeof unsubscribe === 'function') unsubscribe() } catch (e) {}
+            } else {
+              console.info('Skipping Firestore sync: user not authenticated yet.')
+            }
+          })
+        } catch (e) {
+          console.warn('Failed to attach auth listener for Firestore diagnostic:', e)
+          // Fallback: attempt to start sync (non-ideal) so app can function in some environments
+          try { startFirestoreSync() } catch (e2) { console.warn('Firestore sync start failed (fallback):', e2) }
+        }
+      } else {
+        console.info('Firestore diagnostic - auth not initialized; skipping sync')
+      }
+    } catch (probeErr) {
+      console.warn('Firestore diagnostic probe failed:', probeErr)
+      // If probe fails, attempt to start sync as a best-effort fallback
+      try { startFirestoreSync() } catch (e) { console.warn('Firestore sync start failed (probe fallback):', e) }
+    }
   } catch (syncErr) {
     console.warn('Firestore sync not started:', syncErr);
   }

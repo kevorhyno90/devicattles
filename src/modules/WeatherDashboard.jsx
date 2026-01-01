@@ -164,8 +164,21 @@ export default function WeatherDashboard({ onNavigate }) {
         </div>
       </div>
 
-      {/* Location is fixed to Nyaronde,KE. Location editing is disabled. */}
-          {/* Location is fixed to Nyaronde,KE. Location editing is disabled. */}
+      {editingLocation && (
+        <div style={{
+          padding: '15px',
+          background: '#eef7ff',
+          borderRadius: '8px',
+          marginBottom: '20px'
+        }}>
+          <h3>Location</h3>
+          <p style={{ margin: 0, color: '#555' }}>
+            Location is fixed to Nyaronde, KE. Location editing is currently disabled.
+          </p>
+          <div style={{ marginTop: '10px' }}>
+            <button onClick={() => setEditingLocation(false)} style={{ padding: '8px 12px' }}>Close</button>
+          </div>
+        </div>
       )}
 
       {/* API Key Editor */}

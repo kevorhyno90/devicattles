@@ -1,10 +1,12 @@
-import jsPDF from 'jspdf'
-import 'jspdf-autotable'
+// Load jsPDF dynamically inside each export to avoid adding it to the initial bundle
 
 /**
  * Generate PDF for Animal Profit Report
  */
-export function exportAnimalProfitReport(animals, startDate, endDate) {
+export async function exportAnimalProfitReport(animals, startDate, endDate) {
+  const jsPDFModule = await import('jspdf')
+  const jsPDF = jsPDFModule.default || jsPDFModule
+  await import('jspdf-autotable')
   const doc = new jsPDF()
   
   // Header
@@ -68,7 +70,10 @@ export function exportAnimalProfitReport(animals, startDate, endDate) {
 /**
  * Generate PDF for Vaccination Records
  */
-export function exportVaccinationRecords(pets) {
+export async function exportVaccinationRecords(pets) {
+  const jsPDFModule = await import('jspdf')
+  const jsPDF = jsPDFModule.default || jsPDFModule
+  await import('jspdf-autotable')
   const doc = new jsPDF()
   
   // Header
@@ -132,7 +137,10 @@ export function exportVaccinationRecords(pets) {
 /**
  * Generate PDF for Breeding Records
  */
-export function exportBreedingRecords(animals, pets) {
+export async function exportBreedingRecords(animals, pets) {
+  const jsPDFModule = await import('jspdf')
+  const jsPDF = jsPDFModule.default || jsPDFModule
+  await import('jspdf-autotable')
   const doc = new jsPDF()
   
   // Header
@@ -233,7 +241,10 @@ export function exportBreedingRecords(animals, pets) {
 /**
  * Generate PDF for Crop Yield Report
  */
-export function exportCropYieldReport(crops, startDate, endDate) {
+export async function exportCropYieldReport(crops, startDate, endDate) {
+  const jsPDFModule = await import('jspdf')
+  const jsPDF = jsPDFModule.default || jsPDFModule
+  await import('jspdf-autotable')
   const doc = new jsPDF()
   
   // Header
@@ -289,7 +300,10 @@ export function exportCropYieldReport(crops, startDate, endDate) {
 /**
  * Generate PDF for Financial Summary
  */
-export function exportFinancialSummary(finances, startDate, endDate) {
+export async function exportFinancialSummary(finances, startDate, endDate) {
+  const jsPDFModule = await import('jspdf')
+  const jsPDF = jsPDFModule.default || jsPDFModule
+  await import('jspdf-autotable')
   const doc = new jsPDF()
   
   // Header
@@ -378,7 +392,10 @@ export function exportFinancialSummary(finances, startDate, endDate) {
 /**
  * Generate PDF for Inventory Report
  */
-export function exportInventoryReport(inventory) {
+export async function exportInventoryReport(inventory) {
+  const jsPDFModule = await import('jspdf')
+  const jsPDF = jsPDFModule.default || jsPDFModule
+  await import('jspdf-autotable')
   const doc = new jsPDF()
   
   // Header

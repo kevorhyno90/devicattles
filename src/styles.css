@@ -584,7 +584,6 @@ body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica
   background: transparent !important;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
-}
 
 /* Backup & Restore Styles */
 .backup-restore-container {
