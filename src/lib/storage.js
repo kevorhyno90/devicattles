@@ -171,7 +171,6 @@ async function saveToIndexedDB(storeName, data) {
       if (!db.objectStoreNames.contains(idbStore)) {
         throw new Error(`Store "${idbStore}" not found in IndexedDB`)
       }
-          result = await saveToIndexedDB(storeName, data)
       const transaction = db.transaction([idbStore], 'readwrite')
       const store = transaction.objectStore(idbStore)
 
