@@ -4,7 +4,7 @@ import { safeSetItem, safeGetItem } from './safeStorage'
 
 const DB_NAME = 'devinsfarm'
 const DB_VERSION = 3
-const STORES = {
+export const STORES = {
   animals: 'animals',
   crops: 'crops',
   tasks: 'tasks',
@@ -43,6 +43,9 @@ let useIndexedDB = true
 function normalizeStoreName(storeName) {
   if (typeof storeName === 'string' && storeName.startsWith('cattalytics:')) {
     return storeName.replace(/^cattalytics:/, '');
+  }
+  if (typeof storeName === 'string' && storeName.startsWith('devinsfarm:')) {
+    return storeName.replace(/^devinsfarm:/, '');
   }
   return storeName;
 }
@@ -89,6 +92,7 @@ async function initDB() {
 // Save data (auto-detect storage method)
 export async function saveData(storeName, data) {
   try {
+    const normalizedName = normalizeStoreName(storeName)
     // Try IndexedDB first for large datasets
     if (useIndexedDB && data.length > 50) {
       await initDB()
@@ -98,7 +102,24 @@ export async function saveData(storeName, data) {
     }
 
     // Fall back to localStorage
-    return saveToLocalStorage(storeName, data)
+    const result = saveToLocalStorage(storeName, data)
+
+    // Firestore sync hook (if enabled) — skip when applying remote changes
+    try {
+      if (typeof window !== 'undefined') {
+        const applying = window.__firestoreSyncApplying
+        const pushFn = window.__firestoreSyncPush
+        if (!applying || !applying.has(normalizedName)) {
+          if (typeof pushFn === 'function' && Array.isArray(data)) {
+            pushFn(normalizedName, data)
+          }
+        }
+      }
+    } catch (syncErr) {
+      console.warn('Firestore sync push skipped:', syncErr)
+    }
+
+    return result
   } catch (err) {
     console.error('Save failed, falling back to localStorage:', err)
     useIndexedDB = false
@@ -150,7 +171,7 @@ async function saveToIndexedDB(storeName, data) {
       if (!db.objectStoreNames.contains(idbStore)) {
         throw new Error(`Store "${idbStore}" not found in IndexedDB`)
       }
-      
+          result = await saveToIndexedDB(storeName, data)
       const transaction = db.transaction([idbStore], 'readwrite')
       const store = transaction.objectStore(idbStore)
 

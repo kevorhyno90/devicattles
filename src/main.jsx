@@ -108,9 +108,18 @@ try {
   // Dynamically load providers after initial paint for faster load
 Promise.all([
   import('./lib/theme'),
-  import('./lib/AppViewContext.jsx')
-]).then(([{ ThemeProvider }, { AppViewProvider }]) => {
+  import('./lib/AppViewContext.jsx'),
+  import('./lib/firebaseSync')
+]).then(([{ ThemeProvider }, { AppViewProvider }, { startFirestoreSync }]) => {
   clearTimeout(loadingTimeout);
+
+  // Kick off Firestore sync (noop if Firebase not configured)
+  try {
+    startFirestoreSync();
+  } catch (syncErr) {
+    console.warn('Firestore sync not started:', syncErr);
+  }
+
   root.render(
     <React.StrictMode>
       <BrowserRouter
