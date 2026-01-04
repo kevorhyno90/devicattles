@@ -12,7 +12,7 @@
  */
 
 import { initializeApp, getApps } from 'firebase/app'
-import { initializeFirestore, getFirestore, CACHE_SIZE_UNLIMITED, persistentLocalCache } from 'firebase/firestore'
+import { initializeFirestore, getFirestore, CACHE_SIZE_UNLIMITED, persistentLocalCache, setLogLevel } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 import { getAnalytics, isSupported as analyticsIsSupported } from 'firebase/analytics'
 import { getMessaging, isSupported as messagingIsSupported } from 'firebase/messaging'
@@ -42,6 +42,62 @@ let auth = null
 let analytics = null
 let messaging = null
 let isInitialized = false
+let initInProgress = false
+
+// Provide a programmatic initializer so firebase can be started explicitly
+export async function initFirebase(options = {}) {
+  const { force = false } = options
+  if (isInitialized && !force) return
+  if (initInProgress) return
+  initInProgress = true
+
+  try {
+    if (!isFirebaseConfigured()) return
+
+    // Initialize only if not already initialized
+    if (getApps().length === 0) {
+      app = initializeApp(firebaseConfig)
+      try {
+        db = initializeFirestore(app, {
+          localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED })
+        })
+        try { setLogLevel && setLogLevel('error') } catch (e) {}
+      } catch (firestoreError) {
+        db = getFirestore(app)
+        try { setLogLevel && setLogLevel('error') } catch (e) {}
+      }
+    } else {
+      app = getApps()[0]
+      db = getFirestore(app)
+      try { setLogLevel && setLogLevel('error') } catch (e) {}
+    }
+
+    auth = getAuth(app)
+
+    if (!isDev) {
+      analyticsIsSupported().then(supported => {
+        if (supported) {
+          try { analytics = getAnalytics(app) } catch (err) { analytics = null }
+        }
+      }).catch(() => { analytics = null })
+    }
+
+    if (!messaging) {
+      messagingIsSupported().then(supported => {
+        if (supported) {
+          try { messaging = getMessaging(app) } catch (err) { messaging = null }
+        }
+      }).catch(() => { messaging = null })
+    }
+
+    isInitialized = true
+  } catch (error) {
+    console.error('❌ Firebase initialization error:', error)
+    app = null; db = null; auth = null; analytics = null; messaging = null; isInitialized = false
+  } finally {
+    initInProgress = false
+  }
+}
 
 // Environment detection
 const isDev = typeof window !== 'undefined' && (
@@ -50,60 +106,22 @@ const isDev = typeof window !== 'undefined' && (
   window.location.hostname.includes('githubpreview.dev')
 );
 
+// By default, avoid initializing Firebase automatically during development
+// to prevent dev-server restarts or HMR issues caused by SDK initialization.
+// Set `VITE_ENABLE_FIREBASE=true` in your dev env to opt-in to auto-init.
 try {
   if (isFirebaseConfigured()) {
-    // Check if Firebase is already initialized (prevents HMR errors)
-    if (getApps().length === 0) {
-      app = initializeApp(firebaseConfig)
-      try {
-        db = initializeFirestore(app, {
-          localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED })
-        })
-      } catch (firestoreError) {
-        // Firestore already initialized, use getFirestore
-        db = getFirestore(app)
-      }
+    const enableAutoInit = !isDev || !!import.meta.env.VITE_ENABLE_FIREBASE
+    if (enableAutoInit) {
+      // initialize now
+      initFirebase().catch(() => {})
     } else {
-      // Use existing app instance
-      app = getApps()[0]
-      db = getFirestore(app)
+      if (!window.__firebaseConfigLogged) {
+        console.info('ℹ️ Firebase auto-init disabled in dev. Call initFirebase() to enable.')
+        window.__firebaseConfigLogged = true
+      }
     }
-    
-    auth = getAuth(app)
-    
-    // Skip Analytics completely in development (no cookies, no warnings)
-    if (!isDev) {
-      analyticsIsSupported().then(supported => {
-        if (supported) {
-          try {
-            analytics = getAnalytics(app);
-          } catch (err) {
-            analytics = null;
-          }
-        }
-      }).catch(() => {
-        analytics = null;
-      });
-    }
-    
-    // Initialize Messaging only if supported and only once
-    if (!messaging) {
-      messagingIsSupported().then(supported => {
-        if (supported) {
-          try {
-            messaging = getMessaging(app);
-          } catch (err) {
-            messaging = null;
-          }
-        }
-      }).catch(() => {
-        messaging = null;
-      });
-    }
-    
-    isInitialized = true
   } else {
-    // Log once on first check - not a warning since it's expected in local/demo mode
     if (!window.__firebaseConfigLogged) {
       console.info('ℹ️ Firebase not configured. Running in local-only mode.');
       window.__firebaseConfigLogged = true;
@@ -111,12 +129,7 @@ try {
   }
 } catch (error) {
   console.error('❌ Firebase initialization error:', error)
-  // Ensure variables are set even on error
-  app = null
-  db = null
-  auth = null
-  isInitialized = false
 }
 
-export { app, db, auth, analytics, messaging }
-export default { app, db, auth, analytics, messaging, isConfigured: isFirebaseConfigured }
+export { app, db, auth, analytics, messaging, isInitialized }
+export default { app, db, auth, analytics, messaging, isConfigured: isFirebaseConfigured, initFirebase }
