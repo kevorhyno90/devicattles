@@ -407,3 +407,49 @@ window.installPWA = async () => {
   
   return outcome === 'accepted';
 };
+
+// Global error handlers to detect Codespaces preview auth redirects (helpful during dev)
+if (isCodespaces) {
+  function showCodespacesErrorBanner(message) {
+    try {
+      const existing = document.getElementById('codespaces-error-banner')
+      if (existing) {
+        existing.textContent = message
+        return
+      }
+      const div = document.createElement('div')
+      div.id = 'codespaces-error-banner'
+      div.style = 'position:fixed;left:8px;right:8px;bottom:12px;z-index:10000;padding:12px 16px;background:#ef4444;color:white;font-weight:700;border-radius:6px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui'
+      const txt = document.createElement('div')
+      txt.textContent = message
+      const help = document.createElement('a')
+      help.href = 'https://github.com/kevorhyno90/devicattles/blob/main/CODESPACES_PREVIEW.md'
+      help.target = '_blank'
+      help.rel = 'noreferrer noopener'
+      help.style = 'color:inherit;text-decoration:underline;font-weight:800'
+      help.textContent = 'Open guide'
+      div.appendChild(txt)
+      div.appendChild(help)
+      try { document.body.appendChild(div) } catch (e) {}
+    } catch (e) {}
+  }
+
+  window.addEventListener('error', (e) => {
+    try {
+      const msg = e.message || (e.error && e.error.message) || ''
+      const src = (e.target && e.target.src) || ''
+      if (/401|Unauthorized|ERR_ABORTED|pf-signin|github.dev/.test(msg) || /\/src\//.test(src) || /favicon\.svg$/.test(src)) {
+        showCodespacesErrorBanner('Codespaces preview blocked asset loads (401/redirect). Open the forwarded port via Codespaces or make it public.');
+      }
+    } catch (ignore) {}
+  }, true);
+
+  window.addEventListener('unhandledrejection', (e) => {
+    try {
+      const reason = (e.reason && (e.reason.message || String(e.reason))) || ''
+      if (/401|Unauthorized|ERR_ABORTED|pf-signin|github.dev/.test(reason)) {
+        showCodespacesErrorBanner('Codespaces preview blocked asset loads (401/redirect). Open the forwarded port via Codespaces or make it public.');
+      }
+    } catch (ignore) {}
+  });
+}
