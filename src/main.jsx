@@ -9,92 +9,33 @@ import App from './App';
 // import { initializeAudio } from './lib/notifications.js';
 import './styles.css'
 
-// Console coalescer: reduce repetitive noisy messages without hiding real errors.
-// Runtime control: set `window.__VERBOSE_CONSOLE__ = true` to disable suppression.
+// Suppress Zustand and other deprecation warnings before any modules load
 (function() {
-  const NOISY_PATTERNS = [
-    /Firestore diagnostic/i,
-    /\bSTORES\b/,
-    /✅\s*Synced|🔄\s*Updated|\bSynced\b|\bUpdated\b/i,
-    /Skipping item in .* without an ID/i,
-    /installHook|@firebase/i,
-    /Quota exceeded|maximum backoff|backoff delay/i,
-    /getSnapshot should be cached|Maximum update depth exceeded|\bdeprecated\b/i,
-    /\[vite\]\s*server connection lost/i,
-    /Polling for restart/i,
-    /server connection lost/i,
-  ];
-
-  const THROTTLE_MS = 30 * 1000; // suppress identical noisy messages for 30s
-  const recent = new Map();
-
-  function getTextFromArg(arg) {
-    try {
-      if (typeof arg === 'string') return arg;
-      if (arg instanceof Error) return arg.message + '\n' + (arg.stack || '');
-      return JSON.stringify(arg, getCircularReplacer());
-    } catch (e) {
-      return String(arg);
-    }
-  }
-
-  function getKey(args) {
-    return args.map(getTextFromArg).join(' | ').slice(0, 1600);
-  }
-
-  function matchesNoisy(text) {
-    if (typeof window !== 'undefined' && window.__VERBOSE_CONSOLE__) return false;
-    return NOISY_PATTERNS.some(r => r.test(text));
-  }
-
-  function getCircularReplacer() {
-    const seen = new WeakSet();
-    return (k, v) => {
-      if (v && typeof v === 'object') {
-        if (seen.has(v)) return '[Circular]';
-        seen.add(v);
-      }
-      return v;
-    };
-  }
-
-  function makeWrapper(methodName) {
-    const original = console[methodName].bind(console);
+  const zustandWarningRegex = /\[DEPRECATED\].*Zustand|Default export is deprecated.*zustand/i;
+  
+  const suppressWarning = function(originalMethod) {
     return function(...args) {
-      try {
-        const key = getKey(args);
-        if (matchesNoisy(key)) {
-          const now = Date.now();
-          const last = recent.get(key) || 0;
-          if (now - last < THROTTLE_MS) {
-            // skip duplicate noisy message
-            return;
-          }
-          recent.set(key, now);
-          // allow the first occurrence through
-        }
-      } catch (e) {
-        // If our filter throws, don't break console
+      const message = String(args[0] || '');
+      if (zustandWarningRegex.test(message)) {
+        return; // Suppress Zustand deprecation warning
       }
-      return original(...args);
+      return originalMethod.apply(console, args);
     };
-  }
-
-  // Replace console methods safely
-  ['log', 'info', 'warn', 'error'].forEach(m => {
-    try { console[m] = makeWrapper(m) } catch (e) {}
-  });
-
-  // Expose a small API to toggle verbosity at runtime
-  try {
-    Object.defineProperty(window, '__VERBOSE_CONSOLE__', {
-      configurable: true,
-      enumerable: false,
-      writable: true,
-      value: !!window.__VERBOSE_CONSOLE__
-    });
-    window.setConsoleVerbose = (v) => { window.__VERBOSE_CONSOLE__ = !!v; console.info('Console verbose:', !!v) };
-  } catch (e) {}
+  };
+  
+  // Intercept all console methods to filter warnings
+  console.warn = suppressWarning(console.warn);
+  console.log = suppressWarning(console.log);
+  console.info = suppressWarning(console.info);
+  
+  // Also suppress in error for safety
+  const originalError = console.error;
+  console.error = function(...args) {
+    const message = String(args[0] || '');
+    if (!zustandWarningRegex.test(message)) {
+      originalError.apply(console, args);
+    }
+  };
 })();
 
 // Verify React is available
@@ -167,8 +108,9 @@ try {
   // Dynamically load providers after initial paint for faster load
 Promise.all([
   import('./lib/theme'),
-  import('./lib/AppViewContext.jsx')
-]).then(async ([{ ThemeProvider, ThemeToggleButton }, { AppViewProvider, AppViewContext }]) => {
+  import('./lib/AppViewContext.jsx'),
+  import('./lib/firebaseSync')
+]).then(async ([{ ThemeProvider, ThemeToggleButton }, { AppViewProvider, AppViewContext }, { startFirestoreSync }]) => {
   // Expose the context object globally so the App can reference it without
   // importing the module eagerly (helps keep the initial bundle smaller).
   if (typeof window !== 'undefined' && AppViewContext) {
@@ -179,7 +121,7 @@ Promise.all([
   }
   clearTimeout(loadingTimeout);
 
-      // Kick off Firestore sync (noop if Firebase not configured)
+  // Kick off Firestore sync (noop if Firebase not configured)
   try {
     // Diagnostic probe: log Firebase auth state and configured STORES, and delay sync until auth ready
     try {
@@ -187,26 +129,25 @@ Promise.all([
       const storageMod = await import('./lib/storage')
       const { auth } = firebaseMod
       const { STORES } = storageMod
-          const _shouldLogFirestore = import.meta.env.DEV || !!window.DEBUG_FIRESTORE
-          if (_shouldLogFirestore) console.debug('Firestore diagnostic - STORES:', Object.keys(STORES))
+      console.info('Firestore diagnostic - STORES:', Object.keys(STORES))
       if (auth) {
         const user = auth.currentUser
-            if (_shouldLogFirestore) console.debug('Firestore diagnostic - currentUser:', user ? { uid: user.uid, email: user.email } : null)
+        console.info('Firestore diagnostic - currentUser:', user ? { uid: user.uid, email: user.email } : null)
         try {
           // Start sync only after a user is authenticated to avoid permission-denied errors
           const unsubscribe = auth.onAuthStateChanged(u => {
-                if (_shouldLogFirestore) console.debug('Firestore diagnostic - onAuthStateChanged:', u ? { uid: u.uid, email: u.email } : null)
+            console.info('Firestore diagnostic - onAuthStateChanged:', u ? { uid: u.uid, email: u.email } : null)
             if (u) {
-              try { import('./lib/firebaseSync').then(m => m.startFirestoreSync()).catch(e => console.warn('startFirestoreSync failed:', e)) } catch (e) { console.warn('Firestore sync start failed:', e) }
+              try { startFirestoreSync() } catch (e) { console.warn('Firestore sync start failed:', e) }
               try { if (typeof unsubscribe === 'function') unsubscribe() } catch (e) {}
             } else {
-                  if (_shouldLogFirestore) console.debug('Skipping Firestore sync: user not authenticated yet.')
+              console.info('Skipping Firestore sync: user not authenticated yet.')
             }
           })
         } catch (e) {
           console.warn('Failed to attach auth listener for Firestore diagnostic:', e)
           // Fallback: attempt to start sync (non-ideal) so app can function in some environments
-          try { import('./lib/firebaseSync').then(m => m.startFirestoreSync()).catch(e => console.warn('startFirestoreSync failed (fallback):', e)) } catch (e2) { console.warn('Firestore sync start failed (fallback):', e2) }
+          try { startFirestoreSync() } catch (e2) { console.warn('Firestore sync start failed (fallback):', e2) }
         }
       } else {
         console.info('Firestore diagnostic - auth not initialized; skipping sync')
@@ -251,25 +192,6 @@ Promise.all([
 // Only in production or when explicitly enabled
 const isDev = import.meta.env.DEV
 const isCodespaces = window.location.hostname.includes('github.dev') || window.location.hostname.includes('githubpreview.dev')
-
-// If running inside Codespaces / app.github.dev preview, warn about the preview proxy
-if (isCodespaces) {
-  const msg = 'Running in Codespaces preview: open the forwarded port using the Codespaces "Open in Browser" link or make the port public so asset requests are allowed. See CODESPACES_PREVIEW.md for details.'
-  try {
-    console.warn(msg)
-    if (!document.getElementById('codespaces-preview-warning')) {
-      const b = document.createElement('div')
-      b.id = 'codespaces-preview-warning'
-      b.style = 'position:fixed;left:0;right:0;top:0;z-index:9999;padding:8px 12px;background:#f59e0b;color:#111;font-weight:600;text-align:center;font-family:system-ui;-webkit-font-smoothing:antialiased;'
-      b.textContent = msg
-      document.addEventListener('DOMContentLoaded', () => {
-        try { document.body.appendChild(b) } catch (e) {}
-      })
-      // if DOM already ready
-      try { if (document.body) document.body.appendChild(b) } catch(e){}
-    }
-  } catch (e) {}
-}
 
 if ('serviceWorker' in navigator && !isDev && !isCodespaces) {
   // Defer SW registration even more to not interfere with hard reloads
