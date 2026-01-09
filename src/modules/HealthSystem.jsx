@@ -843,7 +843,8 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
     const p = patients.find(x=> x.id === patientId)
     if(!p) return alert('Patient not found')
       try{
-        const docx = await new Function('return import("docx")')()
+        const { importDocx } = await import('../lib/cdnLoaders')
+        const docx = await importDocx()
       const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun, AlignmentType } = docx
 
       // helper: fetch an image (data: or url), convert svg -> png if needed, return ArrayBuffer
@@ -941,8 +942,9 @@ function ReportsView({ patients=[], appointments=[], prescriptions=[], inventory
 
   async function exportAllPatientsDocx(){
     try{
-      const docx = await new Function('return import("docx")')()
-      const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun, AlignmentType } = docx
+    const { importDocx } = await import('../lib/cdnLoaders')
+    const docx = await importDocx()
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun, AlignmentType } = docx
       const doc = new Document({ sections: [] })
       const children = []
 

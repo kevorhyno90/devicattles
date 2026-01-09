@@ -168,7 +168,8 @@ export default function AdditionalReports() {
       const title = activeReport === 'health' ? 'Herd Health Report' : activeReport === 'breeding' ? 'Breeding Report' : 'Feed Cost Analysis'
       const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 
-      const docx = await import('docx')
+      const { importDocx } = await import('../lib/cdnLoaders')
+      const docx = await importDocx()
       const { Document, Packer, Paragraph, AlignmentType, HeadingLevel } = docx
 
       const sections = [

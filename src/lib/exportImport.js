@@ -2,8 +2,9 @@
 
 export async function exportToDocx(data, filename = 'export.docx', title = 'Export Report', headers = null) {
   try {
-    // load docx lazily
-    const docx = await import('docx')
+    // load docx lazily (try CDN first)
+    const { importDocx } = await import('../lib/cdnLoaders')
+    const docx = await importDocx()
     const { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun } = docx
     if (!data || data.length === 0) {
       alert('No data to export')
