@@ -15,6 +15,7 @@ export default function Header({
 }) {
   const [queueCount, setQueueCount] = useState(0)
   const [queueProcessing, setQueueProcessing] = useState(false)
+  const [persistenceMode, setPersistenceMode] = useState(typeof window !== 'undefined' ? window.__firestorePersistenceMode || 'unknown' : 'unknown')
 
   useEffect(() => {
     let mounted = true
@@ -23,6 +24,7 @@ export default function Header({
         if (window.__firestoreQueueLength) setQueueCount(Number(window.__firestoreQueueLength() || 0))
         if (window.__firestoreQueueProcessing) setQueueProcessing(Boolean(window.__firestoreQueueProcessing()))
         else if (window.__firestoreQueueLength && window.__firestoreFlushQueue) setQueueProcessing(false)
+        try { setPersistenceMode(window.__firestorePersistenceMode || 'unknown') } catch (e) {}
       } catch (e) {}
     }
     update()
@@ -83,6 +85,11 @@ export default function Header({
           {queueProcessing ? <span style={{ fontSize: 14 }}>⏳</span> : null}
           <div style={{ background: queueCount ? '#f59e0b' : 'rgba(255,255,255,0.12)', color: 'white', borderRadius: 10, padding: '4px 8px', fontSize: 12 }}>
             Q:{queueCount}
+          </div>
+        </div>
+        <div title={`Firestore persistence: ${persistenceMode}`} style={{ marginLeft: 8 }}>
+          <div style={{ background: persistenceMode && persistenceMode.startsWith('indexeddb') ? '#06b6d4' : '#6b7280', color: 'white', borderRadius: 8, padding: '3px 8px', fontSize: 11 }}>
+            {persistenceMode}
           </div>
         </div>
         <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', textAlign: 'right' }}>
