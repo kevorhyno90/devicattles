@@ -1,16 +1,16 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react'
 const Pastures = React.lazy(() => import('./Pastures'))
 const HealthSystem = React.lazy(() => import('./HealthSystem'))
-import AnimalFeeding from './AnimalFeeding'
-import AnimalMeasurement from './AnimalMeasurement'
+const AnimalFeeding = React.lazy(() => import('./AnimalFeeding'))
+const AnimalMeasurement = React.lazy(() => import('./AnimalMeasurement'))
 // Removed: import AnimalBreeding from './AnimalBreeding' (for startup perf)
-import AnimalBreeding from './AnimalBreeding'
-import AnimalMilkYield from './AnimalMilkYield'
-import AnimalTreatment from './AnimalTreatment'
-import CalfManagement from './CalfManagement'
-import BSFFarming from './BSFFarming'
-import AzollaFarming from './AzollaFarming'
-import PoultryManagement from './PoultryManagement'
+const AnimalBreeding = React.lazy(() => import('./AnimalBreeding'))
+const AnimalMilkYield = React.lazy(() => import('./AnimalMilkYield'))
+const AnimalTreatment = React.lazy(() => import('./AnimalTreatment'))
+const CalfManagement = React.lazy(() => import('./CalfManagement'))
+const BSFFarming = React.lazy(() => import('./BSFFarming'))
+const AzollaFarming = React.lazy(() => import('./AzollaFarming'))
+const PoultryManagement = React.lazy(() => import('./PoultryManagement'))
 const CanineManagement = React.lazy(() => import('./CanineManagement'))
 import PhotoGallery from '../components/PhotoGallery'
 import { fileToDataUrl, estimateDataUrlSize, uid } from '../lib/image'
@@ -1789,55 +1789,73 @@ export default function Animals() {
 
         {tab === 'feeding' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
-            <AnimalFeeding animals={animals} />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <AnimalFeeding animals={animals} />
+            </React.Suspense>
           </div>
         )}
 
         {tab === 'measurement' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
-            <AnimalMeasurement animals={animals} />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <AnimalMeasurement animals={animals} />
+            </React.Suspense>
           </div>
         )}
 
         {tab === 'breeding' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
-            <AnimalBreeding animals={animals} />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <AnimalBreeding animals={animals} />
+            </React.Suspense>
           </div>
         )}
 
         {tab === 'milkyield' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
-            <AnimalMilkYield animals={animals} />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <AnimalMilkYield animals={animals} />
+            </React.Suspense>
           </div>
         )}
 
         {tab === 'treatment' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
-            <AnimalTreatment animals={animals} />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <AnimalTreatment animals={animals} />
+            </React.Suspense>
           </div>
         )}
 
         {tab === 'calf' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
-            <CalfManagement animals={animals} />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <CalfManagement animals={animals} />
+            </React.Suspense>
           </div>
         )}
 
         {tab === 'bsf' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
-            <BSFFarming />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <BSFFarming />
+            </React.Suspense>
           </div>
         )}
 
         {tab === 'azolla' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
-            <AzollaFarming />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <AzollaFarming />
+            </React.Suspense>
           </div>
         )}
 
         {tab === 'poultry' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
-            <PoultryManagement />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <PoultryManagement />
+            </React.Suspense>
           </div>
         )}
 
