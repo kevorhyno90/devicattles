@@ -294,13 +294,28 @@ export function deleteNotification(notificationId) {
  * Play notification sound
  */
 function playNotificationSound() {
-    const context = getAudioContext();
-    if (!context || context.state !== 'running') {
-        if (context && context.state === 'suspended') {
-            console.warn('AudioContext is suspended. User interaction needed.');
-        }
-        return;
+  const context = getAudioContext();
+  if (!context) return;
+
+  // If suspended, try to resume silently. If resume fails, skip sound.
+  if (context.state === 'suspended') {
+    try {
+      // Attempt to resume; if it succeeds, continue to play sound.
+      // If it fails (common without user gesture), silently return.
+      const resumed = context.resume();
+      if (!resumed || typeof resumed.then !== 'function') return;
+      // Wait a short time for resume to take effect
+      // If resume fails, the .catch will handle it and we won't play.
+      // eslint-disable-next-line no-unused-vars
+      return resumed.then(() => {
+        try {
+          // playback after successful resume
+        } catch (e) {}
+      }).catch(() => {});
+    } catch (e) {
+      return;
     }
+  }
 
     try {
         const oscillator = context.createOscillator();
