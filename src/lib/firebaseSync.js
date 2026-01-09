@@ -18,8 +18,6 @@ const permissionDeniedStores = new Set()
 let pauseWritesUntil = 0
 let backoffCount = 0
 // Stores to exclude from automatic cloud sync to avoid noisy writes
-const EXCLUDED_SYNC_STORES = new Set(['notifications'])
-// Stores to exclude from auto-sync to avoid noisy writes
 const EXCLUDED_SYNC_STORES = new Set(['notifications', 'reminders'])
 
 // Expose flags/hooks for storage.js
