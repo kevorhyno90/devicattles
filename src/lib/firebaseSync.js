@@ -36,7 +36,15 @@ function isPersistenceOk() {
   try {
     if (typeof window === 'undefined') return true
     const pm = window.__firestorePersistenceMode
-    return typeof pm === 'string' && pm.startsWith('indexeddb')
+    if (typeof pm === 'string' && pm.startsWith('indexeddb')) return true
+    // Allow full sync when running as an installed PWA (standalone) even if
+    // the persistence flag wasn't set yet — installed apps are single-window
+    // and typically have stable persistence ownership.
+    try {
+      const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone
+      if (isStandalone) return true
+    } catch (e) {}
+    return false
   } catch (e) {
     return false
   }
