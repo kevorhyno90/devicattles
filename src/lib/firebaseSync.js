@@ -29,7 +29,8 @@ const EXCLUDED_SYNC_STORES = new Set(['notifications', 'reminders'])
 // Single-writer queue to serialize and rate-limit commits to Firestore.
 const writeQueue = []
 let writeInProgress = false
-const INTER_WRITE_DELAY_MS = 300
+// Increase the inter-write delay to avoid write bursts that can trigger quota errors.
+const INTER_WRITE_DELAY_MS = 1000
 
 function enqueueWrite(fn) {
   return new Promise((resolve, reject) => {
@@ -77,29 +78,38 @@ async function processPersistentQueue() {
     while (q.length) {
       const op = q[0]
       try {
-        // Use the serialized in-memory write queue to perform the commit
-        await enqueueWrite(async () => {
-          // perform op
-          const uid = auth && auth.currentUser && auth.currentUser.uid
-          if (!uid) throw new Error('No user logged in')
-          const colName = firestoreCollectionName(op.storeName)
-          const colRefBase = uid ? (path => doc(db, 'users', uid, colName, path)) : (path => doc(db, colName, path))
-          const batch = writeBatch(db)
-          if (Array.isArray(op.items)) {
-            for (const item of op.items) {
-              try {
-                if (item && item._deleted) {
-                  const id = String(item.id)
-                  batch.delete(colRefBase(id))
-                } else if (item && item.id != null) {
-                  const id = String(item.id)
-                  batch.set(colRefBase(id), { ...item, updatedAt: serverTimestamp() }, { merge: true })
-                }
-              } catch (e) {}
-            }
+        // Use the serialized in-memory write queue to perform the commit.
+        // Break large ops into smaller chunks and commit with pauses to avoid bursts.
+        const uid = auth && auth.currentUser && auth.currentUser.uid
+        if (!uid) throw new Error('No user logged in')
+        const colName = firestoreCollectionName(op.storeName)
+        const colRefBase = uid ? (path => doc(db, 'users', uid, colName, path)) : (path => doc(db, colName, path))
+        if (Array.isArray(op.items) && op.items.length) {
+          const CHUNK_SIZE = 10
+          for (let i = 0; i < op.items.length; i += CHUNK_SIZE) {
+            const chunk = op.items.slice(i, i + CHUNK_SIZE)
+            await enqueueWrite(async () => {
+              const batch = writeBatch(db)
+              for (const item of chunk) {
+                try {
+                  if (item && item._deleted) {
+                    const id = String(item.id)
+                    batch.delete(colRefBase(id))
+                  } else if (item && item.id != null) {
+                    const id = String(item.id)
+                    batch.set(colRefBase(id), { ...item, updatedAt: serverTimestamp() }, { merge: true })
+                  }
+                } catch (e) {}
+              }
+              await batch.commit()
+            })
+            // Pause briefly between chunk commits to reduce write rate
+            await new Promise(r => setTimeout(r, 1200))
           }
-          await batch.commit()
-        })
+        } else {
+          // No items: still enqueue a no-op to keep ordering semantics
+          await enqueueWrite(async () => {})
+        }
         // remove op from persistent queue
         q.shift()
         savePersistQueue(q)
