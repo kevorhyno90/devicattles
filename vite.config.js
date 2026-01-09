@@ -233,9 +233,21 @@ export default defineConfig({
               return 'vendor'
             }
           }
-          // Keep app modules in their own chunk by filename
-          if (id.includes('/src/lib/')) return 'lib'
-          if (id.includes('/src/components/')) return 'components'
+          // Keep app modules in their own chunk by filename (per-file chunks)
+          if (id.includes('/src/lib/')) {
+            try {
+              const rel = id.split('/src/lib/')[1]
+              const name = rel.split('/') .pop().replace(/\.js$|\.jsx$|\.ts$|\.tsx$/,'')
+              return `lib-${name}`
+            } catch(e){ return 'lib' }
+          }
+          if (id.includes('/src/components/')) {
+            try {
+              const rel = id.split('/src/components/')[1]
+              const name = rel.split('/') .pop().replace(/\.js$|\.jsx$|\.ts$|\.tsx$/,'')
+              return `component-${name}`
+            } catch(e){ return 'components' }
+          }
           return undefined
         },
         // Better chunk naming for debugging
