@@ -34,6 +34,8 @@ export default function SyncSettings() {
   
   const [pushing, setPushing] = useState(false)
   const [pulling, setPulling] = useState(false)
+  const [pendingQueue, setPendingQueue] = useState(0)
+  const [queueItems, setQueueItems] = useState([])
 
   useEffect(() => {
     setConfigured(isFirebaseConfigured())
@@ -49,6 +51,10 @@ export default function SyncSettings() {
       setSyncStatus(getSyncStatus())
       setLastSyncTime(localStorage.getItem('devinsfarm:lastSyncTime'))
       setSyncError(localStorage.getItem('devinsfarm:lastSyncError') || '')
+      try {
+        if (window.__firestoreQueueLength) setPendingQueue(Number(window.__firestoreQueueLength() || 0))
+        if (window.__firestoreQueueItems) setQueueItems(Array.from(window.__firestoreQueueItems()))
+      } catch (e) {}
     }, 2000)
     
     return () => clearInterval(interval)
@@ -156,6 +162,61 @@ export default function SyncSettings() {
       if (retryCount < 2) {
         retryTimeoutRef.current = setTimeout(() => handlePullAll(retryCount + 1), 10000)
       }
+    }
+  }
+
+  async function handleExport() {
+    if (!confirm('Export all local data to a JSON file?')) return
+    try {
+      const all = {}
+      // Gather each store
+      for (const key of Object.keys(window.STORES || {})) {
+        try {
+          const data = localStorage.getItem(key) || null
+          all[key] = data ? JSON.parse(data) : []
+        } catch (e) {
+          all[key] = []
+        }
+      }
+      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), data: all }, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `devinsfarm-export-${new Date().toISOString()}.json`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+      alert('✅ Export started (check your downloads)')
+    } catch (e) {
+      alert('Export failed: ' + e.message)
+    }
+  }
+
+  async function handleImport(file) {
+    if (!file) return
+    if (!confirm('Importing will overwrite local data for the included stores. Proceed?')) return
+    try {
+      const text = await file.text()
+      const parsed = JSON.parse(text)
+      const data = parsed && parsed.data ? parsed.data : parsed
+      // Write each store
+      for (const [key, value] of Object.entries(data)) {
+        try {
+          // value expected to be array
+          if (Array.isArray(value)) {
+            // call global saveData if available
+            if (window.saveData && typeof window.saveData === 'function') {
+              window.saveData(key, value)
+            } else {
+              localStorage.setItem(key, JSON.stringify(value))
+            }
+          }
+        } catch (e) {}
+      }
+      alert('✅ Import completed. Refresh to load imported data.')
+    } catch (e) {
+      alert('Import failed: ' + (e.message || e))
     }
   }
 
@@ -416,6 +477,50 @@ export default function SyncSettings() {
                 >
                   {pulling ? '⏳ Pulling...' : '⬇️ Pull All from Cloud'}
                 </button>
+                <button onClick={handleExport}>📤 Export Local Data</button>
+                <label style={{ display: 'inline-block' }}>
+                  <input type="file" accept="application/json" style={{ display: 'none' }} onChange={e => handleImport(e.target.files && e.target.files[0])} />
+                  <button>📥 Import Data</button>
+                </label>
+              </div>
+              <div style={{ marginTop: 12, display: 'flex', gap: 10, alignItems: 'center' }}>
+                <div style={{ fontSize: 13, color: '#6b7280' }}>Pending queue: <strong>{pendingQueue}</strong></div>
+                <button onClick={() => { if (window.__firestoreFlushQueue) { window.__firestoreFlushQueue(); setTimeout(() => { try { setPendingQueue(window.__firestoreQueueLength()) } catch(e){} }, 1000) } }}>Flush Queue</button>
+                <button onClick={() => { if (window.__firestoreClearQueue) { window.__firestoreClearQueue(); setPendingQueue(0) } }} style={{ background: '#fee2e2' }}>Clear Queue</button>
+              </div>
+              {/* Admin: Inspect queued ops */}
+              <div style={{ marginTop: 12 }}>
+                <h4 style={{ margin: '8px 0' }}>Queued Operations</h4>
+                {queueItems && queueItems.length ? (
+                  <div style={{ maxHeight: 260, overflow: 'auto', border: '1px solid #e5e7eb', padding: 8, borderRadius: 6 }}>
+                    {queueItems.map((op, idx) => (
+                      <div key={idx} style={{ borderBottom: '1px dashed #e5e7eb', padding: 8 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ fontSize: 13 }}><strong>{op.storeName}</strong> — {Array.isArray(op.items) ? op.items.length : 0} item(s)</div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button onClick={() => { try { alert(JSON.stringify(op, null, 2)) } catch(e){} }}>Inspect</button>
+                            <button
+                              onClick={() => {
+                                if (window.__firestoreClearOp) {
+                                  window.__firestoreClearOp(idx);
+                                  setTimeout(() => {
+                                    setQueueItems(window.__firestoreQueueItems());
+                                    setPendingQueue(window.__firestoreQueueLength());
+                                  }, 250);
+                                }
+                              }}
+                              style={{ background: '#fee2e2' }}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 13, color: '#6b7280' }}>No queued operations</div>
+                )}
               </div>
               <p style={{ fontSize: 12, color: '#6b7280', marginTop: 10 }}>
                 <strong>Note:</strong> Push overwrites cloud data. Pull overwrites local data and reloads the app.
