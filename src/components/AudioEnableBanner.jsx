@@ -1,16 +1,23 @@
 import React, { useEffect, useState } from 'react'
-import { isAudioSuspended, enableAudioNow } from '../lib/notifications'
 
 export default function AudioEnableBanner() {
   const [visible, setVisible] = useState(false)
   const STORAGE_KEY = 'devinsfarm:audio:enabled'
 
   useEffect(() => {
-    try {
-      const hidden = localStorage.getItem(STORAGE_KEY)
-      if (hidden === 'true') return
-      if (isAudioSuspended()) setVisible(true)
-    } catch (e) {}
+    let mounted = true
+    ;(async () => {
+      try {
+        const hidden = localStorage.getItem(STORAGE_KEY)
+        if (hidden === 'true') return
+        const mod = await import('../lib/notifications')
+        if (!mounted) return
+        if (mod && typeof mod.isAudioSuspended === 'function' && mod.isAudioSuspended()) {
+          setVisible(true)
+        }
+      } catch (e) {}
+    })()
+    return () => { mounted = false }
   }, [])
 
   if (!visible) return null
@@ -19,12 +26,19 @@ export default function AudioEnableBanner() {
     <div style={{ position: 'fixed', bottom: 20, left: 20, zIndex: 12000 }}>
       <button
         onClick={async () => {
-          const ok = await enableAudioNow()
-          try { localStorage.setItem(STORAGE_KEY, 'true') } catch(e){}
-          setVisible(false)
-          if (ok) {
-            window.showToast && window.showToast('Audio enabled', 'success')
-          } else {
+          try {
+            const mod = await import('../lib/notifications')
+            const ok = mod && typeof mod.enableAudioNow === 'function' ? await mod.enableAudioNow() : false
+            try { localStorage.setItem(STORAGE_KEY, 'true') } catch (e) {}
+            setVisible(false)
+            if (ok) {
+              window.showToast && window.showToast('Audio enabled', 'success')
+            } else {
+              window.showToast && window.showToast('Audio could not be enabled', 'error')
+            }
+          } catch (e) {
+            try { localStorage.setItem(STORAGE_KEY, 'true') } catch (e) {}
+            setVisible(false)
             window.showToast && window.showToast('Audio could not be enabled', 'error')
           }
         }}
