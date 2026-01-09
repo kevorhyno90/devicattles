@@ -222,8 +222,16 @@ export default defineConfig({
             if (id.includes('node_modules/papaparse')) return 'analytics-libs'
             if (id.includes('node_modules/zustand')) return 'state'
             if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) return 'react-vendor'
-            // default vendor fallback
-            return 'vendor'
+            // default vendor fallback: split by package to avoid single huge vendor bundle
+            try {
+              const rel = id.split('node_modules/')[1]
+              if (!rel) return 'vendor'
+              const parts = rel.split('/')
+              const pkg = parts[0].startsWith('@') ? parts.slice(0,2).join('_') : parts[0]
+              return `vendor-${pkg}`
+            } catch (e) {
+              return 'vendor'
+            }
           }
           // Keep app modules in their own chunk by filename
           if (id.includes('/src/lib/')) return 'lib'
