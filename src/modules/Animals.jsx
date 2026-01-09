@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react'
-import Pastures from './Pastures'
-import HealthSystem from './HealthSystem'
+const Pastures = React.lazy(() => import('./Pastures'))
+const HealthSystem = React.lazy(() => import('./HealthSystem'))
 import AnimalFeeding from './AnimalFeeding'
 import AnimalMeasurement from './AnimalMeasurement'
 // Removed: import AnimalBreeding from './AnimalBreeding' (for startup perf)
@@ -11,7 +11,7 @@ import CalfManagement from './CalfManagement'
 import BSFFarming from './BSFFarming'
 import AzollaFarming from './AzollaFarming'
 import PoultryManagement from './PoultryManagement'
-import CanineManagement from './CanineManagement'
+const CanineManagement = React.lazy(() => import('./CanineManagement'))
 import PhotoGallery from '../components/PhotoGallery'
 import { fileToDataUrl, estimateDataUrlSize, uid } from '../lib/image'
 import { logAnimalActivity } from '../lib/activityLogger'
@@ -1773,13 +1773,17 @@ export default function Animals() {
         {/* Submodules - single column on mobile */}
         {tab === 'pastures' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
-            <Pastures />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <Pastures />
+            </React.Suspense>
           </div>
         )}
 
         {tab === 'health' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
-            <HealthSystem animals={animals} setAnimals={setAnimals} groups={groups} />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <HealthSystem animals={animals} setAnimals={setAnimals} groups={groups} />
+            </React.Suspense>
           </div>
         )}
 
@@ -1839,7 +1843,9 @@ export default function Animals() {
 
         {tab === 'canine' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
-            <CanineManagement animals={animals} setAnimals={setAnimals} />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <CanineManagement animals={animals} setAnimals={setAnimals} />
+            </React.Suspense>
           </div>
         )}
       </div>
