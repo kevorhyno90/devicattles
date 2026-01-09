@@ -210,20 +210,25 @@ export default defineConfig({
     // Manual chunk splitting for better caching and lazy loading
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Core vendor chunks - keep small
-          'react-vendor': ['react', 'react-dom'],
-          'router': ['react-router-dom'],
-          // Separate heavy libraries - load on demand only
-          'charts': ['chart.js', 'react-chartjs-2'],
-          'firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth', 'firebase/analytics', 'firebase/messaging'],
-          'state': ['zustand'],
-          // Very heavy libraries - must be separate
-          'pdf-lib': ['jspdf', 'jspdf-autotable'],
-          'docx-lib': ['docx'],
-          'html2canvas-lib': ['html2canvas'],
-          // Split components by feature for better granularity
-          'analytics-libs': ['papaparse']
+        manualChunks: (id) => {
+          if (!id) return
+          if (id.includes('node_modules')) {
+            if (id.includes('node_modules/docx')) return 'docx-lib'
+            if (id.includes('node_modules/html2canvas')) return 'html2canvas-lib'
+            if (id.includes('node_modules/jspdf') || id.includes('node_modules/jspdf-autotable')) return 'pdf-lib'
+            if (id.includes('node_modules/xlsx') || id.includes('node_modules/sheetjs')) return 'xlsx-lib'
+            if (id.includes('node_modules/firebase')) return 'firebase'
+            if (id.includes('node_modules/chart.js') || id.includes('node_modules/react-chartjs-2')) return 'charts'
+            if (id.includes('node_modules/papaparse')) return 'analytics-libs'
+            if (id.includes('node_modules/zustand')) return 'state'
+            if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) return 'react-vendor'
+            // default vendor fallback
+            return 'vendor'
+          }
+          // Keep app modules in their own chunk by filename
+          if (id.includes('/src/lib/')) return 'lib'
+          if (id.includes('/src/components/')) return 'components'
+          return undefined
         },
         // Better chunk naming for debugging
         chunkFileNames: (chunkInfo) => {
