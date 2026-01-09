@@ -42,6 +42,7 @@ import ToastContainer from './components/ToastContainer'
 import useUISettings from './hooks/useUISettings'
 import Header from './components/Header'
 import useAuthInit from './hooks/useAuthInit'
+import AudioEnableBanner from './components/AudioEnableBanner'
 // Lazy load stores to improve initial load time
 // import { useAnimalStore, useCropStore, useFinanceStore, useTaskStore, useInventoryStore, useUIStore } from './stores'
 
@@ -522,6 +523,7 @@ function AppContent() {
         getCurrentUserName={getCurrentUserName}
         getCurrentUserRole={getCurrentUserRole}
       />
+      <AudioEnableBanner />
       <nav style={{ 
         background: colors.bg.elevated, 
         padding: '12px 20px', 

@@ -54,6 +54,30 @@ export function initializeAudio() {
     document.body.addEventListener(event, resumeHandler, { once: true, capture: true });
   });
 }
+// Check whether an existing AudioContext is suspended (without creating a new one)
+export function isAudioSuspended() {
+  try {
+    return !!audioContext && audioContext.state === 'suspended'
+  } catch (e) {
+    return false
+  }
+}
+
+// Attempt to enable audio immediately (called after a user gesture)
+export async function enableAudioNow() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return false;
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+    isAudioInitialized = true;
+    return ctx.state === 'running';
+  } catch (e) {
+    console.warn('enableAudioNow failed:', e);
+    return false;
+  }
+}
 // --- End Audio API Management ---
 
 
