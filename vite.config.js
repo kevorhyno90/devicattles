@@ -133,7 +133,9 @@ export default defineConfig({
     port: 5000,
     strictPort: false,
     allowedHosts: true,
-    hmr: false, // Disable HMR in Codespaces to avoid WebSocket connection errors
+    // Disable HMR in Codespaces to avoid WebSocket connection errors
+    // Use `DEV_PERSISTENT=1 npm run dev` to enable a more persistent dev mode
+    hmr: false,
     fs: {
       strict: true
     },
@@ -141,15 +143,36 @@ export default defineConfig({
       // Reduce resource usage to avoid Codespaces restarts
       usePolling: false,
       interval: 300,
-      ignored: [
-        '**/node_modules/**',
-        '**/.git/**',
-        '**/dist/**',
-        '**/.vite/**',
-        'assets/**',
-        'attached_assets/**',
-        'public/assets/**'
-      ]
+      ignored: (function() {
+        const base = [
+          '**/node_modules/**',
+          '**/.git/**',
+          '**/dist/**',
+          '**/.vite/**',
+          'assets/**',
+          'attached_assets/**',
+          'public/assets/**',
+          // Ignore generated public files (service worker, manifest, preview helpers)
+          'public/firebase-messaging-sw.js',
+          'public/manifest.webmanifest',
+          'public/*.html',
+          'public/workers/**',
+          'public/icons/**',
+          '**/*.log',
+          '**/*.tmp',
+          '**/*.swp',
+          '.vscode/**'
+        ]
+        const persistent = process.env.DEV_PERSISTENT === '1' || process.env.DEV_PERSISTENT === 'true'
+        if (persistent) {
+          // In persistent dev mode, ignore lib and heavy component folders to avoid automatic restarts
+          base.push('src/lib/**')
+          base.push('src/components/**')
+          base.push('src/main.jsx')
+          base.push('index.html')
+        }
+        return base
+      })()
     }
   },
   preview: {

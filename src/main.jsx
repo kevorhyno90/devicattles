@@ -56,6 +56,24 @@ setTimeout(() => {
   }).catch(() => {});
 }, 100);
 
+// Provide safe global fallbacks for UI helpers used by many modules.
+// These are lightweight no-ops in dev/preview to avoid ReferenceError when
+// modules expect global helpers to exist before their code runs.
+if (typeof window !== 'undefined') {
+  try {
+    if (!window.startInlineEdit) {
+      window.startInlineEdit = function() { /* noop fallback for inline edit buttons */ }
+    }
+  } catch (e) {}
+  try {
+    if (!window.toast) {
+      window.toast = function(message, opts) {
+        try { console.info('toast:', message, opts || {}) } catch (e) {}
+      }
+    }
+  } catch (e) {}
+}
+
 const rootElement = document.getElementById('root')
 if (!rootElement) {
   console.error('❌ Root element not found')

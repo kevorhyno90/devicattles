@@ -752,6 +752,22 @@ export default function Animals() {
             📋 Animal List
           </button>
           <button
+            onClick={() => { resetGroupForm(); setTab('addGroup') }}
+            style={{
+              padding: window.innerWidth <= 600 ? '14px 10px' : '12px 20px',
+              minWidth: window.innerWidth <= 600 ? '120px' : 'auto',
+              border: 'none',
+              borderBottom: tab === 'addGroup' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'addGroup' ? '#f0fdf4' : 'transparent',
+              color: tab === 'addGroup' ? 'var(--green)' : '#6b7280',
+              fontWeight: tab === 'addGroup' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: window.innerWidth <= 600 ? '15px' : '14px'
+            }}
+          >
+            👥 Groups
+          </button>
+          <button
             onClick={() => setTab('feeding')}
             style={{
               padding: '12px 20px',
@@ -1077,6 +1093,25 @@ export default function Animals() {
                         </div>
                       </div>
                       
+                      {/* Inline Quick Edit */}
+                      {inlineEditingId === a.id && (
+                        <div style={{ marginTop: 12, padding: 12, background: '#fff7ed', borderRadius: 8, border: '1px solid #fde68a' }}>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <input placeholder="Name" value={inlineForm.name || ''} onChange={e => handleInlineChange('name', e.target.value)} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #e5e7eb' }} />
+                            <input placeholder="Tag" value={inlineForm.tag || ''} onChange={e => handleInlineChange('tag', e.target.value)} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #e5e7eb' }} />
+                            <input placeholder="Weight (kg)" value={inlineForm.weight || ''} onChange={e => handleInlineChange('weight', e.target.value)} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #e5e7eb', width: 120 }} />
+                            <select value={inlineForm.groupId || ''} onChange={e => handleInlineChange('groupId', e.target.value)} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #e5e7eb' }}>
+                              <option value="">-- No group --</option>
+                              {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                            </select>
+                            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+                              <button onClick={saveInlineEdit} style={{ padding: '8px 12px', background: 'var(--green)', color: '#fff', border: 'none', borderRadius: 6 }}>Save</button>
+                              <button onClick={cancelInlineEdit} style={{ padding: '8px 12px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 6 }}>Cancel</button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {isExp && (
                         <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #e5e7eb', fontSize: '0.9rem' }}>
                           {/* Weight Trend Chart */}

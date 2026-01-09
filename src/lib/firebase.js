@@ -12,7 +12,7 @@
  */
 
 import { initializeApp, getApps } from 'firebase/app'
-import { initializeFirestore, getFirestore, CACHE_SIZE_UNLIMITED, persistentLocalCache } from 'firebase/firestore'
+import { initializeFirestore, getFirestore, CACHE_SIZE_UNLIMITED, persistentLocalCache, connectFirestoreEmulator } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 import { getAnalytics, isSupported as analyticsIsSupported } from 'firebase/analytics'
 import { getMessaging, isSupported as messagingIsSupported } from 'firebase/messaging'
@@ -67,6 +67,26 @@ try {
       // Use existing app instance
       app = getApps()[0]
       db = getFirestore(app)
+    }
+    
+    // Wire up Firestore emulator in development when requested via Vite env vars.
+    // Use `VITE_USE_FIRESTORE_EMULATOR=true` to enable, or set `VITE_FIRESTORE_EMULATOR_HOST` and `VITE_FIRESTORE_EMULATOR_PORT`.
+    try {
+      const useEmulator = Boolean(import.meta.env.VITE_USE_FIRESTORE_EMULATOR === 'true')
+      const emulatorHost = import.meta.env.VITE_FIRESTORE_EMULATOR_HOST || 'localhost'
+      const emulatorPort = parseInt(import.meta.env.VITE_FIRESTORE_EMULATOR_PORT || '') || undefined
+      if (useEmulator || (emulatorHost && emulatorPort)) {
+        if (db && typeof connectFirestoreEmulator === 'function' && emulatorPort) {
+          try {
+            connectFirestoreEmulator(db, emulatorHost, emulatorPort)
+            console.info(`ℹ️ Firestore emulator connected to ${emulatorHost}:${emulatorPort}`)
+          } catch (e) {
+            console.warn('⚠️ Failed to connect to Firestore emulator:', e)
+          }
+        }
+      }
+    } catch (e) {
+      // ignore emulator wiring failures in dev
     }
     
     auth = getAuth(app)

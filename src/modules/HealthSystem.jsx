@@ -60,6 +60,12 @@ export default function HealthSystem({ animals = [] }){
     setLastChange({ item })
   }
 
+  // Expose for legacy/global callers and preview environments where bundling may
+  // reference a global function name. This is a safe fallback and kept for dev only.
+  if (typeof window !== 'undefined') {
+    try { window.startInlineEdit = startInlineEdit } catch (e) {}
+  }
+
   function saveInlineEdit() {
     if (!inlineData.name || !inlineData.name.trim()) {
       setToast({ type: 'error', message: 'Name is required' })
