@@ -32,7 +32,21 @@ let writeInProgress = false
 // Increase the inter-write delay to avoid write bursts that can trigger quota errors.
 const INTER_WRITE_DELAY_MS = 1000
 
+function isPersistenceOk() {
+  try {
+    if (typeof window === 'undefined') return true
+    const pm = window.__firestorePersistenceMode
+    return typeof pm === 'string' && pm.startsWith('indexeddb')
+  } catch (e) {
+    return false
+  }
+}
+
 function enqueueWrite(fn) {
+  if (!isPersistenceOk()) {
+    try { console.warn('enqueueWrite: persistence unavailable — skipping write enqueue') } catch(e){}
+    return Promise.resolve()
+  }
   return new Promise((resolve, reject) => {
     writeQueue.push({ fn, resolve, reject })
     if (!writeInProgress) processWriteQueue()
@@ -77,6 +91,11 @@ async function processPersistentQueue() {
     let q = loadPersistQueue()
     while (q.length) {
       const op = q[0]
+      // If persistence isn't available, defer processing persistent queue.
+      if (!isPersistenceOk()) {
+        try { console.warn('processPersistentQueue: persistence unavailable — deferring persistent queue processing') } catch(e){}
+        break
+      }
       try {
         // Use the serialized in-memory write queue to perform the commit.
         // Break large ops into smaller chunks and commit with pauses to avoid bursts.
