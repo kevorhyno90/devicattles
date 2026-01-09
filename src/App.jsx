@@ -54,8 +54,8 @@ const Notes = lazyWithRetry(() => import('./modules/Notes'))
 // Lazy load all modules with retry logic
 const Dashboard = lazyWithRetry(() => import('./modules/Dashboard'))
 const NotificationCenter = lazyWithRetry(() => import('./modules/NotificationCenter'))
-// Load Animals synchronously to avoid dynamic import timeouts in Codespaces
-import Animals from './modules/Animals'
+// Load Animals lazily to reduce initial bundle
+const Animals = lazyWithRetry(() => import('./modules/Animals'))
 const Tasks = lazyWithRetry(() => import('./modules/Tasks'))
 const Finance = lazyWithRetry(() => import('./modules/Finance'))
 const Schedules = lazyWithRetry(() => import('./modules/Schedules'))
