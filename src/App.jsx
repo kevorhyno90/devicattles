@@ -41,6 +41,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import ToastContainer from './components/ToastContainer'
 import useUISettings from './hooks/useUISettings'
 import Header from './components/Header'
+import useAuthInit from './hooks/useAuthInit'
 // Lazy load stores to improve initial load time
 // import { useAnimalStore, useCropStore, useFinanceStore, useTaskStore, useInventoryStore, useUIStore } from './stores'
 
@@ -187,8 +188,7 @@ const LoadingFallback = () => {
 }
 
 // Import critical auth/settings functions (needed immediately)
-import { isAuthenticated, getCurrentSession, logout, getCurrentUserName, getCurrentUserRole } from './lib/auth'
-import { isAuthRequired, getDefaultUser } from './lib/appSettings'
+import { getCurrentUserName, getCurrentUserRole } from './lib/auth'
 // Defer heavy lib imports to dynamic loading when possible
 // import { logAction, ACTIONS, ENTITIES } from './lib/audit'
 // import { startReminderChecker, stopReminderChecker, getUnreadCount } from './lib/notifications'
@@ -227,8 +227,8 @@ function AppContent() {
   const AppViewContextLocal = (typeof window !== 'undefined' && window.AppViewContext) ? window.AppViewContext : React.createContext({ view: 'dashboard', setView: () => {}, editMode: false, setEditMode: () => {} });
   const { view, setView, editMode, setEditMode } = useContext(AppViewContextLocal);
   const ThemeToggle = (typeof window !== 'undefined' && window.ThemeToggleButton) ? window.ThemeToggleButton : null;
-  const [authenticated, setAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  // Authentication state is managed via hook
+  const { authenticated, currentUser, handleLoginSuccess, handleLogout } = useAuthInit({ onLogout: () => setView('dashboard') })
   const [animals, setAnimals] = useState([]);
   const [crops, setCrops] = useState([]);
   const [finance, setFinance] = useState([]);
@@ -350,23 +350,7 @@ function AppContent() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Check authentication on mount (with dynamic imports)
-  useEffect(() => {
-    import('./lib/appSettings').then(({ isAuthRequired, getDefaultUser }) => {
-      import('./lib/auth').then(({ isAuthenticated, getCurrentSession }) => {
-        // If auth is not required (personal mode), auto-login as default user
-        if (!isAuthRequired()) {
-          const defaultUser = getDefaultUser()
-          setCurrentUser(defaultUser)
-          setAuthenticated(true)
-        } else if (isAuthenticated()) {
-          const session = getCurrentSession()
-          setCurrentUser(session)
-          setAuthenticated(true)
-        }
-      });
-    });
-  }, [])
+  // Authentication is handled by `useAuthInit` hook; no local auth initialization here.
 
   // Start notification/reminder checker and sync (deferred for performance)
   useEffect(() => {
@@ -505,25 +489,7 @@ function AppContent() {
     };
   }, []);
 
-  function handleLoginSuccess(user) {
-    setCurrentUser(user)
-    setAuthenticated(true)
-  }
-
-  async function handleLogout() {
-    const [{ logAction, ACTIONS, ENTITIES }, { logout }] = await Promise.all([
-      import('./lib/audit'),
-      import('./lib/auth')
-    ]);
-    
-    logAction(ACTIONS.LOGOUT, ENTITIES.USER, currentUser?.userId || 'unknown', {
-      username: currentUser?.username
-    })
-    logout()
-    setAuthenticated(false)
-    setCurrentUser(null)
-    setView('dashboard')
-  }
+  
 
   // Show login if not authenticated
   if (!authenticated) {
