@@ -119,7 +119,9 @@ async function pushStoreToFirestore(storeName, localData = []) {
         backoffCount = Math.min((backoffCount || 0) + 1, 6)
         const pauseMs = Math.min(60 * 1000 * Math.pow(2, backoffCount - 1), 60 * 60 * 1000)
         pauseWritesUntil = Date.now() + pauseMs
-        console.warn(`Firestore quota exceeded — pausing writes for ${Math.round(pauseMs/1000)}s (backoff #${backoffCount}).`)
+          console.warn(`Firestore quota exceeded — pausing writes for ${Math.round(pauseMs/1000)}s (backoff #${backoffCount}).`)
+          // Expose backoff telemetry for diagnostics
+          try { window.__firestoreBackoff = { backoffCount, pauseWritesUntil } } catch(e) {}
       } catch (e) {
         pauseWritesUntil = Date.now() + (60 * 1000)
         console.warn(`Firestore quota exceeded — pausing writes for 60s.`)
