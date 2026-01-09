@@ -39,6 +39,8 @@ import ErrorBoundary from './components/ErrorBoundary'
 // import { DataLayer } from './lib/dataLayer'
 // import { initGlobalErrorHandler } from './lib/errorHandler'
 import ToastContainer from './components/ToastContainer'
+import useUISettings from './hooks/useUISettings'
+import Header from './components/Header'
 // Lazy load stores to improve initial load time
 // import { useAnimalStore, useCropStore, useFinanceStore, useTaskStore, useInventoryStore, useUIStore } from './stores'
 
@@ -240,10 +242,10 @@ function AppContent() {
   const [deniedStores, setDeniedStores] = useState([]);
   // Add GoatModule view
   
-  // UI branding/settings - must be declared before any conditional returns
+  // UI branding/settings - use hook to load/save from localStorage
   const SETTINGS_KEY = 'devinsfarm:ui:settings'
   const defaultSettings = { backgroundOn: false, background: 'bg-farm.svg', logo: 'jr-farm-logo.svg', uploadedLogo: '', theme: 'catalytics' }
-  const [settings, setSettings] = useState(defaultSettings)
+  const [settings, setSettings] = useUISettings(SETTINGS_KEY, defaultSettings)
 
   // Initialize error handler and data layer on mount (dynamically imported for better performance)
   useEffect(() => {
@@ -470,19 +472,7 @@ function AppContent() {
     return () => clearTimeout(timer);
   }, [view]); // Reload when view changes to keep animals fresh
   
-  // Load UI settings
-  useEffect(()=>{
-    try{
-      const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null')
-      if(s) setSettings(prev=> ({ ...prev, ...s }))
-    }catch(e){}
-  }, [])
 
-  // Save UI settings
-  useEffect(()=>{ 
-    try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)) }
-    catch(e){} 
-  }, [settings])
 
   // Global toast notification function
   useEffect(() => {
@@ -553,111 +543,19 @@ function AppContent() {
         minHeight: '100vh',
         transition: 'background 0.3s, color 0.3s'
       }}>
-      <header style={{
-        background: colors.bg.elevated,
-        borderBottom: `2px solid ${colors.border.primary}`,
-        boxShadow: colors.shadow.md
-      }}>
-        <div style={{ display:'flex', alignItems:'center', gap:12 }} className="brand">
-          <div className="logo-wrap" aria-hidden>
-            <img
-              src={ settings.logo === 'uploaded' && settings.uploadedLogo ? settings.uploadedLogo : `/assets/${settings.logo}` }
-              className="logo"
-              alt="JR FARM - Comprehensive Farm Management"
-              onError={()=> setSettings(s=> ({ ...s, logo: '' }))}
-            />
-          </div>
-          <div>
-            <h2 style={{
-              margin:'0 0 4px 0', 
-              fontSize:'1.4rem', 
-              fontWeight:'900', 
-              letterSpacing:'0.5px',
-              color: colors.text.primary
-            }}>JR FARM</h2>
-            <p style={{
-              margin:'0', 
-              fontSize:'0.75rem', 
-              opacity:'0.95',
-              color: colors.text.secondary || colors.text.primary
-            }}>Comprehensive Farm Management</p>
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {showInstallPrompt && (
-            <button
-              onClick={handleInstallClick}
-              style={{
-                padding: '6px 12px',
-                background: '#10b981',
-                border: 'none',
-                color: 'white',
-                borderRadius: 6,
-                cursor: 'pointer',
-                fontSize: 13,
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}
-              title="Install app on your device"
-            >
-              📥 Install App
-            </button>
-          )}
-          {/* Global Edit Mode Toggle */}
-          <label title="Toggle edit mode" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'rgba(255,255,255,0.2)', borderRadius: 6 }}>
-            <input type="checkbox" checked={editMode} onChange={e=>setEditMode(e.target.checked)} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'white' }}>{editMode ? 'Edit Mode: ON' : 'Edit Mode: OFF'}</span>
-          </label>
-          {unreadNotifications > 0 && (
-            <div 
-              onClick={() => setView('notifications')}
-              style={{
-                position: 'relative',
-                cursor: 'pointer',
-                padding: '6px 10px',
-                background: 'rgba(255,255,255,0.2)',
-                borderRadius: 6,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}
-              title="View notifications"
-            >
-              🔔
-              <span style={{
-                background: '#ef4444',
-                color: 'white',
-                borderRadius: 10,
-                padding: '2px 6px',
-                fontSize: 11,
-                fontWeight: '600'
-              }}>
-                {unreadNotifications}
-              </span>
-            </div>
-          )}
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', textAlign: 'right' }}>
-            <div style={{ fontWeight: 600 }}>{getCurrentUserName()}</div>
-            <div style={{ fontSize: 11 }}>{getCurrentUserRole()}</div>
-          </div>
-          <button 
-            onClick={handleLogout}
-            style={{ 
-              padding: '6px 12px', 
-              background: 'rgba(255,255,255,0.2)', 
-              border: '1px solid rgba(255,255,255,0.3)',
-              color: 'white',
-              borderRadius: 6,
-              cursor: 'pointer',
-              fontSize: 13
-            }}
-          >
-            Logout
-          </button>
-        </div>
-      </header>
+      <Header
+        settings={settings}
+        setSettings={setSettings}
+        showInstallPrompt={showInstallPrompt}
+        handleInstallClick={handleInstallClick}
+        editMode={editMode}
+        setEditMode={setEditMode}
+        unreadNotifications={unreadNotifications}
+        setView={setView}
+        handleLogout={handleLogout}
+        getCurrentUserName={getCurrentUserName}
+        getCurrentUserRole={getCurrentUserRole}
+      />
       <nav style={{ 
         background: colors.bg.elevated, 
         padding: '12px 20px', 
