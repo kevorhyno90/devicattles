@@ -16,6 +16,11 @@ const applyingSet = new Set()
 const permissionDeniedStores = new Set()
 // Pause writes temporarily when backend quota errors are encountered
 let pauseWritesUntil = 0
+let backoffCount = 0
+// Stores to exclude from automatic cloud sync to avoid noisy writes
+const EXCLUDED_SYNC_STORES = new Set(['notifications'])
+// Stores to exclude from auto-sync to avoid noisy writes
+const EXCLUDED_SYNC_STORES = new Set(['notifications', 'reminders'])
 
 // Expose flags/hooks for storage.js
 function firestoreCollectionName(storeName) {
@@ -55,6 +60,10 @@ async function pushStoreToFirestore(storeName, localData = []) {
   }
   // If we've previously detected permission denied for this store, skip silently
   if (permissionDeniedStores.has(storeName)) return
+  if (EXCLUDED_SYNC_STORES.has(storeName)) return
+  // Skip noisy or intentionally local-only stores
+  if (EXCLUDED_SYNC_STORES.has(storeName)) return
+
   const colRef = getUserCollectionRef(storeName)
   const batch = writeBatch(db)
 
@@ -68,16 +77,32 @@ async function pushStoreToFirestore(storeName, localData = []) {
     // Index local by id and upsert only — do NOT delete remote docs automatically.
     const localById = new Map()
     localData.forEach(item => {
-      const id = item.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+      // Normalize id values to strings to avoid SDK path parsing errors
+      const rawId = item && item.id != null ? item.id : null
+      const id = rawId != null ? String(rawId) : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
       localById.set(id, { ...item, id, updatedAt: item.updatedAt || new Date().toISOString() })
     })
 
     // Upsert all local items
     for (const [id, item] of localById.entries()) {
-      batch.set(doc(colRef, id), item, { merge: true })
+      try {
+        if (!id) {
+          console.warn('pushStoreToFirestore: skipping item with invalid id', item)
+          continue
+        }
+        // Use segmented path arguments to avoid SDK parsing ambiguity
+        const colName = firestoreCollectionName(storeName)
+        const uid = auth && auth.currentUser && auth.currentUser.uid
+        const docRef = uid ? doc(db, 'users', uid, colName, id) : doc(db, colName, id)
+        batch.set(docRef, item, { merge: true })
+      } catch (e) {
+        console.warn('pushStoreToFirestore: failed to queue item', id, e)
+      }
     }
 
     await batch.commit()
+    // reset backoff on successful commit
+    backoffCount = 0
   } catch (err) {
     // Avoid spamming the console with repeated Firestore errors.
     const msg = String((err && (err.message || err.code)) || '')
@@ -91,8 +116,16 @@ async function pushStoreToFirestore(storeName, localData = []) {
 
     // Handle quota / resource-exhausted by backing off writes briefly
     if (err && (err.code === 'resource-exhausted' || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('resource-exhausted'))) {
-      pauseWritesUntil = Date.now() + (60 * 1000) // pause for 60s
-      console.warn(`Firestore quota exceeded — pausing writes for 60s.`)
+      // exponential backoff: base 60s, double per occurrence, cap at 1 hour
+      try {
+        backoffCount = Math.min((backoffCount || 0) + 1, 6)
+        const pauseMs = Math.min(60 * 1000 * Math.pow(2, backoffCount - 1), 60 * 60 * 1000)
+        pauseWritesUntil = Date.now() + pauseMs
+        console.warn(`Firestore quota exceeded — pausing writes for ${Math.round(pauseMs/1000)}s (backoff #${backoffCount}).`)
+      } catch (e) {
+        pauseWritesUntil = Date.now() + (60 * 1000)
+        console.warn(`Firestore quota exceeded — pausing writes for 60s.`)
+      }
       return
     }
 
@@ -186,6 +219,8 @@ export async function startFirestoreSync() {
   // Initial push + listeners per store
   for (const storeName of Object.keys(STORES)) {
     try {
+      // Optionally skip noisy stores
+      if (EXCLUDED_SYNC_STORES.has(storeName)) continue
       // If permissions were already denied for this store, skip push/listener setup
       if (permissionDeniedStores.has(storeName)) {
         continue
@@ -324,7 +359,6 @@ export async function syncToFirebase(collectionName, data) {
     syncStatus = 'syncing'
     const uid = auth && auth.currentUser && auth.currentUser.uid
     if (!uid) return false
-    const userPath = `users/${uid}`
     const batch = writeBatch(db)
     let items = []
     if (data == null) items = []
@@ -332,11 +366,22 @@ export async function syncToFirebase(collectionName, data) {
     else if (typeof data === 'object') items = Object.values(data)
     else items = [data]
 
-    const collectionRef = collection(db, userPath, collectionName)
+    // Use segmented path arguments to avoid passing a combined path string.
+    const collectionRef = collection(db, 'users', uid, collectionName)
     for (const item of items) {
-      if (!item || !item.id) continue
-      const docRef = doc(collectionRef, item.id)
-      batch.set(docRef, { ...item, updatedAt: serverTimestamp() }, { merge: true })
+      try {
+        if (!item || item.id == null) continue
+        // Normalize id to string to defend against objects/arrays being passed
+        const id = (typeof item.id === 'string') ? item.id : String(item.id)
+        if (!id) {
+          console.warn('syncToFirebase: skipping item with invalid id', item)
+          continue
+        }
+        const docRef = doc(collectionRef, id)
+        batch.set(docRef, { ...item, updatedAt: serverTimestamp() }, { merge: true })
+      } catch (e) {
+        console.warn('syncToFirebase: failed to queue item for sync', item, e)
+      }
     }
     await batch.commit()
     syncStatus = 'synced'
@@ -455,6 +500,36 @@ export async function pullAllFromFirebase() {
 export function setupAutoSync() {
   if (!isSyncEnabled()) return
   const originalSetItem = localStorage.setItem
+  // Pending syncs per collection with debounce timers
+  const pending = new Map()
+  const DEBOUNCE_MS = 2000
+
+  function scheduleSync(collectionName, toSync) {
+    try {
+      // Skip noisy stores by default
+      if (EXCLUDED_SYNC_STORES.has(collectionName)) return
+
+      if (pending.has(collectionName)) {
+        // merge arrays
+        const entry = pending.get(collectionName)
+        entry.items = Array.isArray(entry.items) ? Array.from(new Map([...entry.items, ...toSync].map(i => [i.id || JSON.stringify(i), i])).values()) : toSync
+        clearTimeout(entry.timer)
+        entry.timer = setTimeout(() => {
+          try { syncToFirebase(collectionName, entry.items) } catch (e) {}
+          pending.delete(collectionName)
+        }, DEBOUNCE_MS)
+      } else {
+        const timer = setTimeout(() => {
+          try { syncToFirebase(collectionName, toSync) } catch (e) {}
+          pending.delete(collectionName)
+        }, DEBOUNCE_MS)
+        pending.set(collectionName, { items: toSync, timer })
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
   localStorage.setItem = function(key, value) {
     originalSetItem.call(localStorage, key, value)
     if (key.startsWith('devinsfarm:') || key.startsWith('cattalytics:')) {
@@ -465,7 +540,7 @@ export function setupAutoSync() {
         if (Array.isArray(parsed)) toSync = parsed
         else if (parsed && typeof parsed === 'object') toSync = Object.values(parsed)
         else toSync = [parsed]
-        syncToFirebase(collectionName, toSync)
+        scheduleSync(collectionName, toSync)
       } catch (e) {}
     }
   }
