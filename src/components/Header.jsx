@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
 export default function Header({
   settings,
@@ -13,6 +13,22 @@ export default function Header({
   getCurrentUserName,
   getCurrentUserRole
 }) {
+  const [queueCount, setQueueCount] = useState(0)
+  const [queueProcessing, setQueueProcessing] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+    const update = () => {
+      try {
+        if (window.__firestoreQueueLength) setQueueCount(Number(window.__firestoreQueueLength() || 0))
+        if (window.__firestoreQueueProcessing) setQueueProcessing(Boolean(window.__firestoreQueueProcessing()))
+        else if (window.__firestoreQueueLength && window.__firestoreFlushQueue) setQueueProcessing(false)
+      } catch (e) {}
+    }
+    update()
+    const iv = setInterval(update, 2000)
+    return () => { mounted = false; clearInterval(iv) }
+  }, [])
   return (
     <header style={{
       background: 'var(--header-bg, transparent)',
@@ -62,6 +78,13 @@ export default function Header({
             <span style={{ background: '#ef4444', color: 'white', borderRadius: 10, padding: '2px 6px', fontSize: 11, fontWeight: '600' }}>{unreadNotifications}</span>
           </div>
         )}
+        {/* Queue badge */}
+        <div title="Sync queue" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {queueProcessing ? <span style={{ fontSize: 14 }}>⏳</span> : null}
+          <div style={{ background: queueCount ? '#f59e0b' : 'rgba(255,255,255,0.12)', color: 'white', borderRadius: 10, padding: '4px 8px', fontSize: 12 }}>
+            Q:{queueCount}
+          </div>
+        </div>
         <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', textAlign: 'right' }}>
           <div style={{ fontWeight: 600 }}>{getCurrentUserName()}</div>
           <div style={{ fontSize: 11 }}>{getCurrentUserRole()}</div>

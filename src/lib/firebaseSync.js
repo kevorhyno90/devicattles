@@ -1,6 +1,9 @@
 import { db, isFirebaseConfigured, auth } from './firebase'
-// Respect a dev-only flag to disable cloud sync when running locally or in previews.
-const DISABLE_SYNC = typeof import.meta !== 'undefined' && Boolean(import.meta.env.VITE_DISABLE_FIRESTORE_SYNC === 'true')
+// Sync is opt-in to avoid accidental cloud writes/costs for personal apps.
+// Enable by setting the env var `VITE_ENABLE_FIRESTORE_SYNC=true` at build/runtime
+// or by setting localStorage `devinsfarm:sync:enabled` = 'true' in the browser.
+const EXPLICIT_SYNC_ENABLED = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_ENABLE_FIRESTORE_SYNC === 'true') || (typeof window !== 'undefined' && (() => { try { return localStorage.getItem('devinsfarm:sync:enabled') === 'true' } catch (e) { return false } })())
+const DISABLE_SYNC = !EXPLICIT_SYNC_ENABLED
 import { collection, doc, getDocs, onSnapshot, setDoc, writeBatch, query, limit, serverTimestamp } from 'firebase/firestore'
 import { STORES, loadData, saveData } from './storage'
 
@@ -17,8 +20,205 @@ const permissionDeniedStores = new Set()
 // Pause writes temporarily when backend quota errors are encountered
 let pauseWritesUntil = 0
 let backoffCount = 0
+// Pause reads temporarily when backend quota errors are encountered
+let pauseReadsUntil = 0
+let readBackoffCount = 0
 // Stores to exclude from automatic cloud sync to avoid noisy writes
 const EXCLUDED_SYNC_STORES = new Set(['notifications', 'reminders'])
+
+// Single-writer queue to serialize and rate-limit commits to Firestore.
+const writeQueue = []
+let writeInProgress = false
+const INTER_WRITE_DELAY_MS = 300
+
+function enqueueWrite(fn) {
+  return new Promise((resolve, reject) => {
+    writeQueue.push({ fn, resolve, reject })
+    if (!writeInProgress) processWriteQueue()
+  })
+}
+
+// Persistent write queue stored in localStorage to survive reloads.
+const PERSIST_QUEUE_KEY = 'devinsfarm:writeQueue'
+let persistentProcessing = false
+
+function loadPersistQueue() {
+  try {
+    const raw = localStorage.getItem(PERSIST_QUEUE_KEY)
+    if (!raw) return []
+    return JSON.parse(raw)
+  } catch (e) {
+    return []
+  }
+}
+
+function savePersistQueue(q) {
+  try {
+    localStorage.setItem(PERSIST_QUEUE_KEY, JSON.stringify(q))
+  } catch (e) {
+    // ignore
+  }
+}
+
+async function enqueuePersistentOp(op) {
+  try {
+    const q = loadPersistQueue()
+    q.push(op)
+    savePersistQueue(q)
+    processPersistentQueue().catch(() => {})
+  } catch (e) {}
+}
+
+async function processPersistentQueue() {
+  if (persistentProcessing) return
+  persistentProcessing = true
+  try {
+    let q = loadPersistQueue()
+    while (q.length) {
+      const op = q[0]
+      try {
+        // Use the serialized in-memory write queue to perform the commit
+        await enqueueWrite(async () => {
+          // perform op
+          const uid = auth && auth.currentUser && auth.currentUser.uid
+          if (!uid) throw new Error('No user logged in')
+          const colName = firestoreCollectionName(op.storeName)
+          const colRefBase = uid ? (path => doc(db, 'users', uid, colName, path)) : (path => doc(db, colName, path))
+          const batch = writeBatch(db)
+          if (Array.isArray(op.items)) {
+            for (const item of op.items) {
+              try {
+                if (item && item._deleted) {
+                  const id = String(item.id)
+                  batch.delete(colRefBase(id))
+                } else if (item && item.id != null) {
+                  const id = String(item.id)
+                  batch.set(colRefBase(id), { ...item, updatedAt: serverTimestamp() }, { merge: true })
+                }
+              } catch (e) {}
+            }
+          }
+          await batch.commit()
+        })
+        // remove op from persistent queue
+        q.shift()
+        savePersistQueue(q)
+      } catch (e) {
+        // handle quota errors: if resource-exhausted, set pauseWritesUntil and stop processing
+        const msg = String((e && (e.message || e.code)) || '')
+        if (e && (e.code === 'resource-exhausted' || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('resource-exhausted'))) {
+          backoffCount = Math.min((backoffCount || 0) + 1, 6)
+          const pauseMs = Math.min(60 * 1000 * Math.pow(2, backoffCount - 1), 60 * 60 * 1000)
+          pauseWritesUntil = Date.now() + pauseMs
+          console.warn(`Firestore quota exceeded during persistent queue processing — pausing writes for ${Math.round(pauseMs/1000)}s (backoff #${backoffCount}).`)
+          try { window.__firestoreBackoff = { backoffCount, pauseWritesUntil } } catch(e) {}
+          break
+        }
+        // Other errors: break to avoid tight failure loop
+        break
+      }
+      q = loadPersistQueue()
+    }
+  } finally {
+    persistentProcessing = false
+  }
+}
+
+// Expose persistent queue helpers for UI/diagnostics
+export function getPersistentQueueLength() {
+  try { return loadPersistQueue().length } catch (e) { return 0 }
+}
+
+export function clearPersistentQueue() {
+  try { savePersistQueue([]); return true } catch (e) { return false }
+}
+
+export function flushPersistentQueue() {
+  try { processPersistentQueue().catch(() => {}); return true } catch (e) { return false }
+}
+
+export function getPersistentQueueItems() {
+  try { return loadPersistQueue() } catch (e) { return [] }
+}
+
+export function removePersistentQueueItem(index) {
+  try {
+    const q = loadPersistQueue()
+    if (index < 0 || index >= q.length) return false
+    q.splice(index, 1)
+    savePersistQueue(q)
+    return true
+  } catch (e) { return false }
+}
+
+export function isPersistentProcessing() {
+  return Boolean(persistentProcessing)
+}
+
+if (typeof window !== 'undefined') {
+  try {
+    window.__firestoreQueueLength = () => getPersistentQueueLength()
+    window.__firestoreFlushQueue = () => flushPersistentQueue()
+    window.__firestoreClearQueue = () => clearPersistentQueue()
+    window.__firestoreQueueItems = () => getPersistentQueueItems()
+    window.__firestoreClearOp = (i) => removePersistentQueueItem(i)
+    window.__firestoreQueueProcessing = () => isPersistentProcessing()
+  } catch (e) {}
+}
+
+// Read queue to serialize/pace read probes (avoids many simultaneous getDocs)
+const readQueue = []
+let readInProgress = false
+const INTER_READ_DELAY_MS = 250
+
+function enqueueRead(fn) {
+  return new Promise((resolve, reject) => {
+    readQueue.push({ fn, resolve, reject })
+    if (!readInProgress) processReadQueue()
+  })
+}
+
+async function processReadQueue() {
+  if (readInProgress) return
+  readInProgress = true
+  while (readQueue.length) {
+    const { fn, resolve, reject } = readQueue.shift()
+    try {
+      if (Date.now() < pauseReadsUntil) {
+        const waitMs = Math.max(0, pauseReadsUntil - Date.now())
+        await new Promise(r => setTimeout(r, waitMs))
+      }
+      const res = await fn()
+      resolve(res)
+    } catch (e) {
+      reject(e)
+    }
+    await new Promise(r => setTimeout(r, INTER_READ_DELAY_MS))
+  }
+  readInProgress = false
+}
+
+async function processWriteQueue() {
+  if (writeInProgress) return
+  writeInProgress = true
+  while (writeQueue.length) {
+    const { fn, resolve, reject } = writeQueue.shift()
+    try {
+      // Respect quota/backoff window
+      if (Date.now() < pauseWritesUntil) {
+        const waitMs = Math.max(0, pauseWritesUntil - Date.now())
+        await new Promise(r => setTimeout(r, waitMs))
+      }
+      const res = await fn()
+      resolve(res)
+    } catch (e) {
+      reject(e)
+    }
+    // Small delay between writes to avoid bursts
+    await new Promise(r => setTimeout(r, INTER_WRITE_DELAY_MS))
+  }
+  writeInProgress = false
+}
 
 // Expose flags/hooks for storage.js
 function firestoreCollectionName(storeName) {
@@ -63,74 +263,72 @@ async function pushStoreToFirestore(storeName, localData = []) {
   if (EXCLUDED_SYNC_STORES.has(storeName)) return
 
   const colRef = getUserCollectionRef(storeName)
-  const batch = writeBatch(db)
+  // Index local by id and prepare items for upsert
+  const localById = new Map()
+  localData.forEach(item => {
+    const rawId = item && item.id != null ? item.id : null
+    const id = rawId != null ? String(rawId) : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    localById.set(id, { ...item, id, updatedAt: item.updatedAt || new Date().toISOString() })
+  })
 
-  try {
+  // Enqueue the actual Firestore commit to the serialized queue to avoid concurrent bursts
+  return enqueueWrite(async () => {
+    // If we've previously detected permission denied for this store, skip
+    if (permissionDeniedStores.has(storeName)) return
+    if (EXCLUDED_SYNC_STORES.has(storeName)) return
+
     // Respect quota-based pause window
     if (Date.now() < pauseWritesUntil) {
-      // Skip write attempts while in backoff to avoid exhausting quota further
       return
     }
 
-    // Index local by id and upsert only — do NOT delete remote docs automatically.
-    const localById = new Map()
-    localData.forEach(item => {
-      // Normalize id values to strings to avoid SDK path parsing errors
-      const rawId = item && item.id != null ? item.id : null
-      const id = rawId != null ? String(rawId) : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-      localById.set(id, { ...item, id, updatedAt: item.updatedAt || new Date().toISOString() })
-    })
-
-    // Upsert all local items
-    for (const [id, item] of localById.entries()) {
-      try {
-        if (!id) {
-          console.warn('pushStoreToFirestore: skipping item with invalid id', item)
-          continue
+    const batch = writeBatch(db)
+    try {
+      for (const [id, item] of localById.entries()) {
+        try {
+          if (!id) {
+            console.warn('pushStoreToFirestore: skipping item with invalid id', item)
+            continue
+          }
+          const colName = firestoreCollectionName(storeName)
+          const uid = auth && auth.currentUser && auth.currentUser.uid
+          const docRef = uid ? doc(db, 'users', uid, colName, id) : doc(db, colName, id)
+          batch.set(docRef, item, { merge: true })
+        } catch (e) {
+          console.warn('pushStoreToFirestore: failed to queue item', id, e)
         }
-        // Use segmented path arguments to avoid SDK parsing ambiguity
-        const colName = firestoreCollectionName(storeName)
-        const uid = auth && auth.currentUser && auth.currentUser.uid
-        const docRef = uid ? doc(db, 'users', uid, colName, id) : doc(db, colName, id)
-        batch.set(docRef, item, { merge: true })
-      } catch (e) {
-        console.warn('pushStoreToFirestore: failed to queue item', id, e)
       }
-    }
 
-    await batch.commit()
-    // reset backoff on successful commit
-    backoffCount = 0
-  } catch (err) {
-    // Avoid spamming the console with repeated Firestore errors.
-    const msg = String((err && (err.message || err.code)) || '')
-    if (err && (err.code === 'permission-denied' || msg.toLowerCase().includes('permission'))) {
-      if (!permissionDeniedStores.has(storeName)) {
-        permissionDeniedStores.add(storeName)
-        console.warn(`Firestore push aborted for ${storeName}: Missing or insufficient permissions.`)
+      await batch.commit()
+      backoffCount = 0
+    } catch (err) {
+      const msg = String((err && (err.message || err.code)) || '')
+      if (err && (err.code === 'permission-denied' || msg.toLowerCase().includes('permission'))) {
+        if (!permissionDeniedStores.has(storeName)) {
+          permissionDeniedStores.add(storeName)
+          console.warn(`Firestore push aborted for ${storeName}: Missing or insufficient permissions.`)
+        }
+        return
       }
-      return
-    }
 
-    // Handle quota / resource-exhausted by backing off writes briefly
-    if (err && (err.code === 'resource-exhausted' || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('resource-exhausted'))) {
-      // exponential backoff: base 60s, double per occurrence, cap at 1 hour
-      try {
-        backoffCount = Math.min((backoffCount || 0) + 1, 6)
-        const pauseMs = Math.min(60 * 1000 * Math.pow(2, backoffCount - 1), 60 * 60 * 1000)
-        pauseWritesUntil = Date.now() + pauseMs
+      if (err && (err.code === 'resource-exhausted' || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('resource-exhausted'))) {
+        try {
+          backoffCount = Math.min((backoffCount || 0) + 1, 6)
+          const pauseMs = Math.min(60 * 1000 * Math.pow(2, backoffCount - 1), 60 * 60 * 1000)
+          pauseWritesUntil = Date.now() + pauseMs
           console.warn(`Firestore quota exceeded — pausing writes for ${Math.round(pauseMs/1000)}s (backoff #${backoffCount}).`)
-          // Expose backoff telemetry for diagnostics
           try { window.__firestoreBackoff = { backoffCount, pauseWritesUntil } } catch(e) {}
-      } catch (e) {
-        pauseWritesUntil = Date.now() + (60 * 1000)
-        console.warn(`Firestore quota exceeded — pausing writes for 60s.`)
+        } catch (e) {
+          pauseWritesUntil = Date.now() + (60 * 1000)
+          console.warn(`Firestore quota exceeded — pausing writes for 60s.`)
+        }
+        return
       }
-      return
-    }
 
-    console.warn(`Firestore push failed for ${storeName}:`, err)
-  }
+      console.warn(`Firestore push failed for ${storeName}:`, err)
+      throw err
+    }
+  })
 }
 
 /**
@@ -213,11 +411,13 @@ export async function startFirestoreSync() {
 
   // Expose push hook for storage saveData
   if (typeof window !== 'undefined') {
-    window.__firestoreSyncPush = (store, data) => pushStoreToFirestore(store, data)
+    // Expose a persistent enqueue function so `storage.saveData` can queue small
+    // deltas safely and survive reloads/offline.
+    window.__firestoreSyncPush = (store, data) => enqueuePersistentOp({ storeName: store, items: data })
   }
 
   // Initial push + listeners per store
-  for (const storeName of Object.keys(STORES)) {
+  for (const [storeIndex, storeName] of Object.keys(STORES).entries()) {
     try {
       // Optionally skip noisy stores
       if (EXCLUDED_SYNC_STORES.has(storeName)) continue
@@ -234,20 +434,53 @@ export async function startFirestoreSync() {
       })()
       const MAX_INITIAL_PUSH_ITEMS = 200
       if (initialPushEnabled || (Array.isArray(localData) && localData.length <= MAX_INITIAL_PUSH_ITEMS)) {
-        pushStoreToFirestore(storeName, localData).catch(() => {})
+        // Stagger initial pushes across stores to avoid creating a sudden burst
+        // of write activity which can exhaust Firestore quotas. Schedule pushes
+        // with a small per-store delay rather than committing all at once.
+        try {
+          const pushDelayMs = 500 // ms per store index
+          const storeIndex = Object.keys(STORES).indexOf(storeName)
+          setTimeout(() => {
+            pushStoreToFirestore(storeName, localData).catch(() => {})
+          }, Math.max(0, storeIndex) * pushDelayMs)
+        } catch (e) {
+          // Fallback to immediate push if scheduling fails for any reason
+          pushStoreToFirestore(storeName, localData).catch(() => {})
+        }
       }
 
       const colRef = getUserCollectionRef(storeName)
 
-      // Probe permission quickly before subscribing to avoid noisy errors
+      // Probe permission quickly before subscribing to avoid noisy errors.
+      // Use serialized read queue and a read backoff window to avoid many
+      // simultaneous getDocs calls which can exhaust Firestore read quota.
       try {
-        await getDocs(query(colRef, limit(1)))
+        if (Date.now() < pauseReadsUntil) {
+          // Skip probe while reads are paused; proceed to setup listener later
+        } else {
+          await enqueueRead(() => getDocs(query(colRef, limit(1))))
+        }
       } catch (probeErr) {
-        if (probeErr && (probeErr.code === 'permission-denied' || String(probeErr.message).toLowerCase().includes('permission'))) {
+        const msg = String((probeErr && (probeErr.message || probeErr.code)) || '')
+        if (probeErr && (probeErr.code === 'permission-denied' || msg.toLowerCase().includes('permission'))) {
           if (!permissionDeniedStores.has(storeName)) {
             permissionDeniedStores.add(storeName)
             console.warn(`Skipping Firestore listeners for ${storeName}: insufficient permissions.`)
           }
+          continue
+        }
+        if (probeErr && (probeErr.code === 'resource-exhausted' || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('resource-exhausted'))) {
+          try {
+            readBackoffCount = Math.min((readBackoffCount || 0) + 1, 6)
+            const pauseMs = Math.min(30 * 1000 * Math.pow(2, readBackoffCount - 1), 60 * 60 * 1000)
+            pauseReadsUntil = Date.now() + pauseMs
+            console.warn(`Firestore read quota exceeded — pausing probes for ${Math.round(pauseMs/1000)}s (backoff #${readBackoffCount}).`)
+            try { window.__firestoreReadBackoff = { readBackoffCount, pauseReadsUntil } } catch(e) {}
+          } catch (e) {
+            pauseReadsUntil = Date.now() + (30 * 1000)
+            console.warn(`Firestore read quota exceeded — pausing probes for 30s.`)
+          }
+          // Skip listener setup for now; continue so we don't spam with onSnapshot
           continue
         }
         // If it's a transient network error, still attempt listener setup below
@@ -280,20 +513,30 @@ export async function startFirestoreSync() {
       } catch (e) {}
 
 
-      onSnapshot(colRef, snapshot => {
-        applyRemoteToLocal(storeName, snapshot.docs).catch(err => {
-          console.warn(`Firestore sync apply failed for ${storeName}:`, err)
-        })
-      }, err => {
-        if (err && (err.code === 'permission-denied' || String(err.message).toLowerCase().includes('permission'))) {
-          if (!permissionDeniedStores.has(storeName)) {
-            permissionDeniedStores.add(storeName)
-            console.warn(`Firestore listener denied for ${storeName}:`, err)
+      // Stagger onSnapshot subscriptions to reduce read burst on startup
+      try {
+        const listenDelayMs = Math.min(1000, Math.max(0, storeIndex * 300))
+        setTimeout(() => {
+          try {
+            onSnapshot(colRef, snapshot => {
+              applyRemoteToLocal(storeName, snapshot.docs).catch(err => {
+                console.warn(`Firestore sync apply failed for ${storeName}:`, err)
+              })
+            }, err => {
+              if (err && (err.code === 'permission-denied' || String(err.message).toLowerCase().includes('permission'))) {
+                if (!permissionDeniedStores.has(storeName)) {
+                  permissionDeniedStores.add(storeName)
+                  console.warn(`Firestore listener denied for ${storeName}:`, err)
+                }
+                return
+              }
+              console.warn(`Firestore listener failed for ${storeName}:`, err)
+            })
+          } catch (e) {
+            console.warn(`Failed to start firestore listener for ${storeName}:`, e)
           }
-          return
-        }
-        console.warn(`Firestore listener failed for ${storeName}:`, err)
-      })
+        }, listenDelayMs)
+      } catch (e) {}
     } catch (err) {
       console.warn(`Firestore sync skipped for ${storeName}:`, err)
     }
@@ -359,33 +602,52 @@ export async function syncToFirebase(collectionName, data) {
     syncStatus = 'syncing'
     const uid = auth && auth.currentUser && auth.currentUser.uid
     if (!uid) return false
-    const batch = writeBatch(db)
+    // Use the serialized write queue for commits
     let items = []
     if (data == null) items = []
     else if (Array.isArray(data)) items = data
     else if (typeof data === 'object') items = Object.values(data)
     else items = [data]
-
-    // Use segmented path arguments to avoid passing a combined path string.
     const collectionRef = collection(db, 'users', uid, collectionName)
-    for (const item of items) {
+    // Enqueue the commit to the write queue to serialize and rate-limit
+    return enqueueWrite(async () => {
+      const batch = writeBatch(db)
       try {
-        if (!item || item.id == null) continue
-        // Normalize id to string to defend against objects/arrays being passed
-        const id = (typeof item.id === 'string') ? item.id : String(item.id)
-        if (!id) {
-          console.warn('syncToFirebase: skipping item with invalid id', item)
-          continue
+        for (const item of items) {
+          try {
+            if (!item || item.id == null) continue
+            const id = (typeof item.id === 'string') ? item.id : String(item.id)
+            if (!id) continue
+            const docRef = doc(collectionRef, id)
+            batch.set(docRef, { ...item, updatedAt: serverTimestamp() }, { merge: true })
+          } catch (e) {
+            console.warn('syncToFirebase: failed to queue item for sync', item, e)
+          }
         }
-        const docRef = doc(collectionRef, id)
-        batch.set(docRef, { ...item, updatedAt: serverTimestamp() }, { merge: true })
-      } catch (e) {
-        console.warn('syncToFirebase: failed to queue item for sync', item, e)
+        await batch.commit()
+        syncStatus = 'synced'
+        backoffCount = 0
+        return true
+      } catch (err) {
+        console.error(`Error syncing ${collectionName}:`, err)
+        // bubble quota/permission handling to outer logic similar to pushStoreToFirestore
+        const msg = String((err && (err.message || err.code)) || '')
+        if (err && (err.code === 'permission-denied' || msg.toLowerCase().includes('permission'))) {
+          console.warn(`syncToFirebase aborted for ${collectionName}: Missing or insufficient permissions.`)
+          return false
+        }
+        if (err && (err.code === 'resource-exhausted' || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('resource-exhausted'))) {
+          backoffCount = Math.min((backoffCount || 0) + 1, 6)
+          const pauseMs = Math.min(60 * 1000 * Math.pow(2, backoffCount - 1), 60 * 60 * 1000)
+          pauseWritesUntil = Date.now() + pauseMs
+          console.warn(`Firestore quota exceeded — pausing writes for ${Math.round(pauseMs/1000)}s (backoff #${backoffCount}).`)
+          try { window.__firestoreBackoff = { backoffCount, pauseWritesUntil } } catch(e) {}
+          return false
+        }
+        syncStatus = 'error'
+        return false
       }
-    }
-    await batch.commit()
-    syncStatus = 'synced'
-    return true
+    })
   } catch (err) {
     console.error(`Error syncing ${collectionName}:`, err)
     syncStatus = 'error'
@@ -456,7 +718,7 @@ export async function pushAllToFirebase() {
   // Use STORES mapping to push each store
   const userUid = auth && auth.currentUser && auth.currentUser.uid
   if (!userUid) throw new Error('No user logged in')
-  const batch = writeBatch(db)
+  const ops = []
   let itemCount = 0
   for (const storeName of Object.keys(STORES)) {
     try {
@@ -465,12 +727,40 @@ export async function pushAllToFirebase() {
       const colRef = getUserCollectionRef(storeName)
       for (const item of localData) {
         if (!item || !item.id) continue
-        batch.set(doc(colRef, item.id), { ...item, updatedAt: serverTimestamp() }, { merge: true })
+        ops.push({ colRef, item })
         itemCount++
       }
     } catch (e) { console.warn(`pushAllToFirebase skip ${storeName}:`, e) }
   }
-  if (itemCount > 0) await batch.commit()
+
+  // Firestore batch limit is 500; use a safe chunk size
+  const CHUNK_SIZE = 450
+  for (let i = 0; i < ops.length; i += CHUNK_SIZE) {
+    const chunk = ops.slice(i, i + CHUNK_SIZE)
+    await enqueueWrite(async () => {
+      const batch = writeBatch(db)
+      try {
+        for (const op of chunk) {
+          try {
+            batch.set(doc(op.colRef, String(op.item.id)), { ...op.item, updatedAt: serverTimestamp() }, { merge: true })
+          } catch (e) { console.warn('pushAllToFirebase: failed to queue item', e) }
+        }
+        await batch.commit()
+      } catch (err) {
+        const msg = String((err && (err.message || err.code)) || '')
+        if (err && (err.code === 'resource-exhausted' || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('resource-exhausted'))) {
+          backoffCount = Math.min((backoffCount || 0) + 1, 6)
+          const pauseMs = Math.min(60 * 1000 * Math.pow(2, backoffCount - 1), 60 * 60 * 1000)
+          pauseWritesUntil = Date.now() + pauseMs
+          console.warn(`Firestore quota exceeded — pausing writes for ${Math.round(pauseMs/1000)}s (backoff #${backoffCount}).`)
+          try { window.__firestoreBackoff = { backoffCount, pauseWritesUntil } } catch(e) {}
+          throw err
+        }
+        throw err
+      }
+    })
+  }
+
   syncStatus = 'synced'
   return { success: true, itemCount }
 }

@@ -46,3 +46,27 @@ npm run deploy:gh-pages
 
 See `DEPLOYMENT_GUIDE.md` for complete instructions and `ARCHITECTURE_EXPLAINED.md` to understand why Firebase is optional.
 
+## Firebase rules and cost-safety guidance
+
+If you enable Firestore sync, follow these recommendations to keep usage within the free tier and avoid unexpected charges:
+
+- Use per-user collections and rules so each user only accesses their own documents. Example rule:
+
+```js
+rules_version = '2';
+service cloud.firestore {
+	match /databases/{database}/documents {
+		match /users/{userId}/{collection}/{docId} {
+			allow read, write: if request.auth != null && request.auth.uid == userId;
+		}
+	}
+}
+```
+
+- Avoid large, frequent writes: enable sync only on-demand (the app has an opt-in toggle) and prefer delta updates instead of full-store writes.
+- Keep server-side limits: restrict document sizes and do not store large binary blobs in Firestore (use Cloud Storage for files).
+- Monitor usage in Firebase Console (Firestore usage tab) and enable billing alerts in GCP to get notified before charges occur.
+- For low-cost real-time signaling between devices, prefer presence/delta documents rather than rewriting entire collections.
+
+These measures help ensure the app stays free for personal use while providing cross-device sync.
+

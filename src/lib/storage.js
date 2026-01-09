@@ -94,11 +94,19 @@ export async function saveData(storeName, data) {
   try {
     const normalizedName = normalizeStoreName(storeName)
     // Try IndexedDB first for large datasets
-    if (useIndexedDB && data.length > 50) {
+    if (useIndexedDB && Array.isArray(data) && data.length > 50) {
       await initDB()
       if (db) {
         return await saveToIndexedDB(storeName, data)
       }
+    }
+
+    // Calculate delta compared to existing local copy to minimize cloud writes
+    let prev = []
+    try {
+      prev = loadFromLocalStorage(normalizedName, []) || []
+    } catch (e) {
+      prev = []
     }
 
     // Fall back to localStorage
@@ -111,7 +119,46 @@ export async function saveData(storeName, data) {
         const pushFn = window.__firestoreSyncPush
         if (!applying || !applying.has(normalizedName)) {
           if (typeof pushFn === 'function' && Array.isArray(data)) {
-            pushFn(normalizedName, data)
+            try {
+              // Build list of changed/added items and deletions (tombstones)
+              const prevById = new Map((prev || []).filter(p => p && p.id).map(p => [String(p.id), p]))
+              const currById = new Map((data || []).filter(p => p && p.id).map(p => [String(p.id), p]))
+              const changed = []
+              // additions/updates
+              for (const item of data) {
+                try {
+                  if (!item || item.id == null) continue
+                  const id = String(item.id)
+                  const prevItem = prevById.get(id)
+                  if (!prevItem) {
+                    changed.push(item)
+                    continue
+                  }
+                  const prevTs = prevItem.updatedAt ? Date.parse(prevItem.updatedAt) || 0 : 0
+                  const itemTs = item.updatedAt ? Date.parse(item.updatedAt) || 0 : 0
+                  if (itemTs && itemTs > prevTs) {
+                    changed.push(item)
+                    continue
+                  }
+                  // Fallback: shallow compare to detect changes
+                  if (JSON.stringify(prevItem) !== JSON.stringify(item)) {
+                    changed.push(item)
+                    continue
+                  }
+                } catch (e) {
+                  // ignore per-item errors
+                }
+              }
+              // deletions (items present in prev but not in current)
+              for (const [id, prevItem] of prevById.entries()) {
+                if (!currById.has(id)) {
+                  changed.push({ id, _deleted: true })
+                }
+              }
+              if (changed.length) pushFn(normalizedName, changed)
+            } catch (e) {
+              try { pushFn(normalizedName, data) } catch (e2) {}
+            }
           }
         }
       }
