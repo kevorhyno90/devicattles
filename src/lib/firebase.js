@@ -56,12 +56,33 @@ try {
     if (getApps().length === 0) {
       app = initializeApp(firebaseConfig)
       try {
-        db = initializeFirestore(app, {
-          localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED })
-        })
+        // Try enabling persistent local cache with multi-tab synchronization.
+        // This avoids the "exclusive access" errors when multiple tabs are open.
+        try {
+          db = initializeFirestore(app, {
+            localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED, synchronizeTabs: true })
+          })
+          window.__firestorePersistenceMode = 'indexeddb:synchronized'
+        } catch (pErr) {
+          // If synchronizeTabs isn't supported or fails (e.g., older SDKs), try without it.
+          try {
+            db = initializeFirestore(app, {
+              localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED })
+            })
+            window.__firestorePersistenceMode = 'indexeddb:exclusive'
+          } catch (innerErr) {
+            // Fall back to in-memory / default persistence. This prevents the app from crashing
+            // when indexed DB persistence can't be obtained (e.g., another tab holds ownership).
+            console.warn('⚠️ Firestore persistence warning, falling back to memory cache:', innerErr)
+            db = getFirestore(app)
+            window.__firestorePersistenceMode = 'memory'
+          }
+        }
       } catch (firestoreError) {
-        // Firestore already initialized, use getFirestore
+        // As a final fallback, use the default Firestore instance
+        console.error('❌ Firestore initialization error:', firestoreError)
         db = getFirestore(app)
+        window.__firestorePersistenceMode = 'error'
       }
     } else {
       // Use existing app instance
