@@ -417,6 +417,18 @@ export async function startFirestoreSync() {
   }
   if (isStarted) return
   if (!db || !isFirebaseConfigured()) return
+  // If persistence fell back to memory (exclusive access failure), avoid
+  // starting many listeners or pushing large datasets automatically.
+  // This prevents excessive read/write traffic when persistence isn't available.
+  try {
+    const pm = (typeof window !== 'undefined' && window.__firestorePersistenceMode) || null
+    if (pm && (pm === 'memory' || pm === 'error')) {
+      console.warn('Firestore persistence unavailable (mode=' + pm + '). Skipping automatic listeners and initial pushes to avoid quota pressure. Enable sync manually once persistence issues are resolved.')
+      syncStatus = 'degraded'
+      isStarted = true
+      return
+    }
+  } catch (e) {}
   isStarted = true
 
   // Expose push hook for storage saveData
