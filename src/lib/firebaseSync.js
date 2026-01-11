@@ -32,6 +32,16 @@ let writeInProgress = false
 // Increase the inter-write delay to avoid write bursts that can trigger quota errors.
 const INTER_WRITE_DELAY_MS = 1000
 
+// Track which diagnostic warnings we've already emitted to avoid log spam
+const _emittedWarnings = new Set()
+function warnOnce(key, msg) {
+  try {
+    if (_emittedWarnings.has(key)) return
+    _emittedWarnings.add(key)
+    try { console.warn(msg) } catch (e) { try { console.debug(msg) } catch (e) {} }
+  } catch (e) {}
+}
+
 function isPersistenceOk() {
   try {
     if (typeof window === 'undefined') return true
@@ -52,7 +62,7 @@ function isPersistenceOk() {
 
 function enqueueWrite(fn) {
   if (!isPersistenceOk()) {
-    try { console.warn('enqueueWrite: persistence unavailable — skipping write enqueue') } catch(e){}
+    warnOnce('enqueueWrite:persistence-unavailable', 'enqueueWrite: persistence unavailable — skipping write enqueue')
     return Promise.resolve()
   }
   return new Promise((resolve, reject) => {
@@ -100,10 +110,10 @@ async function processPersistentQueue() {
     while (q.length) {
       const op = q[0]
       // If persistence isn't available, defer processing persistent queue.
-      if (!isPersistenceOk()) {
-        try { console.warn('processPersistentQueue: persistence unavailable — deferring persistent queue processing') } catch(e){}
-        break
-      }
+        if (!isPersistenceOk()) {
+          warnOnce('processPersistentQueue:persistence-unavailable', 'processPersistentQueue: persistence unavailable — deferring persistent queue processing')
+          break
+        }
       try {
         // Use the serialized in-memory write queue to perform the commit.
         // Break large ops into smaller chunks and commit with pauses to avoid bursts.
@@ -450,7 +460,7 @@ export async function startFirestoreSync() {
   try {
     const pm = (typeof window !== 'undefined' && window.__firestorePersistenceMode) || null
     if (pm && (pm === 'memory' || pm === 'error')) {
-      console.warn('Firestore persistence unavailable (mode=' + pm + '). Skipping automatic listeners and initial pushes to avoid quota pressure. Enable sync manually once persistence issues are resolved.')
+      warnOnce('startFirestoreSync:persistence-unavailable', 'Firestore persistence unavailable (mode=' + pm + '). Skipping automatic listeners and initial pushes to avoid quota pressure. Enable sync manually once persistence issues are resolved.')
       syncStatus = 'degraded'
       isStarted = true
       return

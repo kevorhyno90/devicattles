@@ -13,6 +13,7 @@ const AzollaFarming = React.lazy(() => import('./AzollaFarming'))
 const PoultryManagement = React.lazy(() => import('./PoultryManagement'))
 const CanineManagement = React.lazy(() => import('./CanineManagement'))
 import PhotoGallery from '../components/PhotoGallery'
+import AnimalCV from '../components/animal/AnimalCV'
 import { fileToDataUrl, estimateDataUrlSize, uid } from '../lib/image'
 import { logAnimalActivity } from '../lib/activityLogger'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
@@ -214,13 +215,51 @@ export default function Animals() {
 
   useEffect(() => {
     try {
-      const rawA = localStorage.getItem(AKEY)
-      let animalsList = rawA ? JSON.parse(rawA) : SAMPLE_ANIMALS;
-      if (!animalsList || animalsList.length === 0) {
-        animalsList = SAMPLE_ANIMALS;
-        localStorage.setItem(AKEY, JSON.stringify(SAMPLE_ANIMALS));
+      // Support legacy storage key used in some installs (devinsfarm:animals)
+      const LEGACY_KEY = 'devinsfarm:animals'
+
+      const rawPrimary = localStorage.getItem(AKEY)
+      const rawLegacy = localStorage.getItem(LEGACY_KEY)
+
+      const parseSafe = (s) => {
+        try {
+          const v = JSON.parse(s)
+          return Array.isArray(v) ? v : []
+        } catch (e) { return [] }
       }
-      setAnimals(animalsList);
+
+      const primaryList = parseSafe(rawPrimary)
+      const legacyList = parseSafe(rawLegacy)
+
+      // Merge arrays deduping by `id` then `tag`.
+      const mergedMap = new Map()
+      const pushToMap = (item) => {
+        if (!item || typeof item !== 'object') return
+        const key = item.id || item.tag || JSON.stringify(item)
+        if (!mergedMap.has(key)) mergedMap.set(key, item)
+      }
+
+      // Preference: keep primaryList items first, then legacy (so newer entries stay)
+      primaryList.forEach(pushToMap)
+      legacyList.forEach(pushToMap)
+
+      let animalsList = Array.from(mergedMap.values())
+
+      // If no data at all, seed with SAMPLE_ANIMALS
+      if (!animalsList || animalsList.length === 0) {
+        animalsList = SAMPLE_ANIMALS
+      }
+
+      // Persist merged list to both keys for compatibility across installs
+      try {
+        localStorage.setItem(AKEY, JSON.stringify(animalsList))
+        localStorage.setItem(LEGACY_KEY, JSON.stringify(animalsList))
+      } catch (e) {
+        console.warn('Failed to persist merged animals list', e)
+      }
+
+      setAnimals(animalsList)
+
       const rawG = localStorage.getItem(GKEY)
       setGroups(rawG ? JSON.parse(rawG) : DEFAULT_GROUPS)
     } catch (err) {
@@ -523,13 +562,12 @@ export default function Animals() {
 
   function toggleExpand(id){
     // Open modal-like expansive view for a single animal to mimic Farmbrite
-    if (modalOpenId === id) {
-      setModalOpenId(null)
-      setExpandedIds(prev => prev.filter(x => x !== id))
-    } else {
-      setModalOpenId(id)
-      setExpandedIds([id])
-    }
+    setExpandedIds(prev => {
+      const isExpanded = prev.includes(id)
+      if (isExpanded) return prev.filter(x => x !== id)
+      return [id]
+    })
+    setModalOpenId(prev => prev === id ? null : id)
   }
 
   function startInlineEdit(a){
@@ -662,6 +700,25 @@ export default function Animals() {
     e.target.value = '' // Reset input
   }
 
+  // Dev helper: print or download first N animals for debugging
+  function devDumpAnimals(n = 20) {
+    try {
+      const raw = localStorage.getItem(AKEY) || localStorage.getItem('devinsfarm:animals') || '[]'
+      const list = JSON.parse(raw || '[]')
+      console.log('DEV DUMP animals (first', n, ')', list.slice(0, n))
+      // also trigger download for convenience
+      try {
+        exportToJSON(list.slice(0, n), `animals_dump_${n}.json`)
+      } catch (e) {
+        console.warn('Export failed', e)
+      }
+      alert(`Logged and downloaded first ${Math.min(n, list.length)} animals to console/download.`)
+    } catch (err) {
+      console.error('Dev dump failed', err)
+      alert('Failed to dump animals: ' + (err.message || err))
+    }
+  }
+
   function handleBatchPrint() {
     const filtered = animals.filter(filterAnimal)
     if (filtered.length === 0) {
@@ -689,6 +746,187 @@ export default function Animals() {
         </table>
       </div>
     `, 'Animal Records')
+  }
+
+  // Download single animal full record (JSON/CSV/Excel)
+  function getFlattenedAnimal(a) {
+    const groupName = groups.find(g => g.id === a.groupId)?.name || ''
+    return {
+      id: a.id || '',
+      tag: a.tag || '',
+      name: a.name || '',
+      breed: a.breed || '',
+      sex: a.sex || '',
+      dob: a.dob || '',
+      weight: a.weight || '',
+      owner: a.owner || '',
+      registration: a.registration || '',
+      tattoo: a.tattoo || '',
+      purchaseDate: a.purchaseDate || '',
+      purchasePrice: a.purchasePrice || '',
+      vendor: a.vendor || '',
+      group: groupName,
+      status: a.status || '',
+      notes: a.notes || '',
+      photosCount: (a.photos || []).length || 0,
+      production: JSON.stringify(a.production || {}),
+      genetics: JSON.stringify(a.genetics || {}),
+      health: JSON.stringify(a.health || {}),
+      financial: JSON.stringify(a.financial || {}),
+      documentation: JSON.stringify(a.documentation || {}),
+      certifications: JSON.stringify(a.certifications || {}),
+      behavior: JSON.stringify(a.behavior || {}),
+      location: JSON.stringify(a.location || {}),
+      events: JSON.stringify(a.events || [])
+    }
+  }
+
+  function handleDownloadAnimalJSON(a) {
+    exportToJSON(a, `${(a.tag||a.id||'animal')}_record.json`)
+  }
+
+  function handleDownloadAnimalCSV(a) {
+    // Download the animal CV (HTML) instead of a flattened CSV so the user
+    // receives the full CV record. Save as .html which can be opened in browser
+    // or imported into Excel if needed.
+    exportAnimalCVAsFile(a, `${(a.tag||a.id||'animal')}_cv.html`)
+  }
+
+  function handleDownloadAnimalExcel(a) {
+    // For Excel requests, also provide the CV HTML (Excel can open HTML files).
+    exportAnimalCVAsFile(a, `${(a.tag||a.id||'animal')}_cv.html`)
+  }
+
+  function exportAnimalCVAsFile(a, filename = 'animal_cv.html') {
+    try {
+      const groupName = groups.find(g => g.id === a.groupId)?.name || ''
+      const title = `${a.name || a.tag || a.id} — Animal CV`
+
+      const photoHtml = (a.photos && a.photos.length)
+        ? `<img src="${a.photos[0].dataUrl}" alt="${escapeHtml(a.name||'photo')}" style="width:240px;height:200px;object-fit:cover;border-radius:8px;"/>`
+        : (a.photo ? `<img src="${a.photo}" alt="${escapeHtml(a.name||'photo')}" style="width:240px;height:200px;object-fit:cover;border-radius:8px;"/>` : `<div style="width:240px;height:200px;background:#f3f4f6;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;">No photo</div>`)
+
+      const sections = [
+        { title: 'Basic Information', content: {
+          Tag: a.tag || '', Name: a.name || '', Breed: a.breed || '', Sex: a.sex || '', DOB: a.dob || '', Weight: a.weight || '', Color: a.color || '', Group: groupName || '', Owner: a.owner || '', Registration: a.registration || '', Tattoo: a.tattoo || '', Notes: a.notes || ''
+        }},
+        { title: 'Production', content: a.production || {} },
+        { title: 'Health', content: a.health || {} },
+        { title: 'Genetics', content: a.genetics || {} },
+        { title: 'Financial', content: a.financial || {} },
+        { title: 'Location', content: a.location || {} },
+        { title: 'Behavior', content: a.behavior || {} },
+        { title: 'Documentation', content: a.documentation || {} },
+        { title: 'Events', content: a.events || [] }
+      ]
+
+      const sectionHtml = sections.map(s => `
+        <section style="margin-bottom:18px">
+          <h3 style="margin:6px 0;color:#111827">${escapeHtml(s.title)}</h3>
+          <pre style="background:#f9fafb;padding:10px;border-radius:6px;overflow:auto">${escapeHtml(JSON.stringify(s.content, null, 2))}</pre>
+        </section>
+      `).join('\n')
+
+      const html = `<!doctype html>
+      <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>${escapeHtml(title)}</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <style>
+          body{font-family:Arial,Helvetica,sans-serif;color:#111827;padding:20px}
+          .header{display:flex;gap:16px;align-items:center}
+          h1{margin:0}
+          h2{margin:4px 0;color:#6b7280}
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>${photoHtml}</div>
+          <div>
+            <h1>${escapeHtml(a.name || a.tag || a.id)}</h1>
+            <h2>${escapeHtml(a.tag || '')} • ${escapeHtml(a.breed || '')} • ${escapeHtml(a.sex || '')}</h2>
+            <div style="margin-top:10px"><strong>Group:</strong> ${escapeHtml(groupName || '—')}</div>
+            <div style="margin-top:6px"><strong>Status:</strong> ${escapeHtml(a.status || '—')}</div>
+          </div>
+        </div>
+        <hr style="margin:18px 0" />
+        ${sectionHtml}
+      </body>
+      </html>`
+
+      const blob = new Blob([html], { type: 'text/html' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Export CV failed', err)
+      alert('Failed to export CV: ' + (err.message || err))
+    }
+  }
+
+  function escapeHtml(text) {
+    if (text === null || text === undefined) return ''
+    return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  }
+
+  // Render nested sections in expanded view with headings/subheadings
+  function renderSection(title, obj) {
+    if (obj === null || obj === undefined) return null
+    const isEmptyArray = Array.isArray(obj) && obj.length === 0
+    const isEmptyObject = typeof obj === 'object' && !Array.isArray(obj) && Object.keys(obj).length === 0
+    if (isEmptyArray || isEmptyObject) return null
+
+    function renderValue(val) {
+      if (val === null || val === undefined || val === '') return <span style={{ color: '#6b7280' }}>—</span>
+      if (Array.isArray(val)) {
+        if (val.length === 0) return <span style={{ color: '#6b7280' }}>None</span>
+        return (
+          <ul style={{ margin: '6px 0 0 18px', padding: 0 }}>
+            {val.map((it, i) => (
+              <li key={i} style={{ marginBottom: 6 }}>{typeof it === 'object' ? <pre style={{ margin: 0 }}>{JSON.stringify(it, null, 2)}</pre> : String(it)}</li>
+            ))}
+          </ul>
+        )
+      }
+      if (typeof val === 'object') {
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8 }}>
+            {Object.entries(val).map(([k, v]) => (
+              <div key={k} style={{ background: '#fff', padding: 8, borderRadius: 6, border: '1px solid #eef2f7' }}>
+                <div style={{ fontSize: '0.85rem', color: '#374151' }}><strong>{k}</strong></div>
+                <div style={{ marginTop: 6, fontSize: '0.85rem', color: '#374151' }}>{typeof v === 'object' ? <pre style={{ margin: 0 }}>{JSON.stringify(v, null, 2)}</pre> : String(v ?? '—')}</div>
+              </div>
+            ))}
+          </div>
+        )
+      }
+      return <span style={{ color: '#111827' }}>{String(val)}</span>
+    }
+
+    // Top-level rendering
+    return (
+      <div style={{ marginTop: 12 }}>
+        <h4 style={{ margin: '6px 0', color: '#111827' }}>{title}</h4>
+        {typeof obj === 'object' && !Array.isArray(obj) ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+            {Object.entries(obj).map(([k, v]) => (
+              <div key={k} style={{ background: '#f9fafb', padding: 10, borderRadius: 6, border: '1px solid #eef2f7' }}>
+                <div style={{ fontSize: '0.9rem', color: '#374151' }}><strong>{k}</strong></div>
+                <div style={{ marginTop: 8 }}>{renderValue(v)}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          renderValue(obj)
+        )}
+      </div>
+    )
   }
 
   // Responsive styles for mobile
@@ -989,6 +1227,7 @@ export default function Animals() {
               <button onClick={handleExportCSV} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📊 CSV</button>
               <button onClick={handleExportExcel} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📈 Excel</button>
               <button onClick={handleExportJSON} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📄 JSON</button>
+              <button onClick={() => devDumpAnimals(20)} style={{ padding: '8px 16px', background: '#111827', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>DEV: Dump 20</button>
               <button onClick={handleImportClick} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📥 Import</button>
               <button onClick={handleBatchPrint} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>🖨️ Print</button>
               <button onClick={() => batchPrintQRTags(sortedAnimals, 'animal')} style={{ padding: '8px 16px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>📱 Print QR Tags</button>
@@ -1205,14 +1444,27 @@ export default function Animals() {
                                 >
                                   🖨️ Print QR Tag
                                 </button>
+                                <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                  <button onClick={() => handleDownloadAnimalJSON(a)} style={{ padding: '8px 12px', background: '#111827', color: 'white', border: 'none', borderRadius: 6, fontSize: '0.85rem' }}>⬇️ JSON</button>
+                                  <button onClick={() => handleDownloadAnimalCSV(a)} style={{ padding: '8px 12px', background: '#059669', color: 'white', border: 'none', borderRadius: 6, fontSize: '0.85rem' }}>⬇️ CSV</button>
+                                  <button onClick={() => handleDownloadAnimalExcel(a)} style={{ padding: '8px 12px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: 6, fontSize: '0.85rem' }}>⬇️ Excel</button>
+                                </div>
                               </div>
                             </div>
                           </div>
+                          {renderSection('Production', a.production)}
+                          {renderSection('Health', a.health)}
+                          {renderSection('Genetics', a.genetics)}
+                          {renderSection('Financial', a.financial)}
+                          {renderSection('Documentation', a.documentation)}
+                          {renderSection('Behavior', a.behavior)}
+                          {renderSection('Location', a.location)}
+                          {renderSection('Events', a.events)}
                         </div>
                       )}
                       
                       <button 
-                        onClick={() => setExpandedIds(prev => isExp ? prev.filter(id => id !== a.id) : [...prev, a.id])}
+                        onClick={() => toggleExpand(a.id)}
                         style={{ marginTop: 12, padding: window.innerWidth <= 600 ? '10px 16px' : '6px 12px', fontSize: window.innerWidth <= 600 ? '1rem' : '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db', width: window.innerWidth <= 600 ? '100%' : 'auto' }}
                       >
                         {isExp ? '▲ Show Less' : '▼ Show More'}
@@ -1225,6 +1477,22 @@ export default function Animals() {
           />
         </div>
       )}
+
+      {/* Modal full CV view for selected animal */}
+      {modalOpenId && (() => {
+        const animal = animals.find(x => x.id === modalOpenId)
+        if (!animal) return null
+        return (
+          <AnimalCV
+            animal={animal}
+            groups={groups}
+            onClose={() => setModalOpenId(null)}
+            onDownloadJSON={() => handleDownloadAnimalJSON(animal)}
+            onDownloadCSV={() => handleDownloadAnimalCSV(animal)}
+            onDownloadExcel={() => handleDownloadAnimalExcel(animal)}
+          />
+        )
+      })()}
 
       {/* Add/Edit Animal Form - single column on mobile */}
       {tab === 'addAnimal' && (

@@ -123,83 +123,113 @@ try {
     }
   }, 2000);
 
-  // Dynamically load providers after initial paint for faster load
-Promise.all([
-  import('./lib/theme'),
-  import('./lib/AppViewContext.jsx'),
-  import('./lib/firebaseSync')
-]).then(async ([{ ThemeProvider, ThemeToggleButton }, { AppViewProvider, AppViewContext }, { startFirestoreSync }]) => {
-  // Expose the context object globally so the App can reference it without
-  // importing the module eagerly (helps keep the initial bundle smaller).
-  if (typeof window !== 'undefined' && AppViewContext) {
-    try { window.AppViewContext = AppViewContext } catch(e) {}
-  }
-  if (typeof window !== 'undefined' && ThemeToggleButton) {
-    try { window.ThemeToggleButton = ThemeToggleButton } catch(e) {}
-  }
-  clearTimeout(loadingTimeout);
+  // Dynamically load providers after initial paint for faster load.
+  // Use timeouts and per-module fallbacks so a slow network or a large module
+  // does not block rendering indefinitely.
+  (async function loadProviders() {
+    const importWithTimeout = (p, ms = 3000) => Promise.race([
+      p,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('import timeout')), ms))
+    ]);
 
-  // Kick off Firestore sync (noop if Firebase not configured)
-  try {
-    // Diagnostic probe: log Firebase auth state and configured STORES, and delay sync until auth ready
     try {
-      const firebaseMod = await import('./lib/firebase')
-      const storageMod = await import('./lib/storage')
-      const { auth } = firebaseMod
-      const { STORES } = storageMod
-      console.info('Firestore diagnostic - STORES:', Object.keys(STORES))
-      if (auth) {
-        const user = auth.currentUser
-        console.info('Firestore diagnostic - currentUser:', user ? { uid: user.uid, email: user.email } : null)
-        try {
-          // Start sync only after a user is authenticated to avoid permission-denied errors
-          const unsubscribe = auth.onAuthStateChanged(u => {
-            console.info('Firestore diagnostic - onAuthStateChanged:', u ? { uid: u.uid, email: u.email } : null)
-            if (u) {
-              try { startFirestoreSync() } catch (e) { console.warn('Firestore sync start failed:', e) }
-              try { if (typeof unsubscribe === 'function') unsubscribe() } catch (e) {}
-            } else {
-              console.info('Skipping Firestore sync: user not authenticated yet.')
-            }
-          })
-        } catch (e) {
-          console.warn('Failed to attach auth listener for Firestore diagnostic:', e)
-          // Fallback: attempt to start sync (non-ideal) so app can function in some environments
-          try { startFirestoreSync() } catch (e2) { console.warn('Firestore sync start failed (fallback):', e2) }
-        }
-      } else {
-        console.info('Firestore diagnostic - auth not initialized; skipping sync')
-      }
-    } catch (probeErr) {
-      console.warn('Firestore diagnostic probe failed:', probeErr)
-      // If probe fails, attempt to start sync as a best-effort fallback
-      try { startFirestoreSync() } catch (e) { console.warn('Firestore sync start failed (probe fallback):', e) }
-    }
-  } catch (syncErr) {
-    console.warn('Firestore sync not started:', syncErr);
-  }
+      const results = await Promise.allSettled([
+        importWithTimeout(import('./lib/theme'), 3000),
+        importWithTimeout(import('./lib/AppViewContext.jsx'), 3000),
+        importWithTimeout(import('./lib/firebaseSync'), 3000)
+      ]);
 
-  root.render(
-    <React.StrictMode>
-      <BrowserRouter
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true
-        }}
-      >
-        <ThemeProvider>
-          <AppViewProvider>
-            <App />
-          </AppViewProvider>
-        </ThemeProvider>
-      </BrowserRouter>
-    </React.StrictMode>
-  );
-}).catch(err => {
-  clearTimeout(loadingTimeout);
-  console.error('❌ Failed to load app providers:', err)
-  document.body.innerHTML = '<div style="padding: 20px; background: #dc2626; color: white;"><h1>Error</h1><p>Failed to load providers. Please refresh.</p></div>'
-});
+      const themeRes = results[0];
+      const appViewRes = results[1];
+      const firebaseSyncRes = results[2];
+
+      const ThemeProvider = themeRes.status === 'fulfilled' ? themeRes.value.ThemeProvider : null;
+      const ThemeToggleButton = themeRes.status === 'fulfilled' ? themeRes.value.ThemeToggleButton : null;
+      const AppViewProvider = appViewRes.status === 'fulfilled' ? appViewRes.value.AppViewProvider : null;
+      const AppViewContext = appViewRes.status === 'fulfilled' ? appViewRes.value.AppViewContext : null;
+      const startFirestoreSync = firebaseSyncRes.status === 'fulfilled' ? firebaseSyncRes.value.startFirestoreSync : null;
+
+      if (typeof window !== 'undefined' && AppViewContext) {
+        try { window.AppViewContext = AppViewContext } catch (e) {}
+      }
+      if (typeof window !== 'undefined' && ThemeToggleButton) {
+        try { window.ThemeToggleButton = ThemeToggleButton } catch (e) {}
+      }
+
+      clearTimeout(loadingTimeout);
+
+      // Start Firestore sync with diagnostic probes, but tolerate failures/timeouts.
+      if (typeof startFirestoreSync === 'function') {
+        try {
+          try {
+            const firebaseMod = await importWithTimeout(import('./lib/firebase'), 2000);
+            const storageMod = await importWithTimeout(import('./lib/storage'), 2000);
+            const { auth } = firebaseMod;
+            const { STORES } = storageMod;
+            console.info('Firestore diagnostic - STORES:', Object.keys(STORES || {}));
+            if (auth) {
+              try {
+                const unsubscribe = auth.onAuthStateChanged(u => {
+                  console.info('Firestore diagnostic - onAuthStateChanged:', u ? { uid: u.uid, email: u.email } : null);
+                  if (u) {
+                    try { startFirestoreSync() } catch (e) { console.warn('Firestore sync start failed:', e) }
+                    try { if (typeof unsubscribe === 'function') unsubscribe() } catch (e) {}
+                  } else {
+                    console.info('Skipping Firestore sync: user not authenticated yet.')
+                  }
+                });
+              } catch (e) {
+                console.warn('Failed to attach auth listener for Firestore diagnostic:', e);
+                try { startFirestoreSync() } catch (e2) { console.warn('Firestore sync start failed (fallback):', e2) }
+              }
+            } else {
+              console.info('Firestore diagnostic - auth not initialized; skipping sync')
+            }
+          } catch (probeErr) {
+            console.warn('Firestore diagnostic probe failed:', probeErr);
+            try { startFirestoreSync() } catch (e) { console.warn('Firestore sync start failed (probe fallback):', e) }
+          }
+        } catch (syncErr) {
+          console.warn('Firestore sync not started:', syncErr);
+        }
+      }
+
+      // Render the app using available providers. If ThemeProvider or AppViewProvider
+      // failed to load, render the app without them so the UI becomes interactive.
+      root.render(
+        <React.StrictMode>
+          <BrowserRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true
+            }}
+          >
+            {ThemeProvider ? (
+              <ThemeProvider>
+                {AppViewProvider ? (
+                  <AppViewProvider>
+                    <App />
+                  </AppViewProvider>
+                ) : (
+                  <App />
+                )}
+              </ThemeProvider>
+            ) : AppViewProvider ? (
+              <AppViewProvider>
+                <App />
+              </AppViewProvider>
+            ) : (
+              <App />
+            )}
+          </BrowserRouter>
+        </React.StrictMode>
+      );
+    } catch (err) {
+      clearTimeout(loadingTimeout);
+      console.error('❌ Failed to load app providers:', err)
+      document.body.innerHTML = '<div style="padding: 20px; background: #dc2626; color: white;"><h1>Error</h1><p>Failed to load providers. Please refresh.</p></div>'
+    }
+  })();
 } catch (e) {
   console.error('❌ Failed to render React app:', e)
   document.body.innerHTML = '<div style="padding: 20px; background: #dc2626; color: white;"><h1>Error</h1><p>Failed to load application. Error: ' + e.message + '</p></div>'

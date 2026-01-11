@@ -50,32 +50,44 @@ const isDev = typeof window !== 'undefined' && (
   window.location.hostname.includes('githubpreview.dev')
 );
 
+// Allow opt-out for persistence (useful in Codespaces, CI, or when multiple tabs
+// / windows cause IndexedDB ownership conflicts). Set VITE_DISABLE_FIRESTORE_PERSISTENCE=true
+// to force memory-only mode.
+const disablePersistence = import.meta.env.VITE_DISABLE_FIRESTORE_PERSISTENCE === 'true' || isDev
+
 try {
   if (isFirebaseConfigured()) {
     // Check if Firebase is already initialized (prevents HMR errors)
     if (getApps().length === 0) {
       app = initializeApp(firebaseConfig)
       try {
-        // Try enabling persistent local cache with multi-tab synchronization.
-        // This avoids the "exclusive access" errors when multiple tabs are open.
-        try {
-          db = initializeFirestore(app, {
-            localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED, synchronizeTabs: true })
-          })
-          window.__firestorePersistenceMode = 'indexeddb:synchronized'
-        } catch (pErr) {
-          // If synchronizeTabs isn't supported or fails (e.g., older SDKs), try without it.
+        if (disablePersistence) {
+          // Skip attempting IndexedDB persistence in environments known to cause
+          // conflicts (multiple tabs, Codespaces, CI). Use memory-only Firestore.
+          db = getFirestore(app)
+          window.__firestorePersistenceMode = 'disabled'
+        } else {
+          // Try enabling persistent local cache with multi-tab synchronization.
+          // This avoids the "exclusive access" errors when multiple tabs are open.
           try {
             db = initializeFirestore(app, {
-              localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED })
+              localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED, synchronizeTabs: true })
             })
-            window.__firestorePersistenceMode = 'indexeddb:exclusive'
-          } catch (innerErr) {
-            // Fall back to in-memory / default persistence. This prevents the app from crashing
-            // when indexed DB persistence can't be obtained (e.g., another tab holds ownership).
-            console.warn('⚠️ Firestore persistence warning, falling back to memory cache:', innerErr)
-            db = getFirestore(app)
-            window.__firestorePersistenceMode = 'memory'
+            window.__firestorePersistenceMode = 'indexeddb:synchronized'
+          } catch (pErr) {
+            // If synchronizeTabs isn't supported or fails (e.g., older SDKs), try without it.
+            try {
+              db = initializeFirestore(app, {
+                localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED })
+              })
+              window.__firestorePersistenceMode = 'indexeddb:exclusive'
+            } catch (innerErr) {
+              // Fall back to in-memory / default persistence. This prevents the app from crashing
+              // when indexed DB persistence can't be obtained (e.g., another tab holds ownership).
+              console.warn('⚠️ Firestore persistence warning, falling back to memory cache:', innerErr)
+              db = getFirestore(app)
+              window.__firestorePersistenceMode = 'memory'
+            }
           }
         }
       } catch (firestoreError) {

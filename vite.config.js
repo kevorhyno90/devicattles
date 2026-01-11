@@ -4,6 +4,31 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vitejs.dev/config/
+// Build a stable ignored list for the dev file watcher to avoid
+// restarts when generated files are written (dist, public assets, etc.).
+const DEV_PERSISTENT = process.env.DEV_PERSISTENT === '1' || process.env.DEV_PERSISTENT === 'true';
+const WATCH_IGNORED_BASE = [
+  '**/node_modules/**',
+  '**/.git/**',
+  '**/dist/**',
+  '.vite/**',
+  'assets/**',
+  'attached_assets/**',
+  'public/assets/**',
+  'public/firebase-messaging-sw.js',
+  'public/manifest.webmanifest',
+  'public/*.html',
+  'public/workers/**',
+  'public/icons/**',
+  '**/*.log',
+  '**/*.tmp',
+  '**/*.swp',
+  '.vscode/**'
+];
+if (DEV_PERSISTENT) {
+  WATCH_IGNORED_BASE.push('src/lib/**', 'src/components/**', 'src/main.jsx', 'index.html');
+}
+
 export default defineConfig({
   // Set the base path for deployment to a subdirectory (GitHub Pages)
   // For Vercel, use root path
@@ -92,7 +117,15 @@ export default defineConfig({
             }
           }
         ],
-        navigateFallback: null, // Don't redirect to index for offline
+        // Provide an explicit offline fallback for navigations but ensure
+        // module/css requests are not redirected to HTML (fixes MIME errors
+        // where the SW returned index.html for JS modules).
+        navigateFallback: '/offline.html',
+        navigateFallbackDenylist: [
+          /\/.+\.(js|css|json|map)$/i,
+          /\/api\//i,
+          /\/assets\//i
+        ],
       },
       devOptions: {
         enabled: false,
@@ -145,36 +178,7 @@ export default defineConfig({
       // Reduce resource usage to avoid Codespaces restarts
       usePolling: false,
       interval: 300,
-      ignored: (function() {
-        const base = [
-          '**/node_modules/**',
-          '**/.git/**',
-          '**/dist/**',
-          '**/.vite/**',
-          'assets/**',
-          'attached_assets/**',
-          'public/assets/**',
-          // Ignore generated public files (service worker, manifest, preview helpers)
-          'public/firebase-messaging-sw.js',
-          'public/manifest.webmanifest',
-          'public/*.html',
-          'public/workers/**',
-          'public/icons/**',
-          '**/*.log',
-          '**/*.tmp',
-          '**/*.swp',
-          '.vscode/**'
-        ]
-        const persistent = process.env.DEV_PERSISTENT === '1' || process.env.DEV_PERSISTENT === 'true'
-        if (persistent) {
-          // In persistent dev mode, ignore lib and heavy component folders to avoid automatic restarts
-          base.push('src/lib/**')
-          base.push('src/components/**')
-          base.push('src/main.jsx')
-          base.push('index.html')
-        }
-        return base
-      })()
+      ignored: WATCH_IGNORED_BASE
     }
   },
   preview: {
