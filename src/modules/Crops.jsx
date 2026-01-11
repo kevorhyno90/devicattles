@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 import { useDebounce } from '../lib/useDebounce'
+import RecordCV from '../components/RecordCV'
 import VirtualizedList from '../components/VirtualizedList'
 import { logCropActivity } from '../lib/activityLogger'
 import { savePhoto, deletePhoto, getPhotosByEntity } from '../lib/photoAnalysis'
@@ -158,6 +159,7 @@ export default function Crops(){
   const [items, setItems] = useState([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [modalOpenId, setModalOpenId] = useState(null)
+  const [showRecordCV, setShowRecordCV] = useState(null)
   const [activeTab, setActiveTab] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
   const [sortBy, setSortBy] = useState('planted')
@@ -560,13 +562,16 @@ export default function Crops(){
     if(!(inlineData.name||'').trim()){
       setToast({ type:'error', message:'Crop name cannot be empty' })
       setTimeout(()=> setToast(null), 2000)
-      return
-    }
-    // Validate dates ordering if both provided
-    if(inlineData.planted && inlineData.expectedHarvest){
-      const p = new Date(inlineData.planted)
-      const h = new Date(inlineData.expectedHarvest)
-      if(h <= p){
+        return (
+          <div className="drawer-overlay" onClick={() => setModalOpenId(null)}>
+            <div className="drawer" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ margin: 0 }}>{crop.name} — {crop.id}</h3>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => setShowRecordCV(crop)} style={{ padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>👁️ View CV</button>
+                  <button onClick={() => setModalOpenId(null)} style={{ marginLeft: '8px' }}>Close</button>
+                </div>
+              </div>
         setToast({ type:'error', message:'Expected harvest must be after planted date' })
         setTimeout(()=> setToast(null), 2500)
         return
@@ -1331,6 +1336,22 @@ export default function Crops(){
           </div>
         )
       })()}
+
+        {showRecordCV && (
+          <RecordCV
+            entity={showRecordCV}
+            title={`Crop: ${showRecordCV.name || showRecordCV.id}`}
+            fields={[
+              { key: 'name', label: 'Name' },
+              { key: 'id', label: 'ID' },
+              { key: 'cropType', label: 'Type' },
+              { key: 'area', label: 'Area' },
+              { key: 'yield', label: 'Yield' },
+              { key: 'season', label: 'Season' }
+            ]}
+            onClose={() => setShowRecordCV(null)}
+          />
+        )}
     </section>
   )
 }

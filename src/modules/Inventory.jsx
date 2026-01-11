@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 import { useDebounce } from '../lib/useDebounce'
 import { logInventoryActivity } from '../lib/activityLogger'
+import RecordCV from '../components/RecordCV'
 
 const SAMPLE = [
   { 
@@ -235,6 +236,7 @@ export default function Inventory(){
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [modalOpenId, setModalOpenId] = useState(null)
+  const [showRecordCV, setShowRecordCV] = useState(null)
   const [filterCategory, setFilterCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   
@@ -1283,11 +1285,14 @@ export default function Inventory(){
         if(!record) return null
         
         return (
-          <div className="drawer-overlay" onClick={() => setModalOpenId(null)}>
-            <div className="drawer" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px' }}>
+            <div className="drawer-overlay" onClick={() => setModalOpenId(null)}>
+              <div className="drawer" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ margin: 0 }}>{record.name} — {record.id}</h3>
-                <button onClick={() => setModalOpenId(null)}>✕ Close</button>
+                  <h3 style={{ margin: 0 }}>{record.name} — {record.id}</h3>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => setShowRecordCV(record)} style={{ padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>👁️ View CV</button>
+                    <button onClick={() => setModalOpenId(null)}>✕ Close</button>
+                  </div>
               </div>
 
               {/* Supplies Details */}
@@ -1428,6 +1433,26 @@ export default function Inventory(){
           </div>
         )
       })()}
+
+        {/* Record CV modal for inventory/equipment */}
+        {showRecordCV && (
+          <RecordCV
+            entity={showRecordCV}
+            title={`Record: ${showRecordCV.name || showRecordCV.id}`}
+            fields={[
+              { key: 'name', label: 'Name' },
+              { key: 'id', label: 'ID' },
+              { key: 'category', label: 'Category' },
+              { key: 'quantity', label: 'Quantity' },
+              { key: 'unit', label: 'Unit' },
+              { key: 'unitCost', label: 'Unit Cost' },
+              { key: 'totalValue', label: 'Total Value' },
+              { key: 'location', label: 'Location' },
+              { key: 'supplier', label: 'Supplier' }
+            ]}
+            onClose={() => setShowRecordCV(null)}
+          />
+        )}
       
       {/* Toast Notifications */}
       {toast && (

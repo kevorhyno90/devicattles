@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react'
+import { exportToJSON } from '../lib/exportImport'
+import AnimalCV from '../components/animal/AnimalCV'
+import { recordClick } from '../lib/clickDB'
 
 const SAMPLE = [
   { id: 'BREED-001', animalId: 'A-002', date: '2025-05-20', event: 'AI', sire: 'S-101', sireName: 'Premium Bull', method: 'Artificial Insemination', technician: 'Dr. Smith', expectedDue: '2026-02-15', cost: 150, notes: 'First breeding attempt', status: 'Confirmed' },
@@ -112,6 +115,7 @@ export default function AnimalBreeding({ animals }){
   const [inlineData, setInlineData] = useState({})
   const [toast, setToast] = useState(null)
   const [lastChange, setLastChange] = useState(null)
+  const [showAnimalCV, setShowAnimalCV] = useState(null)
 
   // Semen inventory form
   const [semenForm, setSemenForm] = useState({
@@ -158,6 +162,22 @@ export default function AnimalBreeding({ animals }){
   }, [])
 
   useEffect(()=> localStorage.setItem(KEY, JSON.stringify(items)), [items])
+
+  // Show Animal CV when requested
+  const renderAnimalCV = (showAnimalCV, setShowAnimalCV) => {
+    return showAnimalCV ? (
+      <AnimalCV
+        animal={showAnimalCV}
+        groups={JSON.parse(localStorage.getItem('cattalytics:groups') || '[]')}
+        onClose={() => setShowAnimalCV(null)}
+        onDownloadJSON={() => {/* no-op here; caller may implement */}}
+      />
+    ) : null
+  }
+  
+  
+  // Render selected animal CV
+  
 
   function add(){
     if(!animalId || !event) {
@@ -582,6 +602,7 @@ export default function AnimalBreeding({ animals }){
                         </div>
                         <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
                           <strong>{animal?.name || animal?.tag || item.animalId}</strong> • {new Date(item.timestamp || item.date).toLocaleDateString()}
+                          <button onClick={() => { const a = (animals||[]).find(x=>x.id===item.animalId); if(a){ setShowAnimalCV(a); recordClick('animal', a.id, 'view_cv') } }} style={{ marginLeft: 8, padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>👁️ View CV</button>
                         </div>
                         {item.sireName && (
                           <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
@@ -899,6 +920,15 @@ export default function AnimalBreeding({ animals }){
           </div>
         </>
       )}
+      {showAnimalCV && (
+        <AnimalCV
+          animal={showAnimalCV}
+          groups={JSON.parse(localStorage.getItem('cattalytics:groups') || '[]')}
+          onClose={() => setShowAnimalCV(null)}
+          onDownloadJSON={() => exportToJSON(showAnimalCV, `${(showAnimalCV.tag||showAnimalCV.id)}_record.json`)}
+        />
+      )}
+
       {toast && (
         <div style={{position:'fixed',bottom:20,right:20,padding:'12px 20px',background:toast.type==='error'?'#ef4444':'#10b981',color:'#fff',borderRadius:8,boxShadow:'0 4px 12px rgba(0,0,0,0.15)',zIndex:10000,display:'flex',gap:12}}>
           <span>{toast.message}</span>

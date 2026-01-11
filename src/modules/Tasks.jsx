@@ -4,6 +4,7 @@ import { getCurrentUserName, getAllUsers } from '../lib/auth'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
 import { useDebounce } from '../lib/useDebounce'
 import { logTaskActivity } from '../lib/activityLogger'
+import RecordCV from '../components/RecordCV'
 
 const SAMPLE = [
   { id: 'T-001', title: 'Check water troughs', description: 'Inspect all water systems in pastures A-D', assignedTo: 'John Smith', due: '2025-11-16', priority: 'High', category: 'Maintenance', done: false, createdDate: '2025-11-15', estimatedHours: 2, notes: [], location: 'Pasture A-D' },
@@ -21,6 +22,7 @@ export default function Tasks(){
   const [activeTab, setActiveTab] = useState('all')
   const [showAddForm, setShowAddForm] = useState(false)
   const [modalOpenId, setModalOpenId] = useState(null)
+  const [showRecordCV, setShowRecordCV] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [inlineEditId, setInlineEditId] = useState(null)
   const [inlineData, setInlineData] = useState({ title: '', priority: 'Medium', due: '', assignedTo: '', category: 'Animal Care', description: '', estimatedHours: 1, location: '' })
@@ -550,7 +552,8 @@ export default function Tasks(){
             <div className="drawer" onClick={e => e.stopPropagation()}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h3>{task.title}</h3>
-                <div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => setShowRecordCV(task)} style={{ padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>👁️ View CV</button>
                   <button onClick={() => toggleDone(task.id)}>{task.done ? 'Mark Incomplete' : 'Mark Complete'}</button>
                   <button onClick={() => { setModalOpenId(null); startEdit(task); }} style={{ marginLeft: '8px' }}>Edit</button>
                   <button onClick={() => setModalOpenId(null)} style={{ marginLeft: '8px' }}>Close</button>
@@ -613,6 +616,22 @@ export default function Tasks(){
           </div>
         )
       })()}
+
+      {showRecordCV && (
+        <RecordCV
+          entity={showRecordCV}
+          title={`Task: ${showRecordCV.title || showRecordCV.id}`}
+          fields={[
+            { key: 'title', label: 'Title' },
+            { key: 'id', label: 'ID' },
+            { key: 'assignedTo', label: 'Assigned To' },
+            { key: 'due', label: 'Due Date' },
+            { key: 'priority', label: 'Priority' },
+            { key: 'location', label: 'Location' }
+          ]}
+          onClose={() => setShowRecordCV(null)}
+        />
+      )}
     </section>
   )
 }

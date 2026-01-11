@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
+import AnimalCV from '../components/animal/AnimalCV'
+import { recordClick } from '../lib/clickDB'
 
 // Comprehensive Ingredient Library with Kenya Prices (KES per kg)
 // Now includes ME (Metabolizable Energy, MJ/kg DM) alongside NEL
@@ -379,6 +381,7 @@ export default function AnimalFeeding({ animals }){
   const [inlineData, setInlineData] = useState({})
   const [toast, setToast] = useState(null)
   const [lastChange, setLastChange] = useState(null)
+  const [showAnimalCV, setShowAnimalCV] = useState(null)
 
   useEffect(() => {
     const d = localStorage.getItem('rumen8:diets')
@@ -1407,7 +1410,30 @@ export default function AnimalFeeding({ animals }){
                           {event.cost > 0 ? `${event.cost.toFixed(2)}` : '-'}
                         </td>
                         <td style={{ padding: 10 }}>
-                          <div style={{ fontSize: 13 }}>{animalNames || 'N/A'}</div>
+                          <div style={{ fontSize: 13, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {event.animals && event.animals.length > 0 ? (
+                              event.animals.map(aId => {
+                                const a = (animals || []).find(an => an.id === aId)
+                                return (
+                                  <div key={aId} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <div style={{ flex: 1 }}>{a ? (a.name || a.tag) : aId}</div>
+                                    {a && (
+                                      <button
+                                        onClick={() => {
+                                          setShowAnimalCV(a)
+                                          try { recordClick('animal', a.id, 'view_cv') } catch (e) { }
+                                        }}
+                                        style={{ fontSize: 12 }}
+                                        title="View CV"
+                                      >👁️</button>
+                                    )}
+                                  </div>
+                                )
+                              })
+                            ) : (
+                              <div>N/A</div>
+                            )}
+                          </div>
                           <div style={{ fontSize: 12, color: '#666' }}>{event.animals.length} animal(s)</div>
                         </td>
                         <td style={{ padding: 10 }}>{event.method}</td>
@@ -1502,6 +1528,18 @@ export default function AnimalFeeding({ animals }){
       )}
       
       {/* Toast Notification */}
+      {showAnimalCV && (
+        <AnimalCV
+          animal={showAnimalCV}
+          onClose={() => setShowAnimalCV(null)}
+          onDownloadJSON={() => {
+            try {
+              exportToJSON(showAnimalCV, `${showAnimalCV.id || 'animal'}-cv.json`)
+              recordClick('animal', showAnimalCV.id, 'download_json')
+            } catch (e) { }
+          }}
+        />
+      )}
       {toast && (
         <div style={{ position: 'fixed', bottom: 20, right: 20, background: toast.type === 'error' ? '#dc2626' : '#10b981', color: 'white', padding: '12px 20px', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: 12, zIndex: 10000 }}>
           <span>{toast.message}</span>

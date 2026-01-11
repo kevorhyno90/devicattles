@@ -1,4 +1,5 @@
 import React, { useRef } from 'react'
+import { recordClick } from '../../lib/clickDB'
 
 export default function AnimalCV({ animal = {}, groups = [], onClose = () => {}, onDownloadJSON = () => {} }) {
   const rootRef = useRef(null)
@@ -45,9 +46,9 @@ export default function AnimalCV({ animal = {}, groups = [], onClose = () => {},
             <div className="muted">{animal.tag} • {animal.breed} • {animal.sex === 'F' ? 'Female' : 'Male'}</div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => onDownloadJSON()} style={{ padding: '8px 12px', background: '#111827', color: 'white', border: 'none', borderRadius: 6 }}>⬇️ JSON</button>
-            <button onClick={() => downloadRenderedCV(`${(animal.tag||animal.id||'animal')}_cv.html`)} style={{ padding: '8px 12px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>⬇️ CV</button>
-            <button onClick={() => downloadRenderedCV(`${(animal.tag||animal.id||'animal')}_cv.html`)} style={{ padding: '8px 12px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: 6 }}>⬇️ Excel</button>
+            <button onClick={() => { recordClick('animal', animal.id, 'download_json'); onDownloadJSON(); }} style={{ padding: '8px 12px', background: '#111827', color: 'white', border: 'none', borderRadius: 6 }}>⬇️ JSON</button>
+            <button onClick={() => { recordClick('animal', animal.id, 'download_cv'); downloadRenderedCV(`${(animal.tag||animal.id||'animal')}_cv.html`); }} style={{ padding: '8px 12px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>⬇️ CV</button>
+            <button onClick={() => { recordClick('animal', animal.id, 'download_excel'); downloadRenderedCV(`${(animal.tag||animal.id||'animal')}_cv.html`); }} style={{ padding: '8px 12px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: 6 }}>⬇️ Excel</button>
             <button onClick={onClose} style={{ padding: '8px 12px', background: '#fee2e2', color: '#9b1c1c', border: 'none', borderRadius: 6 }}>Close</button>
           </div>
         </div>

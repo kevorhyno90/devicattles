@@ -31,6 +31,9 @@ import { addMilkExpense } from '../lib/finance'
 import { getMilkExpenses } from '../lib/finance'
 import CalfOverviewRow from './CalfOverviewRow'
 import { LineChart, BarChart } from '../components/Charts'
+import { exportToJSON } from '../lib/exportImport'
+import AnimalCV from '../components/animal/AnimalCV'
+import { recordClick } from '../lib/clickDB'
 
 const HEALTH_STATUS = ['Healthy', 'Sick', 'Under Treatment', 'Quarantine', 'Recovered']
 const HOUSING_TYPES = ['Individual Pen', 'Group Pen', 'Hutch', 'Barn', 'Free Range']
@@ -54,6 +57,7 @@ function CalfManagement({ animals }) {
   const [editingHealthId, setEditingHealthId] = useState(null)
   const [toast, setToast] = useState(null)
   const [lastChange, setLastChange] = useState(null)
+  const [showAnimalCV, setShowAnimalCV] = useState(null)
 
   // Form states
   const [formData, setFormData] = useState({
@@ -472,6 +476,9 @@ function CalfManagement({ animals }) {
                       <strong>{calf ? calf.name : 'Unknown Calf'}</strong> | {record.date} | {record.feedType} | {record.quantityKg} kg / {record.quantityLiters} L | {record.method}
                       <span style={{ marginLeft: 8, color: '#888' }}>{record.notes}</span>
                       <button style={{ marginLeft: 12 }} onClick={() => startEditFeeding(record)}>Edit</button>
+                      {calf && (
+                        <button style={{ marginLeft: 8, fontSize: 12 }} onClick={() => { setShowAnimalCV(calf); try { recordClick('animal', calf.id, 'view_cv') } catch(e){} }}>👁️ View CV</button>
+                      )}
                     </div>
                   )
                 })
@@ -548,6 +555,18 @@ function CalfManagement({ animals }) {
           </div>
         )}
       </section>
+      {showAnimalCV && (
+        <AnimalCV
+          animal={showAnimalCV}
+          onClose={() => setShowAnimalCV(null)}
+          onDownloadJSON={() => {
+            try {
+              exportToJSON(showAnimalCV, `${showAnimalCV.id || 'calf'}-cv.json`)
+              recordClick('animal', showAnimalCV.id, 'download_json')
+            } catch (e) {}
+          }}
+        />
+      )}
     </ErrorBoundary>
   )
 }

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, exportToPDF } from '../lib/exportImport'
+import AnimalCV from '../components/animal/AnimalCV'
+import { recordClick } from '../lib/clickDB'
 
 const SAMPLE = [
   { id: 'MEAS-001', animalId: 'A-001', date: '2025-06-02', timestamp: '2025-06-02T10:00:00', type: 'Weight', value: 450, unit: 'kg', bcs: 3.5, height: null, length: null, girth: null, condition: 'Good', measuredBy: 'Farm Staff', notes: 'Regular check' },
@@ -44,6 +46,7 @@ export default function AnimalMeasurement({ animals }){
   const [inlineData, setInlineData] = useState({ value: '', unit: 'kg', condition: 'Good' })
   const [toast, setToast] = useState(null)
   const [lastChange, setLastChange] = useState(null)
+  const [showAnimalCV, setShowAnimalCV] = useState(null)
 
   useEffect(()=>{
     const raw = localStorage.getItem(KEY)
@@ -566,6 +569,7 @@ export default function AnimalMeasurement({ animals }){
                         <div style={{display:'flex',gap:4,flexDirection:'column'}}>
                           <button className="tab-btn" style={{background:'#3b82f6',color:'#fff',padding:'4px 8px'}} onClick={()=>startInlineEdit(item)}>⚡ Quick</button>
                           <button className="tab-btn" onClick={() => startEdit(item)}>✏️</button>
+                          <button className="tab-btn" onClick={() => { const a = (animals||[]).find(x=>x.id===item.animalId); if(a){ setShowAnimalCV(a); recordClick('animal', a.id, 'view_cv') } }} style={{ padding: '4px 8px', background: '#059669', color: '#fff', borderRadius: 6 }}>👁️ View CV</button>
                           <button className="tab-btn" style={{ color: '#dc2626' }} onClick={() => remove(item.id)}>🗑️</button>
                         </div>
                       </div>
@@ -582,6 +586,14 @@ export default function AnimalMeasurement({ animals }){
           <span>{toast.message}</span>
           {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
         </div>
+      )}
+      {showAnimalCV && (
+        <AnimalCV
+          animal={showAnimalCV}
+          groups={JSON.parse(localStorage.getItem('cattalytics:groups') || '[]')}
+          onClose={() => setShowAnimalCV(null)}
+          onDownloadJSON={() => exportToJSON(showAnimalCV, `${(showAnimalCV.tag||showAnimalCV.id)}_record.json`)}
+        />
       )}
     </section>
   )

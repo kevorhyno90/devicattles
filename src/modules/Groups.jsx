@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import RecordCV from '../components/RecordCV'
 
 const SAMPLE_GROUPS = [
   {
@@ -63,6 +64,7 @@ export default function Groups({ animals = [] }) {
   const KEY = 'cattalytics:groups'
   const [groups, setGroups] = useState([])
   const [selectedGroup, setSelectedGroup] = useState(null)
+  const [showRecordCV, setShowRecordCV] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [editValues, setEditValues] = useState({})
   const [showAddForm, setShowAddForm] = useState(false)
@@ -234,6 +236,21 @@ export default function Groups({ animals = [] }) {
           <h2 style={{ margin: 0 }}>👥 Groups & Herds</h2>
           <div style={{ fontSize: '14px', color: '#64748b' }}>Manage animal groups, herds, and production units</div>
         </div>
+
+  {showRecordCV && (
+    <RecordCV
+      entity={showRecordCV}
+      title={`Group: ${showRecordCV.name || showRecordCV.id}`}
+      fields={[
+        { key: 'name', label: 'Name' },
+        { key: 'id', label: 'ID' },
+        { key: 'type', label: 'Type' },
+        { key: 'manager', label: 'Manager' },
+        { key: 'location', label: 'Location' }
+      ]}
+      onClose={() => setShowRecordCV(null)}
+    />
+  )}
         <button className="tab-btn" onClick={() => setShowAddForm(true)}>➕ Add Group</button>
       </div>
 
@@ -479,6 +496,7 @@ export default function Groups({ animals = [] }) {
                 <div style={{ fontSize: '14px', color: '#64748b' }}>{selectedGroup.id}</div>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={() => setShowRecordCV(selectedGroup)} style={{ padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>👁️ View CV</button>
                 <button onClick={() => startEdit(selectedGroup)}>✏️ Edit</button>
                 <button onClick={() => setSelectedGroup(null)}>Close</button>
               </div>

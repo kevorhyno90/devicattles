@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { logAnimalActivity } from '../lib/activityLogger'
+import AnimalCV from '../components/animal/AnimalCV'
+import { recordClick } from '../lib/clickDB'
+import { exportToJSON } from '../lib/exportImport'
 
 /**
  * Animal Health Tracker
@@ -16,6 +19,8 @@ export default function AnimalHealthTracker({ onNavigate }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all') // all, healthy, sick, treatment
   const [sortBy, setSortBy] = useState('recent') // recent, name, status
+
+  const [showAnimalCV, setShowAnimalCV] = useState(null)
 
   const [formData, setFormData] = useState({
     type: 'checkup',
@@ -384,19 +389,22 @@ export default function AnimalHealthTracker({ onNavigate }) {
                     {selectedAnimal.type || 'Animal'} • {selectedAnimal.tag || selectedAnimal.id}
                   </div>
                 </div>
-                <button
-                  onClick={() => setSelectedAnimal(null)}
-                  style={{
-                    padding: '6px 12px',
-                    background: '#f3f4f6',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '13px'
-                  }}
-                >
-                  ✕ Close
-                </button>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button onClick={() => { setShowAnimalCV(selectedAnimal); recordClick('animal', selectedAnimal.id, 'view_cv') }} style={{ padding: '6px 12px', background: '#059669', color: '#fff', border: 'none', borderRadius: 6 }}>👁️ View CV</button>
+                  <button
+                    onClick={() => setSelectedAnimal(null)}
+                    style={{
+                      padding: '6px 12px',
+                      background: '#f3f4f6',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '13px'
+                    }}
+                  >
+                    ✕ Close
+                  </button>
+                </div>
               </div>
 
               {/* Action Buttons */}
@@ -697,6 +705,14 @@ export default function AnimalHealthTracker({ onNavigate }) {
               </div>
             </div>
           </div>
+        )}
+        {showAnimalCV && (
+          <AnimalCV
+            animal={showAnimalCV}
+            groups={JSON.parse(localStorage.getItem('cattalytics:groups') || '[]')}
+            onClose={() => setShowAnimalCV(null)}
+            onDownloadJSON={() => exportToJSON(showAnimalCV, `${(showAnimalCV.tag||showAnimalCV.id)}_record.json`)}
+          />
         )}
       </div>
     </div>

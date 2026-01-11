@@ -7,6 +7,7 @@ import { getFinancialSummary } from '../lib/moduleIntegration'
 import { useDebounce } from '../lib/useDebounce'
 import VirtualizedList from '../components/VirtualizedList'
 import { logFinanceActivity } from '../lib/activityLogger'
+import RecordCV from '../components/RecordCV'
 
 const SAMPLE = [
   { id: 'F-001', date: '2025-01-12', amount: -18000.00, type: 'expense', category: 'Veterinary', subcategory: 'Vaccines', description: 'Annual vaccination program', notes: [], paymentMethod: 'M-Pesa', vendor: 'Valley Veterinary Clinic' },
@@ -43,6 +44,7 @@ export default function Finance(){
   const [activeTab, setActiveTab] = useState('all')
   const [showAddForm, setShowAddForm] = useState(false)
   const [modalOpenId, setModalOpenId] = useState(null)
+    const [showRecordCV, setShowRecordCV] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterType, setFilterType] = useState('all')
@@ -727,7 +729,8 @@ export default function Finance(){
             <div className="drawer" onClick={e => e.stopPropagation()}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h3>{entry.description}</h3>
-                <div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => setShowRecordCV(entry)} style={{ padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>👁️ View CV</button>
                   <button onClick={() => { setModalOpenId(null); startEdit(entry); }}>Edit</button>
                   <button onClick={() => setModalOpenId(null)} style={{ marginLeft: '8px' }}>Close</button>
                 </div>
@@ -788,6 +791,22 @@ export default function Finance(){
           </div>
         )
       })()}
+
+      {showRecordCV && (
+        <RecordCV
+          entity={showRecordCV}
+          title={`Transaction: ${showRecordCV.description || showRecordCV.id}`}
+          fields={[
+            { key: 'description', label: 'Description' },
+            { key: 'id', label: 'ID' },
+            { key: 'date', label: 'Date' },
+            { key: 'amount', label: 'Amount' },
+            { key: 'category', label: 'Category' },
+            { key: 'vendor', label: 'Vendor' }
+          ]}
+          onClose={() => setShowRecordCV(null)}
+        />
+      )}
       
       {/* Toast Notifications */}
       {toast && (

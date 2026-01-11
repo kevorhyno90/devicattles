@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { recordIncome } from '../lib/moduleIntegration'
 import { exportToCSV, exportToExcel, exportToJSON, exportToPDF } from '../lib/exportImport'
+import AnimalCV from '../components/animal/AnimalCV'
+import { recordClick } from '../lib/clickDB'
 
 const SAMPLE = [
   { id: 'MILK-001', animalId: 'A-012', date: '2025-11-28', timestamp: '2025-11-28T06:30:00', session: 'Morning', liters: 18.5, milkToCalf: 2.5, milkConsumed: 1.0, milkSold: 15.0, spoiledMilk: 0.5, spoiledMilkPrice: 0, spoiledMilkReason: 'Left unrefrigerated', fatContent: 3.8, proteinContent: 3.2, lactose: 4.8, solidsNotFat: 8.7, totalSolids: 12.5, scc: 150000, temp: 37.5, ph: 6.7, quality: 'Grade A', pricePerLiter: 45, totalPrice: 675, buyer: 'Brookside Dairy', sold: true, notes: 'Normal milking', milkerId: 'MKR-001', milkerName: 'John Kamau', milkingDuration: 8, equipmentUsed: 'Portable Milker', location: 'Barn A', weather: 'Sunny', feedQuality: 'Good', cowHealth: 'Excellent', lactationDay: 45, peakMilk: false, colostrum: false, antibiotics: false, withdrawal: false },
@@ -64,6 +66,7 @@ export default function AnimalMilkYield({ animals }){
   const [inlineData, setInlineData] = useState({ liters: '', session: 'Morning', quality: 'Grade A', notes: '' })
   const [toast, setToast] = useState(null)
   const [lastChange, setLastChange] = useState(null)
+  const [showAnimalCV, setShowAnimalCV] = useState(null)
   const [filterQuality, setFilterQuality] = useState('all')
   const [viewMode, setViewMode] = useState('list')
   const [editingId, setEditingId] = useState(null)
@@ -1191,6 +1194,7 @@ export default function AnimalMilkYield({ animals }){
                         {item.totalPrice > 0 && <span style={{ fontWeight: 600, color: '#059669' }}>KES {item.totalPrice.toFixed(2)}</span>}
                         {item.fatContent && <span className="badge" style={{ background: '#fef3c7' }}>Fat: {item.fatContent}%</span>}
                         {item.proteinContent && <span className="badge" style={{ background: '#dbeafe' }}>Protein: {item.proteinContent}%</span>}
+                        <button onClick={() => { const a = (animals||[]).find(x=>x.id===item.animalId); if(a){ setShowAnimalCV(a); recordClick('animal', a.id, 'view_cv') } }} style={{ marginLeft: 8, padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>👁️ View CV</button>
                         {sccStatus && (
                           <span className="badge" style={{ 
                             background: sccStatus === 'good' ? '#d1fae5' : sccStatus === 'warning' ? '#fef3c7' : '#fee2e2',
@@ -1229,6 +1233,14 @@ export default function AnimalMilkYield({ animals }){
           <span>{toast.message}</span>
           {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
         </div>
+      )}
+      {showAnimalCV && (
+        <AnimalCV
+          animal={showAnimalCV}
+          groups={JSON.parse(localStorage.getItem('cattalytics:groups') || '[]')}
+          onClose={() => setShowAnimalCV(null)}
+          onDownloadJSON={() => exportToJSON(showAnimalCV, `${(showAnimalCV.tag||showAnimalCV.id)}_record.json`)}
+        />
       )}
     </section>
   )

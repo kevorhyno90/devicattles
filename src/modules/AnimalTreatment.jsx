@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, exportToPDF, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
 import { getVeterinaryInventory, useInventoryItem, recordExpense } from '../lib/moduleIntegration'
+import AnimalCV from '../components/animal/AnimalCV'
+import { recordClick } from '../lib/clickDB'
 
 const SAMPLE = [
   { id: 'TREAT-001', animalId: 'A-001', date: '2025-06-01', timestamp: '2025-06-01T10:30:00', treatmentType: 'Hoof Care', treatment: 'Hoof trim', veterinarian: 'Dr. Smith', medication: '', dosage: '', cost: 50, duration: '', nextDue: '', status: 'Completed', severity: 'Routine', notes: 'Regular maintenance' },
@@ -39,6 +41,7 @@ export default function AnimalTreatment({ animals }){
   const [inlineData, setInlineData] = useState({ treatment: '', status: 'Completed', severity: 'Routine' })
   const [toast, setToast] = useState(null)
   const [lastChange, setLastChange] = useState(null)
+  const [showAnimalCV, setShowAnimalCV] = useState(null)
 
   useEffect(()=>{
     const raw = localStorage.getItem(KEY)
@@ -675,6 +678,7 @@ export default function AnimalTreatment({ animals }){
                                 item.status === 'In Progress' ? '#0284c7' : '#6b7280'
                         }}>{item.status}</span>
                         <span className="badge" style={{ background: '#fee2e2', color: severityColor }}>{item.severity}</span>
+                        <button onClick={() => { const a = (animals||[]).find(x => x.id === item.animalId); if (a) { setShowAnimalCV(a); recordClick('animal', a.id, 'view_cv') } }} style={{ marginLeft: 8, padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>👁️ View CV</button>
                         {item.cost > 0 && <span className="badge" style={{ background: '#d1fae5' }}>KSH {Number(item.cost).toLocaleString()}</span>}
                       </div>
                       <div style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>
@@ -720,6 +724,14 @@ export default function AnimalTreatment({ animals }){
           <span>{toast.message}</span>
           {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
         </div>
+      )}
+      {showAnimalCV && (
+        <AnimalCV
+          animal={showAnimalCV}
+          groups={JSON.parse(localStorage.getItem('cattalytics:groups') || '[]')}
+          onClose={() => setShowAnimalCV(null)}
+          onDownloadJSON={() => exportToJSON(showAnimalCV, `${(showAnimalCV.tag||showAnimalCV.id)}_record.json`)}
+        />
       )}
     </section>
   )

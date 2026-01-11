@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import ErrorBoundary from '../components/ErrorBoundary'
+import AnimalCV from '../components/animal/AnimalCV'
+import { recordClick } from '../lib/clickDB'
 
 export default function CanineManagement({ animals, setAnimals }) {
-  const canines = animals.filter(a => a.groupId === 'G-004')
+  const canines = animals.filter(a => a.groupId === 'G-008')
   const [showForm, setShowForm] = useState(false)
   const [selectedCanine, setSelectedCanine] = useState(null)
   const [tab, setTab] = useState('list') // Top-level tab
@@ -39,13 +41,32 @@ export default function CanineManagement({ animals, setAnimals }) {
   const workTypes = ['Herding', 'Protection', 'Tracking', 'Patrol', 'Farm Work', 'None']
   const trainingLevels = ['None', 'Basic', 'Intermediate', 'Advanced', 'Professional']
 
+  const [showCV, setShowCV] = useState(false)
+
+  function downloadAnimalJSON(a) {
+    try {
+      const blob = new Blob([JSON.stringify(a || {}, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const el = document.createElement('a')
+      el.href = url
+      el.download = `${(a.tag || a.id || 'animal')}_data.json`
+      document.body.appendChild(el)
+      el.click()
+      document.body.removeChild(el)
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Download JSON failed', err)
+      alert('Failed to download JSON')
+    }
+  }
+
   const addCanine = () => {
     if (!formData.name.trim()) return
     
     const newCanine = {
       id: 'C-' + Math.floor(10000 + Math.random() * 90000),
       tag: formData.name.substring(0, 3).toUpperCase() + '-' + Date.now().toString().slice(-4),
-      groupId: 'G-004',
+      groupId: 'G-008',
       type: 'Canine',
       ...formData,
       healthRecords: [],
@@ -240,6 +261,7 @@ export default function CanineManagement({ animals, setAnimals }) {
                     </div>
                     <div style={{ marginTop: '8px', display: 'flex', gap: '4px' }}>
                       <button onClick={(e) => { e.stopPropagation(); startInlineEdit(dog); }} style={{ flex: 1, padding: '4px 8px', background: '#ffffcc', color: '#333', border: '1px solid #ffdd00', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '500' }}>⚡ Quick</button>
+                      <button onClick={(e) => { e.stopPropagation(); recordClick('animal', dog.id, 'view_cv'); setSelectedCanine(dog); setShowCV(true); }} style={{ flex: 1, padding: '4px 8px', background: '#059669', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>👁️ View</button>
                       <button onClick={(e) => { e.stopPropagation(); editCanine(dog); }} style={{ flex: 1, padding: '4px 8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>✏️</button>
                       <button onClick={(e) => { e.stopPropagation(); deleteCanine(dog.id); }} style={{ flex: 1, padding: '4px 8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>🗑️</button>
                     </div>
@@ -408,6 +430,9 @@ export default function CanineManagement({ animals, setAnimals }) {
               <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
                 <button onClick={() => setSelectedCanine(null)} style={{ padding: '8px 16px', background: '#e5e7eb', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>← Back</button>
                 <h3 style={{ margin: 0, flex: 1 }}>🐕 {selectedCanine.name} ({selectedCanine.breed})</h3>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => setShowCV(true)} style={{ padding: '8px 12px', background: '#059669', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}>👁️ View CV</button>
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '2px solid #e5e7eb' }}>
@@ -587,6 +612,14 @@ export default function CanineManagement({ animals, setAnimals }) {
               )}
             </div>
           )}
+      {showCV && selectedCanine && (
+        <AnimalCV
+          animal={selectedCanine}
+          groups={[{ id: 'G-008', name: 'Canines' }]}
+          onClose={() => setShowCV(false)}
+          onDownloadJSON={() => downloadAnimalJSON(selectedCanine)}
+        />
+      )}
     </div>
   );
 }
