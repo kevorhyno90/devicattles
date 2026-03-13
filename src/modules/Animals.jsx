@@ -26,7 +26,18 @@ import { LineChart } from '../components/Charts'
 
 // Realized Animals component: HTML5 controls, inline validation, unique tag checks,
 // realistic sample data, and non-placeholder behavior.
-export default function Animals() {
+export default function Animals({ section = 'all' }) {
+  const isDairySection = section === 'dairy'
+  const dairyGroupId = 'G-001'
+
+  function isAnimalInScope(animal) {
+    return !isDairySection || animal?.groupId === dairyGroupId
+  }
+
+  function isGroupInScope(group) {
+    return !isDairySection || group?.id === dairyGroupId
+  }
+
   // Track expanded/collapsed state for group details
   const [expandedGroups, setExpandedGroups] = useState([])
   const AKEY = 'cattalytics:animals'
@@ -82,7 +93,7 @@ export default function Animals() {
   const debouncedFilter = useDebounce(filter, 300)
 
   const emptyAnimal = { 
-    id: '', tag: '', name: '', breed: '', sex: 'F', color: '', dob: '', weight: '', sire: '', dam: '', groupId: '', status: 'Active', notes: '', owner: '', registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', photos: [], 
+    id: '', tag: '', name: '', breed: '', sex: 'F', color: '', dob: '', weight: '', sire: '', dam: '', groupId: isDairySection ? dairyGroupId : '', status: 'Active', notes: '', owner: '', registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', photos: [], 
     pregnancyStatus: 'Unknown', expectedDue: '', parity: '', lactationStatus: 'NA',
     // Production Metrics
     production: {
@@ -212,6 +223,8 @@ export default function Animals() {
   const [groupStartDate, setGroupStartDate] = useState('')
   const [groupEndDate, setGroupEndDate] = useState('')
   const [editingGroupId, setEditingGroupId] = useState(null)
+  const scopedAnimals = useMemo(() => animals.filter(isAnimalInScope), [animals, isDairySection])
+  const visibleGroups = useMemo(() => groups.filter(isGroupInScope), [groups, isDairySection])
 
   useEffect(() => {
     try {
@@ -271,6 +284,11 @@ export default function Animals() {
 
   useEffect(() => localStorage.setItem(AKEY, JSON.stringify(animals)), [animals])
   useEffect(() => localStorage.setItem(GKEY, JSON.stringify(groups)), [groups])
+  useEffect(() => {
+    if (!isDairySection) return
+    if (['addGroup', 'bsf', 'poultry', 'canine'].includes(tab)) setTab('list')
+    if (filterGroup === 'ungrouped') setFilterGroup('all')
+  }, [filterGroup, isDairySection, tab])
 
   function validateAnimal(a) {
     const e = {}
@@ -338,6 +356,7 @@ export default function Animals() {
   async function saveAnimal(e) {
     e && e.preventDefault()
     const candidate = { ...form }
+    if (isDairySection) candidate.groupId = dairyGroupId
     if (!candidate.tag || !candidate.tag.trim()) candidate.tag = 'TAG' + (1000 + Math.floor(Math.random() * 9000))
     const eobj = validateAnimal(candidate)
     setErrors(eobj)
@@ -512,10 +531,10 @@ export default function Animals() {
   const filtered = useMemo(() => {
     perfMonitor.start('Filter Animals')
     
-    const result = animals.filter(a => {
+    const result = scopedAnimals.filter(a => {
       // Text search
       if (q) {
-        const groupName = groups.find(g => g.id === a.groupId)?.name || ''
+        const groupName = visibleGroups.find(g => g.id === a.groupId)?.name || ''
         const matchesText = (a.id || '').toLowerCase().includes(q) || 
                            (a.tag || '').toLowerCase().includes(q) || 
                            (a.name || '').toLowerCase().includes(q) || 
@@ -541,7 +560,7 @@ export default function Animals() {
     
     perfMonitor.end('Filter Animals')
     return result
-  }, [animals, debouncedFilter, filterGroup, filterStatus, filterSex, groups])
+  }, [debouncedFilter, filterGroup, filterStatus, filterSex, scopedAnimals, visibleGroups])
 
   // Sort animals
   const sortedAnimals = [...filtered].sort((a, b) => {
@@ -598,7 +617,7 @@ export default function Animals() {
   const fileInputRef = useRef(null)
 
   function handleExportCSV() {
-    const exportData = animals.map(a => ({
+    const exportData = scopedAnimals.map(a => ({
       id: a.id,
       tag: a.tag,
       name: a.name,
@@ -618,7 +637,7 @@ export default function Animals() {
   }
 
   function handleExportExcel() {
-    const exportData = animals.map(a => ({
+    const exportData = scopedAnimals.map(a => ({
       id: a.id,
       tag: a.tag,
       name: a.name,
@@ -638,7 +657,7 @@ export default function Animals() {
   }
 
   function handleExportJSON() {
-    exportToJSON(animals, 'animals.json')
+    exportToJSON(scopedAnimals, 'animals.json')
   }
 
   function handleImportClick() {
@@ -720,7 +739,7 @@ export default function Animals() {
   }
 
   function handleBatchPrint() {
-    const filtered = animals.filter(filterAnimal)
+    const filtered = sortedAnimals
     if (filtered.length === 0) {
       alert('No animals to print')
       return
@@ -750,7 +769,7 @@ export default function Animals() {
 
   // Download single animal full record (JSON/CSV/Excel)
   function getFlattenedAnimal(a) {
-    const groupName = groups.find(g => g.id === a.groupId)?.name || ''
+    const groupName = visibleGroups.find(g => g.id === a.groupId)?.name || ''
     return {
       id: a.id || '',
       tag: a.tag || '',
@@ -799,7 +818,7 @@ export default function Animals() {
 
   function exportAnimalCVAsFile(a, filename = 'animal_cv.html') {
     try {
-      const groupName = groups.find(g => g.id === a.groupId)?.name || ''
+      const groupName = visibleGroups.find(g => g.id === a.groupId)?.name || ''
       const title = `${a.name || a.tag || a.id} — Animal CV`
 
       const photoHtml = (a.photos && a.photos.length)
@@ -953,19 +972,19 @@ export default function Animals() {
       {/* Statistics Cards - stack vertically on mobile */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px', ...(window.innerWidth <= 600 ? { gridTemplateColumns: '1fr', gap: '12px' } : {}) }}>
         <div className="card" style={{ padding: '16px', textAlign: 'center', ...mobileStyle.card }}>
-          <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--green)' }}>{animals.length}</div>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--green)' }}>{scopedAnimals.length}</div>
           <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Total Animals</div>
         </div>
         <div className="card" style={{ padding: '16px', textAlign: 'center', ...mobileStyle.card }}>
-          <div style={{ fontSize: '24px', fontWeight: '700', color: '#3b82f6' }}>{animals.filter(a => a.status === 'Active').length}</div>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#3b82f6' }}>{scopedAnimals.filter(a => a.status === 'Active').length}</div>
           <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Active</div>
         </div>
         <div className="card" style={{ padding: '16px', textAlign: 'center', ...mobileStyle.card }}>
-          <div style={{ fontSize: '24px', fontWeight: '700', color: '#ec4899' }}>{animals.filter(a => a.sex === 'F').length}</div>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#ec4899' }}>{scopedAnimals.filter(a => a.sex === 'F').length}</div>
           <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Female</div>
         </div>
         <div className="card" style={{ padding: '16px', textAlign: 'center', ...mobileStyle.card }}>
-          <div style={{ fontSize: '24px', fontWeight: '700', color: '#6b7280' }}>{groups.length}</div>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#6b7280' }}>{visibleGroups.length}</div>
           <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Groups</div>
         </div>
       </div>
@@ -989,22 +1008,24 @@ export default function Animals() {
           >
             📋 Animal List
           </button>
-          <button
-            onClick={() => { resetGroupForm(); setTab('addGroup') }}
-            style={{
-              padding: window.innerWidth <= 600 ? '14px 10px' : '12px 20px',
-              minWidth: window.innerWidth <= 600 ? '120px' : 'auto',
-              border: 'none',
-              borderBottom: tab === 'addGroup' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'addGroup' ? '#f0fdf4' : 'transparent',
-              color: tab === 'addGroup' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'addGroup' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: window.innerWidth <= 600 ? '15px' : '14px'
-            }}
-          >
-            👥 Groups
-          </button>
+          {!isDairySection && (
+            <button
+              onClick={() => { resetGroupForm(); setTab('addGroup') }}
+              style={{
+                padding: window.innerWidth <= 600 ? '14px 10px' : '12px 20px',
+                minWidth: window.innerWidth <= 600 ? '120px' : 'auto',
+                border: 'none',
+                borderBottom: tab === 'addGroup' ? '3px solid var(--green)' : '3px solid transparent',
+                background: tab === 'addGroup' ? '#f0fdf4' : 'transparent',
+                color: tab === 'addGroup' ? 'var(--green)' : '#6b7280',
+                fontWeight: tab === 'addGroup' ? '600' : '400',
+                cursor: 'pointer',
+                fontSize: window.innerWidth <= 600 ? '15px' : '14px'
+              }}
+            >
+              👥 Groups
+            </button>
+          )}
           <button
             onClick={() => setTab('feeding')}
             style={{
@@ -1125,21 +1146,23 @@ export default function Animals() {
           >
             🌱 Pastures
           </button>
-          <button
-            onClick={() => setTab('bsf')}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              borderBottom: tab === 'bsf' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'bsf' ? '#f0fdf4' : 'transparent',
-              color: tab === 'bsf' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'bsf' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            🪰 BSF Farm
-          </button>
+          {!isDairySection && (
+            <button
+              onClick={() => setTab('bsf')}
+              style={{
+                padding: '12px 20px',
+                border: 'none',
+                borderBottom: tab === 'bsf' ? '3px solid var(--green)' : '3px solid transparent',
+                background: tab === 'bsf' ? '#f0fdf4' : 'transparent',
+                color: tab === 'bsf' ? 'var(--green)' : '#6b7280',
+                fontWeight: tab === 'bsf' ? '600' : '400',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              🪰 BSF Farm
+            </button>
+          )}
           <button
             onClick={() => setTab('azolla')}
             style={{
@@ -1155,51 +1178,55 @@ export default function Animals() {
           >
             🌿 Azolla
           </button>
-          <button
-            onClick={() => setTab('poultry')}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              borderBottom: tab === 'poultry' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'poultry' ? '#f0fdf4' : 'transparent',
-              color: tab === 'poultry' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'poultry' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            🐔 Poultry
-          </button>
-          <button
-            onClick={() => setTab('canine')}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              borderBottom: tab === 'canine' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'canine' ? '#f0fdf4' : 'transparent',
-              color: tab === 'canine' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'canine' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            🐕 Canines
-          </button>
-          <button
-            onClick={() => { resetGroupForm(); setTab('addGroup') }}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              borderBottom: tab === 'addGroup' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'addGroup' ? '#f0fdf4' : 'transparent',
-              color: tab === 'addGroup' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'addGroup' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            👥 Groups
-          </button>
+          {!isDairySection && (
+            <>
+              <button
+                onClick={() => setTab('poultry')}
+                style={{
+                  padding: '12px 20px',
+                  border: 'none',
+                  borderBottom: tab === 'poultry' ? '3px solid var(--green)' : '3px solid transparent',
+                  background: tab === 'poultry' ? '#f0fdf4' : 'transparent',
+                  color: tab === 'poultry' ? 'var(--green)' : '#6b7280',
+                  fontWeight: tab === 'poultry' ? '600' : '400',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                🐔 Poultry
+              </button>
+              <button
+                onClick={() => setTab('canine')}
+                style={{
+                  padding: '12px 20px',
+                  border: 'none',
+                  borderBottom: tab === 'canine' ? '3px solid var(--green)' : '3px solid transparent',
+                  background: tab === 'canine' ? '#f0fdf4' : 'transparent',
+                  color: tab === 'canine' ? 'var(--green)' : '#6b7280',
+                  fontWeight: tab === 'canine' ? '600' : '400',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                🐕 Canines
+              </button>
+              <button
+                onClick={() => { resetGroupForm(); setTab('addGroup') }}
+                style={{
+                  padding: '12px 20px',
+                  border: 'none',
+                  borderBottom: tab === 'addGroup' ? '3px solid var(--green)' : '3px solid transparent',
+                  background: tab === 'addGroup' ? '#f0fdf4' : 'transparent',
+                  color: tab === 'addGroup' ? 'var(--green)' : '#6b7280',
+                  fontWeight: tab === 'addGroup' ? '600' : '400',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                👥 Groups
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -1258,7 +1285,7 @@ export default function Animals() {
               >
                 <option value="all">All Groups</option>
                 <option value="ungrouped">Ungrouped</option>
-                {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                {visibleGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
               </select>
               <select
                 value={filterStatus}
@@ -1305,7 +1332,7 @@ export default function Animals() {
             renderItem={(a, index) => {
               const isExp = expandedIds.includes(a.id)
               const preview = (a.photos && a.photos.length) ? a.photos[0].dataUrl : (a.photo || null)
-              const groupName = groups.find(g => g.id === a.groupId)?.name || 'No group'
+              const groupName = visibleGroups.find(g => g.id === a.groupId)?.name || 'No group'
               return (
                 <div className="card" style={{ marginBottom: 12, padding: 16, ...(window.innerWidth <= 600 ? { padding: '12px' } : {}) }}>
                   <div style={{ display: 'flex', gap: 16, alignItems: window.innerWidth <= 600 ? 'center' : 'flex-start', flexDirection: window.innerWidth <= 600 ? 'column' : 'row' }}>
@@ -1341,7 +1368,7 @@ export default function Animals() {
                             <input placeholder="Weight (kg)" value={inlineForm.weight || ''} onChange={e => handleInlineChange('weight', e.target.value)} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #e5e7eb', width: 120 }} />
                             <select value={inlineForm.groupId || ''} onChange={e => handleInlineChange('groupId', e.target.value)} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #e5e7eb' }}>
                               <option value="">-- No group --</option>
-                              {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                              {visibleGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                             </select>
                             <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
                               <button onClick={saveInlineEdit} style={{ padding: '8px 12px', background: 'var(--green)', color: '#fff', border: 'none', borderRadius: 6 }}>Save</button>
@@ -1480,12 +1507,12 @@ export default function Animals() {
 
       {/* Modal full CV view for selected animal */}
       {modalOpenId && (() => {
-        const animal = animals.find(x => x.id === modalOpenId)
+        const animal = scopedAnimals.find(x => x.id === modalOpenId)
         if (!animal) return null
         return (
           <AnimalCV
             animal={animal}
-            groups={groups}
+            groups={visibleGroups}
             onClose={() => setModalOpenId(null)}
             onDownloadJSON={() => handleDownloadAnimalJSON(animal)}
             onDownloadCSV={() => handleDownloadAnimalCSV(animal)}
@@ -1605,7 +1632,7 @@ export default function Animals() {
                 Group
                 <select id="animal-group" name="groupId" value={form.groupId} onChange={e => setForm({ ...form, groupId: e.target.value })}>
                   <option value="">-- No group --</option>
-                  {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                  {visibleGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
               </label>
 
@@ -1866,7 +1893,7 @@ export default function Animals() {
         </div>
       )}
 
-      {tab === 'addGroup' && (
+      {!isDairySection && tab === 'addGroup' && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
             <h2 style={{ fontSize: '2rem', fontWeight: '700', color: '#059669', margin: 0 }}>👥 Livestock Groups</h2>
@@ -1935,15 +1962,15 @@ export default function Animals() {
 
           {/* Responsive Group Cards Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 600 ? '1fr' : 'repeat(auto-fit, minmax(340px, 1fr))', gap: 24 }}>
-            {groups.length === 0 ? (
+            {visibleGroups.length === 0 ? (
               <div style={{ padding: 40, textAlign: 'center', background: '#f0fdf4', borderRadius: 8 }}>
                 <div style={{ fontSize: 48, marginBottom: 16 }}>🏷️</div>
                 <h3>No groups yet</h3>
                 <p style={{ color: '#666' }}>Create your first group to organize animals</p>
               </div>
             ) : (
-              groups.filter(g => g.name.toLowerCase().includes(filter.toLowerCase())).map(g => {
-                const groupAnimals = animals.filter(a => a.groupId === g.id)
+              visibleGroups.filter(g => g.name.toLowerCase().includes(filter.toLowerCase())).map(g => {
+                const groupAnimals = scopedAnimals.filter(a => a.groupId === g.id)
                 const femaleCount = groupAnimals.filter(a => a.sex === 'F').length
                 const maleCount = groupAnimals.filter(a => a.sex === 'M').length
                 const breedBreakdown = Object.entries(groupAnimals.reduce((acc, a) => {
@@ -2019,14 +2046,14 @@ export default function Animals() {
           </div>
 
           {/* Ungrouped Animals Warning */}
-          {animals.filter(a => !a.groupId).length > 0 && (
+          {scopedAnimals.filter(a => !a.groupId).length > 0 && (
             <div className="card" style={{ padding: 20, marginTop: 24, background: '#fef3c7', borderLeft: '6px solid #f59e0b', borderRadius: 8 }}>
               <h3 style={{ margin: '0 0 8px 0', color: '#92400e' }}>⚠️ Ungrouped Animals</h3>
               <p style={{ margin: '0 0 8px 0', color: '#78350f', fontSize: 15 }}>
-                {animals.filter(a => !a.groupId).length} animal(s) are not assigned to any group.
+                {scopedAnimals.filter(a => !a.groupId).length} animal(s) are not assigned to any group.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-                {animals.filter(a => !a.groupId).map(a => (
+                {scopedAnimals.filter(a => !a.groupId).map(a => (
                   <span key={a.id} style={{ fontSize: 13, padding: '6px 12px', background: 'white', borderRadius: 6, border: '1px solid #fbbf24' }}>
                     {a.name || a.tag || a.id}
                   </span>
@@ -2050,7 +2077,7 @@ export default function Animals() {
         {tab === 'health' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
-              <HealthSystem animals={animals} setAnimals={setAnimals} groups={groups} />
+              <HealthSystem animals={scopedAnimals} setAnimals={setAnimals} groups={visibleGroups} />
             </React.Suspense>
           </div>
         )}
@@ -2058,7 +2085,7 @@ export default function Animals() {
         {tab === 'feeding' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
-              <AnimalFeeding animals={animals} />
+              <AnimalFeeding animals={scopedAnimals} />
             </React.Suspense>
           </div>
         )}
@@ -2066,7 +2093,7 @@ export default function Animals() {
         {tab === 'measurement' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
-              <AnimalMeasurement animals={animals} />
+              <AnimalMeasurement animals={scopedAnimals} />
             </React.Suspense>
           </div>
         )}
@@ -2074,7 +2101,7 @@ export default function Animals() {
         {tab === 'breeding' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
-              <AnimalBreeding animals={animals} />
+              <AnimalBreeding animals={scopedAnimals} />
             </React.Suspense>
           </div>
         )}
@@ -2082,7 +2109,7 @@ export default function Animals() {
         {tab === 'milkyield' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
-              <AnimalMilkYield animals={animals} />
+              <AnimalMilkYield animals={scopedAnimals} />
             </React.Suspense>
           </div>
         )}
@@ -2090,7 +2117,7 @@ export default function Animals() {
         {tab === 'treatment' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
-              <AnimalTreatment animals={animals} />
+              <AnimalTreatment animals={scopedAnimals} />
             </React.Suspense>
           </div>
         )}
@@ -2098,12 +2125,12 @@ export default function Animals() {
         {tab === 'calf' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
-              <CalfManagement animals={animals} />
+              <CalfManagement animals={scopedAnimals} />
             </React.Suspense>
           </div>
         )}
 
-        {tab === 'bsf' && (
+        {!isDairySection && tab === 'bsf' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
               <BSFFarming />
@@ -2119,7 +2146,7 @@ export default function Animals() {
           </div>
         )}
 
-        {tab === 'poultry' && (
+        {!isDairySection && tab === 'poultry' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
               <PoultryManagement />
@@ -2127,7 +2154,7 @@ export default function Animals() {
           </div>
         )}
 
-        {tab === 'canine' && (
+        {!isDairySection && tab === 'canine' && (
           <div style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
               <CanineManagement animals={animals} setAnimals={setAnimals} />

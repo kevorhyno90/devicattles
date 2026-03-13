@@ -60,23 +60,19 @@ const Tasks = lazyWithRetry(() => import('./modules/Tasks'))
 const Finance = lazyWithRetry(() => import('./modules/Finance'))
 const Schedules = lazyWithRetry(() => import('./modules/Schedules'))
 const Crops = lazyWithRetry(() => import('./modules/CropsWithSubsections'))
-import ReportModule from './components/ReportModule.jsx'
 const Inventory = lazyWithRetry(() => import('./modules/Inventory'))
-const Groups = lazyWithRetry(() => import('./modules/Groups'))
 const Pastures = lazyWithRetry(() => import('./modules/Pastures'))
 const HealthSystem = lazyWithRetry(() => import('./modules/HealthSystem'))
 const Login = lazyWithRetry(() => import('./modules/Login'))
 // AuditLog import removed
 const BackupRestore = lazyWithRetry(() => import('./modules/BackupRestore'))
 const SyncSettings = lazyWithRetry(() => import('./modules/SyncSettings'))
-const AdvancedAnalytics = lazyWithRetry(() => import('./modules/AdvancedAnalytics'))
 const EnhancedSettings = lazyWithRetry(() => import('./modules/EnhancedSettings'))
-const BulkOperations = lazyWithRetry(() => import('./modules/BulkOperations'))
-const AdditionalReports = lazyWithRetry(() => import('./modules/AdditionalReports'))
 const CanineManagement = lazyWithRetry(() => import('./modules/CanineManagement'))
+const PoultryManagement = lazyWithRetry(() => import('./modules/PoultryManagement'))
+const BSFFarming = lazyWithRetry(() => import('./modules/BSFFarming'))
 const CalendarView = lazyWithRetry(() => import('./modules/CalendarView'))
 const SmartAlerts = lazyWithRetry(() => import('./modules/SmartAlerts'))
-const WeatherDashboard = lazyWithRetry(() => import('./modules/WeatherDashboard'))
 const MarketPrices = lazyWithRetry(() => import('./modules/MarketPrices'))
 const TimelinePlanner = lazyWithRetry(() => import('./modules/TimelinePlanner'))
 const PhotoGalleryAdvanced = lazyWithRetry(() => import('./modules/PhotoGalleryAdvanced'))
@@ -241,6 +237,8 @@ function AppContent() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [deniedStores, setDeniedStores] = useState([]);
+  const [showNavMore, setShowNavMore] = useState(false);
+  const [livestockCounts, setLivestockCounts] = useState({ dairy: 0, goats: 0, canines: 0, poultry: 0, bsf: 0 });
   // Add GoatModule view
   
   // UI branding/settings - use hook to load/save from localStorage
@@ -456,6 +454,31 @@ function AppContent() {
     
     return () => clearTimeout(timer);
   }, [view]); // Reload when view changes to keep animals fresh
+
+  useEffect(() => {
+    const refreshLivestockCounts = () => {
+      try {
+        const goats = JSON.parse(localStorage.getItem('cattalytics:goats') || '[]')
+        const flocks = JSON.parse(localStorage.getItem('cattalytics:flocks') || '[]')
+        const poultry = JSON.parse(localStorage.getItem('cattalytics:poultry') || '[]')
+        const bsf = JSON.parse(localStorage.getItem('cattalytics:bsf:colonies') || '[]')
+
+        setLivestockCounts({
+          dairy: animals.filter(animal => animal.groupId === 'G-001').length,
+          goats: goats.length,
+          canines: animals.filter(animal => animal.groupId === 'G-008').length,
+          poultry: flocks.length || poultry.length,
+          bsf: bsf.length
+        })
+      } catch (error) {
+        setLivestockCounts({ dairy: 0, goats: 0, canines: 0, poultry: 0, bsf: 0 })
+      }
+    }
+
+    refreshLivestockCounts()
+    const interval = setInterval(refreshLivestockCounts, 4000)
+    return () => clearInterval(interval)
+  }, [animals])
   
 
 
@@ -501,6 +524,117 @@ function AppContent() {
     )
   }
 
+  const livestockSections = {
+    animals: {
+      icon: '🥛',
+      title: 'Dairy',
+      description: 'Cattle records, milk tracking, breeding, treatment, and feeding.',
+      subsections: ['Registry', 'Feeding', 'Health', 'Treatment', 'Breeding', 'Milk', 'Measurement'],
+      count: livestockCounts.dairy,
+      countLabel: 'animals'
+    },
+    goats: {
+      icon: '🐐',
+      title: 'Goat',
+      description: 'Goat herd records, health events, breeding cycles, and kids.',
+      subsections: ['Goats', 'Health', 'Breeding', 'Kids'],
+      count: livestockCounts.goats,
+      countLabel: 'goats'
+    },
+    canines: {
+      icon: '🐕',
+      title: 'Canine',
+      description: 'Working dog records, vaccines, health checks, and husbandry.',
+      subsections: ['List', 'Health', 'Vaccine', 'Husbandry'],
+      count: livestockCounts.canines,
+      countLabel: 'dogs'
+    },
+    poultry: {
+      icon: '🐔',
+      title: 'Poultry',
+      description: 'Flocks, birds, egg production, and poultry health records.',
+      subsections: ['Flocks', 'Birds', 'Eggs', 'Health'],
+      count: livestockCounts.poultry,
+      countLabel: 'flocks'
+    },
+    bsf: {
+      icon: '🪰',
+      title: 'BSF',
+      description: 'Black soldier fly colonies, feed logs, harvests, and production.',
+      subsections: ['Colonies', 'Feeding', 'Harvest'],
+      count: livestockCounts.bsf,
+      countLabel: 'colonies'
+    }
+  }
+
+  const renderLivestockSubNav = () => (
+    <div style={{ marginBottom: '20px', display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+      {Object.entries(livestockSections).map(([sectionKey, section]) => {
+        const active = view === sectionKey
+        return (
+          <button
+            key={sectionKey}
+            onClick={() => setView(sectionKey)}
+            style={{
+              textAlign: 'left',
+              padding: '14px 16px',
+              background: active ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : colors.bg.elevated,
+              color: active ? '#ffffff' : colors.text.primary,
+              border: active ? '1px solid #047857' : `1px solid ${colors.border.primary}`,
+              borderRadius: '12px',
+              cursor: 'pointer',
+              boxShadow: active ? colors.shadow.md : colors.shadow.sm
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '18px', fontWeight: '700' }}>{section.icon} {section.title}</span>
+              <span style={{ fontSize: '12px', fontWeight: '700', padding: '4px 8px', borderRadius: '999px', background: active ? 'rgba(255,255,255,0.18)' : '#ecfdf5', color: active ? '#ffffff' : '#065f46' }}>
+                {section.count} {section.countLabel}
+              </span>
+            </div>
+            <div style={{ fontSize: '12px', lineHeight: 1.5, opacity: active ? 0.95 : 0.8 }}>
+              {section.description}
+            </div>
+          </button>
+        )
+      })}
+    </div>
+  )
+
+  const renderLivestockShell = (sectionKey, content) => {
+    const section = livestockSections[sectionKey]
+
+    return (
+      <section>
+        <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+          ← Back to Dashboard
+        </button>
+        <div style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%)', border: '1px solid #bbf7d0', borderRadius: '16px', padding: '20px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            <div>
+              <div style={{ fontSize: '26px', fontWeight: '800', color: '#065f46', marginBottom: '6px' }}>{section.icon} {section.title} Section</div>
+              <div style={{ color: '#475569', maxWidth: '760px', lineHeight: 1.6 }}>{section.description}</div>
+            </div>
+            <div style={{ minWidth: '140px', padding: '14px 16px', background: '#ffffff', borderRadius: '12px', border: '1px solid #d1fae5', boxShadow: colors.shadow.sm }}>
+              <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280', marginBottom: '4px' }}>Current Count</div>
+              <div style={{ fontSize: '28px', fontWeight: '800', color: '#047857' }}>{section.count}</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>{section.countLabel}</div>
+            </div>
+          </div>
+          {renderLivestockSubNav()}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {section.subsections.map(subsection => (
+              <span key={subsection} style={{ padding: '6px 10px', borderRadius: '999px', background: '#ffffff', border: '1px solid #d1fae5', color: '#065f46', fontSize: '12px', fontWeight: '700' }}>
+                {subsection}
+              </span>
+            ))}
+          </div>
+        </div>
+        <ErrorBoundary>{content}</ErrorBoundary>
+      </section>
+    )
+  }
+
   return (
     <div className={`app ${settings.backgroundOn? 'bg-on' : ''} theme-${settings.theme || 'bold'}`} 
       style={{
@@ -526,13 +660,14 @@ function AppContent() {
       <AudioEnableBanner />
       <nav style={{ 
         background: colors.bg.elevated, 
-        padding: '12px 20px', 
+        padding: '10px 16px', 
         boxShadow: colors.shadow.sm, 
         borderBottom: `2px solid ${colors.border.primary}`,
         display: 'flex',
-        gap: '8px',
+        gap: '6px',
         flexWrap: 'wrap',
-        alignItems: 'center'
+        alignItems: 'center',
+        rowGap: '6px'
       }}>
           <button 
             className={view==='dashboard'? 'active':''} 
@@ -540,6 +675,7 @@ function AppContent() {
             style={{
               background: view==='dashboard' ? colors.action.success : colors.bg.tertiary,
               color: view==='dashboard' ? colors.text.inverse : colors.text.primary,
+              order: -10,
               border: 'none',
               padding: '8px 16px',
               borderRadius: '6px',
@@ -548,13 +684,14 @@ function AppContent() {
               fontWeight: '500',
               transition: 'all 0.2s'
             }}
-          >📊 Dashboard</button>
+          >🩺 ezyVet Dashboard</button>
           <button 
             className={view==='notifications'? 'active':''} 
             onClick={()=>setView('notifications')}
             style={{
               background: view==='notifications' ? colors.action.success : colors.bg.tertiary,
               color: view==='notifications' ? colors.text.inverse : colors.text.primary,
+              order: -5,
               border: 'none',
               padding: '8px 16px',
               borderRadius: '6px',
@@ -584,6 +721,7 @@ function AppContent() {
             style={{
               background: view==='alerts' ? '#dc2626' : '#f3f4f6',
               color: view==='alerts' ? '#fff' : '#1f2937',
+              order: -7,
               border: 'none',
               padding: '8px 16px',
               borderRadius: '6px',
@@ -610,25 +748,7 @@ function AppContent() {
           >
             🔔 Alert Rules
           </button>
-
-          <button 
-            className={view==='weather'? 'active':''} 
-            onClick={()=>setView('weather')}
-            style={{
-              background: view==='weather' ? '#0ea5e9' : '#f3f4f6',
-              color: view==='weather' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >
-            🌤️ Weather
-          </button>
-
-          <button 
+          {showNavMore && (<button 
             className={view==='market'? 'active':''} 
             onClick={()=>setView('market')}
             style={{
@@ -643,9 +763,9 @@ function AppContent() {
             }}
           >
             💰 Market Prices
-          </button>
+          </button>)}
           {/* Farm3D button removed */}
-          <button 
+          {showNavMore && (<button 
             className={view==='timeline'? 'active':''} 
             onClick={()=>setView('timeline')}
             style={{
@@ -660,8 +780,8 @@ function AppContent() {
             }}
           >
             📅 Timeline
-          </button>
-          <button 
+          </button>)}
+          {showNavMore && (<button 
             className={view==='photos'? 'active':''} 
             onClick={()=>setView('photos')}
             style={{
@@ -676,9 +796,9 @@ function AppContent() {
             }}
           >
             📸 Photos
-          </button>
+          </button>)}
 
-            <button 
+            {showNavMore && (<button 
               className={view==='notes'? 'active':''} 
               onClick={()=>setView('notes')}
               style={{
@@ -691,7 +811,7 @@ function AppContent() {
                 fontSize: '14px',
                 fontWeight: '500'
               }}
-            >🗒️ Notes</button>
+            >🗒️ Notes</button>)}
 
           <button 
             className={view==='animals'? 'active':''} 
@@ -699,6 +819,7 @@ function AppContent() {
             style={{
               background: view==='animals' ? '#059669' : '#f3f4f6',
               color: view==='animals' ? '#fff' : '#1f2937',
+              order: -9,
               border: 'none',
               padding: '8px 16px',
               borderRadius: '6px',
@@ -707,21 +828,7 @@ function AppContent() {
               fontWeight: '500'
             }}
           >🐄 Livestock</button>
-          <button
-            className={view==='goats' ? 'active' : ''}
-            onClick={() => setView('goats')}
-            style={{
-              background: view==='goats' ? '#059669' : '#f3f4f6',
-              color: view==='goats' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >🐐 Goats</button>
-          <button 
+          {showNavMore && (<button 
             className={view==='pastures'? 'active':''} 
             onClick={()=>setView('pastures')}
             style={{
@@ -734,8 +841,8 @@ function AppContent() {
               fontSize: '14px',
               fontWeight: '500'
             }}
-          >🌱 Pastures</button>
-          <button 
+          >🌱 Pastures</button>)}
+          {showNavMore && (<button 
             className={view==='crops'? 'active':''} 
             onClick={()=>setView('crops')}
             style={{
@@ -748,13 +855,14 @@ function AppContent() {
               fontSize: '14px',
               fontWeight: '500'
             }}
-          >🌾 Crops</button>
+          >🌾 Crops</button>)}
           <button 
             className={view==='tasks'? 'active':''} 
             onClick={()=>setView('tasks')}
             style={{
               background: view==='tasks' ? '#059669' : '#f3f4f6',
               color: view==='tasks' ? '#fff' : '#1f2937',
+              order: -8,
               border: 'none',
               padding: '8px 16px',
               borderRadius: '6px',
@@ -763,7 +871,7 @@ function AppContent() {
               fontWeight: '500'
             }}
           >✅ Tasks</button>
-          <button 
+          {showNavMore && (<button 
             className={view==='schedules'? 'active':''} 
             onClick={()=>setView('schedules')}
             style={{
@@ -776,8 +884,8 @@ function AppContent() {
               fontSize: '14px',
               fontWeight: '500'
             }}
-          >📅 Schedules</button>
-          <button 
+          >📅 Schedules</button>)}
+          {showNavMore && (<button 
             className={view==='calendar'? 'active':''} 
             onClick={()=>setView('calendar')}
             style={{
@@ -790,8 +898,8 @@ function AppContent() {
               fontSize: '14px',
               fontWeight: '500'
             }}
-          >📆 Calendar</button>
-          <button 
+          >📆 Calendar</button>)}
+          {showNavMore && (<button 
             className={view==='inventory'? 'active':''}
             onClick={()=>setView('inventory')}
             style={{
@@ -804,13 +912,14 @@ function AppContent() {
               fontSize: '14px',
               fontWeight: '500'
             }}
-          >📦 Inventory</button>
+          >📦 Inventory</button>)}
           <button 
             className={view==='finance'? 'active':''} 
             onClick={()=>setView('finance')}
             style={{
               background: view==='finance' ? '#059669' : '#f3f4f6',
               color: view==='finance' ? '#fff' : '#1f2937',
+              order: -6,
               border: 'none',
               padding: '8px 16px',
               borderRadius: '6px',
@@ -819,65 +928,24 @@ function AppContent() {
               fontWeight: '500'
             }}
           >💰 Finance</button>
-          <button 
-            className={view==='reports'? 'active':''} 
-            onClick={()=>setView('reports')}
+          <button
+            onClick={() => setShowNavMore(v => !v)}
             style={{
-              background: view==='reports' ? '#059669' : '#f3f4f6',
-              color: view==='reports' ? '#fff' : '#1f2937',
+              order: -4,
+              background: showNavMore ? '#1f2937' : '#e5e7eb',
+              color: showNavMore ? '#fff' : '#1f2937',
               border: 'none',
-              padding: '8px 16px',
+              padding: '8px 14px',
               borderRadius: '6px',
               cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
+              fontSize: '13px',
+              fontWeight: '600'
             }}
-          >📊 Reports</button>
-
-          <button 
-            className={view==='analytics'? 'active':''} 
-            onClick={()=>setView('analytics')}
-            style={{
-              background: view==='analytics' ? '#059669' : '#f3f4f6',
-              color: view==='analytics' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >📈 Analytics</button>
-          <button 
-            className={view==='additionalReports'? 'active':''} 
-            onClick={()=>setView('additionalReports')}
-            style={{
-              background: view==='additionalReports' ? '#059669' : '#f3f4f6',
-              color: view==='additionalReports' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >🏥 Health Reports</button>
-          <button 
-            className={view==='bulk'? 'active':''} 
-            onClick={()=>setView('bulk')}
-            style={{
-              background: view==='bulk' ? '#059669' : '#f3f4f6',
-              color: view==='bulk' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >⚡ Bulk Ops</button>
+          >
+            {showNavMore ? 'Hide Modules' : 'More Modules'}
+          </button>
           {/* Audit Log button removed */}
-          <button 
+          {showNavMore && (<button 
             className={view==='backup'? 'active':''} 
             onClick={()=>setView('backup')}
             style={{
@@ -890,7 +958,7 @@ function AppContent() {
               fontSize: '14px',
               fontWeight: '500'
             }}
-          >💾 Backup</button>
+          >💾 Backup</button>)}
           <button 
             className={view==='settings'? 'active':''} 
             onClick={()=>setView('settings')}
@@ -945,22 +1013,7 @@ function AppContent() {
           {view === 'notifications' && <ErrorBoundary><NotificationCenter /></ErrorBoundary>}
 
           {view === 'animals' && (
-            <section>
-              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                ← Back to Dashboard
-              </button>
-              {/* Sub-navigation for Livestock */}
-              <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                <button onClick={() => setView('animals')} style={{ padding: '8px 16px', background: '#059669', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
-                  🐄 Livestock
-                </button>
-                {/* Poultry button removed */}
-                <button onClick={() => setView('canines')} style={{ padding: '8px 16px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                  🐕 Canines
-                </button>
-              </div>
-              <ErrorBoundary><Animals /></ErrorBoundary>
-            </section>
+            renderLivestockShell('animals', <Animals section="dairy" />)
           )}
           {view === 'pastures' && (
             <section>
@@ -972,21 +1025,19 @@ function AppContent() {
           )}
 
           {view === 'goats' && (
-            <section>
-              <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                ← Back to Dashboard
-              </button>
-              <ErrorBoundary><GoatModule /></ErrorBoundary>
-            </section>
+            renderLivestockShell('goats', <GoatModule />)
           )}
 
           {view === 'canines' && (
-            <section>
-              <button onClick={() => setView('animals')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                ← Back to Livestock
-              </button>
-              <ErrorBoundary><CanineManagement animals={animals} setAnimals={setAnimals} /></ErrorBoundary>
-            </section>
+            renderLivestockShell('canines', <CanineManagement animals={animals} setAnimals={setAnimals} />)
+          )}
+
+          {view === 'poultry' && (
+            renderLivestockShell('poultry', <PoultryManagement />)
+          )}
+
+          {view === 'bsf' && (
+            renderLivestockShell('bsf', <BSFFarming />)
           )}
 
           {view === 'animal-health' && (
@@ -1076,44 +1127,6 @@ function AppContent() {
         )}
 
 
-        {view === 'reports' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><ReportModule /></ErrorBoundary>
-          </section>
-        )}
-
-
-
-        {view === 'analytics' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><AdvancedAnalytics /></ErrorBoundary>
-          </section>
-        )}
-
-        {view === 'additionalReports' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><AdditionalReports /></ErrorBoundary>
-          </section>
-        )}
-
-        {view === 'bulk' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><BulkOperations /></ErrorBoundary>
-          </section>
-        )}
-
         {view === 'alerts' && (
           <section>
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
@@ -1122,17 +1135,6 @@ function AppContent() {
             <ErrorBoundary><SmartAlerts onNavigate={setView} /></ErrorBoundary>
           </section>
         )}
-
-
-        {view === 'weather' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><WeatherDashboard onNavigate={setView} /></ErrorBoundary>
-          </section>
-        )}
-
 
         {view === 'market' && (
           <section>

@@ -41,6 +41,22 @@ export default function CanineManagement({ animals, setAnimals }) {
   const workTypes = ['Herding', 'Protection', 'Tracking', 'Patrol', 'Farm Work', 'None']
   const trainingLevels = ['None', 'Basic', 'Intermediate', 'Advanced', 'Professional']
 
+  const navTabsStyle = {
+    display: 'flex',
+    gap: '10px',
+    flexWrap: 'wrap'
+  }
+  const getNavTabStyle = (isActive) => ({
+    padding: '12px 18px',
+    border: `1px solid ${isActive ? '#a7f3d0' : '#dbe4ea'}`,
+    background: isActive ? '#ecfdf5' : '#f8fafc',
+    color: isActive ? '#047857' : '#475569',
+    borderRadius: '999px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    fontSize: '14px'
+  })
+
   const [showCV, setShowCV] = useState(false)
 
   function downloadAnimalJSON(a) {
@@ -204,18 +220,18 @@ export default function CanineManagement({ animals, setAnimals }) {
         </div>
 
         {/* Top-Level Tabs */}
-        <div style={{ marginBottom: '20px', borderBottom: '2px solid #e5e7eb' }}>
-          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-            <button onClick={() => setTab('list')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'list' ? '3px solid #3b82f6' : '3px solid transparent', background: tab === 'list' ? '#eff6ff' : 'transparent', color: tab === 'list' ? '#3b82f6' : '#6b7280', fontWeight: tab === 'list' ? '600' : '400', cursor: 'pointer' }}>
+        <div style={{ marginBottom: '20px' }}>
+          <div style={navTabsStyle}>
+            <button onClick={() => setTab('list')} style={getNavTabStyle(tab === 'list')}>
               📋 Canine List
             </button>
-            <button onClick={() => setTab('health')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'health' ? '3px solid #3b82f6' : '3px solid transparent', background: tab === 'health' ? '#eff6ff' : 'transparent', color: tab === 'health' ? '#3b82f6' : '#6b7280', fontWeight: tab === 'health' ? '600' : '400', cursor: 'pointer' }}>
+            <button onClick={() => setTab('health')} style={getNavTabStyle(tab === 'health')}>
               🏥 Health Records
             </button>
-            <button onClick={() => setTab('vaccines')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'vaccines' ? '3px solid #3b82f6' : '3px solid transparent', background: tab === 'vaccines' ? '#eff6ff' : 'transparent', color: tab === 'vaccines' ? '#3b82f6' : '#6b7280', fontWeight: tab === 'vaccines' ? '600' : '400', cursor: 'pointer' }}>
+            <button onClick={() => setTab('vaccines')} style={getNavTabStyle(tab === 'vaccines')}>
               💉 Vaccinations
             </button>
-            <button onClick={() => setTab('husbandry')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'husbandry' ? '3px solid #3b82f6' : '3px solid transparent', background: tab === 'husbandry' ? '#eff6ff' : 'transparent', color: tab === 'husbandry' ? '#3b82f6' : '#6b7280', fontWeight: tab === 'husbandry' ? '600' : '400', cursor: 'pointer' }}>
+            <button onClick={() => setTab('husbandry')} style={getNavTabStyle(tab === 'husbandry')}>
               🍽️ Husbandry & Care
             </button>
           </div>
@@ -435,9 +451,9 @@ export default function CanineManagement({ animals, setAnimals }) {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '2px solid #e5e7eb' }}>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
                 {['info', 'health', 'vaccine', 'husbandry'].map(t => (
-                  <button key={t} onClick={() => setDetailTab(t)} style={{ padding: '10px 16px', border: 'none', borderBottom: detailTab === t ? '3px solid #3b82f6' : 'none', background: detailTab === t ? '#eff6ff' : 'transparent', color: detailTab === t ? '#3b82f6' : '#666', cursor: 'pointer', fontWeight: detailTab === t ? '600' : '400', fontSize: '14px' }}>
+                  <button key={t} onClick={() => setDetailTab(t)} style={getNavTabStyle(detailTab === t)}>
                     {t === 'info' && '📋 Info'}
                     {t === 'health' && '🏥 Health'}
                     {t === 'vaccine' && '💉 Vaccines'}

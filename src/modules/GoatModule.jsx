@@ -49,6 +49,34 @@ export default function GoatModule() {
   const [showKidHealthForm, setShowKidHealthForm] = useState(false)
   const [editingKidHealthId, setEditingKidHealthId] = useState(null)
   const [kidSearch, setKidSearch] = useState('')
+
+  const sectionTabsStyle = {
+    display: 'flex',
+    gap: '10px',
+    flexWrap: 'wrap',
+    marginTop: '18px'
+  }
+  const getSectionTabStyle = (isActive) => ({
+    padding: '12px 18px',
+    background: isActive ? 'linear-gradient(135deg, #0f766e, #059669)' : '#f8fafc',
+    color: isActive ? '#fff' : '#1f2937',
+    border: isActive ? '1px solid transparent' : '1px solid #dbe4ea',
+    borderRadius: '999px',
+    fontSize: '14px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    boxShadow: isActive ? '0 12px 24px rgba(5, 150, 105, 0.18)' : 'none'
+  })
+  const getFilterTabStyle = (isActive) => ({
+    padding: '10px 14px',
+    background: isActive ? '#ecfdf5' : '#f8fafc',
+    color: isActive ? '#047857' : '#475569',
+    border: `1px solid ${isActive ? '#a7f3d0' : '#dbe4ea'}`,
+    borderRadius: '999px',
+    fontSize: '13px',
+    fontWeight: '700',
+    cursor: 'pointer'
+  })
   
   // Debounce search
   const debouncedSearch = useDebounce(searchTerm, 300)
@@ -550,64 +578,28 @@ export default function GoatModule() {
         <p style={{ color: '#6b7280', fontSize: '14px' }}>Manage your goat herd with full tracking and analytics</p>
         
         {/* Main View Navigation */}
-        <div style={{ marginTop: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={sectionTabsStyle}>
           <button
             onClick={() => setMainView('goats')}
-            style={{
-              padding: '10px 20px',
-              background: mainView === 'goats' ? '#059669' : '#e5e7eb',
-              color: mainView === 'goats' ? 'white' : '#1f2937',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '15px',
-              fontWeight: '600',
-              cursor: 'pointer'
-            }}
+            style={getSectionTabStyle(mainView === 'goats')}
           >
             🐐 Goats
           </button>
           <button
             onClick={() => setMainView('health')}
-            style={{
-              padding: '10px 20px',
-              background: mainView === 'health' ? '#10b981' : '#e5e7eb',
-              color: mainView === 'health' ? 'white' : '#1f2937',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '15px',
-              fontWeight: '600',
-              cursor: 'pointer'
-            }}
+            style={getSectionTabStyle(mainView === 'health')}
           >
             🏥 Health Records
           </button>
           <button
             onClick={() => setMainView('breeding')}
-            style={{
-              padding: '10px 20px',
-              background: mainView === 'breeding' ? '#f59e0b' : '#e5e7eb',
-              color: mainView === 'breeding' ? 'white' : '#1f2937',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '15px',
-              fontWeight: '600',
-              cursor: 'pointer'
-            }}
+            style={getSectionTabStyle(mainView === 'breeding')}
           >
             👶 Breeding & Kidding
           </button>
           <button
             onClick={() => setMainView('kids')}
-            style={{
-              padding: '10px 20px',
-              background: mainView === 'kids' ? '#8b5cf6' : '#e5e7eb',
-              color: mainView === 'kids' ? 'white' : '#1f2937',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '15px',
-              fontWeight: '600',
-              cursor: 'pointer'
-            }}
+            style={getSectionTabStyle(mainView === 'kids')}
           >
             🐐 Kids
           </button>
@@ -653,16 +645,7 @@ export default function GoatModule() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              style={{
-                padding: '8px 16px',
-                background: activeTab === tab.id ? '#059669' : '#e5e7eb',
-                color: activeTab === tab.id ? 'white' : '#1f2937',
-                border: 'none',
-                borderRadius: '6px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}
+              style={getFilterTabStyle(activeTab === tab.id)}
             >
               {tab.label} ({tab.count})
             </button>

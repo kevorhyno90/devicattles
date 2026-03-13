@@ -48,6 +48,26 @@ export default function PoultryManagement() {
     dosage: '', cost: '', veterinarian: '', notes: ''
   })
 
+  const navTabsStyle = {
+    display: 'flex',
+    gap: '10px',
+    marginBottom: '24px',
+    flexWrap: 'wrap',
+    alignItems: 'center'
+  }
+  const getNavTabStyle = (isActive) => ({
+    padding: '12px 18px',
+    background: isActive ? 'linear-gradient(135deg, #0f766e, #2563eb)' : '#f8fafc',
+    color: isActive ? '#fff' : '#1f2937',
+    border: isActive ? '1px solid transparent' : '1px solid #dbe4ea',
+    borderRadius: '999px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '700',
+    textTransform: 'capitalize',
+    boxShadow: isActive ? '0 12px 24px rgba(37, 99, 235, 0.16)' : 'none'
+  })
+
   useEffect(() => {
     setBirds(loadData(POULTRY_KEY, []))
     setFlocks(loadData(FLOCK_KEY, []))
@@ -241,22 +261,12 @@ export default function PoultryManagement() {
       </div>
 
       {/* Navigation Tabs */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+      <div style={navTabsStyle}>
         {['flocks', 'eggs', 'health'].map(tab => (
           <button
             key={tab}
             onClick={() => { setView(tab); setShowForm(false); setEditingId(null) }}
-            style={{
-              padding: '10px 20px',
-              background: view === tab ? '#3b82f6' : '#f3f4f6',
-              color: view === tab ? 'white' : '#1f2937',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '600',
-              textTransform: 'capitalize'
-            }}
+            style={getNavTabStyle(view === tab)}
           >
             {tab}
           </button>

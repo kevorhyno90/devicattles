@@ -1,127 +1,33 @@
 import React, { useState, useEffect } from 'react'
-import { LineChart, BarChart, PieChart } from '../components/Charts'
-import { exportToCSV, exportToExcel, exportToPDF } from '../lib/exportUtils'
 import EditableField from '../components/EditableField'
-import {
-  getDashboardData,
-  getAnimalsByType,
-  getFinancialSummary,
-  getUpcomingTasks,
-  getHealthAlerts,
-  getInventoryAlerts,
-  getFeedCostTrends
-} from '../lib/analytics'
+import { getDashboardData } from '../lib/analytics'
 import { getFinancialSummary as getIntegratedFinancials } from '../lib/moduleIntegration'
 import { getCacheStats } from '../lib/dataCache'
 import { getPredictiveDashboard } from '../lib/predictiveAnalytics'
-import { getAllSmartAlerts, getAlertsSummary } from '../lib/smartAlerts'
-import { getCurrentWeather, getFarmLocation } from '../lib/weatherApi'
+import { getAlertsSummary } from '../lib/smartAlerts'
 import { loadData } from '../lib/storage'
 import DashboardCustomizer from '../components/DashboardCustomizer'
 
 export default function Dashboard({ onNavigate }) {
-  // ...existing code...
-
-  // Actionable insights logic (moved inside Dashboard to access state/variables)
-  function getInsights(metric) {
-    if (metric === 'netProfit') {
-      if (netProfit < 0) return '⚠️ Net profit is negative. Review expenses and optimize costs.'
-      if (netProfit < 10000) return 'ℹ️ Net profit is below peer average. Consider increasing revenue streams.'
-      return '✅ Net profit is healthy. Keep monitoring for improvements.'
-    }
-    if (metric === 'totalIncome') {
-      if (totalIncome < 15000) return '⚠️ Income is low. Explore new sales channels or increase production.'
-      return '✅ Income is on track.'
-    }
-    if (metric === 'totalExpenses') {
-      if (totalExpenses > 10000) return '⚠️ Expenses are high. Audit major cost drivers.'
-      return '✅ Expenses are within normal range.'
-    }
-    if (metric === 'milkProduction') {
-      if (milkProduction && milkProduction.totalMilk < 1000) return '⚠️ Milk production is low. Check animal health and feed quality.'
-      return '✅ Milk production is good.'
-    }
-    if (metric === 'feedCosts') {
-      if (feedCosts && feedCosts.trend === 'increasing') return '⚠️ Feed costs are rising. Negotiate with suppliers or optimize rations.'
-      return '✅ Feed costs are stable.'
-    }
-    if (metric === 'cropYield') {
-      if (cropYield && cropYield.totalYield < 500) return '⚠️ Crop yield is low. Review soil health and irrigation.'
-      return '✅ Crop yield is satisfactory.'
-    }
-    if (metric === 'inventory') {
-      if (inventory && inventory.criticalStock > 0) return '⚠️ Critical inventory items are low. Reorder soon.'
-      return '✅ Inventory levels are healthy.'
-    }
-    if (metric === 'tasks') {
-      if (tasks && tasks.completionRate < 90) return '⚠️ Task completion rate is low. Improve task management.'
-      return '✅ Task completion is excellent.'
-    }
-    return ''
-  }
   const [dashboardData, setDashboardData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [period, setPeriod] = useState('month')
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [cacheStats, setCacheStats] = useState(null)
   const [predictions, setPredictions] = useState(null)
   const [alertsSummary, setAlertsSummary] = useState(null)
-  const [weather, setWeather] = useState(null)
   const [showCustomizer, setShowCustomizer] = useState(false)
-  const [quickActionsTitle, setQuickActionsTitle] = useState('⚡ Quick Actions')
+  const [quickActionsTitle, setQuickActionsTitle] = useState('🩺 ezyVet Quick Actions')
   const [qaLabels, setQaLabels] = useState({
     alerts: '🔔 Smart Alerts',
-    weather: '🌤️ Weather',
-    // Removed: iot
     market: '💰 Market Prices'
-    // Removed: voice, disease, audit
   })
-
-  // Chart/Benchmarking state
-  const [selectedMetric, setSelectedMetric] = useState('netProfit')
-  const [comparePeriod, setComparePeriod] = useState('previousMonth')
-  const [selectedMetrics, setSelectedMetrics] = useState(['netProfit', 'totalIncome', 'totalExpenses'])
-  const [customTimeframe, setCustomTimeframe] = useState('6m')
-  const [reportLayout, setReportLayout] = useState('vertical')
-  const [scheduleEmail, setScheduleEmail] = useState(false)
-  const [emailAddress, setEmailAddress] = useState('')
-  const [scheduleFrequency, setScheduleFrequency] = useState('weekly')
-  const metricOptions = [
-    { value: 'netProfit', label: 'Net Profit' },
-    { value: 'totalIncome', label: 'Total Income' },
-    { value: 'totalExpenses', label: 'Total Expenses' },
-    { value: 'milkProduction', label: 'Milk Production' },
-    { value: 'feedCosts', label: 'Feed Costs' },
-    { value: 'cropYield', label: 'Crop Yield' },
-    { value: 'inventory', label: 'Inventory Alerts' },
-    { value: 'tasks', label: 'Tasks Completion' },
-  ]
-  const compareOptions = [
-    { value: 'previousMonth', label: 'Previous Month' },
-    { value: 'previousYear', label: 'Previous Year' },
-    { value: 'none', label: 'No Comparison' },
-  ]
-  const timeframeOptions = [
-    { value: '3m', label: 'Last 3 Months' },
-    { value: '6m', label: 'Last 6 Months' },
-    { value: '12m', label: 'Last 12 Months' },
-  ]
-  const layoutOptions = [
-    { value: 'vertical', label: 'Vertical' },
-    { value: 'horizontal', label: 'Horizontal' },
-  ]
-  const frequencyOptions = [
-    { value: 'daily', label: 'Daily' },
-    { value: 'weekly', label: 'Weekly' },
-    { value: 'monthly', label: 'Monthly' },
-  ]
 
   // Persist quick actions edits
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('cattalytics:dashboard:qa') || 'null')
       if (saved) {
-        setQuickActionsTitle(saved.title || '⚡ Quick Actions')
+        setQuickActionsTitle(saved.title || '🩺 ezyVet Quick Actions')
         setQaLabels(saved.labels || qaLabels)
       }
     } catch {}
@@ -144,7 +50,7 @@ export default function Dashboard({ onNavigate }) {
       }, 60000) // Refresh every minute
       return () => clearInterval(interval)
     }
-  }, [period, autoRefresh])
+  }, [autoRefresh])
 
   const loadDashboard = () => {
     setLoading(true)
@@ -180,19 +86,6 @@ export default function Dashboard({ onNavigate }) {
       } catch (error) {
         console.error('Error loading predictions:', error)
       }
-      
-      // Load weather data
-      try {
-        const location = getFarmLocation()
-        const apiKey = localStorage.getItem('cattalytics:weather:apikey') || null
-        getCurrentWeather(location, apiKey).then(weatherData => {
-          setWeather(weatherData)
-        }).catch(err => {
-          console.error('Weather load error:', err)
-        })
-      } catch (error) {
-        console.error('Error initializing weather:', error)
-      }
     } catch (error) {
       console.error('Error loading dashboard:', error)
       // Set safe defaults on error
@@ -212,7 +105,7 @@ export default function Dashboard({ onNavigate }) {
     animals, breeding, health, tasks, finance, feedCosts, inventory, milkProduction, integratedFinance,
     crops, cropYield, cropSales, cropTreatments,
     azolla, bsf, poultry, canines, pets, calves,
-    pastures, groups, schedules, notifications,
+    pastures, schedules, notifications,
     measurements, treatments, feeding
   } = dashboardData
   
@@ -222,248 +115,17 @@ export default function Dashboard({ onNavigate }) {
   const netProfit = totalIncome - totalExpenses
   const profitMargin = totalIncome > 0 ? ((netProfit / totalIncome) * 100) : 0
 
-  // Prepare chart data for selected metric
-  function getMetricChartData(metric) {
-    // Example: Replace with real historical/benchmarking data
-    // Here, we use dummy data for demonstration
-    if (metric === 'netProfit') {
-      return [
-        { label: 'Jan', value: 12000 },
-        { label: 'Feb', value: 15000 },
-        { label: 'Mar', value: 11000 },
-        { label: 'Apr', value: 17000 },
-        { label: 'May', value: 14000 },
-        { label: 'Jun', value: netProfit },
-      ]
-    }
-    if (metric === 'totalIncome') {
-      return [
-        { label: 'Jan', value: 20000 },
-        { label: 'Feb', value: 22000 },
-        { label: 'Mar', value: 21000 },
-        { label: 'Apr', value: 25000 },
-        { label: 'May', value: 23000 },
-        { label: 'Jun', value: totalIncome },
-      ]
-    }
-    if (metric === 'totalExpenses') {
-      return [
-        { label: 'Jan', value: 8000 },
-        { label: 'Feb', value: 7000 },
-        { label: 'Mar', value: 10000 },
-        { label: 'Apr', value: 8000 },
-        { label: 'May', value: 9000 },
-        { label: 'Jun', value: totalExpenses },
-      ]
-    }
-    if (metric === 'milkProduction') {
-      return [
-        { label: 'Jan', value: 1200 },
-        { label: 'Feb', value: 1300 },
-        { label: 'Mar', value: 1100 },
-        { label: 'Apr', value: 1400 },
-        { label: 'May', value: 1350 },
-        { label: 'Jun', value: milkProduction.totalMilk },
-      ]
-    }
-    if (metric === 'feedCosts') {
-      return [
-        { label: 'Jan', value: 3000 },
-        { label: 'Feb', value: 3200 },
-        { label: 'Mar', value: 3100 },
-        { label: 'Apr', value: 3500 },
-        { label: 'May', value: 3300 },
-        { label: 'Jun', value: feedCosts.avgMonthly },
-      ]
-    }
-    if (metric === 'cropYield') {
-      return [
-        { label: 'Jan', value: 500 },
-        { label: 'Feb', value: 600 },
-        { label: 'Mar', value: 550 },
-        { label: 'Apr', value: 700 },
-        { label: 'May', value: 650 },
-        { label: 'Jun', value: cropYield.totalYield },
-      ]
-    }
-    if (metric === 'inventory') {
-      return [
-        { label: 'Jan', value: 2 },
-        { label: 'Feb', value: 1 },
-        { label: 'Mar', value: 3 },
-        { label: 'Apr', value: 2 },
-        { label: 'May', value: 1 },
-        { label: 'Jun', value: inventory.totalAlerts },
-      ]
-    }
-    if (metric === 'tasks') {
-      return [
-        { label: 'Jan', value: 90 },
-        { label: 'Feb', value: 92 },
-        { label: 'Mar', value: 88 },
-        { label: 'Apr', value: 95 },
-        { label: 'May', value: 93 },
-        { label: 'Jun', value: tasks.completionRate },
-      ]
-    }
-    return []
-  }
-
   return (
     <div className="dashboard">
-      {/* Interactive Chart & Benchmarking Section */}
       <div className="dashboard-section card" style={{ marginBottom: 24, padding: 20 }}>
-        <h2 style={{ fontSize: 20, marginBottom: 12 }}>📈 Analytics, Benchmarking, Custom Reports & Scheduling</h2>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
-          <label>
-            Metrics:
-            <select multiple value={selectedMetrics} onChange={e => setSelectedMetrics(Array.from(e.target.selectedOptions, o => o.value))} style={{ marginLeft: 8, minWidth: 160, height: 70 }}>
-              {metricOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Timeframe:
-            <select value={customTimeframe} onChange={e => setCustomTimeframe(e.target.value)} style={{ marginLeft: 8 }}>
-              {timeframeOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Layout:
-            <select value={reportLayout} onChange={e => setReportLayout(e.target.value)} style={{ marginLeft: 8 }}>
-              {layoutOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Compare:
-            <select value={comparePeriod} onChange={e => setComparePeriod(e.target.value)} style={{ marginLeft: 8 }}>
-              {compareOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Goal:
-            <input
-              type="number"
-              value={localStorage.getItem('dashboard:goal:' + selectedMetric) || ''}
-              onChange={e => {
-                localStorage.setItem('dashboard:goal:' + selectedMetric, e.target.value)
-                setSelectedMetric(selectedMetric)
-              }}
-              style={{ marginLeft: 8, width: 100 }}
-              placeholder="Set goal"
-            />
-          </label>
-        </div>
-        {/* Scheduling UI */}
-        <div style={{ marginBottom: 12, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-          <label>
-            <input type="checkbox" checked={scheduleEmail} onChange={e => setScheduleEmail(e.target.checked)} />
-            <span style={{ marginLeft: 6 }}>Schedule Email Report</span>
-          </label>
-          {scheduleEmail && (
-            <>
-              <input type="email" value={emailAddress} onChange={e => setEmailAddress(e.target.value)} placeholder="Email address" style={{ marginLeft: 8, width: 200 }} />
-              <select value={scheduleFrequency} onChange={e => setScheduleFrequency(e.target.value)} style={{ marginLeft: 8 }}>
-                {frequencyOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-              <button className="btn-primary" style={{ marginLeft: 8 }} onClick={() => {
-                // Save schedule to localStorage (replace with backend integration as needed)
-                localStorage.setItem('dashboard:reportSchedule', JSON.stringify({ email: emailAddress, frequency: scheduleFrequency, metrics: selectedMetrics, timeframe: customTimeframe, layout: reportLayout }))
-                alert('Report schedule saved! (Demo only)')
-              }}>Save Schedule</button>
-            </>
-          )}
-        </div>
-        {/* Render charts for all selected metrics */}
-        <div style={{ display: reportLayout === 'horizontal' ? 'flex' : 'block', gap: 24 }}>
-          {selectedMetrics.map(metric => (
-            <div key={metric} style={{ flex: 1, minWidth: 350 }}>
-              <LineChart
-                data={getMetricChartData(metric)}
-                width={reportLayout === 'horizontal' ? 350 : 700}
-                height={320}
-                title={metricOptions.find(opt => opt.value === metric)?.label + ' Trend'}
-                xLabel="Month"
-                yLabel="Value"
-                color="#059669"
-              />
-              {/* Actionable Insights */}
-              <div style={{ marginTop: 8, fontSize: 15, color: '#0f172a', background: '#f1f5f9', padding: 8, borderRadius: 8 }}>
-                <strong>Insight:</strong> {getInsights(metric)}
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Actionable Insights */}
-        <div style={{ marginTop: 16, fontSize: 15, color: '#0f172a', background: '#f1f5f9', padding: 12, borderRadius: 8 }}>
-          <strong>Insight:</strong> {getInsights(selectedMetric)}
-        </div>
-          {/* Export Buttons for all selected metrics */}
-          <div style={{ marginTop: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            {selectedMetrics.map(metric => (
-              <div key={metric} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <span style={{ fontWeight: 600 }}>{metricOptions.find(opt => opt.value === metric)?.label}:</span>
-                <button className="btn-secondary" onClick={() => {
-                  const data = getMetricChartData(metric)
-                  const rows = [
-                    ['Month', 'Value'],
-                    ...data.map(d => [d.label, d.value])
-                  ]
-                  exportToCSV(`${metric}-trend.csv`, rows)
-                }}>CSV</button>
-                <button className="btn-secondary" onClick={async () => {
-                  const data = getMetricChartData(metric)
-                  const rows = [
-                    ['Month', 'Value'],
-                    ...data.map(d => [d.label, d.value])
-                  ]
-                  await exportToExcel(`${metric}-trend.xlsx`, rows)
-                }}>Excel</button>
-                <button className="btn-secondary" onClick={async () => {
-                  const data = getMetricChartData(metric)
-                  const rows = [
-                    ['Month', 'Value'],
-                    ...data.map(d => [d.label, d.value])
-                  ]
-                  await exportToPDF(`${metric}-trend.pdf`, rows, `${metricOptions.find(opt => opt.value === metric)?.label} Trend`)
-                }}>PDF</button>
-              </div>
-            ))}
-          </div>
-        {/* Peer Benchmarking (dummy data for now) */}
-        <div style={{ marginTop: 12, fontSize: 14, color: '#374151' }}>
-          <strong>Peer Average:</strong> {
-            (() => {
-              // Dummy peer averages for demonstration
-              const peerAverages = {
-                netProfit: 13000,
-                totalIncome: 21000,
-                totalExpenses: 8500,
-                milkProduction: 1250,
-                feedCosts: 3200,
-                cropYield: 600,
-                inventory: 2,
-                tasks: 92,
-              }
-              return peerAverages[selectedMetric] || 'N/A'
-            })()
-          }
-          {localStorage.getItem('dashboard:goal:' + selectedMetric) && (
-            <span style={{ marginLeft: 16 }}><strong>Goal:</strong> {localStorage.getItem('dashboard:goal:' + selectedMetric)}</span>
-          )}
-        </div>
+        <h2 style={{ fontSize: 20, marginBottom: 12 }}>🩺 ezyVet Clinical Focus</h2>
+        <p style={{ margin: 0, color: '#475569', lineHeight: 1.6 }}>
+          This dashboard now prioritizes day-to-day clinical operations, livestock status, tasks, finance,
+          inventory, and alerts for a cleaner ezyVet-style workflow.
+        </p>
       </div>
       <div className="dashboard-header">
-        <h1>📊 Farm Dashboard</h1>
+        <h1>🩺 ezyVet Dashboard</h1>
         <div className="dashboard-controls">
           <button onClick={() => setShowCustomizer(true)} className="btn-primary" style={{ background: '#8b5cf6', marginRight: 12 }}>
             🎨 Customize
@@ -959,18 +621,6 @@ export default function Dashboard({ onNavigate }) {
             </div>
           )}
           
-          {/* Groups */}
-          {groups && groups.totalGroups > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #a5b4fc', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('groups')}>
-              <div style={{ fontSize: '28px', marginBottom: '8px' }}>👥</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Groups</div>
-              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#4f46e5' }}>{groups.totalGroups}</div>
-              <div style={{ fontSize: '11px', color: '#4f46e5' }}>
-                {groups.totalAnimals} animals • Avg {groups.avgGroupSize?.toFixed(1)}
-              </div>
-            </div>
-          )}
-          
           {/* Schedules */}
           {schedules && schedules.total > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #f0abfc', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('schedules')}>
@@ -1401,61 +1051,6 @@ export default function Dashboard({ onNavigate }) {
         </div>
       </div>
 
-      {/* Weather Widget */}
-      {weather && (
-        <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '16px', borderRadius: '8px', marginBottom: '20px', color: 'white' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h3 style={{ margin: 0, fontSize: '18px' }}>🌤️ Weather at {weather.location}</h3>
-            <button
-              onClick={() => onNavigate && onNavigate('weather')}
-              style={{
-                padding: '6px 12px',
-                background: 'rgba(255,255,255,0.2)',
-                color: 'white',
-                border: '1px solid rgba(255,255,255,0.3)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: '500',
-                fontSize: '13px'
-              }}
-            >
-              Full Forecast →
-            </button>
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '12px' }}>
-            <div>
-              <div style={{ fontSize: '48px', fontWeight: 'bold' }}>{weather.temperature}°C</div>
-              <div style={{ fontSize: '14px', textTransform: 'capitalize', opacity: 0.9 }}>
-                {weather.description}
-              </div>
-            </div>
-            <img src={weather.iconUrl} alt={weather.description} style={{ width: '80px', height: '80px' }} />
-          </div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '12px', fontSize: '13px' }}>
-            <div>
-              <div style={{ opacity: 0.8 }}>Feels Like</div>
-              <div style={{ fontWeight: 'bold' }}>{weather.feelsLike}°C</div>
-            </div>
-            <div>
-              <div style={{ opacity: 0.8 }}>Humidity</div>
-              <div style={{ fontWeight: 'bold' }}>{weather.humidity}%</div>
-            </div>
-            <div>
-              <div style={{ opacity: 0.8 }}>Wind</div>
-              <div style={{ fontWeight: 'bold' }}>{weather.windSpeed} m/s</div>
-            </div>
-          </div>
-          
-          {weather.demo && (
-            <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(255,255,255,0.15)', borderRadius: '4px', fontSize: '12px' }}>
-              ⚠️ Demo mode - Add API key in Weather Dashboard for real data
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Smart Alerts Summary */}
       {alertsSummary && alertsSummary.total > 0 && (
         <div style={{ background: '#fef2f2', padding: '16px', borderRadius: '8px', marginBottom: '20px', border: '2px solid #fca5a5' }}>
@@ -1526,9 +1121,6 @@ export default function Dashboard({ onNavigate }) {
             <EditableField value={qaLabels.alerts} onChange={(v)=>setQaLabels(l=>({ ...l, alerts: v }))} inputStyle={{ fontWeight: 600 }} />
           </button>
           {/* Voice, disease, and audit quick actions removed */}
-          <button onClick={() => onNavigate && onNavigate('weather')} className="btn-primary" style={{ background: '#0ea5e9' }}>
-            <EditableField value={qaLabels.weather} onChange={(v)=>setQaLabels(l=>({ ...l, weather: v }))} inputStyle={{ fontWeight: 600 }} />
-          </button>
           <button onClick={() => onNavigate && onNavigate('market')} className="btn-primary" style={{ background: '#10b981' }}>
             <EditableField value={qaLabels.market} onChange={(v)=>setQaLabels(l=>({ ...l, market: v }))} inputStyle={{ fontWeight: 600 }} />
           </button>
@@ -1541,12 +1133,6 @@ export default function Dashboard({ onNavigate }) {
 
           <button onClick={() => onNavigate && onNavigate('alertcenter')} className="btn-primary" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', border: 'none' }}>
             🔔 Alert Center
-          </button>
-          <button onClick={() => onNavigate && onNavigate('batchops')} className="btn-primary" style={{ background: '#f59e0b' }}>
-            ⚡ Batch Operations
-          </button>
-          <button onClick={() => onNavigate && onNavigate('customreports')} className="btn-primary" style={{ background: '#8b5cf6' }}>
-            📊 Custom Reports
           </button>
           <button onClick={() => onNavigate && onNavigate('mobilesettings')} className="btn-primary" style={{ background: '#6366f1' }}>
             📱 Mobile Settings

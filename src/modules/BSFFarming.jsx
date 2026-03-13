@@ -43,6 +43,23 @@ export default function BSFFarming() {
   const [toast, setToast] = useState(null)
   const [lastChange, setLastChange] = useState(null)
 
+  const tabsWrapStyle = {
+    display: 'flex',
+    gap: '10px',
+    flexWrap: 'wrap',
+    marginBottom: 16
+  }
+  const getTabStyle = (isActive) => ({
+    padding: '10px 16px',
+    border: `1px solid ${isActive ? '#a7f3d0' : '#dbe4ea'}`,
+    background: isActive ? 'linear-gradient(135deg, #0f766e, #059669)' : '#f8fafc',
+    color: isActive ? '#fff' : '#475569',
+    borderRadius: '999px',
+    cursor: 'pointer',
+    fontWeight: '700',
+    boxShadow: isActive ? '0 12px 24px rgba(5, 150, 105, 0.16)' : 'none'
+  })
+
   useEffect(() => {
     const raw = localStorage.getItem(KEY)
     if (raw) setColonies(JSON.parse(raw))
@@ -249,36 +266,18 @@ export default function BSFFarming() {
       )}
 
       {/* Tabs */}
-      <div style={{ marginBottom: 16, borderBottom: '2px solid #e5e7eb' }}>
+      <div style={tabsWrapStyle}>
         <button 
           onClick={() => setActiveTab('colonies')} 
-          style={{ 
-            padding: '8px 16px', 
-            border: 'none', 
-            background: activeTab === 'colonies' ? '#059669' : 'transparent',
-            color: activeTab === 'colonies' ? '#fff' : '#666',
-            cursor: 'pointer'
-          }}
+          style={getTabStyle(activeTab === 'colonies')}
         >Colonies</button>
         <button 
           onClick={() => setActiveTab('feeding')} 
-          style={{ 
-            padding: '8px 16px', 
-            border: 'none', 
-            background: activeTab === 'feeding' ? '#059669' : 'transparent',
-            color: activeTab === 'feeding' ? '#fff' : '#666',
-            cursor: 'pointer'
-          }}
+          style={getTabStyle(activeTab === 'feeding')}
         >Feeding Records</button>
         <button 
           onClick={() => setActiveTab('harvest')} 
-          style={{ 
-            padding: '8px 16px', 
-            border: 'none', 
-            background: activeTab === 'harvest' ? '#059669' : 'transparent',
-            color: activeTab === 'harvest' ? '#fff' : '#666',
-            cursor: 'pointer'
-          }}
+          style={getTabStyle(activeTab === 'harvest')}
         >Harvest Records</button>
       </div>
 
