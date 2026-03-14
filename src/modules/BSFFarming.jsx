@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { formatCurrency } from '../lib/currency'
+import { recordExpense, recordIncome } from '../lib/moduleIntegration'
+import { logActivity } from '../lib/activityLogger'
+import { NOTIFICATION_TYPES, PRIORITIES } from '../lib/notifications'
+import { validateBSFColonyInput, validateBSFFeedingInput, validateBSFHarvestInput, scheduleLivestockReminder } from '../lib/livestockPhase1'
 
 const SAMPLE_COLONIES = [
   { id: 'BSF-001', name: 'Colony A', location: 'Barn 1', establishedDate: '2025-09-01', status: 'Active', population: 5000, substrate: 'Food Waste', substrateAmount: 50, temperature: 28, humidity: 70, notes: 'Good production' },
@@ -10,7 +14,7 @@ const SUBSTRATE_TYPES = ['Food Waste', 'Animal Manure', 'Vegetable Waste', 'Mixe
 const COLONY_STATUS = ['Active', 'Growing', 'Inactive', 'Harvesting', 'Maintenance']
 const HARVEST_TYPES = ['Larvae', 'Prepupae', 'Adult Flies', 'Frass (Compost)']
 
-export default function BSFFarming() {
+export default function BSFFarming({ initialTab = 'colonies', recordSource = null }) {
   const KEY = 'cattalytics:bsf:colonies'
   const FEEDING_KEY = 'cattalytics:bsf:feeding'
   const HARVEST_KEY = 'cattalytics:bsf:harvest'
@@ -42,6 +46,13 @@ export default function BSFFarming() {
   const [inlineData, setInlineData] = useState({ name: '', location: '', status: 'Active', population: '' })
   const [toast, setToast] = useState(null)
   const [lastChange, setLastChange] = useState(null)
+
+  useEffect(() => {
+    const allowed = new Set(['colonies', 'feeding', 'harvest'])
+    if (allowed.has(initialTab) && initialTab !== activeTab) {
+      setActiveTab(initialTab)
+    }
+  }, [initialTab, activeTab])
 
   const tabsWrapStyle = {
     display: 'flex',
@@ -77,12 +88,30 @@ export default function BSFFarming() {
   useEffect(() => localStorage.setItem(HARVEST_KEY, JSON.stringify(harvestRecords)), [harvestRecords])
 
   function addColony() {
-    if (!colonyForm.name) {
-      alert('Please provide colony name')
+    const validation = validateBSFColonyInput(colonyForm)
+    if (!validation.valid) {
+      alert(validation.errors.join('\n'))
       return
     }
     const id = 'BSF-' + Date.now()
     setColonies([...colonies, { ...colonyForm, id }])
+
+    scheduleLivestockReminder({
+      type: NOTIFICATION_TYPES.GENERAL,
+      title: `BSF colony check: ${colonyForm.name}`,
+      body: `Run a routine review for colony ${colonyForm.name}.`,
+      dueDate: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)).toISOString(),
+      entityId: id,
+      entityType: 'bsf-colony',
+      priority: PRIORITIES.MEDIUM
+    })
+
+    logActivity('animal', 'bsf_colony_created', `Created BSF colony ${colonyForm.name}`, {
+      colonyId: id,
+      location: colonyForm.location,
+      population: colonyForm.population
+    })
+
     resetColonyForm()
     setShowAddColony(false)
   }
@@ -147,22 +176,77 @@ export default function BSFFarming() {
   }
 
   function addFeeding() {
-    if (!feedingForm.colonyId || !feedingForm.amount) {
-      alert('Please select colony and enter amount')
+    const validation = validateBSFFeedingInput(feedingForm)
+    if (!validation.valid) {
+      alert(validation.errors.join('\n'))
       return
     }
     const id = 'FEED-' + Date.now()
-    setFeedingRecords([...feedingRecords, { ...feedingForm, id, timestamp: new Date().toISOString() }])
+    const newRecord = { ...feedingForm, id, timestamp: new Date().toISOString() }
+    setFeedingRecords([...feedingRecords, newRecord])
+
+    const feedingCost = parseFloat(feedingForm.cost) || 0
+    if (feedingCost > 0) {
+      recordExpense({
+        amount: feedingCost,
+        category: 'Feed',
+        subcategory: 'BSF Substrate',
+        description: `BSF feeding (${feedingForm.substrate}) for colony ${feedingForm.colonyId}`,
+        source: 'BSF Feeding',
+        linkedId: id
+      })
+    }
+
+    scheduleLivestockReminder({
+      type: NOTIFICATION_TYPES.GENERAL,
+      title: `BSF feeding follow-up: ${feedingForm.colonyId}`,
+      body: `Check substrate conversion after feeding ${feedingForm.substrate}.`,
+      dueDate: new Date(Date.now() + (48 * 60 * 60 * 1000)).toISOString(),
+      entityId: id,
+      entityType: 'bsf-feeding',
+      priority: PRIORITIES.MEDIUM
+    })
+
+    logActivity('animal', 'bsf_feeding_logged', `Logged BSF feeding for colony ${feedingForm.colonyId}`, {
+      feedingId: id,
+      colonyId: feedingForm.colonyId,
+      amount: feedingForm.amount,
+      substrate: feedingForm.substrate
+    })
+
     setFeedingForm({ ...feedingForm, amount: '', cost: '', notes: '' })
   }
 
   function addHarvest() {
-    if (!harvestForm.colonyId || !harvestForm.quantity) {
-      alert('Please select colony and enter quantity')
+    const validation = validateBSFHarvestInput(harvestForm)
+    if (!validation.valid) {
+      alert(validation.errors.join('\n'))
       return
     }
     const id = 'HARVEST-' + Date.now()
-    setHarvestRecords([...harvestRecords, { ...harvestForm, id, timestamp: new Date().toISOString() }])
+    const newRecord = { ...harvestForm, id, timestamp: new Date().toISOString() }
+    setHarvestRecords([...harvestRecords, newRecord])
+
+    const salePrice = parseFloat(harvestForm.salePrice) || 0
+    if (salePrice > 0) {
+      recordIncome({
+        amount: salePrice,
+        category: 'BSF Sales',
+        subcategory: harvestForm.type || 'BSF Harvest',
+        description: `BSF harvest sale from colony ${harvestForm.colonyId}`,
+        source: 'BSF Harvest',
+        linkedId: id
+      })
+    }
+
+    logActivity('animal', 'bsf_harvest_logged', `Logged BSF harvest for colony ${harvestForm.colonyId}`, {
+      harvestId: id,
+      colonyId: harvestForm.colonyId,
+      quantity: harvestForm.quantity,
+      type: harvestForm.type,
+      salePrice
+    })
+
     setHarvestForm({ ...harvestForm, quantity: '', weight: '', salePrice: '', notes: '' })
   }
 
@@ -182,7 +266,14 @@ export default function BSFFarming() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h3>🪰 BSF (Black Soldier Fly) Farming</h3>
+        <div>
+          <h3 style={{ margin: 0 }}>🪰 BSF (Black Soldier Fly) Farming</h3>
+          {recordSource?.domain && recordSource?.item && (
+            <div style={{ marginTop: '8px', fontSize: '12px', fontWeight: 700, color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
+              Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
+            </div>
+          )}
+        </div>
         <button onClick={() => setShowAddColony(!showAddColony)}>
           {showAddColony ? '✕ Cancel' : '+ Add Colony'}
         </button>

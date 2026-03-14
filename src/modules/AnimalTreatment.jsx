@@ -3,6 +3,9 @@ import { exportToCSV, exportToExcel, exportToJSON, exportToPDF, importFromCSV, i
 import { getVeterinaryInventory, useInventoryItem, recordExpense } from '../lib/moduleIntegration'
 import AnimalCV from '../components/animal/AnimalCV'
 import { recordClick } from '../lib/clickDB'
+import { logActivity } from '../lib/activityLogger'
+import { NOTIFICATION_TYPES, PRIORITIES } from '../lib/notifications'
+import { validateTreatmentInput, scheduleLivestockReminder, getTreatmentPhase2Insights } from '../lib/livestockPhase1'
 
 const SAMPLE = [
   { id: 'TREAT-001', animalId: 'A-001', date: '2025-06-01', timestamp: '2025-06-01T10:30:00', treatmentType: 'Hoof Care', treatment: 'Hoof trim', veterinarian: 'Dr. Smith', medication: '', dosage: '', cost: 50, duration: '', nextDue: '', status: 'Completed', severity: 'Routine', notes: 'Regular maintenance' },
@@ -33,6 +36,7 @@ export default function AnimalTreatment({ animals }){
   const [filterAnimal, setFilterAnimal] = useState('all')
   const [filterType, setFilterType] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [filterDue, setFilterDue] = useState('all')
   const [vetInventory, setVetInventory] = useState([])
   const [selectedInventoryItem, setSelectedInventoryItem] = useState('')
 
@@ -54,12 +58,19 @@ export default function AnimalTreatment({ animals }){
   useEffect(()=> localStorage.setItem(KEY, JSON.stringify(items)), [items])
 
   function add(){
-    if(!animalId || !treatment.trim()) {
-      alert('Please select animal and enter treatment description')
+    const treatmentCost = parseFloat(cost) || 0
+    const validation = validateTreatmentInput({
+      animalId,
+      treatment: treatment.trim(),
+      cost: treatmentCost,
+      nextDue
+    })
+
+    if(!validation.valid) {
+      alert(validation.errors.join('\n'))
       return
     }
-    
-    const treatmentCost = parseFloat(cost) || 0
+
     const animalName = animals?.find(a => a.id === animalId)?.name || animalId
     
     if(editingId) {
@@ -79,6 +90,16 @@ export default function AnimalTreatment({ animals }){
         severity,
         notes: notes.trim()
       } : i))
+
+      logActivity('health', 'treatment_updated', `Updated treatment for ${animalName}`, {
+        treatmentId: editingId,
+        animalId,
+        treatmentType,
+        status,
+        severity,
+        nextDue
+      })
+
       setEditingId(null)
     } else {
       // Add new treatment
@@ -105,8 +126,8 @@ export default function AnimalTreatment({ animals }){
     // Use inventory item if selected
     if(selectedInventoryItem) {
       const doseQty = parseFloat(dosage) || 1
-      const success = useInventoryItem(selectedInventoryItem, doseQty, animalName, `Treatment: ${treatment}`)
-      if(!success) {
+      const inventoryResult = useInventoryItem(selectedInventoryItem, doseQty, animalName, `Treatment: ${treatment}`)
+      if(!inventoryResult?.success) {
         alert('Failed to deduct from inventory. Please check stock levels.')
         return
       }
@@ -126,6 +147,27 @@ export default function AnimalTreatment({ animals }){
     }
     
     setItems([...items, newItem])
+
+    if (newItem.nextDue) {
+      scheduleLivestockReminder({
+        type: NOTIFICATION_TYPES.TREATMENT,
+        title: `Treatment due: ${newItem.treatmentType}`,
+        body: `Follow-up for ${animalName} (${newItem.treatment}).`,
+        dueDate: newItem.nextDue,
+        entityId: newItem.id,
+        entityType: 'treatment',
+        priority: PRIORITIES.HIGH
+      })
+    }
+
+    logActivity('health', 'treatment_created', `Treatment recorded for ${animalName}`, {
+      treatmentId: newItem.id,
+      animalId,
+      treatmentType,
+      status,
+      severity,
+      nextDue: newItem.nextDue
+    })
     }
     
     setTreatment('')
@@ -218,8 +260,30 @@ export default function AnimalTreatment({ animals }){
     if(filterAnimal !== 'all' && item.animalId !== filterAnimal) return false
     if(filterType !== 'all' && item.treatmentType !== filterType) return false
     if(filterStatus !== 'all' && item.status !== filterStatus) return false
+    if (filterDue !== 'all') {
+      const dueDate = item.nextDue ? new Date(item.nextDue) : null
+      const today = new Date()
+      const startToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+      if (filterDue === 'none' && dueDate) return false
+      if (filterDue === 'overdue' && (!dueDate || dueDate >= startToday)) return false
+      if (filterDue === 'next7') {
+        if (!dueDate) return false
+        const daysUntil = Math.floor((dueDate - startToday) / (1000 * 60 * 60 * 24))
+        if (daysUntil < 0 || daysUntil > 7) return false
+      }
+      if (filterDue === 'next30') {
+        if (!dueDate) return false
+        const daysUntil = Math.floor((dueDate - startToday) / (1000 * 60 * 60 * 24))
+        if (daysUntil < 0 || daysUntil > 30) return false
+      }
+    }
     return true
   })
+
+  const phase2Insights = getTreatmentPhase2Insights(filteredItems)
+  const overdueTreatments = phase2Insights.overdue
+  const dueIn7Days = phase2Insights.dueIn7Days
+  const vaccinationDueSoon = phase2Insights.vaccinationDueSoon
 
   const totalCost = filteredItems.reduce((sum, item) => sum + (item.cost || 0), 0)
   const upcomingTreatments = filteredItems.filter(item => {
@@ -487,6 +551,14 @@ export default function AnimalTreatment({ animals }){
           <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Cost</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>${totalCost.toFixed(2)}</div>
         </div>
+        <div className="card" style={{ padding: 16, background: '#fff1f2' }}>
+          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Overdue Follow-ups</div>
+          <div style={{ fontSize: 24, fontWeight: 'bold', color: '#be123c' }}>{overdueTreatments.length}</div>
+        </div>
+        <div className="card" style={{ padding: 16, background: '#f0f9ff' }}>
+          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Vaccines Due (30d)</div>
+          <div style={{ fontSize: 24, fontWeight: 'bold', color: '#0369a1' }}>{vaccinationDueSoon.length}</div>
+        </div>
       </div>
 
       {/* Alerts */}
@@ -515,6 +587,34 @@ export default function AnimalTreatment({ animals }){
                 return (
                   <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #fbbf24' }}>
                     <strong>{animal?.name || animal?.tag || item.animalId}</strong> - {item.treatment} (Due in {daysUntil} days - {new Date(item.nextDue).toLocaleDateString()})
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {overdueTreatments.length > 0 && (
+            <div className="card" style={{ padding: 16, background: '#fff1f2', borderLeft: '4px solid #be123c' }}>
+              <h4 style={{ margin: '0 0 8px 0', color: '#9f1239' }}>⛔ Overdue Treatments</h4>
+              {overdueTreatments.slice(0, 8).map(item => {
+                const animal = (animals||[]).find(a => a.id === item.animalId)
+                return (
+                  <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #fecdd3' }}>
+                    <strong>{animal?.name || animal?.tag || item.animalId}</strong> - {item.treatment} (Due {new Date(item.nextDue).toLocaleDateString()})
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {dueIn7Days.length > 0 && (
+            <div className="card" style={{ padding: 16, background: '#ecfeff', borderLeft: '4px solid #0891b2' }}>
+              <h4 style={{ margin: '0 0 8px 0', color: '#0e7490' }}>📅 Due In Next 7 Days</h4>
+              {dueIn7Days.slice(0, 8).map(item => {
+                const animal = (animals||[]).find(a => a.id === item.animalId)
+                return (
+                  <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #bae6fd' }}>
+                    <strong>{animal?.name || animal?.tag || item.animalId}</strong> - {item.treatment} ({new Date(item.nextDue).toLocaleDateString()})
                   </div>
                 )
               })}
@@ -609,8 +709,15 @@ export default function AnimalTreatment({ animals }){
           <option value="all">All Statuses</option>
           {TREATMENT_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
-        {(filterAnimal !== 'all' || filterType !== 'all' || filterStatus !== 'all') && (
-          <button onClick={() => { setFilterAnimal('all'); setFilterType('all'); setFilterStatus('all') }}>Clear Filters</button>
+        <select id="filter-due" name="filterDue" value={filterDue} onChange={e => setFilterDue(e.target.value)}>
+          <option value="all">All Due Dates</option>
+          <option value="overdue">Overdue</option>
+          <option value="next7">Due in 7 days</option>
+          <option value="next30">Due in 30 days</option>
+          <option value="none">No due date</option>
+        </select>
+        {(filterAnimal !== 'all' || filterType !== 'all' || filterStatus !== 'all' || filterDue !== 'all') && (
+          <button onClick={() => { setFilterAnimal('all'); setFilterType('all'); setFilterStatus('all'); setFilterDue('all') }}>Clear Filters</button>
         )}
       </div>
 

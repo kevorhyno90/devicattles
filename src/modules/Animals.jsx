@@ -26,7 +26,7 @@ import { LineChart } from '../components/Charts'
 
 // Realized Animals component: HTML5 controls, inline validation, unique tag checks,
 // realistic sample data, and non-placeholder behavior.
-export default function Animals({ section = 'all' }) {
+export default function Animals({ section = 'all', initialTab = 'list', recordSource = null }) {
   const isDairySection = section === 'dairy'
   const dairyGroupId = 'G-001'
 
@@ -289,6 +289,26 @@ export default function Animals({ section = 'all' }) {
     if (['addGroup', 'bsf', 'poultry', 'canine'].includes(tab)) setTab('list')
     if (filterGroup === 'ungrouped') setFilterGroup('all')
   }, [filterGroup, isDairySection, tab])
+
+  useEffect(() => {
+    const allowedTabs = new Set([
+      'list',
+      'feeding',
+      'health',
+      'treatment',
+      'breeding',
+      'milkyield',
+      'measurement',
+      'calf',
+      'pastures',
+      'azolla',
+      'poultry',
+      'canine',
+      'bsf'
+    ])
+    const nextTab = allowedTabs.has(initialTab) ? initialTab : 'list'
+    setTab(prev => (prev === nextTab ? prev : nextTab))
+  }, [initialTab])
 
   function validateAnimal(a) {
     const e = {}
@@ -967,6 +987,11 @@ export default function Animals({ section = 'all' }) {
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '8px', color: 'inherit' }}>🐄 Livestock Management</h2>
         <p style={{ color: 'var(--muted)', margin: 0 }}>Comprehensive livestock tracking and management system</p>
+        {recordSource?.domain && recordSource?.item && (
+          <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
+            Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
+          </div>
+        )}
       </div>
 
       {/* Statistics Cards - stack vertically on mobile */}

@@ -11,6 +11,7 @@ import {
 } from '../lib/sync'
 
 export default function SyncSettings() {
+  const canEnablePersistenceInCurrentEnv = !import.meta.env.DEV || import.meta.env.VITE_ALLOW_DEV_FIRESTORE_PERSISTENCE === 'true'
   const [configured, setConfigured] = useState(false)
   const [syncEnabled, setSyncEnabledState] = useState(false)
   const [syncStatus, setSyncStatus] = useState('offline')
@@ -36,6 +37,8 @@ export default function SyncSettings() {
   const [pulling, setPulling] = useState(false)
   const [pendingQueue, setPendingQueue] = useState(0)
   const [queueItems, setQueueItems] = useState([])
+  const [persistencePref, setPersistencePref] = useState('default')
+  const [persistenceMode, setPersistenceMode] = useState(typeof window !== 'undefined' ? (window.__firestorePersistenceMode || 'unknown') : 'unknown')
 
   useEffect(() => {
     setConfigured(isFirebaseConfigured())
@@ -45,20 +48,68 @@ export default function SyncSettings() {
     setLastSyncTime(localStorage.getItem('devinsfarm:lastSyncTime'))
     setSyncError(localStorage.getItem('devinsfarm:lastSyncError') || '')
     setFirebaseUser(getCurrentFirebaseUser())
+    try {
+      const pref = localStorage.getItem('devinsfarm:firestore:persistence')
+      setPersistencePref(pref === 'enabled' || pref === 'disabled' ? pref : 'default')
+    } catch (e) {
+      setPersistencePref('default')
+    }
+    try {
+      setPersistenceMode(window.__firestorePersistenceMode || 'unknown')
+    } catch (e) {
+      setPersistenceMode('unknown')
+    }
     
     // Update sync status periodically
     const interval = setInterval(() => {
-      setSyncStatus(getSyncStatus())
-      setLastSyncTime(localStorage.getItem('devinsfarm:lastSyncTime'))
-      setSyncError(localStorage.getItem('devinsfarm:lastSyncError') || '')
+      const nextSyncStatus = getSyncStatus()
+      const nextLastSync = localStorage.getItem('devinsfarm:lastSyncTime')
+      const nextSyncError = localStorage.getItem('devinsfarm:lastSyncError') || ''
+
+      setSyncStatus(prev => (prev === nextSyncStatus ? prev : nextSyncStatus))
+      setLastSyncTime(prev => (prev === nextLastSync ? prev : nextLastSync))
+      setSyncError(prev => (prev === nextSyncError ? prev : nextSyncError))
       try {
-        if (window.__firestoreQueueLength) setPendingQueue(Number(window.__firestoreQueueLength() || 0))
-        if (window.__firestoreQueueItems) setQueueItems(Array.from(window.__firestoreQueueItems()))
+        const nextPersistence = window.__firestorePersistenceMode || 'unknown'
+        setPersistenceMode(prev => (prev === nextPersistence ? prev : nextPersistence))
       } catch (e) {}
-    }, 2000)
+
+      try {
+        if (window.__firestoreQueueLength) {
+          const nextPending = Number(window.__firestoreQueueLength() || 0)
+          setPendingQueue(prev => (prev === nextPending ? prev : nextPending))
+        }
+        if (window.__firestoreQueueItems) {
+          const nextItems = Array.from(window.__firestoreQueueItems())
+          setQueueItems(prev => (JSON.stringify(prev) === JSON.stringify(nextItems) ? prev : nextItems))
+        }
+      } catch (e) {}
+    }, 10000)
     
     return () => clearInterval(interval)
   }, [])
+
+  function handlePersistenceChange(nextValue) {
+    try {
+      if (nextValue === 'enabled' && !canEnablePersistenceInCurrentEnv) {
+        alert('Firestore persistence enable is blocked in development/Codespaces for stability. It remains enabled by default in production. Set VITE_ALLOW_DEV_FIRESTORE_PERSISTENCE=true only if you need to test it locally.')
+        return
+      }
+
+      if (nextValue === 'default') {
+        localStorage.removeItem('devinsfarm:firestore:persistence')
+      } else {
+        localStorage.setItem('devinsfarm:firestore:persistence', nextValue)
+      }
+      setPersistencePref(nextValue)
+      const label = nextValue === 'default' ? 'default policy' : nextValue
+      if (window.confirm(`Firestore persistence set to ${label}. Reload now to apply?`)) {
+        window.location.reload()
+      }
+    } catch (e) {
+      alert('Failed to save persistence preference: ' + (e.message || e))
+    }
+  }
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -272,6 +323,66 @@ export default function SyncSettings() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Firestore Persistence Controls */}
+      <div style={{ marginTop: 20, padding: 15, border: '1px solid #cbd5e1', borderRadius: 8, background: '#f8fafc' }}>
+        <h3 style={{ margin: '0 0 8px 0' }}>💾 Firestore Persistence</h3>
+        <div style={{ fontSize: 13, color: '#475569', marginBottom: 10 }}>
+          Current runtime mode: <strong>{persistenceMode}</strong>
+        </div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => handlePersistenceChange('enabled')}
+            style={{
+              background: persistencePref === 'enabled' ? '#059669' : '#e5e7eb',
+              color: persistencePref === 'enabled' ? '#fff' : '#1f2937',
+              border: 'none',
+              borderRadius: 6,
+              padding: '8px 12px',
+              cursor: 'pointer',
+              fontWeight: 600
+            }}
+          >
+            Enable
+          </button>
+          <button
+            onClick={() => handlePersistenceChange('disabled')}
+            style={{
+              background: persistencePref === 'disabled' ? '#dc2626' : '#e5e7eb',
+              color: persistencePref === 'disabled' ? '#fff' : '#1f2937',
+              border: 'none',
+              borderRadius: 6,
+              padding: '8px 12px',
+              cursor: 'pointer',
+              fontWeight: 600
+            }}
+          >
+            Disable
+          </button>
+          <button
+            onClick={() => handlePersistenceChange('default')}
+            style={{
+              background: persistencePref === 'default' ? '#0f766e' : '#e5e7eb',
+              color: persistencePref === 'default' ? '#fff' : '#1f2937',
+              border: 'none',
+              borderRadius: 6,
+              padding: '8px 12px',
+              cursor: 'pointer',
+              fontWeight: 600
+            }}
+          >
+            Use Default
+          </button>
+        </div>
+        <div style={{ fontSize: 12, color: '#6b7280', marginTop: 10 }}>
+          Applies after reload. Default policy: enabled in production, disabled in dev/Codespaces.
+        </div>
+        {!canEnablePersistenceInCurrentEnv && (
+          <div style={{ fontSize: 12, color: '#9a3412', marginTop: 6 }}>
+            Dev safety is active: Enable is blocked in this environment to prevent restart loops.
+          </div>
+        )}
       </div>
 
       {/* Authentication Section */}

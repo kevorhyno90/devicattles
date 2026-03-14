@@ -7,6 +7,11 @@ import { visualizer } from 'rollup-plugin-visualizer'
 // Build a stable ignored list for the dev file watcher to avoid
 // restarts when generated files are written (dist, public assets, etc.).
 const DEV_PERSISTENT = process.env.DEV_PERSISTENT === '1' || process.env.DEV_PERSISTENT === 'true';
+const CODESPACE_NAME = process.env.CODESPACE_NAME || '';
+const GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN = process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN || 'app.github.dev';
+const CODESPACES_HMR_HOST = CODESPACE_NAME
+  ? `${CODESPACE_NAME}-5000.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}`
+  : undefined;
 const WATCH_IGNORED_BASE = [
   '**/node_modules/**',
   '**/.git/**',
@@ -168,9 +173,20 @@ export default defineConfig({
     port: 5000,
     strictPort: false,
     allowedHosts: true,
-    // Disable HMR in Codespaces to avoid WebSocket connection errors
-    // Use `DEV_PERSISTENT=1 npm run dev` to enable a more persistent dev mode
-    hmr: false,
+    // Configure HMR explicitly for Codespaces to avoid localhost websocket mismatches.
+    hmr: CODESPACES_HMR_HOST
+      ? {
+          protocol: 'wss',
+          host: CODESPACES_HMR_HOST,
+          clientPort: 443,
+          overlay: true
+        }
+      : {
+          protocol: 'ws',
+          host: 'localhost',
+          clientPort: 5000,
+          overlay: true
+        },
     fs: {
       strict: true
     },

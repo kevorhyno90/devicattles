@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { recordIncome } from '../lib/moduleIntegration'
+import { recordMilkSale } from '../lib/moduleIntegration'
 import { exportToCSV, exportToExcel, exportToJSON, exportToPDF } from '../lib/exportImport'
 import AnimalCV from '../components/animal/AnimalCV'
 import { recordClick } from '../lib/clickDB'
+import { logActivity } from '../lib/activityLogger'
+import { NOTIFICATION_TYPES, PRIORITIES } from '../lib/notifications'
+import { validateMilkInput, scheduleLivestockReminder, getMilkPhase2Insights } from '../lib/livestockPhase1'
 
 const SAMPLE = [
   { id: 'MILK-001', animalId: 'A-012', date: '2025-11-28', timestamp: '2025-11-28T06:30:00', session: 'Morning', liters: 18.5, milkToCalf: 2.5, milkConsumed: 1.0, milkSold: 15.0, spoiledMilk: 0.5, spoiledMilkPrice: 0, spoiledMilkReason: 'Left unrefrigerated', fatContent: 3.8, proteinContent: 3.2, lactose: 4.8, solidsNotFat: 8.7, totalSolids: 12.5, scc: 150000, temp: 37.5, ph: 6.7, quality: 'Grade A', pricePerLiter: 45, totalPrice: 675, buyer: 'Brookside Dairy', sold: true, notes: 'Normal milking', milkerId: 'MKR-001', milkerName: 'John Kamau', milkingDuration: 8, equipmentUsed: 'Portable Milker', location: 'Barn A', weather: 'Sunny', feedQuality: 'Good', cowHealth: 'Excellent', lactationDay: 45, peakMilk: false, colostrum: false, antibiotics: false, withdrawal: false },
@@ -97,15 +100,28 @@ export default function AnimalMilkYield({ animals }){
       const spoiledMilkAmount = parseFloat(spoiledMilk) || 0
       const spoiledMilkPriceAmount = parseFloat(spoiledMilkPrice) || 0
       const spoiledMilkReasonText = spoiledMilkReason.trim()
-    if(!animalId || !liters) {
-      alert('Please select animal and enter milk quantity')
-      return
-    }
     const literAmount = parseFloat(liters)
     const milkToCalfAmount = parseFloat(milkToCalf) || 0
     const milkConsumedAmount = parseFloat(milkConsumed) || 0
     const milkSoldAmount = parseFloat(milkSold) || 0
     const priceAmount = parseFloat(pricePerLiter) || 0
+
+    const validation = validateMilkInput({
+      animalId,
+      liters: literAmount,
+      milkSold: milkSoldAmount,
+      milkToCalf: milkToCalfAmount,
+      milkConsumed: milkConsumedAmount,
+      spoiledMilk: spoiledMilkAmount,
+      sold,
+      pricePerLiter: priceAmount
+    })
+
+    if (!validation.valid) {
+      alert(validation.errors.join('\n'))
+      return
+    }
+
     const totalPrice = milkSoldAmount * priceAmount
     const animalName = animals?.find(a => a.id === animalId)?.name || animalId
     
@@ -199,6 +215,14 @@ export default function AnimalMilkYield({ animals }){
           : item
       ))
       setEditingId(null)
+
+      logActivity('animal', 'milk_updated', `Updated milk record for ${animalName}`, {
+        animalId,
+        session,
+        liters: literAmount,
+        sold,
+        totalPrice
+      })
     } else {
       // Create new record
       const id = 'MILK-' + Math.floor(1000 + Math.random()*9000)
@@ -246,17 +270,37 @@ export default function AnimalMilkYield({ animals }){
       
       // Auto-record income in Finance if sold
       if(sold && totalPrice > 0) {
-        recordIncome({
+        recordMilkSale({
+          id,
           amount: totalPrice,
-          category: 'Milk Sales',
-          subcategory: buyer ? 'Direct Sales' : 'Wholesale',
-          description: `Milk from ${animalName}: ${literAmount} liters @ ${priceAmount}/liter`,
-          vendor: buyer || 'Dairy Buyer',
-          source: 'Milk Yield',
-          linkedId: id,
+          liters: milkSoldAmount,
+          buyer: buyer || 'Dairy Buyer',
           date: newItem.date
         })
       }
+
+      if (withdrawal || antibiotics) {
+        scheduleLivestockReminder({
+          type: NOTIFICATION_TYPES.HEALTH,
+          title: `Milk withdrawal check: ${animalName}`,
+          body: `Review withdrawal status before selling milk from ${animalName}.`,
+          dueDate: new Date(new Date(newItem.timestamp).getTime() + (72 * 60 * 60 * 1000)).toISOString(),
+          entityId: newItem.id,
+          entityType: 'milk',
+          priority: PRIORITIES.HIGH
+        })
+      }
+
+      logActivity('animal', 'milk_created', `Logged milk record for ${animalName}`, {
+        milkId: id,
+        animalId,
+        session,
+        liters: literAmount,
+        sold,
+        totalPrice,
+        withdrawal,
+        antibiotics
+      })
     }
     
     resetForm()
@@ -501,6 +545,8 @@ export default function AnimalMilkYield({ animals }){
     animalProduction[item.animalId].sessions[item.session] += item.liters || 0
   })
 
+  const phase2MilkInsights = getMilkPhase2Insights(filteredItems)
+
   // Export functions
   const handleExportCSV = () => {
     const data = filteredItems.map(item => ({
@@ -702,6 +748,15 @@ export default function AnimalMilkYield({ animals }){
             <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>per session</div>
           </div>
         )}
+        <div className="card" style={{ padding: 16, background: '#f8fafc' }}>
+          <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>14-Day Yield Trend</div>
+          <div style={{ fontSize: 20, fontWeight: 'bold', color: phase2MilkInsights.trend.direction === 'up' ? '#059669' : phase2MilkInsights.trend.direction === 'down' ? '#dc2626' : '#334155' }}>
+            {phase2MilkInsights.trend.direction === 'up' ? 'Rising' : phase2MilkInsights.trend.direction === 'down' ? 'Falling' : 'Stable'}
+          </div>
+          <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+            Recent avg {phase2MilkInsights.trend.avgRecent.toFixed(1)} L/day vs previous {phase2MilkInsights.trend.avgPrevious.toFixed(1)} L/day
+          </div>
+        </div>
       </div>
 
       {/* Comprehensive Add/Edit Form */}
@@ -732,6 +787,37 @@ export default function AnimalMilkYield({ animals }){
                       <td style={{ padding: '6px 8px', border: '1px solid #eee' }}>{(vals.spoiled || 0).toFixed(1)} L</td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <h5 style={{ color: '#1d4ed8', marginBottom: 8 }}>🗓️ Yearly Totals</h5>
+              <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#eff6ff' }}>
+                    <th style={{ padding: '6px 8px', border: '1px solid #ddd' }}>Year</th>
+                    <th style={{ padding: '6px 8px', border: '1px solid #ddd' }}>Total Milk</th>
+                    <th style={{ padding: '6px 8px', border: '1px solid #ddd' }}>Milk Sold</th>
+                    <th style={{ padding: '6px 8px', border: '1px solid #ddd' }}>Revenue</th>
+                    <th style={{ padding: '6px 8px', border: '1px solid #ddd' }}>Records</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(phase2MilkInsights.yearTotals).sort((a, b) => a[0] < b[0] ? 1 : -1).map(([year, vals]) => (
+                    <tr key={year} style={{ background: '#fff' }}>
+                      <td style={{ padding: '6px 8px', border: '1px solid #eee' }}>{year}</td>
+                      <td style={{ padding: '6px 8px', border: '1px solid #eee' }}>{vals.liters.toFixed(1)} L</td>
+                      <td style={{ padding: '6px 8px', border: '1px solid #eee' }}>{vals.sold.toFixed(1)} L</td>
+                      <td style={{ padding: '6px 8px', border: '1px solid #eee' }}>KES {vals.revenue.toFixed(0)}</td>
+                      <td style={{ padding: '6px 8px', border: '1px solid #eee' }}>{vals.count}</td>
+                    </tr>
+                  ))}
+                  {Object.keys(phase2MilkInsights.yearTotals).length === 0 && (
+                    <tr>
+                      <td colSpan={5} style={{ padding: '8px', border: '1px solid #eee', color: '#64748b' }}>No yearly totals available yet.</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

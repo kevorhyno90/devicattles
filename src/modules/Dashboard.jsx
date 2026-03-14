@@ -7,6 +7,8 @@ import { getPredictiveDashboard } from '../lib/predictiveAnalytics'
 import { getAlertsSummary } from '../lib/smartAlerts'
 import { loadData } from '../lib/storage'
 import DashboardCustomizer from '../components/DashboardCustomizer'
+import { exportToCSV } from '../lib/exportImport'
+import { getLivestockDataQualityReport, applyLivestockAutoFix, applyAllLivestockAutoFixes, dismissLivestockQualityIssue, clearDismissedLivestockQualityIssues } from '../lib/livestockPhase1'
 
 export default function Dashboard({ onNavigate }) {
   const [dashboardData, setDashboardData] = useState(null)
@@ -16,6 +18,9 @@ export default function Dashboard({ onNavigate }) {
   const [predictions, setPredictions] = useState(null)
   const [alertsSummary, setAlertsSummary] = useState(null)
   const [showCustomizer, setShowCustomizer] = useState(false)
+  const [livestockQuality, setLivestockQuality] = useState(null)
+  const [showBulkFixPreview, setShowBulkFixPreview] = useState(false)
+  const [selectedFixCodes, setSelectedFixCodes] = useState([])
   const [quickActionsTitle, setQuickActionsTitle] = useState('🩺 ezyVet Quick Actions')
   const [qaLabels, setQaLabels] = useState({
     alerts: '🔔 Smart Alerts'
@@ -74,6 +79,12 @@ export default function Dashboard({ onNavigate }) {
       } catch (error) {
         console.error('Error loading alerts:', error)
       }
+
+      try {
+        setLivestockQuality(getLivestockDataQualityReport({ maxIssues: 8 }))
+      } catch (error) {
+        console.error('Error loading livestock data quality report:', error)
+      }
       
       // Load predictive analytics
       try {
@@ -97,6 +108,95 @@ export default function Dashboard({ onNavigate }) {
       })
     }
     setLoading(false)
+  }
+
+  const refreshLivestockQuality = () => {
+    try {
+      setLivestockQuality(getLivestockDataQualityReport({ maxIssues: 8 }))
+    } catch (error) {
+      console.error('Error refreshing livestock data quality report:', error)
+    }
+  }
+
+  const handleAutoFixIssue = (issue) => {
+    const result = applyLivestockAutoFix(issue)
+    if (!result.ok) {
+      alert(result.message || 'Auto-fix failed')
+      return
+    }
+    refreshLivestockQuality()
+    loadDashboard()
+  }
+
+  const handleDismissIssue = (issue) => {
+    if (!issue?.fingerprint) return
+    dismissLivestockQualityIssue(issue.fingerprint)
+    refreshLivestockQuality()
+  }
+
+  const handleClearDismissed = () => {
+    clearDismissedLivestockQualityIssues()
+    refreshLivestockQuality()
+  }
+
+  const handleBulkAutoFix = () => {
+    if (!livestockQuality?.issues?.length) return
+    const selectedIssues = livestockQuality.issues.filter((i) => i.fixable && selectedFixCodes.includes(i.code))
+    if (selectedIssues.length === 0) {
+      alert('No fix types selected for bulk auto-fix.')
+      return
+    }
+
+    const result = applyAllLivestockAutoFixes(selectedIssues)
+    alert(`Bulk auto-fix completed. Fixed: ${result.fixed}, Failed: ${result.failed}`)
+    setShowBulkFixPreview(false)
+    refreshLivestockQuality()
+    loadDashboard()
+  }
+
+  const openBulkFixPreview = () => {
+    if (!livestockQuality?.issues?.length) {
+      alert('No issues available for bulk fix.')
+      return
+    }
+    const uniqueCodes = Array.from(new Set(livestockQuality.issues.filter((i) => i.fixable).map((i) => i.code))).filter(Boolean)
+    if (uniqueCodes.length === 0) {
+      alert('No auto-fixable issues found.')
+      return
+    }
+    setSelectedFixCodes(uniqueCodes)
+    setShowBulkFixPreview(true)
+  }
+
+  const toggleFixCode = (code) => {
+    setSelectedFixCodes((prev) => prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code])
+  }
+
+  const fixCodeLabel = (code) => {
+    const labels = {
+      'dairy-invalid-expected-due': 'Clear invalid dairy due date',
+      'goat-negative-weight': 'Clear negative goat weight',
+      'canine-missing-role': 'Apply default canine role',
+      'bsf-invalid-population': 'Normalize BSF population'
+    }
+    return labels[code] || code
+  }
+
+  const handleExportQualityCSV = () => {
+    const report = getLivestockDataQualityReport({ maxIssues: 1000, includeDismissed: true, skipTrend: true })
+    const rows = report.issues.map((issue) => ({
+      id: issue.id,
+      module: issue.module,
+      severity: issue.severity,
+      code: issue.code,
+      message: issue.message,
+      actionView: issue.actionView,
+      fixable: issue.fixable ? 'Yes' : 'No',
+      dismissed: issue.dismissed ? 'Yes' : 'No',
+      fingerprint: issue.fingerprint,
+      generatedAt: report.generatedAt
+    }))
+    exportToCSV(rows, `livestock-quality-issues-${new Date().toISOString().slice(0, 10)}.csv`)
   }
 
   if (loading || !dashboardData) {
@@ -219,6 +319,107 @@ export default function Dashboard({ onNavigate }) {
           {tasks.overdue > 0 && <span> {tasks.overdue} overdue task(s)</span>}
           {health.totalAlerts > 0 && <span> • {health.totalAlerts} health alert(s)</span>}
           {inventory.criticalStock > 0 && <span> • {inventory.criticalStock} critical inventory item(s)</span>}
+        </div>
+      )}
+
+      {/* Livestock Data Quality */}
+      {livestockQuality && (
+        <div className="card" style={{ padding: '20px', marginBottom: '20px', border: `1px solid ${livestockQuality.summary.totalIssues > 0 ? '#fca5a5' : '#86efac'}`, background: livestockQuality.summary.totalIssues > 0 ? '#fff7f7' : '#f0fdf4' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+            <h3 style={{ margin: 0 }}>📋 Livestock Data Quality</h3>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button onClick={refreshLivestockQuality} className="btn-secondary">Recheck</button>
+              <button onClick={handleExportQualityCSV} className="btn-secondary">Export CSV</button>
+              <button onClick={openBulkFixPreview} className="btn-secondary">Bulk Auto Fix</button>
+              {livestockQuality.summary.dismissedIssues > 0 && (
+                <button onClick={handleClearDismissed} className="btn-secondary">Show Dismissed ({livestockQuality.summary.dismissedIssues})</button>
+              )}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 12, fontSize: 14 }}>
+            <span><strong>Total Issues:</strong> {livestockQuality.summary.totalIssues}</span>
+            <span style={{ color: '#b91c1c' }}><strong>High:</strong> {livestockQuality.summary.high}</span>
+            <span style={{ color: '#b45309' }}><strong>Medium:</strong> {livestockQuality.summary.medium}</span>
+            {livestockQuality.summary.dismissedIssues > 0 && <span><strong>Dismissed:</strong> {livestockQuality.summary.dismissedIssues}</span>}
+          </div>
+
+          {Array.isArray(livestockQuality.trend) && livestockQuality.trend.length > 1 && (
+            <div style={{ marginBottom: 12, fontSize: 13, color: '#475569' }}>
+              Trend (last {livestockQuality.trend.length} checks): {livestockQuality.trend.map((p) => p.total).join(' → ')}
+            </div>
+          )}
+
+          {livestockQuality.summary.totalIssues > 0 ? (
+            <div style={{ display: 'grid', gap: 10 }}>
+              {livestockQuality.issues.map((issue) => (
+                <div key={issue.id} style={{ padding: '10px 12px', borderRadius: 8, background: '#ffffff', border: '1px solid #fecaca', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>{issue.module} • {issue.severity.toUpperCase()}</div>
+                    <div style={{ fontSize: 13, color: '#374151' }}>{issue.message}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {issue.fixable && (
+                      <button onClick={() => handleAutoFixIssue(issue)} className="btn-primary" style={{ padding: '8px 10px', background: '#059669' }}>
+                        Auto Fix
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onNavigate && onNavigate(issue.actionView)}
+                      className="btn-primary"
+                      style={{ padding: '8px 10px' }}
+                    >
+                      Open
+                    </button>
+                    <button
+                      onClick={() => handleDismissIssue(issue)}
+                      className="btn-secondary"
+                      style={{ padding: '8px 10px' }}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ fontSize: 14, color: '#166534' }}>
+              No livestock data quality issues detected.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Bulk Fix Preview */}
+      {showBulkFixPreview && livestockQuality && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.45)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ width: 'min(760px, 100%)', maxHeight: '80vh', overflowY: 'auto', background: '#ffffff', borderRadius: 12, border: '1px solid #e5e7eb', padding: 20 }}>
+            <h3 style={{ marginTop: 0, marginBottom: 8 }}>Bulk Auto-Fix Preview</h3>
+            <p style={{ marginTop: 0, color: '#475569', fontSize: 14 }}>
+              Select which fix types should run. Only safe, predefined fixes are shown.
+            </p>
+
+            <div style={{ display: 'grid', gap: 10, marginTop: 12, marginBottom: 16 }}>
+              {Array.from(new Set(livestockQuality.issues.filter((i) => i.fixable).map((i) => i.code))).map((code) => {
+                const count = livestockQuality.issues.filter((i) => i.fixable && i.code === code).length
+                const checked = selectedFixCodes.includes(code)
+                return (
+                  <label key={code} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: 10, border: '1px solid #e5e7eb', borderRadius: 8, background: checked ? '#f0fdf4' : '#f8fafc', cursor: 'pointer' }}>
+                    <span style={{ fontSize: 14, color: '#1f2937' }}>{fixCodeLabel(code)}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 12, color: '#64748b' }}>{count} issue(s)</span>
+                      <input type="checkbox" checked={checked} onChange={() => toggleFixCode(code)} />
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button className="btn-secondary" onClick={() => setShowBulkFixPreview(false)}>Cancel</button>
+              <button className="btn-primary" onClick={handleBulkAutoFix} style={{ background: '#059669' }}>Run Selected Fixes</button>
+            </div>
+          </div>
         </div>
       )}
 

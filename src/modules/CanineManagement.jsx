@@ -1,9 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import ErrorBoundary from '../components/ErrorBoundary'
 import AnimalCV from '../components/animal/AnimalCV'
 import { recordClick } from '../lib/clickDB'
+import { logActivity } from '../lib/activityLogger'
+import { NOTIFICATION_TYPES, PRIORITIES } from '../lib/notifications'
+import { validateCanineHealthInput, validateCanineVaccineInput, validateCanineHusbandryInput, scheduleLivestockReminder } from '../lib/livestockPhase1'
 
-export default function CanineManagement({ animals, setAnimals }) {
+export default function CanineManagement({ animals, setAnimals, initialTab = 'list', recordSource = null }) {
   const canines = animals.filter(a => a.groupId === 'G-008')
   const [showForm, setShowForm] = useState(false)
   const [selectedCanine, setSelectedCanine] = useState(null)
@@ -59,6 +62,17 @@ export default function CanineManagement({ animals, setAnimals }) {
 
   const [showCV, setShowCV] = useState(false)
 
+  useEffect(() => {
+    const allowed = new Set(['list', 'health', 'vaccines', 'husbandry'])
+    if (allowed.has(initialTab) && initialTab !== tab) {
+      setTab(initialTab)
+      if (initialTab !== 'list') {
+        setSelectedCanine(null)
+      }
+      setShowForm(false)
+    }
+  }, [initialTab, tab])
+
   function downloadAnimalJSON(a) {
     try {
       const blob = new Blob([JSON.stringify(a || {}, null, 2)], { type: 'application/json' })
@@ -107,27 +121,94 @@ export default function CanineManagement({ animals, setAnimals }) {
   }
 
   const addHealthRecord = (canineId) => {
-    if (!healthForm.condition.trim()) return
+    const validation = validateCanineHealthInput({
+      canineId,
+      condition: healthForm.condition,
+      date: healthForm.date
+    })
+    if (!validation.valid) {
+      setToast({ type: 'error', message: validation.errors[0] })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+
     setAnimals(animals.map(a => a.id === canineId ? {
       ...a,
       healthRecords: [...(a.healthRecords || []), { ...healthForm, id: Date.now() }]
     } : a))
+
+    const canine = animals.find(a => a.id === canineId)
+    logActivity('health', 'canine_health_added', `Health record added for ${canine?.name || canineId}`, {
+      canineId,
+      condition: healthForm.condition,
+      severity: healthForm.severity
+    })
+
     setHealthForm({ condition: '', severity: 'Minor', date: new Date().toISOString().split('T')[0], treatment: '', vetNotes: '' })
   }
 
   const addVaccineRecord = (canineId) => {
+    const validation = validateCanineVaccineInput({
+      canineId,
+      vaccineType: vaccineForm.vaccineType,
+      date: vaccineForm.date,
+      boosterDue: vaccineForm.boosterDue
+    })
+    if (!validation.valid) {
+      setToast({ type: 'error', message: validation.errors[0] })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+
     setAnimals(animals.map(a => a.id === canineId ? {
       ...a,
       vaccineRecords: [...(a.vaccineRecords || []), { ...vaccineForm, id: Date.now() }]
     } : a))
+
+    if (vaccineForm.boosterDue) {
+      const canine = animals.find(a => a.id === canineId)
+      scheduleLivestockReminder({
+        type: NOTIFICATION_TYPES.HEALTH,
+        title: `Canine booster due: ${canine?.name || canineId}`,
+        body: `${vaccineForm.vaccineType} booster is due for ${canine?.name || canineId}.`,
+        dueDate: vaccineForm.boosterDue,
+        entityId: canineId,
+        entityType: 'canine-vaccine',
+        priority: PRIORITIES.HIGH
+      })
+    }
+
+    logActivity('health', 'canine_vaccine_added', `Vaccination record added`, {
+      canineId,
+      vaccineType: vaccineForm.vaccineType,
+      boosterDue: vaccineForm.boosterDue
+    })
+
     setVaccineForm({ vaccineType: 'Rabies', date: new Date().toISOString().split('T')[0], vet: '', boosterDue: '', notes: '' })
   }
 
   const addHusbandryRecord = (canineId) => {
+    const validation = validateCanineHusbandryInput({
+      canineId,
+      feedType: husbandryForm.feedType
+    })
+    if (!validation.valid) {
+      setToast({ type: 'error', message: validation.errors[0] })
+      setTimeout(() => setToast(null), 3000)
+      return
+    }
+
     setAnimals(animals.map(a => a.id === canineId ? {
       ...a,
       husbandryLog: [...(a.husbandryLog || []), { ...husbandryForm, id: Date.now(), date: new Date().toISOString().split('T')[0] }]
     } : a))
+
+    logActivity('animal', 'canine_husbandry_added', 'Canine husbandry record added', {
+      canineId,
+      feedType: husbandryForm.feedType,
+      frequency: husbandryForm.frequency
+    })
+
     setHusbandryForm({ feedType: 'Commercial Dog Food', quantity: '', frequency: 'Twice Daily', housing: 'Farm Kennel', exercise: 'Active', grooming: 'Monthly', supplements: '' })
   }
 
@@ -217,6 +298,11 @@ export default function CanineManagement({ animals, setAnimals }) {
         <div style={{ marginBottom: '20px' }}>
           <h3 style={{ marginTop: 0 }}>🐕 Canine Management</h3>
           <p style={{ color: '#666', fontSize: '14px' }}>Comprehensive dog management with health, vaccination, and husbandry tracking</p>
+          {recordSource?.domain && recordSource?.item && (
+            <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
+              Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
+            </div>
+          )}
         </div>
 
         {/* Top-Level Tabs */}

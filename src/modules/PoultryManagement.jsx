@@ -3,6 +3,9 @@ import { loadData, saveData } from '../lib/storage'
 import { logAnimalActivity } from '../lib/activityLogger'
 import { savePhoto, deletePhoto, getPhotosByEntity } from '../lib/photoAnalysis'
 import { exportToCSV, exportToJSON } from '../lib/exportImport'
+import { recordExpense, recordIncome } from '../lib/moduleIntegration'
+import { NOTIFICATION_TYPES, PRIORITIES } from '../lib/notifications'
+import { validatePoultryEggInput, validatePoultryHealthInput, scheduleLivestockReminder } from '../lib/livestockPhase1'
 
 const POULTRY_KEY = 'cattalytics:poultry'
 const FLOCK_KEY = 'cattalytics:flocks'
@@ -14,7 +17,7 @@ const CHICKEN_BREEDS = ['Leghorn', 'Rhode Island Red', 'Plymouth Rock', 'Sussex'
 const PURPOSES = ['Layers', 'Broilers', 'Dual Purpose', 'Breeding', 'Show', 'Ornamental']
 const HOUSING_TYPES = ['Free Range', 'Cage', 'Deep Litter', 'Battery', 'Barn', 'Aviary', 'Pasture']
 
-export default function PoultryManagement() {
+export default function PoultryManagement({ initialView = 'flocks', recordSource = null }) {
   const [birds, setBirds] = useState([])
   const [flocks, setFlocks] = useState([])
   const [eggRecords, setEggRecords] = useState([])
@@ -24,6 +27,14 @@ export default function PoultryManagement() {
   const [editingId, setEditingId] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [toast, setToast] = useState(null)
+
+  useEffect(() => {
+    const allowed = new Set(['flocks', 'birds', 'eggs', 'health'])
+    if (allowed.has(initialView) && initialView !== view) {
+      setView(initialView)
+      setShowForm(false)
+    }
+  }, [initialView, view])
 
   const [flockForm, setFlockForm] = useState({
     id: '', name: '', type: 'Chicken', breed: 'Local', purpose: 'Layers',
@@ -159,44 +170,101 @@ export default function PoultryManagement() {
   }
 
   const handleSaveEgg = () => {
-    if (!eggForm.flockId || !eggForm.collected) {
-      showToast('Flock and collected eggs required', 'error')
+    const validation = validatePoultryEggInput({
+      flockId: eggForm.flockId,
+      collected: eggForm.collected,
+      broken: eggForm.broken,
+      sold: eggForm.sold,
+      used: eggForm.used,
+      price: eggForm.price
+    })
+
+    if (!validation.valid) {
+      showToast(validation.errors[0], 'error')
       return
     }
 
     let updated
+    let recordId = editingId
     if (editingId) {
       updated = eggRecords.map(e => e.id === editingId ? { ...eggForm } : e)
       showToast('Egg record updated', 'success')
     } else {
       const newRecord = { ...eggForm, id: 'EGG-' + Date.now() }
+      recordId = newRecord.id
       updated = [...eggRecords, newRecord]
       showToast('Egg record added', 'success')
     }
 
     setEggRecords(updated)
+
+    const soldCount = parseFloat(eggForm.sold) || 0
+    const price = parseFloat(eggForm.price) || 0
+    if (soldCount > 0 && price > 0) {
+      recordIncome({
+        amount: soldCount * price,
+        category: 'Egg Sales',
+        subcategory: 'Poultry Products',
+        description: `Egg sales from flock ${eggForm.flockId}: ${soldCount} eggs`,
+        source: 'Poultry Eggs',
+        linkedId: recordId || ''
+      })
+    }
+
     setShowForm(false)
     setEditingId(null)
     setEggForm({ id: '', flockId: '', date: new Date().toISOString().slice(0, 10), collected: '', broken: '', sold: '', used: '', price: '', notes: '' })
   }
 
   const handleSaveHealth = () => {
-    if (!healthForm.flockId || !healthForm.type) {
-      showToast('Flock and type required', 'error')
+    const validation = validatePoultryHealthInput({
+      flockId: healthForm.flockId,
+      type: healthForm.type,
+      cost: healthForm.cost
+    })
+
+    if (!validation.valid) {
+      showToast(validation.errors[0], 'error')
       return
     }
 
     let updated
+    let recordId = editingId
     if (editingId) {
       updated = healthRecords.map(h => h.id === editingId ? { ...healthForm } : h)
       showToast('Health record updated', 'success')
     } else {
       const newRecord = { ...healthForm, id: 'PH-' + Date.now() }
+      recordId = newRecord.id
       updated = [...healthRecords, newRecord]
       showToast('Health record added', 'success')
     }
 
     setHealthRecords(updated)
+
+    const healthCost = parseFloat(healthForm.cost) || 0
+    if (healthCost > 0) {
+      recordExpense({
+        amount: healthCost,
+        category: 'Veterinary',
+        subcategory: healthForm.type,
+        description: `Poultry health event for flock ${healthForm.flockId}: ${healthForm.type}`,
+        vendor: healthForm.veterinarian || 'Vet Service',
+        source: 'Poultry Health',
+        linkedId: recordId || ''
+      })
+    }
+
+    scheduleLivestockReminder({
+      type: NOTIFICATION_TYPES.HEALTH,
+      title: `Poultry health review: ${healthForm.flockId}`,
+      body: `Review flock ${healthForm.flockId} after ${healthForm.type}.`,
+      dueDate: new Date(new Date(healthForm.date || new Date().toISOString()).getTime() + (72 * 60 * 60 * 1000)).toISOString(),
+      entityId: healthForm.flockId,
+      entityType: 'poultry-health',
+      priority: PRIORITIES.MEDIUM
+    })
+
     setShowForm(false)
     setEditingId(null)
     setHealthForm({ id: '', flockId: '', date: new Date().toISOString().slice(0, 10), type: 'Vaccination', treatment: '', diagnosis: '', medication: '', dosage: '', cost: '', veterinarian: '', notes: '' })
@@ -238,6 +306,11 @@ export default function PoultryManagement() {
         <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
           Manage flocks, track egg production, and monitor poultry health
         </p>
+        {recordSource?.domain && recordSource?.item && (
+          <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
+            Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
+          </div>
+        )}
       </div>
 
       {/* Stats */}

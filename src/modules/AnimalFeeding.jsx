@@ -2,6 +2,10 @@ import React, { useEffect, useState, useRef } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON, batchPrint } from '../lib/exportImport'
 import AnimalCV from '../components/animal/AnimalCV'
 import { recordClick } from '../lib/clickDB'
+import { getFeedInventory, recordFeeding } from '../lib/moduleIntegration'
+import { logActivity } from '../lib/activityLogger'
+import { NOTIFICATION_TYPES, PRIORITIES } from '../lib/notifications'
+import { validateFeedingEventInput, scheduleLivestockReminder } from '../lib/livestockPhase1'
 
 // Comprehensive Ingredient Library with Kenya Prices (KES per kg)
 // Now includes ME (Metabolizable Energy, MJ/kg DM) alongside NEL
@@ -590,8 +594,19 @@ export default function AnimalFeeding({ animals }){
   }
 
   function createFeedingEvent() {
-    if (!eventDate || !eventFeedType || !eventQuantity || parseFloat(eventQuantity) <= 0 || eventAnimals.length === 0) {
-      alert('Complete date, feed type, quantity, and select at least one animal')
+    const parsedQuantity = parseFloat(eventQuantity)
+    const parsedCost = eventCost ? parseFloat(eventCost) : 0
+
+    const validation = validateFeedingEventInput({
+      date: eventDate,
+      feedType: eventFeedType,
+      quantity: parsedQuantity,
+      cost: parsedCost,
+      animals: eventAnimals
+    })
+
+    if (!validation.valid) {
+      alert(validation.errors.join('\n'))
       return
     }
 
@@ -599,8 +614,8 @@ export default function AnimalFeeding({ animals }){
       id: Date.now(),
       date: eventDate,
       feedType: eventFeedType,
-      quantity: parseFloat(eventQuantity),
-      cost: eventCost ? parseFloat(eventCost) : 0,
+      quantity: parsedQuantity,
+      cost: parsedCost,
       supplier: eventSupplier,
       method: eventMethod,
       supplements: eventSupplements,
@@ -614,9 +629,57 @@ export default function AnimalFeeding({ animals }){
     if (editingEventId) {
       setFeedingEvents(feedingEvents.map(e => e.id === editingEventId ? newEvent : e))
       setEditingEventId(null)
+      logActivity('animal', 'feeding_updated', `Updated feeding event (${newEvent.feedType})`, {
+        eventId: newEvent.id,
+        animals: newEvent.animals,
+        quantity: newEvent.quantity,
+        cost: newEvent.cost
+      })
       alert('Feeding event updated!')
     } else {
       setFeedingEvents([...feedingEvents, newEvent])
+
+      const feedInventory = getFeedInventory()
+      const matchedInventoryItem = feedInventory.find(item =>
+        String(item?.name || '').toLowerCase().includes(String(newEvent.feedType).toLowerCase())
+      )
+
+      const perAnimalQty = newEvent.animals.length > 0 ? newEvent.quantity / newEvent.animals.length : newEvent.quantity
+      const perAnimalCost = newEvent.animals.length > 0 ? newEvent.cost / newEvent.animals.length : newEvent.cost
+
+      newEvent.animals.forEach(animalId => {
+        const animal = (animals || []).find(a => a.id === animalId)
+        recordFeeding({
+          id: `FEED-${newEvent.id}-${animalId}`,
+          date: new Date(newEvent.date).toISOString().slice(0, 10),
+          animalId,
+          animalName: animal?.name || animal?.tag || animalId,
+          feedType: newEvent.feedType,
+          quantity: perAnimalQty,
+          unit: 'kg',
+          cost: perAnimalCost,
+          inventoryItemId: matchedInventoryItem?.id
+        })
+      })
+
+      scheduleLivestockReminder({
+        type: NOTIFICATION_TYPES.GENERAL,
+        title: `Feeding follow-up: ${newEvent.feedType}`,
+        body: `Review feed response for ${newEvent.animals.length} animal(s).`,
+        dueDate: new Date(new Date(newEvent.date).getTime() + (24 * 60 * 60 * 1000)).toISOString(),
+        entityId: String(newEvent.id),
+        entityType: 'feeding',
+        priority: PRIORITIES.MEDIUM
+      })
+
+      logActivity('animal', 'feeding_logged', `Logged feeding event (${newEvent.feedType})`, {
+        eventId: newEvent.id,
+        animals: newEvent.animals,
+        quantity: newEvent.quantity,
+        cost: newEvent.cost,
+        inventoryLinked: Boolean(matchedInventoryItem?.id)
+      })
+
       alert('Feeding event logged!')
     }
 

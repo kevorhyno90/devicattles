@@ -5,6 +5,7 @@ const navItems = [
   { label: 'Dashboard', icon: '🏠', view: 'dashboard' },
   { label: 'Livestock', icon: '🐄', view: 'animals' },
   { label: 'Crops', icon: '🌾', view: 'crops' },
+  { label: 'Reports', icon: '📊', view: 'customreports' },
   { label: 'Settings', icon: '⚙️', view: 'settings' }
 ];
 

@@ -43,6 +43,7 @@ import useUISettings from './hooks/useUISettings'
 import Header from './components/Header'
 import useAuthInit from './hooks/useAuthInit'
 import AudioEnableBanner from './components/AudioEnableBanner'
+import { getLivestockQualityScores } from './lib/livestockPhase1'
 // Lazy load stores to improve initial load time
 // import { useAnimalStore, useCropStore, useFinanceStore, useTaskStore, useInventoryStore, useUIStore } from './stores'
 
@@ -220,11 +221,11 @@ function AppContent() {
 
   const colors = getColorsFromCSS();
 
-  const AppViewContextLocal = (typeof window !== 'undefined' && window.AppViewContext) ? window.AppViewContext : React.createContext({ view: 'dashboard', setView: () => {}, editMode: false, setEditMode: () => {} });
+  const AppViewContextLocal = (typeof window !== 'undefined' && window.AppViewContext) ? window.AppViewContext : React.createContext({ view: 'landing', setView: () => {}, editMode: false, setEditMode: () => {} });
   const { view, setView, editMode, setEditMode } = useContext(AppViewContextLocal);
   const ThemeToggle = (typeof window !== 'undefined' && window.ThemeToggleButton) ? window.ThemeToggleButton : null;
   // Authentication state is managed via hook
-  const { authenticated, currentUser, handleLoginSuccess, handleLogout } = useAuthInit({ onLogout: () => setView('dashboard') })
+  const { authenticated, currentUser, handleLoginSuccess, handleLogout } = useAuthInit({ onLogout: () => setView('landing') })
   const [animals, setAnimals] = useState([]);
   const [crops, setCrops] = useState([]);
   const [finance, setFinance] = useState([]);
@@ -238,7 +239,16 @@ function AppContent() {
   const [deniedStores, setDeniedStores] = useState([]);
   const [showNavMore, setShowNavMore] = useState(false);
   const [livestockCounts, setLivestockCounts] = useState({ dairy: 0, goats: 0, canines: 0, poultry: 0, bsf: 0 });
-  // Add GoatModule view
+  const [animalsInitialTab, setAnimalsInitialTab] = useState('list');
+  const [goatInitialView, setGoatInitialView] = useState('goats');
+  const [poultryInitialView, setPoultryInitialView] = useState('flocks');
+  const [canineInitialTab, setCanineInitialTab] = useState('list');
+  const [bsfInitialTab, setBsfInitialTab] = useState('colonies');
+  const [animalsRecordSource, setAnimalsRecordSource] = useState(null);
+  const [goatRecordSource, setGoatRecordSource] = useState(null);
+  const [poultryRecordSource, setPoultryRecordSource] = useState(null);
+  const [canineRecordSource, setCanineRecordSource] = useState(null);
+  const [bsfRecordSource, setBsfRecordSource] = useState(null);
   
   // UI branding/settings - use hook to load/save from localStorage
   const SETTINGS_KEY = 'devinsfarm:ui:settings'
@@ -301,24 +311,36 @@ function AppContent() {
   // Poll for any Firestore permission-denied stores to show aggregated banner
   useEffect(() => {
     let mounted = true
+    let lastDeniedKey = ''
+
+    const updateDeniedStores = (arr) => {
+      if (!mounted) return
+      const safe = Array.isArray(arr) ? arr : []
+      const nextKey = safe.slice().sort().join('|')
+      if (nextKey !== lastDeniedKey) {
+        lastDeniedKey = nextKey
+        setDeniedStores(safe)
+      }
+    }
+
     const checkDenied = async () => {
       try {
         if (typeof window !== 'undefined' && window.__firestorePermissionDeniedStores) {
           const arr = Array.from(window.__firestorePermissionDeniedStores || [])
-          if (mounted) setDeniedStores(arr)
+          updateDeniedStores(arr)
           return
         }
         const mod = await import('./lib/firebaseSync').catch(() => null)
         if (mod && typeof mod.getFirestorePermissionDeniedStores === 'function') {
           const arr = mod.getFirestorePermissionDeniedStores() || []
-          if (mounted) setDeniedStores(arr)
+          updateDeniedStores(arr)
         }
       } catch (e) {
         // ignore
       }
     }
     checkDenied()
-    const iv = setInterval(checkDenied, 2000)
+    const iv = setInterval(checkDenied, 15000)
     return () => { mounted = false; clearInterval(iv) }
   }, [])
 
@@ -469,6 +491,14 @@ function AppContent() {
   }, [view]); // Reload when view changes to keep animals fresh
 
   useEffect(() => {
+    const sameCounts = (a, b) => (
+      a.dairy === b.dairy &&
+      a.goats === b.goats &&
+      a.canines === b.canines &&
+      a.poultry === b.poultry &&
+      a.bsf === b.bsf
+    )
+
     const refreshLivestockCounts = () => {
       try {
         const goats = JSON.parse(localStorage.getItem('cattalytics:goats') || '[]')
@@ -476,20 +506,23 @@ function AppContent() {
         const poultry = JSON.parse(localStorage.getItem('cattalytics:poultry') || '[]')
         const bsf = JSON.parse(localStorage.getItem('cattalytics:bsf:colonies') || '[]')
 
-        setLivestockCounts({
+        const nextCounts = {
           dairy: animals.filter(animal => animal.groupId === 'G-001').length,
           goats: goats.length,
           canines: animals.filter(animal => animal.groupId === 'G-008').length,
           poultry: flocks.length || poultry.length,
           bsf: bsf.length
-        })
+        }
+
+        setLivestockCounts(prev => sameCounts(prev, nextCounts) ? prev : nextCounts)
       } catch (error) {
-        setLivestockCounts({ dairy: 0, goats: 0, canines: 0, poultry: 0, bsf: 0 })
+        const fallback = { dairy: 0, goats: 0, canines: 0, poultry: 0, bsf: 0 }
+        setLivestockCounts(prev => sameCounts(prev, fallback) ? prev : fallback)
       }
     }
 
     refreshLivestockCounts()
-    const interval = setInterval(refreshLivestockCounts, 4000)
+    const interval = setInterval(refreshLivestockCounts, 15000)
     return () => clearInterval(interval)
   }, [animals])
   
@@ -528,6 +561,80 @@ function AppContent() {
 
   
 
+  if (view === 'landing') {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(140deg, #f7fce8 0%, #ecfeff 45%, #fff7ed 100%)', color: '#102a43' }}>
+        <section style={{ maxWidth: 1150, margin: '0 auto', padding: '48px 22px 20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap', marginBottom: 26 }}>
+            <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: '0.03em', color: '#064e3b' }}>DEVINS FARM</div>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button onClick={() => setView(authenticated ? 'dashboard' : 'dashboard')} style={{ background: '#0f766e', color: '#fff', border: 'none', borderRadius: 999, padding: '10px 18px', fontWeight: 700, cursor: 'pointer' }}>
+                {authenticated ? 'Open Dashboard' : 'Get Started'}
+              </button>
+              <button onClick={() => setView('animals')} style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 999, padding: '10px 18px', fontWeight: 700, cursor: 'pointer' }}>
+                Preview Livestock
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 24, alignItems: 'stretch' }}>
+            <div style={{ background: 'radial-gradient(130% 180% at 0% 0%, #dcfce7 0%, #dbeafe 45%, #ffffff 100%)', borderRadius: 24, border: '1px solid #bbf7d0', padding: '34px 30px', boxShadow: '0 20px 60px rgba(16,185,129,0.12)' }}>
+              <div style={{ display: 'inline-block', background: '#065f46', color: '#ecfdf5', borderRadius: 999, padding: '6px 12px', fontWeight: 700, fontSize: 12, letterSpacing: '0.04em', marginBottom: 14 }}>
+                OFFLINE-FIRST SMART FARM OS
+              </div>
+              <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3.4rem)', lineHeight: 1.06, margin: '4px 0 14px', color: '#0f172a', maxWidth: 760 }}>
+                Run your farm with clarity, speed, and confidence.
+              </h1>
+              <p style={{ fontSize: 18, lineHeight: 1.65, color: '#334155', maxWidth: 690, marginBottom: 22 }}>
+                Track livestock, feeding, treatment, breeding, milk yield, finances, and alerts in one beautiful workspace built for real daily operations.
+              </p>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button onClick={() => setView('dashboard')} style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 18px', fontWeight: 800, cursor: 'pointer' }}>
+                  Enter Command Center
+                </button>
+                <button onClick={() => setView('settings')} style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 12, padding: '12px 18px', fontWeight: 800, cursor: 'pointer' }}>
+                  Customize Experience
+                </button>
+              </div>
+            </div>
+
+            <div style={{ background: '#ffffffcc', backdropFilter: 'blur(4px)', borderRadius: 24, border: '1px solid #e2e8f0', padding: 22, boxShadow: '0 16px 40px rgba(2,6,23,0.09)' }}>
+              <h3 style={{ marginTop: 0, marginBottom: 12, color: '#0f172a' }}>What You Can Manage</h3>
+              <div style={{ display: 'grid', gap: 10 }}>
+                {[
+                  ['Livestock Records', 'Dairy, goats, poultry, canines, BSF'],
+                  ['Health and Treatment', 'Vaccines, treatments, diagnostics'],
+                  ['Breeding and Production', 'Breeding cycles and milk yield'],
+                  ['Finance and Inventory', 'Costs, revenue, stock and operations'],
+                  ['Smart Alerts', 'Proactive reminders and risk flags']
+                ].map(([title, desc]) => (
+                  <div key={title} style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: '10px 12px', background: '#fff' }}>
+                    <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>{title}</div>
+                    <div style={{ fontSize: 13, color: '#475569' }}>{desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 26, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+            {[
+              ['Realtime Snapshot', 'Instant module summaries across your farm'],
+              ['Mobile Friendly', 'Designed for in-field usage'],
+              ['Offline Support', 'Keep working even without internet'],
+              ['Cloud Sync Ready', 'Secure sync when authenticated']
+            ].map(([title, desc]) => (
+              <div key={title} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 14 }}>
+                <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>{title}</div>
+                <div style={{ fontSize: 13, color: '#475569' }}>{desc}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    )
+  }
+
   // Show login if not authenticated
   if (!authenticated) {
     return (
@@ -537,46 +644,201 @@ function AppContent() {
     )
   }
 
+  const livestockQualityScores = getLivestockQualityScores()
+
+  const LIVESTOCK_RECORD_CATALOG = {
+    animals: {
+      Registry: ['Master List', 'Identification', 'Grouping', 'Ownership', 'Lineage', 'Photos', 'QR Tags'],
+      Production: ['Milk Yield', 'Lactation', 'Peak Yield', 'Egg Production', 'Meat Yield', 'Growth Metrics', 'Performance Scores'],
+      Health: ['Vaccinations', 'Treatments', 'Diagnoses', 'Vet Visits', 'Allergies', 'Chronic Conditions', 'Quarantine'],
+      Breeding: ['Heat Events', 'Service Records', 'Pregnancy Checks', 'Expected Due Dates', 'Calving Events', 'Offspring Tracking'],
+      Nutrition: ['Feeding Events', 'Ration Plans', 'Supplements', 'Water Intake', 'Feed Conversion Ratio'],
+      Measurements: ['Weight Logs', 'Body Condition Score', 'Body Measurements', 'Growth Curves'],
+      Finance: ['Acquisition Cost', 'Feed Cost', 'Vet Cost', 'Revenue', 'ROI', 'Profit/Loss'],
+      Compliance: ['Insurance', 'Certificates', 'Movement Permits', 'Registration Papers', 'Audit Trail']
+    },
+    goats: {
+      Registry: ['Goat Profiles', 'Tag Numbers', 'Breed Records', 'Parentage', 'Age Groups', 'Photos'],
+      Health: ['Health Events', 'Disease Cases', 'Deworming', 'Vaccinations', 'Treatments', 'Mortality Records'],
+      Breeding: ['Mating Records', 'Buck Usage', 'Pregnancy Tracking', 'Kidding Records', 'Litter Size', 'Breeding Performance'],
+      Kids: ['Kid Registry', 'Birth Weight', 'Colostrum Intake', 'Navel Care', 'Weaning Logs', 'Kid Health'],
+      Nutrition: ['Feed Plans', 'Grazing Notes', 'Supplementation', 'Mineral Intake', 'Feed Costs'],
+      Production: ['Milk by Doe', 'Meat Growth', 'Body Weight Trend', 'Cull/Sale Records'],
+      Housing: ['Pen Allocation', 'Movement History', 'Pasture Rotation', 'Biosecurity Status']
+    },
+    canines: {
+      Registry: ['Dog Profiles', 'Role Assignment', 'Breed & Sex', 'Age Records', 'Working Group'],
+      Health: ['Health Checks', 'Conditions', 'Treatments', 'Vet Notes', 'Emergency Incidents'],
+      Vaccination: ['Vaccine Schedule', 'Rabies', 'Boosters Due', 'Vaccination Certificates'],
+      Husbandry: ['Feeding Log', 'Housing Conditions', 'Exercise Log', 'Grooming Log', 'Supplements'],
+      Work: ['Duty Type', 'Training Level', 'Task Performance', 'Patrol/Guard Rounds'],
+      Breeding: ['Breeding Pairing', 'Heat Tracking', 'Pregnancy', 'Puppy Outcome']
+    },
+    poultry: {
+      Flocks: ['Flock Registry', 'Batch Intake', 'Housing Type', 'Mortality', 'Flock Status'],
+      Birds: ['Bird Profiles', 'Tagging', 'Sex Ratio', 'Breed Tracking', 'Growth Monitoring'],
+      Eggs: ['Daily Collection', 'Broken Eggs', 'Sold Eggs', 'Used Eggs', 'Egg Revenue'],
+      Health: ['Vaccinations', 'Disease Events', 'Treatments', 'Medication', 'Biosecurity Checks'],
+      Feeding: ['Feed Types', 'Feed Quantity', 'Feed Cost', 'Conversion Rate', 'Water Monitoring'],
+      Production: ['Layer Performance', 'Broiler Growth', 'FCR', 'Output Trend'],
+      Compliance: ['Vaccination Program', 'Batch Records', 'Farm Audit Entries']
+    },
+    bsf: {
+      Colonies: ['Colony Registry', 'Population Estimates', 'Colony Status', 'Lifecycle Stage'],
+      Feeding: ['Substrate Type', 'Feeding Amount', 'Feed Cost', 'Feeding Frequency'],
+      Environment: ['Temperature', 'Humidity', 'Location', 'Environmental Deviations'],
+      Harvest: ['Harvest Type', 'Quantity', 'Weight', 'Quality Grade', 'Purpose'],
+      Processing: ['Drying/Bagging', 'Frass Output', 'Storage Records', 'Batch Tracking'],
+      Finance: ['Production Cost', 'Sales Revenue', 'Unit Economics', 'Profitability']
+    }
+  }
+
+  const flattenCatalog = (catalog) => Object.values(catalog || {}).flat()
+  const getAnimalsTabForRecord = (domain, item) => {
+    const d = String(domain || '').toLowerCase()
+    const i = String(item || '').toLowerCase()
+
+    if (d === 'health' && i.includes('treatment')) return 'treatment'
+    if (i.includes('treatment')) return 'treatment'
+    if (d === 'nutrition' || i.includes('feed') || i.includes('ration') || i.includes('water')) return 'feeding'
+    if (d === 'measurements' || i.includes('weight') || i.includes('body condition') || i.includes('measurement')) return 'measurement'
+    if (d === 'breeding' || i.includes('pregnancy') || i.includes('calving') || i.includes('service') || i.includes('heat')) return 'breeding'
+    if (d === 'health' || i.includes('vaccin') || i.includes('diagnos') || i.includes('vet') || i.includes('allerg') || i.includes('quarantine')) return 'health'
+    if (d === 'production' || i.includes('milk') || i.includes('lactation') || i.includes('yield')) return 'milkyield'
+    return 'list'
+  }
+
+  const getGoatViewForRecord = (domain, item) => {
+    const d = String(domain || '').toLowerCase()
+    const i = String(item || '').toLowerCase()
+
+    if (d === 'kids' || i.includes('kid') || i.includes('wean') || i.includes('colostrum')) return 'kids'
+    if (d === 'breeding' || i.includes('mating') || i.includes('kidding') || i.includes('pregnan')) return 'breeding'
+    if (d === 'health' || i.includes('health') || i.includes('vaccine') || i.includes('deworm') || i.includes('treatment')) return 'health'
+    return 'goats'
+  }
+
+  const getPoultryViewForRecord = (domain, item) => {
+    const d = String(domain || '').toLowerCase()
+    const i = String(item || '').toLowerCase()
+
+    if (d === 'eggs' || i.includes('egg')) return 'eggs'
+    if (d === 'birds' || i.includes('bird') || i.includes('sex ratio') || i.includes('growth')) return 'birds'
+    if (d === 'health' || d === 'compliance' || i.includes('vaccine') || i.includes('disease') || i.includes('medication') || i.includes('biosecurity')) return 'health'
+    return 'flocks'
+  }
+
+  const getCanineTabForRecord = (domain, item) => {
+    const d = String(domain || '').toLowerCase()
+    const i = String(item || '').toLowerCase()
+
+    if (d === 'vaccination' || i.includes('vaccine') || i.includes('rabies') || i.includes('booster')) return 'vaccines'
+    if (d === 'husbandry' || i.includes('groom') || i.includes('exercise') || i.includes('feeding')) return 'husbandry'
+    if (d === 'health' || i.includes('health') || i.includes('vet') || i.includes('treatment')) return 'health'
+    return 'list'
+  }
+
+  const getBsfTabForRecord = (domain, item) => {
+    const d = String(domain || '').toLowerCase()
+    const i = String(item || '').toLowerCase()
+
+    if (d === 'feeding' || i.includes('feed') || i.includes('substrate')) return 'feeding'
+    if (d === 'harvest' || d === 'processing' || d === 'finance' || i.includes('harvest') || i.includes('frass') || i.includes('sales') || i.includes('revenue') || i.includes('profit')) return 'harvest'
+    return 'colonies'
+  }
+
+  const openLivestockRecord = (sectionKey, domain, item) => {
+    const source = { domain, item }
+
+    if (sectionKey === 'animals') {
+      setAnimalsInitialTab(getAnimalsTabForRecord(domain, item))
+      setAnimalsRecordSource(source)
+      setView('animals')
+      return
+    }
+
+    if (sectionKey === 'goats') {
+      setGoatInitialView(getGoatViewForRecord(domain, item))
+      setGoatRecordSource(source)
+      setView('goats')
+      return
+    }
+
+    if (sectionKey === 'poultry') {
+      setPoultryInitialView(getPoultryViewForRecord(domain, item))
+      setPoultryRecordSource(source)
+      setView('poultry')
+      return
+    }
+
+    if (sectionKey === 'canines') {
+      setCanineInitialTab(getCanineTabForRecord(domain, item))
+      setCanineRecordSource(source)
+      setView('canines')
+      return
+    }
+
+    if (sectionKey === 'bsf') {
+      setBsfInitialTab(getBsfTabForRecord(domain, item))
+      setBsfRecordSource(source)
+      setView('bsf')
+      return
+    }
+
+    setView(sectionKey)
+  }
+
+  const scoreColor = (score) => {
+    if (score >= 85) return { bg: '#dcfce7', fg: '#166534' }
+    if (score >= 65) return { bg: '#fef3c7', fg: '#92400e' }
+    return { bg: '#fee2e2', fg: '#991b1b' }
+  }
+
   const livestockSections = {
     animals: {
       icon: '🥛',
       title: 'Dairy',
       description: 'Cattle records, milk tracking, breeding, treatment, and feeding.',
-      subsections: ['Registry', 'Feeding', 'Health', 'Treatment', 'Breeding', 'Milk', 'Measurement'],
+      subsections: flattenCatalog(LIVESTOCK_RECORD_CATALOG.animals),
       count: livestockCounts.dairy,
-      countLabel: 'animals'
+      countLabel: 'animals',
+      quality: livestockQualityScores.dairy
     },
     goats: {
       icon: '🐐',
       title: 'Goat',
       description: 'Goat herd records, health events, breeding cycles, and kids.',
-      subsections: ['Goats', 'Health', 'Breeding', 'Kids'],
+      subsections: flattenCatalog(LIVESTOCK_RECORD_CATALOG.goats),
       count: livestockCounts.goats,
-      countLabel: 'goats'
+      countLabel: 'goats',
+      quality: livestockQualityScores.goat
     },
     canines: {
       icon: '🐕',
       title: 'Canine',
       description: 'Working dog records, vaccines, health checks, and husbandry.',
-      subsections: ['List', 'Health', 'Vaccine', 'Husbandry'],
+      subsections: flattenCatalog(LIVESTOCK_RECORD_CATALOG.canines),
       count: livestockCounts.canines,
-      countLabel: 'dogs'
+      countLabel: 'dogs',
+      quality: livestockQualityScores.canine
     },
     poultry: {
       icon: '🐔',
       title: 'Poultry',
       description: 'Flocks, birds, egg production, and poultry health records.',
-      subsections: ['Flocks', 'Birds', 'Eggs', 'Health'],
+      subsections: flattenCatalog(LIVESTOCK_RECORD_CATALOG.poultry),
       count: livestockCounts.poultry,
-      countLabel: 'flocks'
+      countLabel: 'flocks',
+      quality: livestockQualityScores.poultry
     },
     bsf: {
       icon: '🪰',
       title: 'BSF',
       description: 'Black soldier fly colonies, feed logs, harvests, and production.',
-      subsections: ['Colonies', 'Feeding', 'Harvest'],
+      subsections: flattenCatalog(LIVESTOCK_RECORD_CATALOG.bsf),
       count: livestockCounts.bsf,
-      countLabel: 'colonies'
+      countLabel: 'colonies',
+      quality: livestockQualityScores.bsf
     }
   }
 
@@ -605,6 +867,13 @@ function AppContent() {
                 {section.count} {section.countLabel}
               </span>
             </div>
+            {section.quality && (
+              <div style={{ marginBottom: '8px' }}>
+                <span style={{ fontSize: '11px', fontWeight: '700', padding: '3px 8px', borderRadius: '999px', background: active ? 'rgba(255,255,255,0.24)' : scoreColor(section.quality.score).bg, color: active ? '#ffffff' : scoreColor(section.quality.score).fg }}>
+                  Quality {section.quality.score}% ({section.quality.issues} issues)
+                </span>
+              </div>
+            )}
             <div style={{ fontSize: '12px', lineHeight: 1.5, opacity: active ? 0.95 : 0.8 }}>
               {section.description}
             </div>
@@ -616,6 +885,9 @@ function AppContent() {
 
   const renderLivestockShell = (sectionKey, content) => {
     const section = livestockSections[sectionKey]
+    const sectionCatalog = LIVESTOCK_RECORD_CATALOG[sectionKey] || {}
+    const sectionDomains = Object.entries(sectionCatalog)
+    const totalSubmodules = sectionDomains.reduce((acc, [, items]) => acc + items.length, 0)
 
     return (
       <section>
@@ -627,6 +899,13 @@ function AppContent() {
             <div>
               <div style={{ fontSize: '26px', fontWeight: '800', color: '#065f46', marginBottom: '6px' }}>{section.icon} {section.title} Section</div>
               <div style={{ color: '#475569', maxWidth: '760px', lineHeight: 1.6 }}>{section.description}</div>
+              {section.quality && (
+                <div style={{ marginTop: '8px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '700', padding: '4px 9px', borderRadius: '999px', background: scoreColor(section.quality.score).bg, color: scoreColor(section.quality.score).fg }}>
+                    Data Quality Score: {section.quality.score}% ({section.quality.issues} issues)
+                  </span>
+                </div>
+              )}
             </div>
             <div style={{ minWidth: '140px', padding: '14px 16px', background: '#ffffff', borderRadius: '12px', border: '1px solid #d1fae5', boxShadow: colors.shadow.sm }}>
               <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280', marginBottom: '4px' }}>Current Count</div>
@@ -635,12 +914,34 @@ function AppContent() {
             </div>
           </div>
           {renderLivestockSubNav()}
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {section.subsections.map(subsection => (
-              <span key={subsection} style={{ padding: '6px 10px', borderRadius: '999px', background: '#ffffff', border: '1px solid #d1fae5', color: '#065f46', fontSize: '12px', fontWeight: '700' }}>
-                {subsection}
-              </span>
-            ))}
+          <div style={{ marginTop: 14, padding: '12px', borderRadius: '12px', background: '#ffffff', border: '1px solid #d1fae5' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#065f46' }}>
+                Comprehensive Record Coverage
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: '#ecfdf5', borderRadius: 999, padding: '4px 10px' }}>
+                {sectionDomains.length} domains • {totalSubmodules} submodules
+              </div>
+            </div>
+            <div style={{ display: 'grid', gap: 10 }}>
+              {sectionDomains.map(([domain, items]) => (
+                <div key={domain} style={{ border: '1px solid #e2f6ea', borderRadius: 10, padding: '10px 10px 8px', background: '#f8fffb' }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: '#047857', marginBottom: 6 }}>{domain}</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {items.map(item => (
+                      <button
+                        key={item}
+                        onClick={() => openLivestockRecord(sectionKey, domain, item)}
+                        title={`Open ${section.title} → ${item}`}
+                        style={{ padding: '4px 9px', borderRadius: 999, background: '#ffffff', border: '1px solid #d1fae5', color: '#065f46', fontSize: 11, fontWeight: '700', cursor: 'pointer' }}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         <ErrorBoundary>{content}</ErrorBoundary>
@@ -682,6 +983,22 @@ function AppContent() {
         alignItems: 'center',
         rowGap: '6px'
       }}>
+          <button 
+            className={view==='landing'? 'active':''}
+            onClick={()=>setView('landing')}
+            style={{
+              background: view==='landing' ? '#0f766e' : '#f3f4f6',
+              color: view==='landing' ? '#fff' : '#1f2937',
+              order: -11,
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              transition: 'all 0.2s'
+            }}
+          >🌟 Home</button>
           <button 
             className={view==='dashboard'? 'active':''} 
             onClick={()=>setView('dashboard')}
@@ -1010,7 +1327,7 @@ function AppContent() {
           {view === 'notifications' && <ErrorBoundary><NotificationCenter /></ErrorBoundary>}
 
           {view === 'animals' && (
-            renderLivestockShell('animals', <Animals section="dairy" />)
+            renderLivestockShell('animals', <Animals section="dairy" initialTab={animalsInitialTab} recordSource={animalsRecordSource} />)
           )}
           {view === 'pastures' && (
             <section>
@@ -1022,19 +1339,19 @@ function AppContent() {
           )}
 
           {view === 'goats' && (
-            renderLivestockShell('goats', <GoatModule />)
+            renderLivestockShell('goats', <GoatModule initialMainView={goatInitialView} recordSource={goatRecordSource} />)
           )}
 
           {view === 'canines' && (
-            renderLivestockShell('canines', <CanineManagement animals={animals} setAnimals={setAnimals} />)
+            renderLivestockShell('canines', <CanineManagement animals={animals} setAnimals={setAnimals} initialTab={canineInitialTab} recordSource={canineRecordSource} />)
           )}
 
           {view === 'poultry' && (
-            renderLivestockShell('poultry', <PoultryManagement />)
+            renderLivestockShell('poultry', <PoultryManagement initialView={poultryInitialView} recordSource={poultryRecordSource} />)
           )}
 
           {view === 'bsf' && (
-            renderLivestockShell('bsf', <BSFFarming />)
+            renderLivestockShell('bsf', <BSFFarming initialTab={bsfInitialTab} recordSource={bsfRecordSource} />)
           )}
 
           {view === 'animal-health' && (

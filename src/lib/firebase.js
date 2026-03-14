@@ -50,10 +50,32 @@ const isDev = typeof window !== 'undefined' && (
   window.location.hostname.includes('githubpreview.dev')
 );
 
-// Allow opt-out for persistence (useful in Codespaces, CI, or when multiple tabs
-// / windows cause IndexedDB ownership conflicts). Set VITE_DISABLE_FIRESTORE_PERSISTENCE=true
-// to force memory-only mode.
-const disablePersistence = import.meta.env.VITE_DISABLE_FIRESTORE_PERSISTENCE === 'true' || isDev
+// Firestore persistence policy:
+// - Production: enabled by default for offline/local cache benefits.
+// - Development/Codespaces: disabled by default to avoid IndexedDB ownership conflicts.
+// - Overrides:
+//   - VITE_ENABLE_FIRESTORE_PERSISTENCE=true  => force enable
+//   - VITE_DISABLE_FIRESTORE_PERSISTENCE=true => force disable
+//   - localStorage devinsfarm:firestore:persistence = 'enabled' | 'disabled'
+const forceDisablePersistence = import.meta.env.VITE_DISABLE_FIRESTORE_PERSISTENCE === 'true'
+const forceEnablePersistence = import.meta.env.VITE_ENABLE_FIRESTORE_PERSISTENCE === 'true'
+const allowDevPersistence = import.meta.env.VITE_ALLOW_DEV_FIRESTORE_PERSISTENCE === 'true'
+let runtimePersistencePreference = null
+try {
+  if (typeof window !== 'undefined') {
+    const pref = localStorage.getItem('devinsfarm:firestore:persistence')
+    if (pref === 'enabled' || pref === 'disabled') {
+      runtimePersistencePreference = pref
+    }
+  }
+} catch (e) {
+  runtimePersistencePreference = null
+}
+
+const disablePersistence =
+  forceDisablePersistence ||
+  (runtimePersistencePreference === 'disabled') ||
+  (!forceEnablePersistence && isDev && (!allowDevPersistence || runtimePersistencePreference !== 'enabled'))
 
 try {
   if (isFirebaseConfigured()) {

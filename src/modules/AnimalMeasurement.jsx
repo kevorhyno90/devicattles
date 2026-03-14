@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, exportToPDF } from '../lib/exportImport'
 import AnimalCV from '../components/animal/AnimalCV'
 import { recordClick } from '../lib/clickDB'
+import { getMeasurementPhase2Insights } from '../lib/livestockPhase1'
 
 const SAMPLE = [
   { id: 'MEAS-001', animalId: 'A-001', date: '2025-06-02', timestamp: '2025-06-02T10:00:00', type: 'Weight', value: 450, unit: 'kg', bcs: 3.5, height: null, length: null, girth: null, condition: 'Good', measuredBy: 'Farm Staff', notes: 'Regular check' },
@@ -23,7 +24,9 @@ const CONDITIONS = ['Excellent', 'Good', 'Fair', 'Poor', 'Concern']
 
 export default function AnimalMeasurement({ animals }){
   const KEY = 'cattalytics:animal:measurement'
+  const TARGET_KEY = 'cattalytics:animal:targetWeight'
   const [items, setItems] = useState([])
+  const [targetWeights, setTargetWeights] = useState({})
   const [animalId, setAnimalId] = useState(animals && animals[0] ? animals[0].id : '')
   const [type, setType] = useState('Weight')
   const [value, setValue] = useState('')
@@ -52,9 +55,20 @@ export default function AnimalMeasurement({ animals }){
     const raw = localStorage.getItem(KEY)
     if(raw) setItems(JSON.parse(raw))
     else setItems(SAMPLE)
+
+    const targetRaw = localStorage.getItem(TARGET_KEY)
+    if (targetRaw) {
+      try {
+        const parsed = JSON.parse(targetRaw)
+        if (parsed && typeof parsed === 'object') setTargetWeights(parsed)
+      } catch {
+        // Ignore target weight parse errors.
+      }
+    }
   }, [])
 
   useEffect(()=> localStorage.setItem(KEY, JSON.stringify(items)), [items])
+  useEffect(() => localStorage.setItem(TARGET_KEY, JSON.stringify(targetWeights)), [targetWeights])
 
   function add(){
     if(!animalId || (!value && !bcs && !height && !length && !girth)) {
@@ -200,10 +214,12 @@ export default function AnimalMeasurement({ animals }){
   }
 
   const filteredItems = items.filter(i => {
-    if(filterAnimal !== 'all' && item.animalId !== filterAnimal) return false
-    if(filterType !== 'all' && item.type !== filterType) return false
+    if(filterAnimal !== 'all' && i.animalId !== filterAnimal) return false
+    if(filterType !== 'all' && i.type !== filterType) return false
     return true
   })
+
+  const phase2Insights = getMeasurementPhase2Insights(filteredItems, targetWeights)
 
   // Calculate statistics per animal
   const animalStats = {}
@@ -418,6 +434,7 @@ export default function AnimalMeasurement({ animals }){
         <div style={{ display: 'grid', gap: 16 }}>
           {Object.entries(animalStats).map(([aId, stats]) => {
             const animal = (animals||[]).find(a => a.id === aId)
+            const growth = phase2Insights[aId]
             return (
               <div key={aId} className="card" style={{ padding: 20 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -464,6 +481,39 @@ export default function AnimalMeasurement({ animals }){
                     <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Total Measurements</div>
                     <div style={{ fontSize: 18, fontWeight: 600 }}>{stats.measurements.length}</div>
                   </div>
+                </div>
+
+                <div className="card" style={{ padding: 12, background: '#f8fafc', marginBottom: 16 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, alignItems: 'end' }}>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#475569', marginBottom: 4 }}>Target Weight (kg)</div>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={targetWeights[aId] || ''}
+                        onChange={(e) => setTargetWeights((prev) => ({ ...prev, [aId]: e.target.value }))}
+                        placeholder="Set target"
+                      />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#475569', marginBottom: 4 }}>Growth Rate</div>
+                      <div style={{ fontWeight: 700, color: (growth?.growthRatePerDay || 0) >= 0 ? '#059669' : '#dc2626' }}>
+                        {growth ? `${growth.growthRatePerDay >= 0 ? '+' : ''}${growth.growthRatePerDay.toFixed(3)} kg/day` : 'N/A'}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#475569', marginBottom: 4 }}>Target Progress</div>
+                      <div style={{ fontWeight: 700, color: '#1d4ed8' }}>
+                        {growth?.progressPct != null ? `${growth.progressPct.toFixed(1)}%` : 'Set target weight'}
+                      </div>
+                    </div>
+                  </div>
+                  {growth?.progressPct != null && (
+                    <div style={{ marginTop: 8, height: 10, background: '#e2e8f0', borderRadius: 999, overflow: 'hidden' }}>
+                      <div style={{ width: `${Math.max(2, Math.min(100, growth.progressPct))}%`, height: '100%', background: growth.progressPct >= 100 ? '#059669' : '#3b82f6' }} />
+                    </div>
+                  )}
                 </div>
 
                 {/* Weight Progress Chart (simplified) */}

@@ -9,8 +9,10 @@ import App from './App';
 // import { initializeAudio } from './lib/notifications.js';
 import './styles.css'
 
+const FIRESTORE_DIAGNOSTICS = import.meta.env.VITE_FIRESTORE_DIAGNOSTICS === 'true';
+
 // Suppress Zustand and other deprecation warnings before any modules load
-(function() {
+;(function() {
   const zustandWarningRegex = /\[DEPRECATED\].*Zustand|Default export is deprecated.*zustand/i;
   
   const suppressWarning = function(originalMethod) {
@@ -87,33 +89,31 @@ const root = createRoot(rootElement);
 let loadingTimeout;
 try {
   root.render(
-    <React.StrictMode>
-      <BrowserRouter
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true
-        }}
-      >
-        <div id="initial-loading" style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          flexDirection: 'column',
-          gap: '16px'
-        }}>
-          <div style={{
-            width: '50px',
-            height: '50px',
-            border: '4px solid #e5e7eb',
-            borderTopColor: '#059669',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite'
-          }}></div>
-          <div id="loading-message" style={{ color: '#059669', fontSize: '16px', fontWeight: '600' }}>Loading...</div>
-        </div>
-      </BrowserRouter>
-    </React.StrictMode>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
+      <div id="initial-loading" style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <div style={{
+          width: '50px',
+          height: '50px',
+          border: '4px solid #e5e7eb',
+          borderTopColor: '#059669',
+          borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite'
+        }}></div>
+        <div id="loading-message" style={{ color: '#059669', fontSize: '16px', fontWeight: '600' }}>Loading...</div>
+      </div>
+    </BrowserRouter>
   );
   // If providers take >2s, show a more informative message
   loadingTimeout = setTimeout(() => {
@@ -166,16 +166,22 @@ try {
             const storageMod = await importWithTimeout(import('./lib/storage'), 2000);
             const { auth } = firebaseMod;
             const { STORES } = storageMod;
-            console.info('Firestore diagnostic - STORES:', Object.keys(STORES || {}));
+            if (FIRESTORE_DIAGNOSTICS) {
+              console.info('Firestore diagnostic - STORES:', Object.keys(STORES || {}));
+            }
             if (auth) {
               try {
                 const unsubscribe = auth.onAuthStateChanged(u => {
-                  console.info('Firestore diagnostic - onAuthStateChanged:', u ? { uid: u.uid, email: u.email } : null);
+                  if (FIRESTORE_DIAGNOSTICS) {
+                    console.info('Firestore diagnostic - onAuthStateChanged:', u ? { uid: u.uid, email: u.email } : null);
+                  }
                   if (u) {
                     try { startFirestoreSync() } catch (e) { console.warn('Firestore sync start failed:', e) }
                     try { if (typeof unsubscribe === 'function') unsubscribe() } catch (e) {}
                   } else {
-                    console.info('Skipping Firestore sync: user not authenticated yet.')
+                    if (FIRESTORE_DIAGNOSTICS) {
+                      console.info('Skipping Firestore sync: user not authenticated yet.')
+                    }
                   }
                 });
               } catch (e) {
@@ -183,7 +189,9 @@ try {
                 try { startFirestoreSync() } catch (e2) { console.warn('Firestore sync start failed (fallback):', e2) }
               }
             } else {
-              console.info('Firestore diagnostic - auth not initialized; skipping sync')
+              if (FIRESTORE_DIAGNOSTICS) {
+                console.info('Firestore diagnostic - auth not initialized; skipping sync')
+              }
             }
           } catch (probeErr) {
             console.warn('Firestore diagnostic probe failed:', probeErr);
@@ -197,32 +205,30 @@ try {
       // Render the app using available providers. If ThemeProvider or AppViewProvider
       // failed to load, render the app without them so the UI becomes interactive.
       root.render(
-        <React.StrictMode>
-          <BrowserRouter
-            future={{
-              v7_startTransition: true,
-              v7_relativeSplatPath: true
-            }}
-          >
-            {ThemeProvider ? (
-              <ThemeProvider>
-                {AppViewProvider ? (
-                  <AppViewProvider>
-                    <App />
-                  </AppViewProvider>
-                ) : (
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}
+        >
+          {ThemeProvider ? (
+            <ThemeProvider>
+              {AppViewProvider ? (
+                <AppViewProvider>
                   <App />
-                )}
-              </ThemeProvider>
-            ) : AppViewProvider ? (
-              <AppViewProvider>
+                </AppViewProvider>
+              ) : (
                 <App />
-              </AppViewProvider>
-            ) : (
+              )}
+            </ThemeProvider>
+          ) : AppViewProvider ? (
+            <AppViewProvider>
               <App />
-            )}
-          </BrowserRouter>
-        </React.StrictMode>
+            </AppViewProvider>
+          ) : (
+            <App />
+          )}
+        </BrowserRouter>
       );
     } catch (err) {
       clearTimeout(loadingTimeout);
@@ -255,27 +261,35 @@ if ('serviceWorker' in navigator && !isDev && !isCodespaces) {
       try {
         // Check if we need to clear old caches (only on first install or major update)
         const SW_VERSION = '1.0.0';
-        const storedVersion = localStorage.getItem('sw-version');
-      
-      if (storedVersion !== SW_VERSION) {
-        console.log('🔄 Clearing old caches for update');
-        const registrations = await navigator.serviceWorker.getRegistrations()
-        for (let reg of registrations) {
-          try {
-            await reg.unregister()
-          } catch (e) {
-            console.warn('Failed to unregister service worker:', e)
-          }
+        let storedVersion = null
+        try {
+          storedVersion = localStorage.getItem('sw-version')
+        } catch (e) {
+          storedVersion = null
         }
-        
-        if ('caches' in window) {
-          const cacheNames = await caches.keys()
-          for (let cacheName of cacheNames) {
-            await caches.delete(cacheName)
+
+        // First run: just stamp version to avoid unnecessary unregister cycles.
+        if (!storedVersion) {
+          try { localStorage.setItem('sw-version', SW_VERSION) } catch (e) {}
+        } else if (storedVersion !== SW_VERSION) {
+          console.log('🔄 Clearing old caches for update');
+          const registrations = await navigator.serviceWorker.getRegistrations()
+          for (let reg of registrations) {
+            try {
+              await reg.unregister()
+            } catch (e) {
+              console.warn('Failed to unregister service worker:', e)
+            }
           }
+
+          if ('caches' in window) {
+            const cacheNames = await caches.keys()
+            for (let cacheName of cacheNames) {
+              await caches.delete(cacheName)
+            }
+          }
+          try { localStorage.setItem('sw-version', SW_VERSION) } catch (e) {}
         }
-        localStorage.setItem('sw-version', SW_VERSION);
-      }
       
       // Register the service worker
       const reg = await navigator.serviceWorker.register('/sw.js', {

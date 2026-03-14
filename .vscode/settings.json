@@ -1,7 +1,7 @@
 {
     "python-envs.defaultEnvManager": "ms-python.python:system",
     "python-envs.pythonProjects": [],
-    "typescript.tsserver.maxTsServerMemory": 256,
+    "typescript.tsserver.maxTsServerMemory": 4096,
     "typescript.tsserver.log": "off",
     "typescript.disableAutomaticTypeAcquisition": true,
     "typescript.enablePromptUseWorkspaceTsdk": false,
@@ -24,5 +24,12 @@
     "[html]": {"editor.defaultFormatter": null},
     "[css]": {"editor.defaultFormatter": null},
     "[json]": {"editor.defaultFormatter": null},
-    "diffEditor.ignoreTrimWhitespace": true
+    "diffEditor.ignoreTrimWhitespace": true,
+    "typescript.tsserver.watchOptions": {
+        "watchFile": "useFsEventsOnParentDirectory",
+        "watchDirectory": "useFsEvents",
+        "fallbackPolling": "dynamicPriority"
+    },
+    "typescript.tsserver.useSeparateSyntaxServer": true,
+    "typescript.tsserver.experimental.enableProjectDiagnostics": false
 }

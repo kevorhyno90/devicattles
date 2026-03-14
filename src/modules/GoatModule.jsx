@@ -5,6 +5,9 @@ import { useDebounce } from '../lib/useDebounce'
 import { logAnimalActivity } from '../lib/activityLogger'
 import { BarChart } from '../components/Charts'
 import { savePhoto, deletePhoto, getPhotosByEntity } from '../lib/photoAnalysis'
+import { recordExpense } from '../lib/moduleIntegration'
+import { NOTIFICATION_TYPES, PRIORITIES } from '../lib/notifications'
+import { validateGoatHealthInput, validateGoatBreedingInput, validateKidHealthInput, scheduleLivestockReminder } from '../lib/livestockPhase1'
 
 const GOAT_KEY = 'cattalytics:goats'
 const HEALTH_KEY = 'cattalytics:goat_health'
@@ -23,7 +26,7 @@ const HEALTH_STATUS = ['Healthy', 'Sick', 'Under Treatment', 'Quarantine', 'Reco
 const HOUSING_TYPES = ['Individual Pen', 'Group Pen', 'Barn', 'Pasture', 'Free Range']
 const COLOSTRUM_INTAKE = ['Adequate', 'Insufficient', 'Unknown']
 
-export default function GoatModule() {
+export default function GoatModule({ initialMainView = 'goats', recordSource = null }) {
   const [goats, setGoats] = useState([])
   const [healthRecords, setHealthRecords] = useState([])
   const [breedingRecords, setBreedingRecords] = useState([])
@@ -49,6 +52,13 @@ export default function GoatModule() {
   const [showKidHealthForm, setShowKidHealthForm] = useState(false)
   const [editingKidHealthId, setEditingKidHealthId] = useState(null)
   const [kidSearch, setKidSearch] = useState('')
+
+  useEffect(() => {
+    const allowed = new Set(['goats', 'health', 'breeding', 'kids'])
+    if (allowed.has(initialMainView) && initialMainView !== mainView) {
+      setMainView(initialMainView)
+    }
+  }, [initialMainView, mainView])
 
   const sectionTabsStyle = {
     display: 'flex',
@@ -312,8 +322,15 @@ export default function GoatModule() {
   }
 
   const handleSaveHealth = () => {
-    if (!healthFormData.goatId || !healthFormData.eventType) {
-      showToast('Goat and event type are required', 'error')
+    const validation = validateGoatHealthInput({
+      goatId: healthFormData.goatId,
+      eventType: healthFormData.eventType,
+      cost: healthFormData.cost,
+      followUpDate: healthFormData.followUpDate
+    })
+
+    if (!validation.valid) {
+      showToast(validation.errors[0], 'error')
       return
     }
 
@@ -330,6 +347,32 @@ export default function GoatModule() {
     setHealthRecords(updated)
     setShowHealthForm(false)
     setEditingHealthId(null)
+
+    const treatmentCost = parseFloat(healthFormData.cost) || 0
+    if (treatmentCost > 0) {
+      recordExpense({
+        amount: treatmentCost,
+        category: 'Veterinary',
+        subcategory: healthFormData.eventType,
+        description: `Goat health event for ${healthFormData.goatName}: ${healthFormData.condition || healthFormData.eventType}`,
+        vendor: healthFormData.veterinarian || 'Vet Service',
+        source: 'Goat Health',
+        linkedId: editingHealthId || updated[updated.length - 1]?.id || ''
+      })
+    }
+
+    if (healthFormData.followUpDate) {
+      scheduleLivestockReminder({
+        type: NOTIFICATION_TYPES.HEALTH,
+        title: `Goat follow-up: ${healthFormData.goatName}`,
+        body: `Follow-up for ${healthFormData.eventType} (${healthFormData.condition || 'health event'}).`,
+        dueDate: healthFormData.followUpDate,
+        entityId: healthFormData.goatId,
+        entityType: 'goat-health',
+        priority: PRIORITIES.HIGH
+      })
+    }
+
     logAnimalActivity('Health', 'Goat', healthFormData.goatName, `Health event: ${healthFormData.eventType}`)
   }
 
@@ -365,8 +408,14 @@ export default function GoatModule() {
   }
 
   const handleSaveBreeding = () => {
-    if (!breedingFormData.goatId || !breedingFormData.eventType) {
-      showToast('Goat and event type are required', 'error')
+    const validation = validateGoatBreedingInput({
+      goatId: breedingFormData.goatId,
+      eventType: breedingFormData.eventType,
+      expectedDueDate: breedingFormData.expectedDueDate
+    })
+
+    if (!validation.valid) {
+      showToast(validation.errors[0], 'error')
       return
     }
 
@@ -393,6 +442,19 @@ export default function GoatModule() {
     setBreedingRecords(updated)
     setShowBreedingForm(false)
     setEditingBreedingId(null)
+
+    if (breedingFormData.expectedDueDate) {
+      scheduleLivestockReminder({
+        type: NOTIFICATION_TYPES.BREEDING,
+        title: `Expected kidding: ${breedingFormData.goatName}`,
+        body: `Expected due date for ${breedingFormData.goatName} is ${breedingFormData.expectedDueDate}.`,
+        dueDate: breedingFormData.expectedDueDate,
+        entityId: breedingFormData.goatId,
+        entityType: 'goat-breeding',
+        priority: PRIORITIES.MEDIUM
+      })
+    }
+
     logAnimalActivity('Breeding', 'Goat', breedingFormData.goatName, `Breeding event: ${breedingFormData.eventType}`)
   }
 
@@ -489,8 +551,15 @@ export default function GoatModule() {
   }
 
   const handleSaveKidHealth = () => {
-    if (!kidHealthForm.kidId || !kidHealthForm.type) {
-      showToast('Kid and type are required', 'error')
+    const validation = validateKidHealthInput({
+      kidId: kidHealthForm.kidId,
+      type: kidHealthForm.type,
+      cost: kidHealthForm.cost,
+      nextVisit: kidHealthForm.nextVisit
+    })
+
+    if (!validation.valid) {
+      showToast(validation.errors[0], 'error')
       return
     }
 
@@ -507,6 +576,32 @@ export default function GoatModule() {
     setKidsHealthRecords(updated)
     setEditingKidHealthId(null)
     setShowKidHealthForm(false)
+
+    const kidHealthCost = parseFloat(kidHealthForm.cost) || 0
+    if (kidHealthCost > 0) {
+      recordExpense({
+        amount: kidHealthCost,
+        category: 'Veterinary',
+        subcategory: 'Kid Health',
+        description: `Kid health event for ${kidHealthForm.kidName}: ${kidHealthForm.type}`,
+        vendor: kidHealthForm.veterinarian || 'Vet Service',
+        source: 'Goat Kids Health',
+        linkedId: editingKidHealthId || updated[updated.length - 1]?.id || ''
+      })
+    }
+
+    if (kidHealthForm.nextVisit) {
+      scheduleLivestockReminder({
+        type: NOTIFICATION_TYPES.HEALTH,
+        title: `Kid health review: ${kidHealthForm.kidName}`,
+        body: `Next visit for ${kidHealthForm.kidName} (${kidHealthForm.type}).`,
+        dueDate: kidHealthForm.nextVisit,
+        entityId: kidHealthForm.kidId,
+        entityType: 'kid-health',
+        priority: PRIORITIES.HIGH
+      })
+    }
+
     logAnimalActivity('Health', 'Kid', kidHealthForm.kidName, `Health event: ${kidHealthForm.type}`)
   }
 
@@ -576,6 +671,11 @@ export default function GoatModule() {
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}>🐐 Goat Management</h1>
         <p style={{ color: '#6b7280', fontSize: '14px' }}>Manage your goat herd with full tracking and analytics</p>
+        {recordSource?.domain && recordSource?.item && (
+          <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
+            Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
+          </div>
+        )}
         
         {/* Main View Navigation */}
         <div style={sectionTabsStyle}>
