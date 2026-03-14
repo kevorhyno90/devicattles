@@ -18,8 +18,7 @@ export default function Dashboard({ onNavigate }) {
   const [showCustomizer, setShowCustomizer] = useState(false)
   const [quickActionsTitle, setQuickActionsTitle] = useState('🩺 ezyVet Quick Actions')
   const [qaLabels, setQaLabels] = useState({
-    alerts: '🔔 Smart Alerts',
-    market: '💰 Market Prices'
+    alerts: '🔔 Smart Alerts'
   })
 
   // Persist quick actions edits
@@ -28,7 +27,10 @@ export default function Dashboard({ onNavigate }) {
       const saved = JSON.parse(localStorage.getItem('cattalytics:dashboard:qa') || 'null')
       if (saved) {
         setQuickActionsTitle(saved.title || '🩺 ezyVet Quick Actions')
-        setQaLabels(saved.labels || qaLabels)
+        const savedLabels = saved.labels || {}
+        setQaLabels({
+          alerts: savedLabels.alerts || '🔔 Smart Alerts'
+        })
       }
     } catch {}
   }, [])
@@ -1121,9 +1123,6 @@ export default function Dashboard({ onNavigate }) {
             <EditableField value={qaLabels.alerts} onChange={(v)=>setQaLabels(l=>({ ...l, alerts: v }))} inputStyle={{ fontWeight: 600 }} />
           </button>
           {/* Voice, disease, and audit quick actions removed */}
-          <button onClick={() => onNavigate && onNavigate('market')} className="btn-primary" style={{ background: '#10b981' }}>
-            <EditableField value={qaLabels.market} onChange={(v)=>setQaLabels(l=>({ ...l, market: v }))} inputStyle={{ fontWeight: 600 }} />
-          </button>
           <button onClick={() => onNavigate && onNavigate('timeline')} className="btn-primary" style={{ background: '#f59e0b' }}>
             📅 Timeline Planner
           </button>

@@ -73,7 +73,6 @@ const PoultryManagement = lazyWithRetry(() => import('./modules/PoultryManagemen
 const BSFFarming = lazyWithRetry(() => import('./modules/BSFFarming'))
 const CalendarView = lazyWithRetry(() => import('./modules/CalendarView'))
 const SmartAlerts = lazyWithRetry(() => import('./modules/SmartAlerts'))
-const MarketPrices = lazyWithRetry(() => import('./modules/MarketPrices'))
 const TimelinePlanner = lazyWithRetry(() => import('./modules/TimelinePlanner'))
 const PhotoGalleryAdvanced = lazyWithRetry(() => import('./modules/PhotoGalleryAdvanced'))
 // const GeospatialMap = lazyWithRetry(() => import('./modules/GeospatialMap')) // Module removed
@@ -245,6 +244,20 @@ function AppContent() {
   const SETTINGS_KEY = 'devinsfarm:ui:settings'
   const defaultSettings = { backgroundOn: false, background: 'bg-farm.svg', logo: 'jr-farm-logo.svg', uploadedLogo: '', theme: 'catalytics' }
   const [settings, setSettings] = useUISettings(SETTINGS_KEY, defaultSettings)
+
+  // Cleanup stale data from removed Market Prices feature.
+  useEffect(() => {
+    try {
+      const removedKeys = [
+        'cattalytics:market:prices',
+        'cattalytics:market:history',
+        'cattalytics:market:targets'
+      ]
+      removedKeys.forEach((key) => localStorage.removeItem(key))
+    } catch {
+      // localStorage may be unavailable in restricted contexts
+    }
+  }, [])
 
   // Initialize error handler and data layer on mount (dynamically imported for better performance)
   useEffect(() => {
@@ -748,22 +761,6 @@ function AppContent() {
           >
             🔔 Alert Rules
           </button>
-          {showNavMore && (<button 
-            className={view==='market'? 'active':''} 
-            onClick={()=>setView('market')}
-            style={{
-              background: view==='market' ? '#10b981' : '#f3f4f6',
-              color: view==='market' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >
-            💰 Market Prices
-          </button>)}
           {/* Farm3D button removed */}
           {showNavMore && (<button 
             className={view==='timeline'? 'active':''} 
@@ -1133,15 +1130,6 @@ function AppContent() {
               ← Back to Dashboard
             </button>
             <ErrorBoundary><SmartAlerts onNavigate={setView} /></ErrorBoundary>
-          </section>
-        )}
-
-        {view === 'market' && (
-          <section>
-            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              ← Back to Dashboard
-            </button>
-            <ErrorBoundary><MarketPrices /></ErrorBoundary>
           </section>
         )}
 

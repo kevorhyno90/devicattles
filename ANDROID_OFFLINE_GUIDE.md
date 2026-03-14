@@ -68,7 +68,7 @@
 
 ### 📊 Limited Functionality
 - Firebase sync (queued until online)
-- External API calls (weather, market prices)
+- External API calls (weather)
 - Cloud backups
 
 ### ❌ Won't Work

@@ -207,7 +207,6 @@ export default function CustomReportBuilder() {
           <option value="inventory">Inventory</option>
           <option value="resources">Resources</option>
           <option value="health">Health</option>
-          <option value="marketPrices">Market Prices</option>
           <option value="weather">Weather</option>
           <option value="alerts">Alerts</option>
           <option value="schedules">Schedules</option>
@@ -362,12 +361,6 @@ export default function CustomReportBuilder() {
           <>
             <h2>Health Full Report</h2>
             {/* ...health report UI... */}
-          </>
-        )}
-        {selectedModule === 'marketPrices' && (
-          <>
-            <h2>Market Prices Full Report</h2>
-            {/* ...market prices report UI... */}
           </>
         )}
         {selectedModule === 'weather' && (

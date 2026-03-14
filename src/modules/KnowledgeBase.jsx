@@ -180,7 +180,7 @@ export default function KnowledgeBase() {
 
     // Marketing
     if (lowerInput.includes('sell') || lowerInput.includes('market') || lowerInput.includes('price')) {
-      return 'Marketing strategies: 1) Research local market prices regularly, 2) Build relationships with buyers, 3) Consider direct-to-consumer sales, 4) Maintain quality standards for premium pricing, 5) Use the Market Prices module to track trends. The Marketplace module connects you with buyers!'
+      return 'Marketing strategies: 1) Track buyer demand regularly, 2) Build relationships with buyers, 3) Consider direct-to-consumer sales, 4) Maintain quality standards for premium pricing, 5) Review your recent sales in the Marketplace and Finance modules to spot trends.'
     }
 
     // Default response
