@@ -14,11 +14,12 @@ const FIRESTORE_DIAGNOSTICS = import.meta.env.VITE_FIRESTORE_DIAGNOSTICS === 'tr
 // Suppress Zustand and other deprecation warnings before any modules load
 ;(function() {
   const zustandWarningRegex = /\[DEPRECATED\].*Zustand|Default export is deprecated.*zustand/i;
+  const viteRestartPollingRegex = /polling for restart|polling for restarts|server connection lost/i;
   
   const suppressWarning = function(originalMethod) {
     return function(...args) {
       const message = String(args[0] || '');
-      if (zustandWarningRegex.test(message)) {
+      if (zustandWarningRegex.test(message) || viteRestartPollingRegex.test(message)) {
         return; // Suppress Zustand deprecation warning
       }
       return originalMethod.apply(console, args);
@@ -34,7 +35,7 @@ const FIRESTORE_DIAGNOSTICS = import.meta.env.VITE_FIRESTORE_DIAGNOSTICS === 'tr
   const originalError = console.error;
   console.error = function(...args) {
     const message = String(args[0] || '');
-    if (!zustandWarningRegex.test(message)) {
+    if (!zustandWarningRegex.test(message) && !viteRestartPollingRegex.test(message)) {
       originalError.apply(console, args);
     }
   };
@@ -337,6 +338,36 @@ if ('serviceWorker' in navigator && !isDev && !isCodespaces) {
     }, 1000); // Delay SW registration by 1 second
   })
 } else {
+  // In dev/Codespaces, proactively remove any previously registered SW/caches.
+  // This prevents stale production SW logic from forcing unexpected reload behavior.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      setTimeout(async () => {
+        try {
+          const regs = await navigator.serviceWorker.getRegistrations()
+          for (const reg of regs) {
+            try {
+              await reg.unregister()
+            } catch (e) {
+              // ignore
+            }
+          }
+          if ('caches' in window) {
+            const cacheNames = await caches.keys()
+            for (const cacheName of cacheNames) {
+              try {
+                await caches.delete(cacheName)
+              } catch (e) {
+                // ignore
+              }
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }, 0)
+    })
+  }
   if (import.meta.env.PROD) {
     console.info('ℹ️ Service Worker skipped - non-supported environment')
   }

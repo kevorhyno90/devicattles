@@ -8,10 +8,8 @@ import { visualizer } from 'rollup-plugin-visualizer'
 // restarts when generated files are written (dist, public assets, etc.).
 const DEV_PERSISTENT = process.env.DEV_PERSISTENT === '1' || process.env.DEV_PERSISTENT === 'true';
 const CODESPACE_NAME = process.env.CODESPACE_NAME || '';
-const GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN = process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN || 'app.github.dev';
-const CODESPACES_HMR_HOST = CODESPACE_NAME
-  ? `${CODESPACE_NAME}-5000.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}`
-  : undefined;
+const GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN = process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN || '';
+const IS_CODESPACES = Boolean(CODESPACE_NAME || process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN);
 const WATCH_IGNORED_BASE = [
   '**/node_modules/**',
   '**/.git/**',
@@ -34,7 +32,10 @@ if (DEV_PERSISTENT) {
   WATCH_IGNORED_BASE.push('src/lib/**', 'src/components/**', 'src/main.jsx', 'index.html');
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => {
+  const isBuild = command === 'build'
+
+  return {
   // Set the base path for deployment to a subdirectory (GitHub Pages)
   // For Vercel, use root path
   base: '/',
@@ -59,8 +60,8 @@ export default defineConfig({
 
   plugins: [
     react(),
-    visualizer({ filename: 'dist/bundle-report.html', open: false }),
-    VitePWA({
+    ...(isBuild ? [visualizer({ filename: 'dist/bundle-report.html', open: false })] : []),
+    ...(isBuild ? [VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       strategies: 'generateSW',
@@ -166,27 +167,16 @@ export default defineConfig({
           },
         ],
       },
-    }),
+    })] : []),
   ],
   server: {
     host: '0.0.0.0',
     port: 5000,
     strictPort: false,
     allowedHosts: true,
-    // Configure HMR explicitly for Codespaces to avoid localhost websocket mismatches.
-    hmr: CODESPACES_HMR_HOST
-      ? {
-          protocol: 'wss',
-          host: CODESPACES_HMR_HOST,
-          clientPort: 443,
-          overlay: true
-        }
-      : {
-          protocol: 'ws',
-          host: 'localhost',
-          clientPort: 5000,
-          overlay: true
-        },
+    // Hard stability mode: disable HMR to prevent client reconnect/restart loops.
+    // Manual browser refresh is required to see code changes.
+    hmr: false,
     fs: {
       strict: true
     },
@@ -301,5 +291,5 @@ export default defineConfig({
     // Enable source map for better debugging (only in dev)
     sourcemap: false
   },
-  publicDir: 'public',
+}
 });

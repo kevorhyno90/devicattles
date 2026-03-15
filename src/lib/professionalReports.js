@@ -1,3 +1,170 @@
+import { STORES } from './storage'
+
+const FRIENDLY_KEY_MAP = {
+  'cattalytics:animals': { module: 'Livestock - Dairy', subsection: 'Animal Registry' },
+  'animals': { module: 'Livestock - Dairy', subsection: 'Animal Registry' },
+  'cattalytics:groups': { module: 'Livestock - Dairy', subsection: 'Animal Groups' },
+  'groups': { module: 'Livestock - Dairy', subsection: 'Animal Groups' },
+  'cattalytics:measurements': { module: 'Livestock - Dairy', subsection: 'Measurements' },
+  'measurements': { module: 'Livestock - Dairy', subsection: 'Measurements' },
+  'cattalytics:treatments': { module: 'Livestock - Dairy', subsection: 'Treatment Log' },
+  'treatments': { module: 'Livestock - Dairy', subsection: 'Treatment Log' },
+  'cattalytics:breeding': { module: 'Livestock - Dairy', subsection: 'Breeding Records' },
+  'breeding': { module: 'Livestock - Dairy', subsection: 'Breeding Records' },
+  'cattalytics:milkYield': { module: 'Livestock - Dairy', subsection: 'Milk Yield' },
+  'milkYield': { module: 'Livestock - Dairy', subsection: 'Milk Yield' },
+  'cattalytics:diets': { module: 'Livestock - Dairy', subsection: 'Diet Plans' },
+  'diets': { module: 'Livestock - Dairy', subsection: 'Diet Plans' },
+  'cattalytics:rations': { module: 'Livestock - Dairy', subsection: 'Ration Logs' },
+  'rations': { module: 'Livestock - Dairy', subsection: 'Ration Logs' },
+
+  'cattalytics:goats': { module: 'Livestock - Goat', subsection: 'Goat Registry' },
+  'goats': { module: 'Livestock - Goat', subsection: 'Goat Registry' },
+  'cattalytics:goat_health': { module: 'Livestock - Goat', subsection: 'Health Records' },
+  'cattalytics:goat_breeding': { module: 'Livestock - Goat', subsection: 'Breeding Records' },
+  'cattalytics:kids': { module: 'Livestock - Goat', subsection: 'Kids Registry' },
+  'cattalytics:kids_health': { module: 'Livestock - Goat', subsection: 'Kids Health' },
+
+  'cattalytics:flocks': { module: 'Livestock - Poultry', subsection: 'Flocks' },
+  'flocks': { module: 'Livestock - Poultry', subsection: 'Flocks' },
+  'cattalytics:poultry': { module: 'Livestock - Poultry', subsection: 'Bird Registry' },
+  'poultry': { module: 'Livestock - Poultry', subsection: 'Bird Registry' },
+  'cattalytics:egg_production': { module: 'Livestock - Poultry', subsection: 'Egg Production' },
+  'egg_production': { module: 'Livestock - Poultry', subsection: 'Egg Production' },
+  'cattalytics:poultry_health': { module: 'Livestock - Poultry', subsection: 'Health Records' },
+
+  'cattalytics:bsf:colonies': { module: 'Livestock - BSF', subsection: 'Colonies' },
+  'cattalytics:bsf:feeding': { module: 'Livestock - BSF', subsection: 'Feeding Log' },
+  'cattalytics:bsf:harvest': { module: 'Livestock - BSF', subsection: 'Harvest Log' },
+
+  'cattalytics:crops': { module: 'Crops', subsection: 'Crop Registry' },
+  'cattalytics:crops:yields': { module: 'Crops', subsection: 'Yield Ledger' },
+  'cattalytics:crops:sales': { module: 'Crops', subsection: 'Sales Ledger' },
+  'cattalytics:crops:treatments': { module: 'Crops', subsection: 'Treatment Ledger' },
+  'cattalytics:crops:costs': { module: 'Crops', subsection: 'Cost Ledger' },
+
+  'cattalytics:employment:employees': { module: 'Employment', subsection: 'Employee Registry' },
+  'cattalytics:employment:off': { module: 'Employment', subsection: 'Off Planner' },
+  'cattalytics:employment:leaves': { module: 'Employment', subsection: 'Leave Management' },
+  'cattalytics:employment:attendance': { module: 'Employment', subsection: 'Attendance Log' }
+}
+
+const REPORT_SECTION_TEMPLATES = [
+  { module: 'Livestock - Dairy', subsection: 'Animal Registry', storageKey: 'cattalytics:animals' },
+  { module: 'Livestock - Dairy', subsection: 'Animal Groups', storageKey: 'cattalytics:groups' },
+  { module: 'Livestock - Dairy', subsection: 'Measurements', storageKey: 'cattalytics:measurements' },
+  { module: 'Livestock - Dairy', subsection: 'Treatment Log', storageKey: 'cattalytics:treatments' },
+  { module: 'Livestock - Dairy', subsection: 'Breeding Records', storageKey: 'cattalytics:breeding' },
+  { module: 'Livestock - Dairy', subsection: 'Milk Yield', storageKey: 'cattalytics:milkYield' },
+  { module: 'Livestock - Dairy', subsection: 'Diet Plans', storageKey: 'cattalytics:diets' },
+  { module: 'Livestock - Dairy', subsection: 'Ration Logs', storageKey: 'cattalytics:rations' },
+
+  { module: 'Livestock - Goat', subsection: 'Goat Registry', storageKey: 'cattalytics:goats' },
+  { module: 'Livestock - Goat', subsection: 'Health Records', storageKey: 'cattalytics:goat_health' },
+  { module: 'Livestock - Goat', subsection: 'Breeding Records', storageKey: 'cattalytics:goat_breeding' },
+  { module: 'Livestock - Goat', subsection: 'Kids Registry', storageKey: 'cattalytics:kids' },
+  { module: 'Livestock - Goat', subsection: 'Kids Health', storageKey: 'cattalytics:kids_health' },
+
+  { module: 'Livestock - Poultry', subsection: 'Flocks', storageKey: 'cattalytics:flocks' },
+  { module: 'Livestock - Poultry', subsection: 'Bird Registry', storageKey: 'cattalytics:poultry' },
+  { module: 'Livestock - Poultry', subsection: 'Egg Production', storageKey: 'cattalytics:egg_production' },
+  { module: 'Livestock - Poultry', subsection: 'Health Records', storageKey: 'cattalytics:poultry_health' },
+
+  { module: 'Livestock - Canine', subsection: 'Canine Registry', storageKey: 'cattalytics:animals' },
+  { module: 'Livestock - Canine', subsection: 'Health Records', storageKey: 'cattalytics:animals' },
+  { module: 'Livestock - Canine', subsection: 'Vaccination Records', storageKey: 'cattalytics:animals' },
+  { module: 'Livestock - Canine', subsection: 'Husbandry Log', storageKey: 'cattalytics:animals' },
+
+  { module: 'Livestock - BSF', subsection: 'Colonies', storageKey: 'cattalytics:bsf:colonies' },
+  { module: 'Livestock - BSF', subsection: 'Feeding Log', storageKey: 'cattalytics:bsf:feeding' },
+  { module: 'Livestock - BSF', subsection: 'Harvest Log', storageKey: 'cattalytics:bsf:harvest' },
+
+  { module: 'Crops', subsection: 'Crop Registry', storageKey: 'cattalytics:crops' },
+  { module: 'Crops', subsection: 'Bananas', storageKey: 'cattalytics:crops' },
+  { module: 'Crops', subsection: 'Sweet Banana', storageKey: 'cattalytics:crops' },
+  { module: 'Crops', subsection: 'Vegetables', storageKey: 'cattalytics:crops' },
+  { module: 'Crops', subsection: 'Herbs', storageKey: 'cattalytics:crops' },
+  { module: 'Crops', subsection: 'Tea Plantation', storageKey: 'cattalytics:crops' },
+  { module: 'Crops', subsection: 'Export Avocado', storageKey: 'cattalytics:crops' },
+  { module: 'Crops', subsection: 'Fruits', storageKey: 'cattalytics:crops' },
+  { module: 'Crops', subsection: 'Yield Ledger', storageKey: 'cattalytics:crops:yields' },
+  { module: 'Crops', subsection: 'Sales Ledger', storageKey: 'cattalytics:crops:sales' },
+  { module: 'Crops', subsection: 'Treatment Ledger', storageKey: 'cattalytics:crops:treatments' },
+  { module: 'Crops', subsection: 'Cost Ledger', storageKey: 'cattalytics:crops:costs' },
+
+  { module: 'Employment', subsection: 'Employee Registry', storageKey: 'cattalytics:employment:employees' },
+  { module: 'Employment', subsection: 'Off Planner', storageKey: 'cattalytics:employment:off' },
+  { module: 'Employment', subsection: 'Leave Management', storageKey: 'cattalytics:employment:leaves' },
+  { module: 'Employment', subsection: 'Attendance Log', storageKey: 'cattalytics:employment:attendance' }
+]
+
+const MODULE_ORDER = [
+  'Livestock - Dairy',
+  'Livestock - Goat',
+  'Livestock - Poultry',
+  'Livestock - Canine',
+  'Livestock - BSF',
+  'Crops',
+  'Employment'
+]
+
+const SUBSECTION_ORDER = {
+  'Livestock - Dairy': [
+    'Animal Registry',
+    'Animal Groups',
+    'Measurements',
+    'Treatment Log',
+    'Breeding Records',
+    'Milk Yield',
+    'Diet Plans',
+    'Ration Logs'
+  ],
+  'Livestock - Goat': [
+    'Goat Registry',
+    'Health Records',
+    'Breeding Records',
+    'Kids Registry',
+    'Kids Health'
+  ],
+  'Livestock - Poultry': [
+    'Flocks',
+    'Bird Registry',
+    'Egg Production',
+    'Health Records'
+  ],
+  'Livestock - Canine': [
+    'Canine Registry',
+    'Health Records',
+    'Vaccination Records',
+    'Husbandry Log'
+  ],
+  'Livestock - BSF': [
+    'Colonies',
+    'Feeding Log',
+    'Harvest Log'
+  ],
+  'Crops': [
+    'Crop Registry',
+    'Bananas',
+    'Sweet Banana',
+    'Vegetables',
+    'Herbs',
+    'Tea Plantation',
+    'Export Avocado',
+    'Fruits',
+    'Yield Ledger',
+    'Sales Ledger',
+    'Treatment Ledger',
+    'Cost Ledger'
+  ],
+  'Employment': [
+    'Employee Registry',
+    'Off Planner',
+    'Leave Management',
+    'Attendance Log'
+  ]
+}
+
 function safeParseJSON(raw) {
   if (typeof raw !== 'string') return null
   try {
@@ -28,6 +195,141 @@ function normalizeKeyParts(storageKey = '') {
   const module = titleize(parts[0])
   const subsection = titleize(parts.slice(1).join(' ') || parts[0])
   return { module, subsection }
+}
+
+function getNamesForKey(storageKey = '') {
+  const cleaned = String(storageKey || '').trim()
+  const noPrefix = cleaned.replace(/^cattalytics:/, '').replace(/^devinsfarm:/, '')
+
+  const direct = FRIENDLY_KEY_MAP[cleaned]
+  if (direct) return direct
+
+  const prefixed = FRIENDLY_KEY_MAP[`cattalytics:${noPrefix}`]
+  if (prefixed) return prefixed
+
+  return normalizeKeyParts(storageKey)
+}
+
+function slugify(value = '') {
+  return String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
+function moduleSortIndex(moduleName = '') {
+  const idx = MODULE_ORDER.indexOf(moduleName)
+  return idx === -1 ? Number.MAX_SAFE_INTEGER : idx
+}
+
+function subsectionSortIndex(moduleName = '', subsectionName = '') {
+  const ordered = SUBSECTION_ORDER[moduleName] || []
+  const idx = ordered.indexOf(subsectionName)
+  return idx === -1 ? Number.MAX_SAFE_INTEGER : idx
+}
+
+function isCanineAnimal(record) {
+  if (!record || typeof record !== 'object') return false
+  const groupId = String(record.groupId || '').toUpperCase()
+  const type = String(record.type || '').toLowerCase()
+  const role = String(record.role || '').toLowerCase()
+  return groupId === 'G-008' || type === 'canine' || role.includes('dog')
+}
+
+function deriveCanineDatasetsFromAnimals(animals = []) {
+  const canines = normalizeRowsForReport(animals).filter(isCanineAnimal)
+
+  const baseRecord = (canine) => ({
+    canineId: canine.id || '',
+    canineTag: canine.tag || '',
+    canineName: canine.name || '',
+    breed: canine.breed || '',
+    sex: canine.sex || '',
+    weight: canine.weight || '',
+    role: canine.role || '',
+    trainingLevel: canine.trainingLevel || ''
+  })
+
+  const healthRows = canines.flatMap((canine) => {
+    const records = Array.isArray(canine.healthRecords) ? canine.healthRecords : []
+    return records.map((item, index) => ({
+      ...baseRecord(canine),
+      recordId: item?.id || `health-${index + 1}`,
+      condition: item?.condition || '',
+      severity: item?.severity || '',
+      date: item?.date || '',
+      treatment: item?.treatment || '',
+      vetNotes: item?.vetNotes || ''
+    }))
+  })
+
+  const vaccineRows = canines.flatMap((canine) => {
+    const records = Array.isArray(canine.vaccineRecords) ? canine.vaccineRecords : []
+    return records.map((item, index) => ({
+      ...baseRecord(canine),
+      recordId: item?.id || `vaccine-${index + 1}`,
+      vaccineType: item?.vaccineType || '',
+      date: item?.date || '',
+      boosterDue: item?.boosterDue || '',
+      vet: item?.vet || '',
+      notes: item?.notes || ''
+    }))
+  })
+
+  const husbandryRows = canines.flatMap((canine) => {
+    const records = Array.isArray(canine.husbandryLog) ? canine.husbandryLog : []
+    return records.map((item, index) => ({
+      ...baseRecord(canine),
+      recordId: item?.id || `husbandry-${index + 1}`,
+      date: item?.date || '',
+      feedType: item?.feedType || '',
+      quantity: item?.quantity || '',
+      frequency: item?.frequency || '',
+      housing: item?.housing || '',
+      exercise: item?.exercise || '',
+      grooming: item?.grooming || '',
+      supplements: item?.supplements || ''
+    }))
+  })
+
+  return [
+    {
+      id: 'derived:canine:registry',
+      storageKey: 'cattalytics:animals',
+      module: 'Livestock - Canine',
+      subsection: 'Canine Registry',
+      sourceType: 'derived',
+      rawRows: canines,
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'derived:canine:health',
+      storageKey: 'cattalytics:animals',
+      module: 'Livestock - Canine',
+      subsection: 'Health Records',
+      sourceType: 'derived',
+      rawRows: healthRows,
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'derived:canine:vaccines',
+      storageKey: 'cattalytics:animals',
+      module: 'Livestock - Canine',
+      subsection: 'Vaccination Records',
+      sourceType: 'derived',
+      rawRows: vaccineRows,
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'derived:canine:husbandry',
+      storageKey: 'cattalytics:animals',
+      module: 'Livestock - Canine',
+      subsection: 'Husbandry Log',
+      sourceType: 'derived',
+      rawRows: husbandryRows,
+      updatedAt: new Date().toISOString()
+    }
+  ]
 }
 
 function isObjectLike(value) {
@@ -69,7 +371,7 @@ function flattenObject(record, prefix = '') {
 }
 
 function extractChildArraySections(rows = [], key, moduleName, subsectionName) {
-  const childSections = []
+  const childSectionMap = new Map()
 
   rows.forEach((row, rowIndex) => {
     if (!isObjectLike(row)) return
@@ -89,19 +391,26 @@ function extractChildArraySections(rows = [], key, moduleName, subsectionName) {
         }
       })
 
-      childSections.push({
-        id: `${key}::${field}`,
-        storageKey: key,
-        module: moduleName,
-        subsection: `${subsectionName} - ${titleize(field)}`,
-        sourceType: 'nested-array',
-        rawRows: childRows,
-        updatedAt: new Date().toISOString()
-      })
+      const sectionId = `${key}::${field}`
+      const existing = childSectionMap.get(sectionId)
+      if (!existing) {
+        childSectionMap.set(sectionId, {
+          id: sectionId,
+          storageKey: key,
+          module: moduleName,
+          subsection: `${subsectionName} - ${titleize(field)}`,
+          sourceType: 'nested-array',
+          rawRows: childRows,
+          updatedAt: new Date().toISOString()
+        })
+      } else {
+        existing.rawRows = existing.rawRows.concat(childRows)
+        existing.updatedAt = new Date().toISOString()
+      }
     })
   })
 
-  return childSections
+  return Array.from(childSectionMap.values())
 }
 
 function normalizeRowsForReport(raw) {
@@ -123,19 +432,56 @@ function toReportEntry(base) {
   }
 }
 
+function buildExpectedReportKeys() {
+  const expected = new Set()
+
+  const fromStores = [...Object.keys(STORES || {}), ...Object.values(STORES || {})]
+  fromStores.forEach((token) => {
+    if (!token) return
+    const key = String(token)
+    expected.add(key)
+    expected.add(`cattalytics:${key}`)
+    expected.add(`devinsfarm:${key}`)
+  })
+
+  // Extra operational domains that are managed directly in modules.
+  ;[
+    'cattalytics:crops',
+    'cattalytics:crops:yields',
+    'cattalytics:crops:sales',
+    'cattalytics:crops:treatments',
+    'cattalytics:crops:costs',
+    'cattalytics:goats',
+    'cattalytics:animals',
+    'cattalytics:groups',
+    'cattalytics:flocks',
+    'cattalytics:poultry',
+    'cattalytics:bsf:colonies',
+    'cattalytics:bsf:feeding',
+    'cattalytics:bsf:harvest',
+    'cattalytics:employment:employees',
+    'cattalytics:employment:off',
+    'cattalytics:employment:leaves',
+    'cattalytics:employment:attendance'
+  ].forEach((k) => expected.add(k))
+
+  return Array.from(expected)
+}
+
+const EXPECTED_REPORT_KEYS = buildExpectedReportKeys()
+
 export function buildProfessionalReportCatalog() {
-  const keys = Object.keys(localStorage || {})
+  const keys = Array.from(new Set([
+    ...Object.keys(localStorage || {}),
+    ...EXPECTED_REPORT_KEYS
+  ]))
 
   const datasets = []
 
   keys.forEach((key) => {
+    const names = getNamesForKey(key)
     const parsed = safeParseJSON(localStorage.getItem(key))
-    if (parsed == null) return
-
-    const rows = normalizeRowsForReport(parsed)
-    if (rows.length === 0) return
-
-    const names = normalizeKeyParts(key)
+    const rows = parsed == null ? [] : normalizeRowsForReport(parsed)
 
     const root = {
       id: key,
@@ -149,15 +495,55 @@ export function buildProfessionalReportCatalog() {
 
     datasets.push(root)
 
-    const child = extractChildArraySections(rows, key, names.module, names.subsection)
-    child.forEach((section) => datasets.push(section))
+    if (rows.length > 0) {
+      const child = extractChildArraySections(rows, key, names.module, names.subsection)
+      child.forEach((section) => datasets.push(section))
+    }
   })
 
-  const reports = datasets.map((d) => toReportEntry(d)).filter((r) => r.rowCount > 0)
+  const animalsData = safeParseJSON(localStorage.getItem('cattalytics:animals'))
+  deriveCanineDatasetsFromAnimals(animalsData).forEach((dataset) => datasets.push(dataset))
+
+  REPORT_SECTION_TEMPLATES.forEach((template) => {
+    datasets.push({
+      id: `template:${slugify(template.module)}:${slugify(template.subsection)}`,
+      storageKey: template.storageKey,
+      module: template.module,
+      subsection: template.subsection,
+      sourceType: 'template',
+      rawRows: [],
+      updatedAt: new Date().toISOString()
+    })
+  })
+
+  const deduped = new Map()
+  datasets.forEach((d) => {
+    const key = `${d.module}::${d.subsection}::${d.storageKey}`
+    const existing = deduped.get(key)
+    if (!existing) {
+      deduped.set(key, d)
+      return
+    }
+    const existingRows = normalizeRowsForReport(existing.rawRows)
+    const incomingRows = normalizeRowsForReport(d.rawRows)
+    if (incomingRows.length > existingRows.length) {
+      deduped.set(key, d)
+    }
+  })
+
+  const reports = Array.from(deduped.values()).map((d) => toReportEntry(d))
 
   reports.sort((a, b) => {
-    if (a.module !== b.module) return a.module.localeCompare(b.module)
-    if (a.subsection !== b.subsection) return a.subsection.localeCompare(b.subsection)
+    if (a.module !== b.module) {
+      const modIdx = moduleSortIndex(a.module) - moduleSortIndex(b.module)
+      if (modIdx !== 0) return modIdx
+      return a.module.localeCompare(b.module)
+    }
+    if (a.subsection !== b.subsection) {
+      const subIdx = subsectionSortIndex(a.module, a.subsection) - subsectionSortIndex(b.module, b.subsection)
+      if (subIdx !== 0) return subIdx
+      return a.subsection.localeCompare(b.subsection)
+    }
     return a.id.localeCompare(b.id)
   })
 

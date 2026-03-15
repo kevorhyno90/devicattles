@@ -448,7 +448,6 @@ async function applyRemoteToLocal(storeName, docs) {
  */
 export async function startFirestoreSync() {
   if (DISABLE_SYNC) {
-    console.info('ℹ️ Firestore sync disabled by VITE_DISABLE_FIRESTORE_SYNC')
     syncStatus = 'disabled'
     return
   }

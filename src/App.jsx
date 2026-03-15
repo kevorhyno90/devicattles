@@ -59,6 +59,7 @@ const NotificationCenter = lazyWithRetry(() => import('./modules/NotificationCen
 const Animals = lazyWithRetry(() => import('./modules/Animals'))
 const Tasks = lazyWithRetry(() => import('./modules/Tasks'))
 const Finance = lazyWithRetry(() => import('./modules/Finance'))
+const EmploymentManager = lazyWithRetry(() => import('./modules/EmploymentManager'))
 const Schedules = lazyWithRetry(() => import('./modules/Schedules'))
 const Crops = lazyWithRetry(() => import('./modules/CropsWithSubsections'))
 const Inventory = lazyWithRetry(() => import('./modules/Inventory'))
@@ -340,8 +341,20 @@ function AppContent() {
       }
     }
     checkDenied()
+    if (typeof window !== 'undefined' && window.__deniedStoresPollInterval) {
+      clearInterval(window.__deniedStoresPollInterval)
+    }
     const iv = setInterval(checkDenied, 15000)
-    return () => { mounted = false; clearInterval(iv) }
+    if (typeof window !== 'undefined') {
+      window.__deniedStoresPollInterval = iv
+    }
+    return () => {
+      mounted = false
+      clearInterval(iv)
+      if (typeof window !== 'undefined' && window.__deniedStoresPollInterval === iv) {
+        window.__deniedStoresPollInterval = null
+      }
+    }
   }, [])
 
   // Handle install button click
@@ -389,6 +402,14 @@ function AppContent() {
   // Start notification/reminder checker and sync (deferred for performance)
   useEffect(() => {
     if (authenticated) {
+      let disposed = false
+      let countInterval = null
+      let autoCheckInterval = null
+      let alertInterval = null
+      let alertInitTimeout = null
+      let stopReminder = null
+      let unreadListener = null
+
       // Defer heavy initialization by 500ms to let UI render first
       const initTimeout = setTimeout(async () => {
         // Dynamically import all notification/sync modules
@@ -406,27 +427,32 @@ function AppContent() {
           import('./lib/farmAlertRules')
         ]);
 
+        if (disposed) return
+
         // Always stop any previous reminder checker before starting a new one
         stopReminderChecker();
 
         // Run initial check
         checkAllAutoNotifications();
 
-        const intervalId = startReminderChecker();
+        startReminderChecker();
+        stopReminder = stopReminderChecker
 
         // Update unread count
         const updateUnreadCount = () => {
+          if (disposed) return
           setUnreadNotifications(getUnreadCount());
         };
 
         updateUnreadCount();
-        const countInterval = setInterval(updateUnreadCount, 30000); // Every 30 seconds
+        countInterval = setInterval(updateUnreadCount, 30000); // Every 30 seconds
 
         // Check auto notifications every hour
-        const autoCheckInterval = setInterval(checkAllAutoNotifications, 60 * 60 * 1000);
+        autoCheckInterval = setInterval(checkAllAutoNotifications, 60 * 60 * 1000);
 
         // Listen for new notifications
-        window.addEventListener('newNotification', updateUnreadCount);
+        unreadListener = updateUnreadCount
+        window.addEventListener('newNotification', unreadListener);
 
         // Initialize sync if configured - wrapped in try-catch
         try {
@@ -437,36 +463,38 @@ function AppContent() {
         }
 
         // Phase 2: Initialize smart alert rules (deferred)
-        setTimeout(() => {
+        alertInitTimeout = setTimeout(() => {
+          if (disposed) return
           try {
             installAllRules(alertRuleEngine);
             alertRuleEngine.evaluateAllRules();
-            const alertInterval = setInterval(() => {
+            alertInterval = setInterval(() => {
               alertRuleEngine.evaluateAllRules();
             }, 5 * 60 * 1000); // Every 5 minutes
-
-            // Store alert interval for cleanup
-            window.__alertInterval = alertInterval;
           } catch (error) {
             console.warn('Alert rules initialization failed (optional feature):', error);
           }
         }, 2000); // Defer alerts by 2 seconds
-
-        // Store intervals for cleanup
-        window.__notificationIntervals = { intervalId, countInterval, autoCheckInterval, stopReminderChecker };
       }, 500);
 
       return () => {
+        disposed = true
         clearTimeout(initTimeout);
-        if (window.__notificationIntervals) {
-          const { countInterval, autoCheckInterval, stopReminderChecker } = window.__notificationIntervals;
-          stopReminderChecker();
-          clearInterval(countInterval);
-          clearInterval(autoCheckInterval);
-          window.removeEventListener('newNotification', () => setUnreadNotifications(0));
+        clearTimeout(alertInitTimeout)
+        if (typeof stopReminder === 'function') {
+          stopReminder()
         }
-        if (window.__alertInterval) {
-          clearInterval(window.__alertInterval);
+        if (countInterval) {
+          clearInterval(countInterval)
+        }
+        if (autoCheckInterval) {
+          clearInterval(autoCheckInterval)
+        }
+        if (alertInterval) {
+          clearInterval(alertInterval)
+        }
+        if (unreadListener) {
+          window.removeEventListener('newNotification', unreadListener)
         }
       };
     }
@@ -1185,6 +1213,21 @@ function AppContent() {
               fontWeight: '500'
             }}
           >✅ Tasks</button>
+          <button
+            className={view==='employment'? 'active':''}
+            onClick={()=>setView('employment')}
+            style={{
+              background: view==='employment' ? '#0f766e' : '#f3f4f6',
+              color: view==='employment' ? '#fff' : '#1f2937',
+              order: -8,
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >👥 Employment</button>
           {showNavMore && (<button 
             className={view==='schedules'? 'active':''} 
             onClick={()=>setView('schedules')}
@@ -1558,6 +1601,15 @@ function AppContent() {
               ← Back to Dashboard
             </button>
             <ErrorBoundary><Finance /></ErrorBoundary>
+          </section>
+        )}
+
+        {view === 'employment' && (
+          <section>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              ← Back to Dashboard
+            </button>
+            <ErrorBoundary><EmploymentManager /></ErrorBoundary>
           </section>
         )}
 

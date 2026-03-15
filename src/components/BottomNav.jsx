@@ -4,6 +4,7 @@ import { AppViewContext } from '../lib/AppViewContext.jsx';
 const navItems = [
   { label: 'Dashboard', icon: '🏠', view: 'dashboard' },
   { label: 'Livestock', icon: '🐄', view: 'animals' },
+  { label: 'Employment', icon: '👥', view: 'employment' },
   { label: 'Crops', icon: '🌾', view: 'crops' },
   { label: 'Reports', icon: '📊', view: 'customreports' },
   { label: 'Settings', icon: '⚙️', view: 'settings' }
