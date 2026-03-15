@@ -775,8 +775,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
       {toast && (
         <div style={{
           position: 'fixed', top: '20px', right: '20px', 
-          background: toast.type === 'success' ? '#10b981' : toast.type === 'error' ? '#ef4444' : '#3b82f6',
-          color: 'white', padding: '12px 20px', borderRadius: '8px', 
+          background: toast.type === 'success' ? 'var(--action-success)' : toast.type === 'error' ? 'var(--action-danger)' : 'var(--action-primary)',
+          color: 'var(--text-inverse)', padding: '12px 20px', borderRadius: '8px', 
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1000
         }}>
           {toast.msg}
@@ -935,9 +935,9 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             onClick={handleExportCSV}
             style={{
               padding: '8px 12px',
-              background: '#f3f4f6',
-              color: '#1f2937',
-              border: '1px solid #d1d5db',
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-secondary)',
               borderRadius: '6px',
               fontSize: '13px',
               fontWeight: '600',
@@ -950,9 +950,9 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             onClick={handleExportExcel}
             style={{
               padding: '8px 12px',
-              background: '#f3f4f6',
-              color: '#1f2937',
-              border: '1px solid #d1d5db',
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-secondary)',
               borderRadius: '6px',
               fontSize: '13px',
               fontWeight: '600',
@@ -965,9 +965,9 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             onClick={handleExportJSON}
             style={{
               padding: '8px 12px',
-              background: '#f3f4f6',
-              color: '#1f2937',
-              border: '1px solid #d1d5db',
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-secondary)',
               borderRadius: '6px',
               fontSize: '13px',
               fontWeight: '600',
@@ -980,9 +980,9 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
       </div>
 
       {/* Goats Table */}
-      <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: '24px' }}>
+      <div style={{ background: 'var(--bg-elevated)', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: '24px' }}>
         {filteredGoats.length === 0 ? (
-          <div style={{ padding: '40px 20px', textAlign: 'center', color: '#6b7280' }}>
+          <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>🐐</div>
             <p style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>No goats found</p>
             <p style={{ fontSize: '14px' }}>
@@ -995,25 +995,25 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
               <thead>
-                <tr style={{ background: '#f3f4f6', borderBottom: '1px solid #e5e7eb' }}>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Tag #</th>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Name</th>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Breed</th>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Gender</th>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Weight (kg)</th>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Status</th>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Pregnancy</th>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Actions</th>
+                <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-primary)' }}>
+                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Tag #</th>
+                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Name</th>
+                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Breed</th>
+                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Gender</th>
+                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Weight (kg)</th>
+                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Status</th>
+                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Pregnancy</th>
+                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredGoats.map((goat, idx) => (
-                  <tr key={goat.id} style={{ borderBottom: '1px solid #e5e7eb', background: idx % 2 === 0 ? 'white' : '#f9fafb' }}>
-                    <td style={{ padding: '12px', color: '#374151' }}><span style={{ background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '4px', fontSize: '13px', fontWeight: '600' }}>{goat.tagNumber}</span></td>
-                    <td style={{ padding: '12px', color: '#374151', fontWeight: '600' }}>{goat.name}</td>
-                    <td style={{ padding: '12px', color: '#6b7280' }}>{goat.breed}</td>
-                    <td style={{ padding: '12px', color: '#6b7280' }}>{goat.gender === 'Male' ? '♂️' : '♀️'} {goat.gender}</td>
-                    <td style={{ padding: '12px', color: '#6b7280' }}>{goat.weight || '-'}</td>
+                  <tr key={goat.id} style={{ borderBottom: '1px solid var(--border-primary)', background: idx % 2 === 0 ? 'white' : '#f9fafb' }}>
+                    <td style={{ padding: '12px', color: 'var(--text-primary)' }}><span style={{ background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '4px', fontSize: '13px', fontWeight: '600' }}>{goat.tagNumber}</span></td>
+                    <td style={{ padding: '12px', color: 'var(--text-primary)', fontWeight: '600' }}>{goat.name}</td>
+                    <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{goat.breed}</td>
+                    <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{goat.gender === 'Male' ? '♂️' : '♀️'} {goat.gender}</td>
+                    <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{goat.weight || '-'}</td>
                     <td style={{ padding: '12px' }}>
                       <span style={{
                         background: goat.status === 'Active' ? '#dcfce7' : '#fee2e2',
@@ -1028,8 +1028,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     </td>
                     <td style={{ padding: '12px' }}>
                       <span style={{
-                        background: goat.pregnancyStatus === 'Pregnant' ? '#fef3c7' : '#e5e7eb',
-                        color: goat.pregnancyStatus === 'Pregnant' ? '#92400e' : '#6b7280',
+                        background: goat.pregnancyStatus === 'Pregnant' ? 'var(--bg-secondary)' : 'var(--bg-tertiary)',
+                        color: goat.pregnancyStatus === 'Pregnant' ? 'var(--action-warning)' : 'var(--text-secondary)',
                         padding: '4px 12px',
                         borderRadius: '4px',
                         fontSize: '13px',
@@ -1045,7 +1045,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                           style={{
                             padding: '4px 10px',
                             background: '#6366f1',
-                            color: 'white',
+                            color: 'var(--text-inverse)',
                             border: 'none',
                             borderRadius: '4px',
                             fontSize: '12px',
@@ -1059,8 +1059,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                           onClick={() => handleAddHealth(goat.id, goat.name)}
                           style={{
                             padding: '4px 10px',
-                            background: '#10b981',
-                            color: 'white',
+                            background: 'var(--action-success)',
+                            color: 'var(--text-inverse)',
                             border: 'none',
                             borderRadius: '4px',
                             fontSize: '12px',
@@ -1076,7 +1076,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                           style={{
                             padding: '4px 10px',
                             background: '#f59e0b',
-                            color: 'white',
+                            color: 'var(--text-inverse)',
                             border: 'none',
                             borderRadius: '4px',
                             fontSize: '12px',
@@ -1091,8 +1091,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                           onClick={() => handleDelete(goat.id, goat.name)}
                           style={{
                             padding: '4px 10px',
-                            background: '#ef4444',
-                            color: 'white',
+                            background: 'var(--action-danger)',
+                            color: 'var(--text-inverse)',
                             border: 'none',
                             borderRadius: '4px',
                             fontSize: '12px',
@@ -1114,14 +1114,14 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
 
       {/* Add/Edit Form - Full Width Below Table */}
       {showAddForm && (
-        <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: '#1f2937' }}>
+        <div style={{ background: 'var(--bg-elevated)', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: 'var(--text-primary)' }}>
             {editingId ? '✏️ Edit Goat' : '➕ Add New Goat'}
           </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Tag Number *</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Tag Number *</label>
               <input
                 type="text"
                 name="tagNumber"
@@ -1131,7 +1131,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1140,7 +1140,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Name *</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Name *</label>
               <input
                 type="text"
                 name="name"
@@ -1150,7 +1150,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1159,7 +1159,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Breed</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Breed</label>
               <select
                 name="breed"
                 value={formData.breed}
@@ -1167,7 +1167,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1180,7 +1180,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Gender</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Gender</label>
               <select
                 name="gender"
                 value={formData.gender}
@@ -1188,7 +1188,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1200,7 +1200,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Birth Date</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Birth Date</label>
               <input
                 type="date"
                 name="birthDate"
@@ -1209,7 +1209,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1218,7 +1218,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Weight (kg)</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Weight (kg)</label>
               <input
                 type="number"
                 name="weight"
@@ -1229,7 +1229,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1238,7 +1238,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Color</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Color</label>
               <input
                 type="text"
                 name="color"
@@ -1248,7 +1248,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1257,7 +1257,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Status</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Status</label>
               <select
                 name="status"
                 value={formData.status}
@@ -1265,7 +1265,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1279,7 +1279,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Pregnancy Status</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Pregnancy Status</label>
               <select
                 name="pregnancyStatus"
                 value={formData.pregnancyStatus}
@@ -1287,7 +1287,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1300,7 +1300,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Expected Due Date</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Expected Due Date</label>
               <input
                 type="date"
                 name="expectedDue"
@@ -1309,7 +1309,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1318,7 +1318,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Lactation Status</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Lactation Status</label>
               <select
                 name="lactationStatus"
                 value={formData.lactationStatus}
@@ -1326,7 +1326,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1340,7 +1340,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Sire (Father)</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Sire (Father)</label>
               <input
                 type="text"
                 name="sire"
@@ -1350,7 +1350,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1359,7 +1359,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Dam (Mother)</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Dam (Mother)</label>
               <input
                 type="text"
                 name="dam"
@@ -1369,7 +1369,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1378,7 +1378,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Purchase Date</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Purchase Date</label>
               <input
                 type="date"
                 name="purchaseDate"
@@ -1387,7 +1387,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1396,7 +1396,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Purchase Price</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Purchase Price</label>
               <input
                 type="number"
                 name="purchasePrice"
@@ -1407,7 +1407,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1416,7 +1416,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Vendor</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Vendor</label>
               <input
                 type="text"
                 name="vendor"
@@ -1426,7 +1426,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1435,7 +1435,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Location</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Location</label>
               <input
                 type="text"
                 name="location"
@@ -1445,7 +1445,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   boxSizing: 'border-box'
@@ -1455,7 +1455,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Notes</label>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Notes</label>
             <textarea
               name="notes"
               value={formData.notes}
@@ -1465,7 +1465,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
               style={{
                 width: '100%',
                 padding: '10px 12px',
-                border: '1px solid #d1d5db',
+                border: '1px solid var(--border-secondary)',
                 borderRadius: '6px',
                 fontSize: '14px',
                 boxSizing: 'border-box',
@@ -1479,8 +1479,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
               onClick={handleSave}
               style={{
                 padding: '10px 20px',
-                background: '#10b981',
-                color: 'white',
+                background: 'var(--action-success)',
+                color: 'var(--text-inverse)',
                 border: 'none',
                 borderRadius: '6px',
                 fontSize: '14px',
@@ -1494,8 +1494,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
               onClick={handleCancel}
               style={{
                 padding: '10px 20px',
-                background: '#e5e7eb',
-                color: '#1f2937',
+                background: 'var(--bg-tertiary)',
+                color: 'var(--text-primary)',
                 border: 'none',
                 borderRadius: '6px',
                 fontSize: '14px',
@@ -1514,9 +1514,9 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
       {/* Health Records View */}
       {mainView === 'health' && (
         <div>
-          <div style={{ background: 'white', padding: '16px', borderRadius: '8px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937' }}>Health Records</h3>
+              <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>Health Records</h3>
               <button
                 onClick={() => {
                   setShowHealthForm(true)
@@ -1530,8 +1530,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 }}
                 style={{
                   padding: '8px 16px',
-                  background: '#10b981',
-                  color: 'white',
+                  background: 'var(--action-success)',
+                  color: 'var(--text-inverse)',
                   border: 'none',
                   borderRadius: '6px',
                   fontSize: '14px',
@@ -1544,27 +1544,27 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             {healthRecords.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#6b7280', padding: '40px' }}>No health records yet</p>
+              <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '40px' }}>No health records yet</p>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead>
-                  <tr style={{ background: '#f3f4f6', borderBottom: '1px solid #e5e7eb' }}>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Date</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Goat</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Event Type</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Condition</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Severity</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Status</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Actions</th>
+                  <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-primary)' }}>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Date</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Goat</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Event Type</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Condition</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Severity</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Status</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {healthRecords.map((record, idx) => (
-                    <tr key={record.id} style={{ borderBottom: '1px solid #e5e7eb', background: idx % 2 === 0 ? 'white' : '#f9fafb' }}>
-                      <td style={{ padding: '12px', color: '#374151' }}>{record.date}</td>
-                      <td style={{ padding: '12px', color: '#374151', fontWeight: '600' }}>{record.goatName}</td>
-                      <td style={{ padding: '12px', color: '#6b7280' }}>{record.eventType}</td>
-                      <td style={{ padding: '12px', color: '#6b7280' }}>{record.condition || '-'}</td>
+                    <tr key={record.id} style={{ borderBottom: '1px solid var(--border-primary)', background: idx % 2 === 0 ? 'white' : '#f9fafb' }}>
+                      <td style={{ padding: '12px', color: 'var(--text-primary)' }}>{record.date}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-primary)', fontWeight: '600' }}>{record.goatName}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{record.eventType}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{record.condition || '-'}</td>
                       <td style={{ padding: '12px' }}>
                         <span style={{
                           background: record.severity === 'Critical' ? '#fee2e2' : record.severity === 'Severe' ? '#fed7aa' : record.severity === 'Moderate' ? '#fef3c7' : '#dcfce7',
@@ -1577,14 +1577,14 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                           {record.severity}
                         </span>
                       </td>
-                      <td style={{ padding: '12px', color: '#6b7280' }}>{record.status}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{record.status}</td>
                       <td style={{ padding: '12px' }}>
                         <button
                           onClick={() => handleEditHealth(record)}
                           style={{
                             padding: '4px 10px',
                             background: '#6366f1',
-                            color: 'white',
+                            color: 'var(--text-inverse)',
                             border: 'none',
                             borderRadius: '4px',
                             fontSize: '12px',
@@ -1599,8 +1599,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                           onClick={() => handleDeleteHealth(record.id)}
                           style={{
                             padding: '4px 10px',
-                            background: '#ef4444',
-                            color: 'white',
+                            background: 'var(--action-danger)',
+                            color: 'var(--text-inverse)',
                             border: 'none',
                             borderRadius: '4px',
                             fontSize: '12px',
@@ -1620,14 +1620,14 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
 
           {/* Health Form */}
           {showHealthForm && (
-            <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: '#1f2937' }}>
+            <div style={{ background: 'var(--bg-elevated)', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: 'var(--text-primary)' }}>
                 {editingHealthId ? '✏️ Edit Health Record' : '➕ Add Health Record'}
               </h3>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Goat *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Goat *</label>
                   <select
                     name="goatId"
                     value={healthFormData.goatId}
@@ -1638,7 +1638,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -1652,7 +1652,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Date *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Date *</label>
                   <input
                     type="date"
                     name="date"
@@ -1661,7 +1661,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -1670,7 +1670,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Event Type *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Event Type *</label>
                   <select
                     name="eventType"
                     value={healthFormData.eventType}
@@ -1678,7 +1678,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -1691,7 +1691,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Severity</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Severity</label>
                   <select
                     name="severity"
                     value={healthFormData.severity}
@@ -1699,7 +1699,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -1712,7 +1712,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Condition/Disease</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Condition/Disease</label>
                   <input
                     type="text"
                     name="condition"
@@ -1722,7 +1722,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -1731,7 +1731,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Symptoms</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Symptoms</label>
                   <input
                     type="text"
                     name="symptoms"
@@ -1741,7 +1741,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -1750,7 +1750,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Treatment</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Treatment</label>
                   <input
                     type="text"
                     name="treatment"
@@ -1760,7 +1760,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -1769,7 +1769,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Medication</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Medication</label>
                   <input
                     type="text"
                     name="medication"
@@ -1779,7 +1779,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -1788,7 +1788,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Dosage</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Dosage</label>
                   <input
                     type="text"
                     name="dosage"
@@ -1798,7 +1798,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -1807,7 +1807,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Veterinarian</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Veterinarian</label>
                   <input
                     type="text"
                     name="veterinarian"
@@ -1817,7 +1817,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -1826,7 +1826,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Cost</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Cost</label>
                   <input
                     type="number"
                     name="cost"
@@ -1837,7 +1837,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -1846,7 +1846,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Follow-up Date</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Follow-up Date</label>
                   <input
                     type="date"
                     name="followUpDate"
@@ -1855,7 +1855,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -1864,7 +1864,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Status</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Status</label>
                   <select
                     name="status"
                     value={healthFormData.status}
@@ -1872,7 +1872,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -1887,7 +1887,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
               </div>
 
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Notes</label>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Notes</label>
                 <textarea
                   name="notes"
                   value={healthFormData.notes}
@@ -1897,7 +1897,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    border: '1px solid #d1d5db',
+                    border: '1px solid var(--border-secondary)',
                     borderRadius: '6px',
                     fontSize: '14px',
                     boxSizing: 'border-box',
@@ -1911,8 +1911,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                   onClick={handleSaveHealth}
                   style={{
                     padding: '10px 20px',
-                    background: '#10b981',
-                    color: 'white',
+                    background: 'var(--action-success)',
+                    color: 'var(--text-inverse)',
                     border: 'none',
                     borderRadius: '6px',
                     fontSize: '14px',
@@ -1929,8 +1929,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                   }}
                   style={{
                     padding: '10px 20px',
-                    background: '#e5e7eb',
-                    color: '#1f2937',
+                    background: 'var(--bg-tertiary)',
+                    color: 'var(--text-primary)',
                     border: 'none',
                     borderRadius: '6px',
                     fontSize: '14px',
@@ -1949,9 +1949,9 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
       {/* Breeding & Kidding View */}
       {mainView === 'breeding' && (
         <div>
-          <div style={{ background: 'white', padding: '16px', borderRadius: '8px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937' }}>Breeding & Kidding Records</h3>
+              <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>Breeding & Kidding Records</h3>
               <button
                 onClick={() => {
                   setShowBreedingForm(true)
@@ -1968,7 +1968,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   padding: '8px 16px',
                   background: '#f59e0b',
-                  color: 'white',
+                  color: 'var(--text-inverse)',
                   border: 'none',
                   borderRadius: '6px',
                   fontSize: '14px',
@@ -1981,38 +1981,38 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             </div>
 
             {breedingRecords.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#6b7280', padding: '40px' }}>No breeding records yet</p>
+              <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '40px' }}>No breeding records yet</p>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead>
-                  <tr style={{ background: '#f3f4f6', borderBottom: '1px solid #e5e7eb' }}>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Date</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Goat</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Event</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Sire</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Expected Due</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Birth Date</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Kids</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Actions</th>
+                  <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-primary)' }}>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Date</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Goat</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Event</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Sire</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Expected Due</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Birth Date</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Kids</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {breedingRecords.map((record, idx) => (
-                    <tr key={record.id} style={{ borderBottom: '1px solid #e5e7eb', background: idx % 2 === 0 ? 'white' : '#f9fafb' }}>
-                      <td style={{ padding: '12px', color: '#374151' }}>{record.date}</td>
-                      <td style={{ padding: '12px', color: '#374151', fontWeight: '600' }}>{record.goatName}</td>
-                      <td style={{ padding: '12px', color: '#6b7280' }}>{record.eventType}</td>
-                      <td style={{ padding: '12px', color: '#6b7280' }}>{record.sireName || '-'}</td>
-                      <td style={{ padding: '12px', color: '#6b7280' }}>{record.expectedDueDate || '-'}</td>
-                      <td style={{ padding: '12px', color: '#6b7280' }}>{record.actualBirthDate || '-'}</td>
-                      <td style={{ padding: '12px', color: '#6b7280' }}>{record.numberOfKids || '-'}</td>
+                    <tr key={record.id} style={{ borderBottom: '1px solid var(--border-primary)', background: idx % 2 === 0 ? 'white' : '#f9fafb' }}>
+                      <td style={{ padding: '12px', color: 'var(--text-primary)' }}>{record.date}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-primary)', fontWeight: '600' }}>{record.goatName}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{record.eventType}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{record.sireName || '-'}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{record.expectedDueDate || '-'}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{record.actualBirthDate || '-'}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{record.numberOfKids || '-'}</td>
                       <td style={{ padding: '12px' }}>
                         <button
                           onClick={() => handleEditBreeding(record)}
                           style={{
                             padding: '4px 10px',
                             background: '#6366f1',
-                            color: 'white',
+                            color: 'var(--text-inverse)',
                             border: 'none',
                             borderRadius: '4px',
                             fontSize: '12px',
@@ -2027,8 +2027,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                           onClick={() => handleDeleteBreeding(record.id)}
                           style={{
                             padding: '4px 10px',
-                            background: '#ef4444',
-                            color: 'white',
+                            background: 'var(--action-danger)',
+                            color: 'var(--text-inverse)',
                             border: 'none',
                             borderRadius: '4px',
                             fontSize: '12px',
@@ -2048,14 +2048,14 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
 
           {/* Breeding Form */}
           {showBreedingForm && (
-            <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: '#1f2937' }}>
+            <div style={{ background: 'var(--bg-elevated)', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: 'var(--text-primary)' }}>
                 {editingBreedingId ? '✏️ Edit Breeding Record' : '➕ Add Breeding/Kidding Record'}
               </h3>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Goat (Dam) *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Goat (Dam) *</label>
                   <select
                     name="goatId"
                     value={breedingFormData.goatId}
@@ -2066,7 +2066,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2080,7 +2080,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Date *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Date *</label>
                   <input
                     type="date"
                     name="date"
@@ -2089,7 +2089,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2098,7 +2098,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Event Type *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Event Type *</label>
                   <select
                     name="eventType"
                     value={breedingFormData.eventType}
@@ -2106,7 +2106,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2120,7 +2120,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Breeding Method</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Breeding Method</label>
                   <select
                     name="method"
                     value={breedingFormData.method}
@@ -2128,7 +2128,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2140,7 +2140,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Sire Tag/ID</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Sire Tag/ID</label>
                   <input
                     type="text"
                     name="sire"
@@ -2150,7 +2150,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2159,7 +2159,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Sire Name</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Sire Name</label>
                   <input
                     type="text"
                     name="sireName"
@@ -2169,7 +2169,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2178,7 +2178,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Expected Due Date</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Expected Due Date</label>
                   <input
                     type="date"
                     name="expectedDueDate"
@@ -2187,17 +2187,17 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
                     }}
                   />
-                  <small style={{ color: '#6b7280', fontSize: '12px' }}>Goat gestation: ~150 days</small>
+                  <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Goat gestation: ~150 days</small>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Actual Birth Date</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Actual Birth Date</label>
                   <input
                     type="date"
                     name="actualBirthDate"
@@ -2206,17 +2206,17 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
                     }}
                   />
-                  <small style={{ color: '#6b7280', fontSize: '12px' }}>Leave blank if not yet born</small>
+                  <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Leave blank if not yet born</small>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Number of Kids</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Number of Kids</label>
                   <input
                     type="number"
                     name="numberOfKids"
@@ -2227,7 +2227,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2236,7 +2236,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Status</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Status</label>
                   <select
                     name="status"
                     value={breedingFormData.status}
@@ -2244,7 +2244,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2259,7 +2259,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
               </div>
 
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Complications/Notes</label>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Complications/Notes</label>
                 <textarea
                   name="complications"
                   value={breedingFormData.complications}
@@ -2269,7 +2269,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    border: '1px solid #d1d5db',
+                    border: '1px solid var(--border-secondary)',
                     borderRadius: '6px',
                     fontSize: '14px',
                     boxSizing: 'border-box',
@@ -2284,7 +2284,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                   style={{
                     padding: '10px 20px',
                     background: '#f59e0b',
-                    color: 'white',
+                    color: 'var(--text-inverse)',
                     border: 'none',
                     borderRadius: '6px',
                     fontSize: '14px',
@@ -2301,8 +2301,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                   }}
                   style={{
                     padding: '10px 20px',
-                    background: '#e5e7eb',
-                    color: '#1f2937',
+                    background: 'var(--bg-tertiary)',
+                    color: 'var(--text-primary)',
                     border: 'none',
                     borderRadius: '6px',
                     fontSize: '14px',
@@ -2323,20 +2323,20 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
         <div>
           {/* Kids Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-            <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <div style={{ color: '#6b7280', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Total Kids</div>
+            <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Total Kids</div>
               <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#8b5cf6' }}>{kids.length}</div>
             </div>
-            <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <div style={{ color: '#6b7280', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Active</div>
-              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#3b82f6' }}>{kids.filter(k => k.status === 'Active').length}</div>
+            <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Active</div>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--action-primary)' }}>{kids.filter(k => k.status === 'Active').length}</div>
             </div>
-            <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <div style={{ color: '#6b7280', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Healthy</div>
-              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#10b981' }}>{kids.filter(k => k.healthStatus === 'Healthy').length}</div>
+            <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Healthy</div>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--action-success)' }}>{kids.filter(k => k.healthStatus === 'Healthy').length}</div>
             </div>
-            <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <div style={{ color: '#6b7280', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Avg Weight</div>
+            <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Avg Weight</div>
               <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>
                 {kids.length > 0 ? (kids.reduce((sum, k) => sum + (parseFloat(k.currentWeight) || 0), 0) / kids.length).toFixed(1) : 0} kg
               </div>
@@ -2344,7 +2344,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
           </div>
 
           {/* Kids Controls */}
-          <div style={{ background: 'white', padding: '16px', borderRadius: '8px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
               <input
                 type="text"
@@ -2355,7 +2355,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                   flex: 1,
                   minWidth: '200px',
                   padding: '10px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-secondary)',
                   borderRadius: '6px',
                   fontSize: '14px'
                 }}
@@ -2365,7 +2365,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 style={{
                   padding: '10px 20px',
                   background: '#8b5cf6',
-                  color: 'white',
+                  color: 'var(--text-inverse)',
                   border: 'none',
                   borderRadius: '6px',
                   fontSize: '14px',
@@ -2379,9 +2379,9 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
           </div>
 
           {/* Kids Table */}
-          <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: '24px' }}>
+          <div style={{ background: 'var(--bg-elevated)', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: '24px' }}>
             {kids.filter(k => !kidSearch || k.name?.toLowerCase().includes(kidSearch.toLowerCase()) || k.tag?.toLowerCase().includes(kidSearch.toLowerCase()) || k.damName?.toLowerCase().includes(kidSearch.toLowerCase())).length === 0 ? (
-              <div style={{ padding: '40px 20px', textAlign: 'center', color: '#6b7280' }}>
+              <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                 <div style={{ fontSize: '48px', marginBottom: '12px' }}>🐐</div>
                 <p style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>No kids found</p>
               </div>
@@ -2389,30 +2389,30 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                   <thead>
-                    <tr style={{ background: '#f3f4f6', borderBottom: '1px solid #e5e7eb' }}>
-                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Tag</th>
-                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Name</th>
-                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Dam</th>
-                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>DOB</th>
-                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Sex</th>
-                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Weight (kg)</th>
-                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Health</th>
-                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Actions</th>
+                    <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-primary)' }}>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Tag</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Name</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Dam</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>DOB</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Sex</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Weight (kg)</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Health</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-primary)' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {kids.filter(k => !kidSearch || k.name?.toLowerCase().includes(kidSearch.toLowerCase()) || k.tag?.toLowerCase().includes(kidSearch.toLowerCase()) || k.damName?.toLowerCase().includes(kidSearch.toLowerCase())).map((kid, idx) => (
-                      <tr key={kid.id} style={{ borderBottom: '1px solid #e5e7eb', background: idx % 2 === 0 ? 'white' : '#f9fafb' }}>
-                        <td style={{ padding: '12px', color: '#374151' }}>
+                      <tr key={kid.id} style={{ borderBottom: '1px solid var(--border-primary)', background: idx % 2 === 0 ? 'white' : '#f9fafb' }}>
+                        <td style={{ padding: '12px', color: 'var(--text-primary)' }}>
                           <span style={{ background: '#ede9fe', color: '#6d28d9', padding: '2px 8px', borderRadius: '4px', fontSize: '13px', fontWeight: '600' }}>
                             {kid.tag}
                           </span>
                         </td>
-                        <td style={{ padding: '12px', color: '#374151', fontWeight: '600' }}>{kid.name}</td>
-                        <td style={{ padding: '12px', color: '#6b7280' }}>{kid.damName || '-'}</td>
-                        <td style={{ padding: '12px', color: '#6b7280' }}>{kid.dob || '-'}</td>
-                        <td style={{ padding: '12px', color: '#6b7280' }}>{kid.sex === 'Male' ? '♂️' : '♀️'}</td>
-                        <td style={{ padding: '12px', color: '#6b7280' }}>{kid.currentWeight || '-'}</td>
+                        <td style={{ padding: '12px', color: 'var(--text-primary)', fontWeight: '600' }}>{kid.name}</td>
+                        <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{kid.damName || '-'}</td>
+                        <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{kid.dob || '-'}</td>
+                        <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{kid.sex === 'Male' ? '♂️' : '♀️'}</td>
+                        <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{kid.currentWeight || '-'}</td>
                         <td style={{ padding: '12px' }}>
                           <span style={{
                             background: kid.healthStatus === 'Healthy' ? '#dcfce7' : '#fee2e2',
@@ -2432,7 +2432,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                               style={{
                                 padding: '4px 10px',
                                 background: '#6366f1',
-                                color: 'white',
+                                color: 'var(--text-inverse)',
                                 border: 'none',
                                 borderRadius: '4px',
                                 fontSize: '12px',
@@ -2446,8 +2446,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                               onClick={() => handleAddKidHealth(kid.id, kid.name)}
                               style={{
                                 padding: '4px 10px',
-                                background: '#10b981',
-                                color: 'white',
+                                background: 'var(--action-success)',
+                                color: 'var(--text-inverse)',
                                 border: 'none',
                                 borderRadius: '4px',
                                 fontSize: '12px',
@@ -2462,8 +2462,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                               onClick={() => handleDeleteKid(kid.id, kid.name)}
                               style={{
                                 padding: '4px 10px',
-                                background: '#ef4444',
-                                color: 'white',
+                                background: 'var(--action-danger)',
+                                color: 'var(--text-inverse)',
                                 border: 'none',
                                 borderRadius: '4px',
                                 fontSize: '12px',
@@ -2485,14 +2485,14 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
 
           {/* Add/Edit Kid Form */}
           {showKidForm && (
-            <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: '#1f2937' }}>
+            <div style={{ background: 'var(--bg-elevated)', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: 'var(--text-primary)' }}>
                 {editingKidId ? '✏️ Edit Kid' : '➕ Add New Kid'}
               </h3>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Tag Number *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Tag Number *</label>
                   <input
                     type="text"
                     name="tag"
@@ -2502,7 +2502,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2511,7 +2511,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Name *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Name *</label>
                   <input
                     type="text"
                     name="name"
@@ -2521,7 +2521,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2530,7 +2530,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Dam (Mother)</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Dam (Mother)</label>
                   <select
                     name="damId"
                     value={kidFormData.damId}
@@ -2541,7 +2541,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2555,7 +2555,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Sire (Father)</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Sire (Father)</label>
                   <input
                     type="text"
                     name="sireName"
@@ -2565,7 +2565,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2574,7 +2574,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Date of Birth</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Date of Birth</label>
                   <input
                     type="date"
                     name="dob"
@@ -2583,7 +2583,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2592,7 +2592,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Sex</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Sex</label>
                   <select
                     name="sex"
                     value={kidFormData.sex}
@@ -2600,7 +2600,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2612,7 +2612,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Breed</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Breed</label>
                   <input
                     type="text"
                     name="breed"
@@ -2622,7 +2622,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2631,7 +2631,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Birth Weight (kg)</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Birth Weight (kg)</label>
                   <input
                     type="number"
                     name="birthWeight"
@@ -2642,7 +2642,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2651,7 +2651,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Current Weight (kg)</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Current Weight (kg)</label>
                   <input
                     type="number"
                     name="currentWeight"
@@ -2662,7 +2662,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2671,7 +2671,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Health Status</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Health Status</label>
                   <select
                     name="healthStatus"
                     value={kidFormData.healthStatus}
@@ -2679,7 +2679,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2692,7 +2692,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Housing Type</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Housing Type</label>
                   <select
                     name="housingType"
                     value={kidFormData.housingType}
@@ -2700,7 +2700,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2713,7 +2713,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Colostrum Intake</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Colostrum Intake</label>
                   <select
                     name="colostrumIntake"
                     value={kidFormData.colostrumIntake}
@@ -2721,7 +2721,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2734,7 +2734,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Weaning Date</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Weaning Date</label>
                   <input
                     type="date"
                     name="weaningDate"
@@ -2743,7 +2743,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2752,7 +2752,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Weaning Weight (kg)</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Weaning Weight (kg)</label>
                   <input
                     type="number"
                     name="weaningWeight"
@@ -2763,7 +2763,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2772,7 +2772,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Status</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Status</label>
                   <select
                     name="status"
                     value={kidFormData.status}
@@ -2780,7 +2780,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2795,7 +2795,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
               </div>
 
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Notes</label>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Notes</label>
                 <textarea
                   name="notes"
                   value={kidFormData.notes}
@@ -2805,7 +2805,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    border: '1px solid #d1d5db',
+                    border: '1px solid var(--border-secondary)',
                     borderRadius: '6px',
                     fontSize: '14px',
                     boxSizing: 'border-box',
@@ -2820,7 +2820,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                   style={{
                     padding: '10px 20px',
                     background: '#8b5cf6',
-                    color: 'white',
+                    color: 'var(--text-inverse)',
                     border: 'none',
                     borderRadius: '6px',
                     fontSize: '14px',
@@ -2837,8 +2837,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                   }}
                   style={{
                     padding: '10px 20px',
-                    background: '#e5e7eb',
-                    color: '#1f2937',
+                    background: 'var(--bg-tertiary)',
+                    color: 'var(--text-primary)',
                     border: 'none',
                     borderRadius: '6px',
                     fontSize: '14px',
@@ -2854,14 +2854,14 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
 
           {/* Kids Health Records */}
           {showKidHealthForm && (
-            <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: '#1f2937' }}>
+            <div style={{ background: 'var(--bg-elevated)', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: 'var(--text-primary)' }}>
                 {editingKidHealthId ? '✏️ Edit Health Record' : '➕ Add Health Record'}
               </h3>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Kid *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Kid *</label>
                   <select
                     name="kidId"
                     value={kidHealthForm.kidId}
@@ -2872,7 +2872,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2886,7 +2886,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Date *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Date *</label>
                   <input
                     type="date"
                     name="date"
@@ -2895,7 +2895,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2904,7 +2904,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Type *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Type *</label>
                   <select
                     name="type"
                     value={kidHealthForm.type}
@@ -2912,7 +2912,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2928,7 +2928,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Treatment</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Treatment</label>
                   <input
                     type="text"
                     name="treatment"
@@ -2938,7 +2938,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2947,7 +2947,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Diagnosis</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Diagnosis</label>
                   <input
                     type="text"
                     name="diagnosis"
@@ -2957,7 +2957,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2966,7 +2966,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Medication</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Medication</label>
                   <input
                     type="text"
                     name="medication"
@@ -2976,7 +2976,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -2985,7 +2985,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Dosage</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Dosage</label>
                   <input
                     type="text"
                     name="dosage"
@@ -2995,7 +2995,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -3004,7 +3004,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Veterinarian</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Veterinarian</label>
                   <input
                     type="text"
                     name="veterinarian"
@@ -3014,7 +3014,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -3023,7 +3023,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Cost</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Cost</label>
                   <input
                     type="number"
                     name="cost"
@@ -3034,7 +3034,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -3043,7 +3043,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Next Visit</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Next Visit</label>
                   <input
                     type="date"
                     name="nextVisit"
@@ -3052,7 +3052,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--border-secondary)',
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -3062,7 +3062,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
               </div>
 
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>Notes</label>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Notes</label>
                 <textarea
                   name="notes"
                   value={kidHealthForm.notes}
@@ -3072,7 +3072,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    border: '1px solid #d1d5db',
+                    border: '1px solid var(--border-secondary)',
                     borderRadius: '6px',
                     fontSize: '14px',
                     boxSizing: 'border-box',
@@ -3087,7 +3087,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                   style={{
                     padding: '10px 20px',
                     background: '#8b5cf6',
-                    color: 'white',
+                    color: 'var(--text-inverse)',
                     border: 'none',
                     borderRadius: '6px',
                     fontSize: '14px',
@@ -3109,8 +3109,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
                   }}
                   style={{
                     padding: '10px 20px',
-                    background: '#e5e7eb',
-                    color: '#1f2937',
+                    background: 'var(--bg-tertiary)',
+                    color: 'var(--text-primary)',
                     border: 'none',
                     borderRadius: '6px',
                     fontSize: '14px',

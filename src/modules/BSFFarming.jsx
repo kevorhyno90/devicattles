@@ -467,7 +467,7 @@ export default function BSFFarming({ initialTab = 'colonies', recordSource = nul
           </div>
           <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
             <button onClick={addColony}>Add Colony</button>
-            <button onClick={() => setShowAddColony(false)} style={{ background: '#6b7280' }}>Cancel</button>
+            <button onClick={() => setShowAddColony(false)} style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)' }}>Cancel</button>
           </div>
         </div>
       )}
@@ -513,8 +513,8 @@ export default function BSFFarming({ initialTab = 'colonies', recordSource = nul
                             {COLONY_STATUS.map(s=><option key={s}>{s}</option>)}
                           </select>
                           <input type="number" value={inlineData.population} onChange={e=>setInlineData({...inlineData,population:e.target.value})} placeholder="Population" style={{width:120}} />
-                          <button onClick={saveInlineEdit} style={{background:'#10b981',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✓ Save</button>
-                          <button onClick={cancelInlineEdit} style={{background:'#ef4444',color:'#fff',padding:'6px 12px',border:'none',borderRadius:4}}>✕ Cancel</button>
+                          <button onClick={saveInlineEdit} style={{background:'var(--action-success)',color:'var(--text-inverse)',padding:'6px 12px',border:'none',borderRadius:4}}>✓ Save</button>
+                          <button onClick={cancelInlineEdit} style={{background:'var(--action-danger)',color:'var(--text-inverse)',padding:'6px 12px',border:'none',borderRadius:4}}>✕ Cancel</button>
                         </div>
                       </div>
                     ) : (
@@ -523,7 +523,7 @@ export default function BSFFarming({ initialTab = 'colonies', recordSource = nul
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
                           <span style={{ fontWeight: 600, fontSize: 16 }}>{colony.name}</span>
                           <span className="badge" style={{ 
-                            background: colony.status === 'Active' ? '#d1fae5' : colony.status === 'Growing' ? '#fef3c7' : '#e5e7eb' 
+                            background: colony.status === 'Active' ? 'var(--bg-secondary)' : colony.status === 'Growing' ? 'var(--bg-secondary)' : 'var(--bg-tertiary)' 
                           }}>{colony.status}</span>
                         </div>
                         <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
@@ -540,7 +540,7 @@ export default function BSFFarming({ initialTab = 'colonies', recordSource = nul
                         )}
                       </div>
                       <div style={{display:'flex',gap:4,flexDirection:'column'}}>
-                        <button onClick={()=>startInlineEdit(colony)} style={{fontSize:12,padding:'4px 8px',background:'#3b82f6',color:'#fff'}}>⚡ Quick</button>
+                        <button onClick={()=>startInlineEdit(colony)} style={{fontSize:12,padding:'4px 8px',background:'var(--action-primary)',color:'var(--text-inverse)'}}>⚡ Quick</button>
                         <button onClick={() => deleteColony(colony.id)} style={{ fontSize: 12, padding: '4px 8px', background: '#dc2626' }}>Delete</button>
                       </div>
                     </div>
@@ -707,7 +707,7 @@ export default function BSFFarming({ initialTab = 'colonies', recordSource = nul
         </div>
       )}
       {toast && (
-        <div style={{position:'fixed',bottom:20,right:20,padding:'12px 20px',background:toast.type==='error'?'#ef4444':'#10b981',color:'#fff',borderRadius:8,boxShadow:'0 4px 12px rgba(0,0,0,0.15)',zIndex:10000,display:'flex',gap:12}}>
+        <div style={{position:'fixed',bottom:20,right:20,padding:'12px 20px',background:toast.type==='error'?'var(--action-danger)':'var(--action-success)',color:'var(--text-inverse)',borderRadius:8,boxShadow:'0 4px 12px rgba(0,0,0,0.15)',zIndex:10000,display:'flex',gap:12}}>
           <span>{toast.message}</span>
           {toast.showUndo && <button onClick={undoLastChange} style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',padding:'4px 12px',borderRadius:4,cursor:'pointer'}}>↶ Undo</button>}
         </div>
