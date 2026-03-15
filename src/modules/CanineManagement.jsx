@@ -6,8 +6,10 @@ import { logActivity } from '../lib/activityLogger'
 import { NOTIFICATION_TYPES, PRIORITIES } from '../lib/notifications'
 import { validateCanineHealthInput, validateCanineVaccineInput, validateCanineHusbandryInput, scheduleLivestockReminder } from '../lib/livestockPhase1'
 
-export default function CanineManagement({ animals, setAnimals, initialTab = 'list', recordSource = null }) {
+export default function CanineManagement({ animals = [], setAnimals, initialTab = 'list', recordSource = null }) {
   const canines = animals.filter(a => a.groupId === 'G-008')
+  const [listSearch, setListSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState('all')
   const [showForm, setShowForm] = useState(false)
   const [selectedCanine, setSelectedCanine] = useState(null)
   const [tab, setTab] = useState('list') // Top-level tab
@@ -61,6 +63,137 @@ export default function CanineManagement({ animals, setAnimals, initialTab = 'li
   })
 
   const [showCV, setShowCV] = useState(false)
+
+  const filteredCanines = canines.filter((dog) => {
+    const q = listSearch.trim().toLowerCase()
+    const matchesSearch = !q ||
+      String(dog.name || '').toLowerCase().includes(q) ||
+      String(dog.breed || '').toLowerCase().includes(q) ||
+      String(dog.tag || '').toLowerCase().includes(q)
+    const matchesRole = roleFilter === 'all' || String(dog.role || '') === roleFilter
+    return matchesSearch && matchesRole
+  })
+
+  const totalHealthRecords = canines.reduce((sum, dog) => sum + (dog.healthRecords || []).length, 0)
+  const totalVaccineRecords = canines.reduce((sum, dog) => sum + (dog.vaccineRecords || []).length, 0)
+  const totalHusbandryRecords = canines.reduce((sum, dog) => sum + (dog.husbandryLog || []).length, 0)
+
+  const caninePremiumStyles = `
+    .canine-premium {
+      --canine-ink: #0f172a;
+      --canine-subtle: #475569;
+      font-family: "Nunito Sans", "Segoe UI", sans-serif;
+      max-width: 1480px;
+      margin: 0 auto;
+      border-radius: 24px;
+      border: 1px solid #dbeafe;
+      background:
+        radial-gradient(circle at 12% -4%, rgba(16, 185, 129, 0.14) 0, transparent 38%),
+        radial-gradient(circle at 100% 0, rgba(2, 132, 199, 0.14) 0, transparent 40%),
+        linear-gradient(145deg, #ecfeff, #f8fafc);
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+      animation: canineFadeIn 0.52s ease-out;
+    }
+    @keyframes canineFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes canineRise {
+      from { opacity: 0; transform: translateY(10px) scale(0.986); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .canine-premium h1,
+    .canine-premium h2,
+    .canine-premium h3,
+    .canine-premium h4 {
+      color: var(--canine-ink);
+      letter-spacing: -0.02em;
+      font-family: "M PLUS Rounded 1c", "Nunito Sans", sans-serif;
+    }
+    .canine-premium p,
+    .canine-premium label,
+    .canine-premium small {
+      color: var(--canine-subtle);
+    }
+    .canine-premium input,
+    .canine-premium select,
+    .canine-premium textarea {
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .canine-premium input:focus,
+    .canine-premium select:focus,
+    .canine-premium textarea:focus {
+      outline: none;
+      border-color: #06b6d4;
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.16);
+    }
+    .canine-premium .canine-hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #bae6fd;
+      border-radius: 16px;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.78);
+    }
+    .canine-premium .canine-hero::after {
+      content: "";
+      position: absolute;
+      width: 160px;
+      height: 160px;
+      border-radius: 999px;
+      top: -54px;
+      right: -42px;
+      background: radial-gradient(circle at center, rgba(6, 182, 212, 0.18), rgba(6, 182, 212, 0));
+      pointer-events: none;
+    }
+    .canine-premium .canine-stat-grid > div {
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      animation: canineRise 0.5s ease both;
+    }
+    .canine-premium .canine-stat-grid > div:nth-child(2) { animation-delay: 0.05s; }
+    .canine-premium .canine-stat-grid > div:nth-child(3) { animation-delay: 0.1s; }
+    .canine-premium .canine-stat-grid > div:nth-child(4) { animation-delay: 0.15s; }
+    .canine-premium button {
+      min-height: 44px;
+      touch-action: manipulation;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+    .canine-premium button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+    }
+    @media (max-width: 768px) {
+      .canine-premium {
+        padding: 14px !important;
+        border-radius: 16px;
+      }
+      .canine-premium .canine-hero {
+        padding: 12px !important;
+      }
+      .canine-premium .canine-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+      }
+      .canine-premium input,
+      .canine-premium select,
+      .canine-premium textarea,
+      .canine-premium button {
+        font-size: 16px;
+      }
+      .canine-premium input,
+      .canine-premium select,
+      .canine-premium textarea {
+        min-height: 42px;
+      }
+    }
+    @media (max-width: 520px) {
+      .canine-premium .canine-stat-grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  `
 
   useEffect(() => {
     const allowed = new Set(['list', 'health', 'vaccines', 'husbandry'])
@@ -294,8 +427,9 @@ export default function CanineManagement({ animals, setAnimals, initialTab = 'li
   }
 
   return (
-    <div style={{ padding: '20px', background: '#f9fafb', borderRadius: '8px' }}>
-        <div style={{ marginBottom: '20px' }}>
+    <div className="canine-premium" style={{ padding: '20px' }}>
+        <style>{caninePremiumStyles}</style>
+        <div className="canine-hero" style={{ marginBottom: '20px' }}>
           <h3 style={{ marginTop: 0 }}>🐕 Canine Management</h3>
           <p style={{ color: '#666', fontSize: '14px' }}>Comprehensive dog management with health, vaccination, and husbandry tracking</p>
           {recordSource?.domain && recordSource?.item && (
@@ -303,6 +437,25 @@ export default function CanineManagement({ animals, setAnimals, initialTab = 'li
               Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
             </div>
           )}
+        </div>
+
+        <div className="canine-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
+          <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 10, padding: 12 }}>
+            <div style={{ fontSize: 12, color: '#166534' }}>Registered Canines</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: '#166534' }}>{canines.length}</div>
+          </div>
+          <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: 12 }}>
+            <div style={{ fontSize: 12, color: '#1d4ed8' }}>Health Records</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: '#1d4ed8' }}>{totalHealthRecords}</div>
+          </div>
+          <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 10, padding: 12 }}>
+            <div style={{ fontSize: 12, color: '#c2410c' }}>Vaccination Records</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: '#c2410c' }}>{totalVaccineRecords}</div>
+          </div>
+          <div style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 10, padding: 12 }}>
+            <div style={{ fontSize: 12, color: '#6d28d9' }}>Husbandry Logs</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: '#6d28d9' }}>{totalHusbandryRecords}</div>
+          </div>
         </div>
 
         {/* Top-Level Tabs */}
@@ -325,10 +478,24 @@ export default function CanineManagement({ animals, setAnimals, initialTab = 'li
 
         {tab === 'list' && (
           <>
-            {canines.length > 0 && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 1fr) minmax(180px, 220px)', gap: 10, marginBottom: 14 }}>
+              <input
+                type="text"
+                value={listSearch}
+                onChange={(e) => setListSearch(e.target.value)}
+                placeholder="Search by name, breed, or tag..."
+                style={{ padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13 }}
+              />
+              <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} style={{ padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13 }}>
+                <option value="all">All Roles</option>
+                {roles.map((role) => <option key={role} value={role}>{role}</option>)}
+              </select>
+            </div>
+
+            {filteredCanines.length > 0 && (
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
-                  {canines.map(dog => (
+                  {filteredCanines.map(dog => (
                     <div key={dog.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '14px', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                       {inlineEditId === dog.id ? (
                         <div onKeyDown={handleKeyDown} style={{display:'flex',flexDirection:'column',gap:8}}>
@@ -375,10 +542,10 @@ export default function CanineManagement({ animals, setAnimals, initialTab = 'li
                 </div>
               )}
 
-              {canines.length === 0 && !showForm && (
+              {filteredCanines.length === 0 && !showForm && (
                 <div style={{ background: 'white', border: '2px dashed #d1d5db', borderRadius: '8px', padding: '40px 20px', textAlign: 'center', marginBottom: '20px' }}>
                   <div style={{ fontSize: '32px', marginBottom: '10px' }}>🐕</div>
-                  <p style={{ margin: '0', color: '#666' }}>No canines registered yet</p>
+                  <p style={{ margin: '0', color: '#666' }}>{canines.length === 0 ? 'No canines registered yet' : 'No canines match the current filters'}</p>
                 </div>
               )}
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 // Pest and Disease Management submodules
 import { useEffect as useNotificationEffect } from 'react'
 import { exportToCSV, exportToExcel, exportToJSON, importFromCSV, importFromJSON } from '../lib/exportImport'
@@ -117,7 +117,7 @@ const parseDateValue = (value) => {
 
 const formatCurrency = (value) => `KES ${(Number(value) || 0).toFixed(2)}`
 
-export default function Crops() {
+export default function Crops({ initialTab = 'list', initialPlantSubmodule = 'all', recordSource = null }) {
   // Azolla state
   const KEY = 'cattalytics:crops'
   const YIELD_KEY = 'cattalytics:crops:yields'
@@ -232,6 +232,23 @@ export default function Crops() {
   const [form, setForm] = useState(emptyCrop)
   const [editingId, setEditingId] = useState(null)
   const [errors, setErrors] = useState({})
+  const lastRouteSyncRef = useRef({ tab: null, submodule: null })
+
+  useEffect(() => {
+    const allowedTabs = new Set(['list', 'addCrop', 'yields', 'sales', 'treatments', 'pests', 'diseases', 'reminders', 'alerts', 'profitability', 'cv'])
+    if (allowedTabs.has(initialTab) && lastRouteSyncRef.current.tab !== initialTab) {
+      setTab(initialTab)
+      lastRouteSyncRef.current.tab = initialTab
+    }
+  }, [initialTab])
+
+  useEffect(() => {
+    const allowedSubmodules = new Set(['all', ...Object.keys(PLANT_SUBMODULE_META)])
+    if (allowedSubmodules.has(initialPlantSubmodule) && lastRouteSyncRef.current.submodule !== initialPlantSubmodule) {
+      setPlantSubmodule(initialPlantSubmodule)
+      lastRouteSyncRef.current.submodule = initialPlantSubmodule
+    }
+  }, [initialPlantSubmodule])
 
   useEffect(() => {
     const raw = localStorage.getItem(KEY)
@@ -794,6 +811,12 @@ export default function Crops() {
             </button>
           )}
         </div>
+
+        {recordSource?.domain && recordSource?.item && (
+          <div style={{ marginBottom: '12px', fontSize: '12px', fontWeight: 700, color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
+            Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
+          </div>
+        )}
 
         <div style={{ marginBottom: '20px', padding: '14px', borderRadius: '10px', border: '1px solid #d1fae5', background: '#f8fffb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useMemo } from 'react'
 const Pastures = React.lazy(() => import('./Pastures'))
 const HealthSystem = React.lazy(() => import('./HealthSystem'))
 const AnimalFeeding = React.lazy(() => import('./AnimalFeeding'))
-const AnimalMeasurement = React.lazy(() => import('./AnimalMeasurement'))
+import AnimalMeasurement from './AnimalMeasurement'
 // Removed: import AnimalBreeding from './AnimalBreeding' (for startup perf)
 const AnimalBreeding = React.lazy(() => import('./AnimalBreeding'))
 const AnimalMilkYield = React.lazy(() => import('./AnimalMilkYield'))
@@ -29,6 +29,21 @@ import { LineChart } from '../components/Charts'
 export default function Animals({ section = 'all', initialTab = 'list', recordSource = null }) {
   const isDairySection = section === 'dairy'
   const dairyGroupId = 'G-001'
+  const dairyFallbackGroup = { id: dairyGroupId, name: 'Bovine', desc: 'Cattle, dairy cows, beef cattle, and related breeds.' }
+  const DAIRY_LIFECYCLE_STAGES = [
+    'Fresh (0-21 DIM)',
+    'Early Lactation (22-100 DIM)',
+    'Mid Lactation (101-200 DIM)',
+    'Late Lactation (201+ DIM)',
+    'Dry (Far-Off)',
+    'Close-Up Dry',
+    'Transition',
+    'Heifer',
+    'Pregnant Heifer',
+    'Pre-Weaned Calf',
+    'Post-Weaned Heifer',
+    'Not Applicable'
+  ]
 
   function isAnimalInScope(animal) {
     return !isDairySection || animal?.groupId === dairyGroupId
@@ -42,6 +57,72 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
   const [expandedGroups, setExpandedGroups] = useState([])
   const AKEY = 'cattalytics:animals'
   const GKEY = 'cattalytics:groups'
+  const DAIRY_SETTINGS_KEY = 'cattalytics:dairy:kpi:settings'
+  const DAIRY_CUSTOM_PRESETS_KEY = 'cattalytics:dairy:kpi:custom-presets'
+  const DAIRY_PRESET_META_KEY = 'cattalytics:dairy:kpi:preset-meta'
+  const DAIRY_PRESET_SCHEMA_VERSION = 2
+  const defaultDairyKpiSettings = {
+    milkingTargetPct: 55,
+    dryTargetPct: 18,
+    heiferTargetPct: 22,
+    pregnantTargetPct: 35,
+    freshTargetPct: 10,
+    dryMaxPct: 35,
+    milkingMinPct: 45,
+    unknownMaxCount: 0,
+    avgDimWarnAbove: 220,
+    requireCloseUpForPregnant: true
+  }
+  const dairyKpiPresets = {
+    conservative: {
+      label: 'Conservative',
+      description: 'Prioritizes safety margins, stronger dry-cow coverage, and tighter alert controls.',
+      settings: {
+        milkingTargetPct: 50,
+        freshTargetPct: 8,
+        dryTargetPct: 22,
+        heiferTargetPct: 24,
+        pregnantTargetPct: 40,
+        dryMaxPct: 32,
+        milkingMinPct: 48,
+        unknownMaxCount: 0,
+        avgDimWarnAbove: 205,
+        requireCloseUpForPregnant: true
+      }
+    },
+    balanced: {
+      label: 'Balanced',
+      description: 'Default operating profile with moderate targets and general-purpose herd thresholds.',
+      settings: {
+        milkingTargetPct: 55,
+        freshTargetPct: 10,
+        dryTargetPct: 18,
+        heiferTargetPct: 22,
+        pregnantTargetPct: 35,
+        dryMaxPct: 35,
+        milkingMinPct: 45,
+        unknownMaxCount: 0,
+        avgDimWarnAbove: 220,
+        requireCloseUpForPregnant: true
+      }
+    },
+    aggressive: {
+      label: 'Aggressive',
+      description: 'Pushes for higher milking share and leaner dry periods for tighter throughput management.',
+      settings: {
+        milkingTargetPct: 62,
+        freshTargetPct: 12,
+        dryTargetPct: 14,
+        heiferTargetPct: 18,
+        pregnantTargetPct: 30,
+        dryMaxPct: 30,
+        milkingMinPct: 52,
+        unknownMaxCount: 0,
+        avgDimWarnAbove: 235,
+        requireCloseUpForPregnant: false
+      }
+    }
+  }
 
   // Default groups for first load, but allow adding/removing
   const DEFAULT_GROUPS = [
@@ -60,18 +141,21 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
   const SAMPLE_ANIMALS = [
     // Minimal sample data for performance - just 2 examples
     { id: 'A-001', tag: 'TAG1001', name: 'Daisy', breed: 'Holstein', sex: 'F', color: 'Black/White', dob: '2024-03-15', weight: 320, sire: 'S-100', dam: 'D-200', groupId: 'G-001', status: 'Active', notes: 'Healthy heifer', owner: 'Farm Owner', registration: 'REG-1001', tattoo: 'H-01', purchaseDate: '2024-03-20', purchasePrice: 85000, vendor: 'Valley Farms', tags: ['heifer'], photo: '', photos: [], pregnancyStatus: 'Not Pregnant', expectedDue: '', parity: 0, lactationStatus: 'Heifer',
+      daysInMilk: '', lastCalvingDate: '',
       production: { eggs: 0, meat: 0 },
       genetics: { pedigree: '', dnaMarkers: '' },
       location: { barn: '', pen: '', pasture: '' },
       events: []
     },
     { id: 'A-002', tag: 'TAG1002', name: 'Bessie', breed: 'Jersey', sex: 'F', color: 'Brown', dob: '2021-05-10', weight: 480, sire: 'S-101', dam: 'D-201', groupId: 'G-001', status: 'Active', notes: 'Pregnant cow', owner: 'Farm Owner', registration: 'REG-1002', tattoo: 'C-01', purchaseDate: '2020-09-10', purchasePrice: 145000, vendor: 'Green Pastures', tags: ['pregnant'], photo: '', pregnancyStatus: 'Pregnant', expectedDue: '2026-02-20', parity: 2, lactationStatus: 'Dry',
+      daysInMilk: 248, lastCalvingDate: '2025-07-10',
       production: { eggs: 0, meat: 0 },
       genetics: { pedigree: '', dnaMarkers: '' },
       location: { barn: '', pen: '', pasture: '' },
       events: []
     },
     { id: 'A-003', tag: 'DOG-001', name: 'Max', breed: 'German Shepherd', sex: 'M', color: 'Black/Tan', dob: '2022-04-15', weight: 38, sire: '', dam: '', groupId: 'G-008', status: 'Active', notes: 'Guard dog', owner: 'Farm Owner', registration: 'CAN-2022-001', tattoo: '', purchaseDate: '2022-06-01', purchasePrice: 25000, vendor: 'Working Dogs Kenya', tags: ['guard','trained'], photo: '', pregnancyStatus: 'Not Applicable', expectedDue: '', parity: 0, lactationStatus: 'NA',
+      daysInMilk: '', lastCalvingDate: '',
       production: { work: '' },
       genetics: { pedigree: '' },
       location: { pen: '' },
@@ -79,7 +163,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
     }
   ]
 
-  const [tab, setTab] = useState('list')
+  const [tab, setTab] = useState(isDairySection ? 'addGroup' : 'list')
   const [formTab, setFormTab] = useState('basic') // New: for multi-tab animal form
   const [animals, setAnimals] = useState([])
   const [groups, setGroups] = useState([])
@@ -223,8 +307,314 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
   const [groupStartDate, setGroupStartDate] = useState('')
   const [groupEndDate, setGroupEndDate] = useState('')
   const [editingGroupId, setEditingGroupId] = useState(null)
+  const [dairyGroupingFilter, setDairyGroupingFilter] = useState('')
+  const [dairyLifecycleFilter, setDairyLifecycleFilter] = useState('all')
+  const [selectedDairyAnimalIds, setSelectedDairyAnimalIds] = useState([])
+  const [bulkLifecycleStage, setBulkLifecycleStage] = useState('')
+  const [dairyKpiSettings, setDairyKpiSettings] = useState(defaultDairyKpiSettings)
+  const [selectedDairyPreset, setSelectedDairyPreset] = useState('balanced')
+  const [customDairyPresets, setCustomDairyPresets] = useState({})
+  const [customPresetName, setCustomPresetName] = useState('')
+  const [customPresetNotes, setCustomPresetNotes] = useState('')
+  const [isEditingSelectedPresetNote, setIsEditingSelectedPresetNote] = useState(false)
+  const [selectedPresetNoteDraft, setSelectedPresetNoteDraft] = useState('')
+  const [lastAppliedPreset, setLastAppliedPreset] = useState({ name: 'balanced', at: '' })
+  const [pendingPresetImport, setPendingPresetImport] = useState(null)
+  const presetImportInputRef = useRef(null)
+  const selectedPresetNoteEditorRef = useRef(null)
   const scopedAnimals = useMemo(() => animals.filter(isAnimalInScope), [animals, isDairySection])
   const visibleGroups = useMemo(() => groups.filter(isGroupInScope), [groups, isDairySection])
+  const isPresetLocked = !selectedDairyPreset.startsWith('custom::')
+
+  function ensureDairyGroup(groupList) {
+    const list = Array.isArray(groupList) ? groupList : []
+    if (!isDairySection) return list
+    if (list.some(g => g?.id === dairyGroupId)) return list
+    return [dairyFallbackGroup, ...list]
+  }
+
+  const groupOptionsForForm = useMemo(() => {
+    if (!isDairySection) return visibleGroups
+    const dairyGroup =
+      visibleGroups.find(g => g.id === dairyGroupId) ||
+      groups.find(g => g.id === dairyGroupId) ||
+      dairyFallbackGroup
+    return [dairyGroup]
+  }, [groups, isDairySection, visibleGroups])
+
+  function getPresetOptionMeta(presetKey) {
+    if (presetKey.startsWith('custom::')) {
+      const name = presetKey.replace('custom::', '')
+      const preset = customDairyPresets[name]
+      return {
+        label: name,
+        description: preset?.notes || 'Custom preset',
+        settings: preset?.settings || defaultDairyKpiSettings
+      }
+    }
+    return dairyKpiPresets[presetKey] || {
+      label: presetKey,
+      description: '',
+      settings: defaultDairyKpiSettings
+    }
+  }
+
+  const selectedPresetMeta = getPresetOptionMeta(selectedDairyPreset)
+
+  useEffect(() => {
+    setIsEditingSelectedPresetNote(false)
+    setSelectedPresetNoteDraft('')
+  }, [selectedDairyPreset])
+
+  useEffect(() => {
+    if (!isEditingSelectedPresetNote) return
+    if (!selectedPresetNoteEditorRef.current) return
+    const ta = selectedPresetNoteEditorRef.current
+    ta.style.height = 'auto'
+    ta.style.height = `${Math.max(96, ta.scrollHeight)}px`
+  }, [isEditingSelectedPresetNote, selectedPresetNoteDraft])
+
+  function renderPresetNoteContent(noteText) {
+    const text = String(noteText || '').trim()
+    if (!text) return <span>No note yet.</span>
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
+    if (!lines.length) return <span>{text}</span>
+
+    const allBullets = lines.every(l => /^[-*]\s+/.test(l))
+    if (allBullets) {
+      return (
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          {lines.map((line, idx) => (
+            <li key={idx}>{line.replace(/^[-*]\s+/, '')}</li>
+          ))}
+        </ul>
+      )
+    }
+
+    return (
+      <div style={{ whiteSpace: 'pre-wrap' }}>
+        {text}
+      </div>
+    )
+  }
+
+  function clampPercent(v, fallback) {
+    const n = Number(v)
+    if (Number.isNaN(n)) return fallback
+    return Math.max(0, Math.min(100, Math.round(n)))
+  }
+
+  function clampNonNegativeInt(v, fallback) {
+    const n = Number(v)
+    if (Number.isNaN(n)) return fallback
+    return Math.max(0, Math.round(n))
+  }
+
+  function sanitizeDairyKpiSettings(settings) {
+    const s = settings && typeof settings === 'object' ? settings : {}
+    return {
+      milkingTargetPct: clampPercent(s.milkingTargetPct, defaultDairyKpiSettings.milkingTargetPct),
+      dryTargetPct: clampPercent(s.dryTargetPct, defaultDairyKpiSettings.dryTargetPct),
+      heiferTargetPct: clampPercent(s.heiferTargetPct, defaultDairyKpiSettings.heiferTargetPct),
+      pregnantTargetPct: clampPercent(s.pregnantTargetPct, defaultDairyKpiSettings.pregnantTargetPct),
+      freshTargetPct: clampPercent(s.freshTargetPct, defaultDairyKpiSettings.freshTargetPct),
+      dryMaxPct: clampPercent(s.dryMaxPct, defaultDairyKpiSettings.dryMaxPct),
+      milkingMinPct: clampPercent(s.milkingMinPct, defaultDairyKpiSettings.milkingMinPct),
+      unknownMaxCount: clampNonNegativeInt(s.unknownMaxCount, defaultDairyKpiSettings.unknownMaxCount),
+      avgDimWarnAbove: clampNonNegativeInt(s.avgDimWarnAbove, defaultDairyKpiSettings.avgDimWarnAbove),
+      requireCloseUpForPregnant: typeof s.requireCloseUpForPregnant === 'boolean'
+        ? s.requireCloseUpForPregnant
+        : defaultDairyKpiSettings.requireCloseUpForPregnant
+    }
+  }
+
+  function sanitizePresetName(name) {
+    return String(name || '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .slice(0, 50)
+  }
+
+  function sanitizeCustomPresetMap(raw) {
+    if (!raw || typeof raw !== 'object') return {}
+    const out = {}
+    Object.entries(raw).forEach(([name, presetValue]) => {
+      const safeName = sanitizePresetName(name)
+      if (!safeName) return
+      const wrapped = presetValue && typeof presetValue === 'object' && ('settings' in presetValue || 'notes' in presetValue)
+      const settings = wrapped ? presetValue.settings : presetValue
+      const notes = wrapped ? String(presetValue.notes || '').trim().slice(0, 240) : ''
+      out[safeName] = {
+        settings: sanitizeDairyKpiSettings(settings),
+        notes
+      }
+    })
+    return out
+  }
+
+  function migratePresetPayload(parsed) {
+    if (!parsed || typeof parsed !== 'object') {
+      return {
+        version: DAIRY_PRESET_SCHEMA_VERSION,
+        customPresets: {},
+        currentSettings: null,
+        selectedDairyPreset: 'balanced',
+        lastAppliedPreset: null
+      }
+    }
+
+    const version = Number(parsed.version || 0)
+
+    if (version >= 1) {
+      return {
+        version,
+        customPresets: sanitizeCustomPresetMap(parsed.customPresets),
+        currentSettings: parsed.currentSettings ? sanitizeDairyKpiSettings(parsed.currentSettings) : null,
+        selectedDairyPreset: typeof parsed.selectedDairyPreset === 'string' ? parsed.selectedDairyPreset : 'balanced',
+        lastAppliedPreset: parsed.lastAppliedPreset && typeof parsed.lastAppliedPreset === 'object'
+          ? {
+              name: String(parsed.lastAppliedPreset.name || 'balanced'),
+              at: String(parsed.lastAppliedPreset.at || '')
+            }
+          : null
+      }
+    }
+
+    return {
+      version: DAIRY_PRESET_SCHEMA_VERSION,
+      customPresets: sanitizeCustomPresetMap(parsed),
+      currentSettings: null,
+      selectedDairyPreset: 'balanced',
+      lastAppliedPreset: null
+    }
+  }
+
+  function getAnimalDIM(animal) {
+    const dim = Number(animal?.daysInMilk)
+    if (!Number.isNaN(dim) && dim >= 0) return Math.round(dim)
+    if (!animal?.lastCalvingDate) return null
+    const calvingTs = Date.parse(animal.lastCalvingDate)
+    if (Number.isNaN(calvingTs)) return null
+    const days = Math.floor((Date.now() - calvingTs) / (24 * 60 * 60 * 1000))
+    return days >= 0 ? days : null
+  }
+
+  function suggestDairyLifecycleStage(animal) {
+    const parity = Number(animal?.parity || 0)
+    const pregnancy = (animal?.pregnancyStatus || '').toLowerCase()
+    const isPregnant = pregnancy === 'pregnant'
+    const dim = getAnimalDIM(animal)
+
+    if (animal?.sex === 'M') {
+      return { stage: 'Not Applicable', reason: 'Male animal', confidence: 'high' }
+    }
+
+    if (parity === 0) {
+      if (isPregnant) return { stage: 'Pregnant Heifer', reason: 'Parity 0 and pregnant', confidence: 'high' }
+      return { stage: 'Heifer', reason: 'Parity 0 and not pregnant', confidence: 'high' }
+    }
+
+    if (dim === null) {
+      if (isPregnant) return { stage: 'Transition', reason: 'Pregnant with missing DIM', confidence: 'medium' }
+      return { stage: 'Mid Lactation (101-200 DIM)', reason: 'Missing DIM, fallback stage', confidence: 'low' }
+    }
+
+    if (dim <= 21) return { stage: 'Fresh (0-21 DIM)', reason: `DIM ${dim}`, confidence: 'high' }
+    if (dim <= 100) return { stage: 'Early Lactation (22-100 DIM)', reason: `DIM ${dim}`, confidence: 'high' }
+    if (dim <= 200) return { stage: 'Mid Lactation (101-200 DIM)', reason: `DIM ${dim}`, confidence: 'high' }
+    if (dim <= 305) return { stage: 'Late Lactation (201+ DIM)', reason: `DIM ${dim}`, confidence: 'high' }
+    if (isPregnant) return { stage: 'Close-Up Dry', reason: `DIM ${dim} and pregnant`, confidence: 'medium' }
+    return { stage: 'Dry (Far-Off)', reason: `DIM ${dim}`, confidence: 'medium' }
+  }
+
+  const dairyStageSummary = useMemo(() => {
+    const summary = {}
+    for (const stage of DAIRY_LIFECYCLE_STAGES) summary[stage] = 0
+    for (const a of scopedAnimals) {
+      const key = DAIRY_LIFECYCLE_STAGES.includes(a?.lactationStatus) ? a.lactationStatus : 'Not Applicable'
+      summary[key] = (summary[key] || 0) + 1
+    }
+    return summary
+  }, [scopedAnimals])
+
+  const dairyGroupingRows = useMemo(() => {
+    const q = dairyGroupingFilter.trim().toLowerCase()
+    return scopedAnimals.filter(a => {
+      if (dairyLifecycleFilter !== 'all' && (a?.lactationStatus || 'Not Applicable') !== dairyLifecycleFilter) return false
+      if (!q) return true
+      const searchable = [a?.name, a?.tag, a?.id, a?.breed, a?.lactationStatus, a?.pregnancyStatus]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return searchable.includes(q)
+    })
+  }, [dairyGroupingFilter, dairyLifecycleFilter, scopedAnimals])
+
+  const dairyKPIs = useMemo(() => {
+    const total = scopedAnimals.length
+    const milkingStages = new Set([
+      'Fresh (0-21 DIM)',
+      'Early Lactation (22-100 DIM)',
+      'Mid Lactation (101-200 DIM)',
+      'Late Lactation (201+ DIM)'
+    ])
+    const dryStages = new Set(['Dry (Far-Off)', 'Close-Up Dry'])
+    const heiferStages = new Set(['Heifer', 'Pregnant Heifer', 'Post-Weaned Heifer', 'Pre-Weaned Calf'])
+
+    const milking = scopedAnimals.filter(a => milkingStages.has(a?.lactationStatus)).length
+    const fresh = scopedAnimals.filter(a => a?.lactationStatus === 'Fresh (0-21 DIM)').length
+    const dry = scopedAnimals.filter(a => dryStages.has(a?.lactationStatus)).length
+    const heifers = scopedAnimals.filter(a => heiferStages.has(a?.lactationStatus)).length
+    const pregnant = scopedAnimals.filter(a => (a?.pregnancyStatus || '').toLowerCase() === 'pregnant').length
+    const unknown = scopedAnimals.filter(a => !a?.lactationStatus || a.lactationStatus === 'Not Applicable').length
+
+    const dimValues = scopedAnimals.map(getAnimalDIM).filter(v => typeof v === 'number')
+    const avgDIM = dimValues.length ? Math.round(dimValues.reduce((s, v) => s + v, 0) / dimValues.length) : null
+
+    const pct = (n) => total ? Math.round((n / total) * 100) : 0
+    const alerts = []
+    const targets = {
+      milking: Number(dairyKpiSettings.milkingTargetPct) || 0,
+      dry: Number(dairyKpiSettings.dryTargetPct) || 0,
+      heifers: Number(dairyKpiSettings.heiferTargetPct) || 0,
+      pregnant: Number(dairyKpiSettings.pregnantTargetPct) || 0,
+      fresh: Number(dairyKpiSettings.freshTargetPct) || 0
+    }
+
+    if (unknown > (Number(dairyKpiSettings.unknownMaxCount) || 0)) {
+      alerts.push({ level: 'warning', text: `${unknown} animal(s) still have uncategorized lifecycle stage.` })
+    }
+    if (pct(dry) > (Number(dairyKpiSettings.dryMaxPct) || 0)) {
+      alerts.push({ level: 'warning', text: `Dry cows are ${pct(dry)}% of herd. Review dry-off plan.` })
+    }
+    if (pct(milking) < (Number(dairyKpiSettings.milkingMinPct) || 0) && total > 4) {
+      alerts.push({ level: 'info', text: `Milking stages are only ${pct(milking)}%. Check transition pipeline.` })
+    }
+    if (pregnant > 0 && dairyStageSummary['Close-Up Dry'] === 0 && dairyKpiSettings.requireCloseUpForPregnant) {
+      alerts.push({ level: 'warning', text: 'Pregnant cows detected with zero close-up dry cows.' })
+    }
+    if (avgDIM !== null && avgDIM > (Number(dairyKpiSettings.avgDimWarnAbove) || 0)) {
+      alerts.push({ level: 'info', text: `Average DIM is ${avgDIM}. Monitor late-lactation performance.` })
+    }
+
+    if (Math.abs(pct(milking) - targets.milking) > 10) {
+      alerts.push({ level: 'info', text: `Milking ratio ${pct(milking)}% is off target ${targets.milking}%.` })
+    }
+    if (Math.abs(pct(dry) - targets.dry) > 10) {
+      alerts.push({ level: 'info', text: `Dry ratio ${pct(dry)}% is off target ${targets.dry}%.` })
+    }
+    if (Math.abs(pct(heifers) - targets.heifers) > 12) {
+      alerts.push({ level: 'info', text: `Heifer ratio ${pct(heifers)}% is off target ${targets.heifers}%.` })
+    }
+    if (Math.abs(pct(pregnant) - targets.pregnant) > 15) {
+      alerts.push({ level: 'info', text: `Pregnancy ratio ${pct(pregnant)}% is off target ${targets.pregnant}%.` })
+    }
+    if (Math.abs(pct(fresh) - targets.fresh) > 8) {
+      alerts.push({ level: 'info', text: `Fresh cow ratio ${pct(fresh)}% is off target ${targets.fresh}%.` })
+    }
+
+    return { total, milking, fresh, dry, heifers, pregnant, unknown, avgDIM, alerts, pct, targets }
+  }, [dairyKpiSettings, dairyStageSummary, scopedAnimals])
 
   useEffect(() => {
     try {
@@ -274,25 +664,86 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
       setAnimals(animalsList)
 
       const rawG = localStorage.getItem(GKEY)
-      setGroups(rawG ? JSON.parse(rawG) : DEFAULT_GROUPS)
+      setGroups(ensureDairyGroup(rawG ? JSON.parse(rawG) : DEFAULT_GROUPS))
     } catch (err) {
       console.error('Failed parsing stored data', err)
       setAnimals(SAMPLE_ANIMALS)
-      setGroups(DEFAULT_GROUPS)
+      setGroups(ensureDairyGroup(DEFAULT_GROUPS))
     }
   }, [])
 
   useEffect(() => localStorage.setItem(AKEY, JSON.stringify(animals)), [animals])
   useEffect(() => localStorage.setItem(GKEY, JSON.stringify(groups)), [groups])
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DAIRY_SETTINGS_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      if (parsed && typeof parsed === 'object') {
+        setDairyKpiSettings(sanitizeDairyKpiSettings(parsed))
+      }
+    } catch (e) {
+      // Ignore settings load errors.
+    }
+  }, [])
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DAIRY_CUSTOM_PRESETS_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      if (parsed && typeof parsed === 'object') {
+        setCustomDairyPresets(sanitizeCustomPresetMap(parsed))
+      }
+    } catch (e) {
+      // Ignore custom preset load errors.
+    }
+  }, [])
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DAIRY_PRESET_META_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.lastAppliedPreset) setLastAppliedPreset(parsed.lastAppliedPreset)
+        if (parsed.selectedDairyPreset && typeof parsed.selectedDairyPreset === 'string') {
+          setSelectedDairyPreset(parsed.selectedDairyPreset)
+        }
+      }
+    } catch (e) {
+      // Ignore preset meta load errors.
+    }
+  }, [])
+  useEffect(() => {
+    try {
+      localStorage.setItem(DAIRY_SETTINGS_KEY, JSON.stringify(dairyKpiSettings))
+    } catch (e) {
+      // Ignore settings save errors.
+    }
+  }, [dairyKpiSettings])
+  useEffect(() => {
+    try {
+      localStorage.setItem(DAIRY_CUSTOM_PRESETS_KEY, JSON.stringify(customDairyPresets))
+    } catch (e) {
+      // Ignore custom preset save errors.
+    }
+  }, [customDairyPresets])
+  useEffect(() => {
+    try {
+      localStorage.setItem(DAIRY_PRESET_META_KEY, JSON.stringify({ selectedDairyPreset, lastAppliedPreset }))
+    } catch (e) {
+      // Ignore preset meta save errors.
+    }
+  }, [lastAppliedPreset, selectedDairyPreset])
+  useEffect(() => {
     if (!isDairySection) return
-    if (['addGroup', 'bsf', 'poultry', 'canine'].includes(tab)) setTab('list')
+    if (['bsf', 'poultry', 'canine'].includes(tab)) setTab('addGroup')
     if (filterGroup === 'ungrouped') setFilterGroup('all')
   }, [filterGroup, isDairySection, tab])
 
   useEffect(() => {
     const allowedTabs = new Set([
       'list',
+      'addGroup',
       'feeding',
       'health',
       'treatment',
@@ -306,9 +757,262 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
       'canine',
       'bsf'
     ])
-    const nextTab = allowedTabs.has(initialTab) ? initialTab : 'list'
+    const defaultTab = isDairySection ? 'addGroup' : 'list'
+    const nextTab = allowedTabs.has(initialTab) ? initialTab : defaultTab
     setTab(prev => (prev === nextTab ? prev : nextTab))
-  }, [initialTab])
+  }, [initialTab, isDairySection])
+
+  function updateDairyLifecycle(animalId, updates) {
+    setAnimals(prev => prev.map(a => (a.id === animalId ? { ...a, ...updates } : a)))
+  }
+
+  function toggleDairySelection(animalId) {
+    setSelectedDairyAnimalIds(prev => prev.includes(animalId) ? prev.filter(id => id !== animalId) : [...prev, animalId])
+  }
+
+  function selectAllFilteredDairy() {
+    setSelectedDairyAnimalIds(dairyGroupingRows.map(a => a.id))
+  }
+
+  function clearSelectedDairy() {
+    setSelectedDairyAnimalIds([])
+  }
+
+  function applyBulkLifecycleStage() {
+    if (!bulkLifecycleStage || selectedDairyAnimalIds.length === 0) return
+    setAnimals(prev => prev.map(a => selectedDairyAnimalIds.includes(a.id) ? { ...a, lactationStatus: bulkLifecycleStage } : a))
+    setBulkLifecycleStage('')
+  }
+
+  function applyAutoSuggestionToIds(ids) {
+    if (!ids.length) return
+    setAnimals(prev => prev.map(a => {
+      if (!ids.includes(a.id)) return a
+      const suggested = suggestDairyLifecycleStage(a)
+      return { ...a, lactationStatus: suggested.stage }
+    }))
+  }
+
+  function updateDairyKpiSetting(field, value) {
+    if (isPresetLocked) return
+    const numericFields = new Set([
+      'milkingTargetPct',
+      'dryTargetPct',
+      'heiferTargetPct',
+      'pregnantTargetPct',
+      'freshTargetPct',
+      'dryMaxPct',
+      'milkingMinPct',
+      'unknownMaxCount',
+      'avgDimWarnAbove'
+    ])
+    if (numericFields.has(field)) {
+      const next = Number(value)
+      setDairyKpiSettings(prev => ({ ...prev, [field]: Number.isNaN(next) ? 0 : next }))
+      return
+    }
+    setDairyKpiSettings(prev => ({ ...prev, [field]: value }))
+  }
+
+  function applyDairyPreset(presetKey) {
+    const preset = presetKey.startsWith('custom::')
+      ? customDairyPresets[presetKey.replace('custom::', '')]
+      : dairyKpiPresets[presetKey]
+    if (!preset) return
+    setDairyKpiSettings({ ...(preset.settings || preset) })
+    setSelectedDairyPreset(presetKey)
+    setLastAppliedPreset({ name: presetKey, at: new Date().toISOString() })
+  }
+
+  function resetDairyKpiSettings() {
+    setDairyKpiSettings({ ...defaultDairyKpiSettings })
+    setSelectedDairyPreset('balanced')
+    setLastAppliedPreset({ name: 'balanced', at: new Date().toISOString() })
+  }
+
+  function saveCustomDairyPreset() {
+    const name = sanitizePresetName(customPresetName)
+    if (!name) {
+      window.alert('Enter a preset name before saving.')
+      return
+    }
+    setCustomDairyPresets(prev => ({
+      ...prev,
+      [name]: {
+        settings: sanitizeDairyKpiSettings(dairyKpiSettings),
+        notes: String(customPresetNotes || '').trim().slice(0, 240)
+      }
+    }))
+    setSelectedDairyPreset(`custom::${name}`)
+    setLastAppliedPreset({ name: `custom::${name}`, at: new Date().toISOString() })
+    setCustomPresetName('')
+    setCustomPresetNotes('')
+  }
+
+  function deleteSelectedCustomPreset() {
+    if (!selectedDairyPreset.startsWith('custom::')) return
+    const name = selectedDairyPreset.replace('custom::', '')
+    if (!window.confirm(`Delete custom preset "${name}"?`)) return
+    setCustomDairyPresets(prev => {
+      const next = { ...prev }
+      delete next[name]
+      return next
+    })
+    setSelectedDairyPreset('balanced')
+    setLastAppliedPreset({ name: 'balanced', at: new Date().toISOString() })
+  }
+
+  function startInlineEditSelectedCustomPresetNote() {
+    if (!selectedDairyPreset.startsWith('custom::')) return
+    const name = selectedDairyPreset.replace('custom::', '')
+    const existing = customDairyPresets[name]?.notes || ''
+    setSelectedPresetNoteDraft(existing)
+    setIsEditingSelectedPresetNote(true)
+  }
+
+  function saveInlineSelectedCustomPresetNote() {
+    if (!selectedDairyPreset.startsWith('custom::')) return
+    const name = selectedDairyPreset.replace('custom::', '')
+    const safeNote = String(selectedPresetNoteDraft || '').trim().slice(0, 240)
+    setCustomDairyPresets(prev => {
+      const preset = prev[name]
+      if (!preset) return prev
+      return {
+        ...prev,
+        [name]: {
+          ...preset,
+          notes: safeNote
+        }
+      }
+    })
+    setIsEditingSelectedPresetNote(false)
+    if (!customPresetNotes.trim()) {
+      setCustomPresetNotes(safeNote)
+    }
+  }
+
+  function cancelInlineSelectedCustomPresetNote() {
+    setIsEditingSelectedPresetNote(false)
+    setSelectedPresetNoteDraft('')
+  }
+
+  function makeEditableCustomFromCurrent() {
+    const defaultName = selectedDairyPreset.startsWith('custom::')
+      ? selectedDairyPreset.replace('custom::', '')
+      : `${selectedDairyPreset}-copy`
+    const name = window.prompt('Name for editable custom preset', defaultName)
+    if (!name || !name.trim()) return
+    const trimmed = sanitizePresetName(name)
+    setCustomDairyPresets(prev => ({
+      ...prev,
+      [trimmed]: {
+        settings: sanitizeDairyKpiSettings(dairyKpiSettings),
+        notes: selectedPresetMeta.description || ''
+      }
+    }))
+    setSelectedDairyPreset(`custom::${trimmed}`)
+    setLastAppliedPreset({ name: `custom::${trimmed}`, at: new Date().toISOString() })
+  }
+
+  function exportDairyPresets() {
+    const payload = {
+      version: DAIRY_PRESET_SCHEMA_VERSION,
+      exportedAt: new Date().toISOString(),
+      selectedDairyPreset,
+      lastAppliedPreset,
+      customPresets: customDairyPresets,
+      currentSettings: sanitizeDairyKpiSettings(dairyKpiSettings)
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'dairy-kpi-presets.json'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function importDairyPresetsFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result || '{}'))
+        const migrated = migratePresetPayload(parsed)
+        const importedCustom = migrated.customPresets || {}
+
+        if (Object.keys(importedCustom).length === 0 && !migrated.currentSettings) {
+          throw new Error('No valid presets found in file')
+        }
+        const importedNames = Object.keys(importedCustom)
+        const existingNames = new Set(Object.keys(customDairyPresets))
+        const newNames = importedNames.filter(name => !existingNames.has(name))
+        const overwriteNames = importedNames.filter(name => existingNames.has(name))
+
+        setPendingPresetImport({
+          importedCustom,
+          currentSettings: migrated.currentSettings,
+          importedNames,
+          newNames,
+          overwriteNames,
+          fileName: file.name,
+          importedAt: new Date().toISOString()
+        })
+      } catch (err) {
+        window.alert('Failed to import presets: ' + (err?.message || err))
+      } finally {
+        e.target.value = ''
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  function cancelPresetImportPreview() {
+    setPendingPresetImport(null)
+  }
+
+  function applyPresetImport({ applyImportedSettings = false } = {}) {
+    if (!pendingPresetImport) return
+    const { importedCustom, currentSettings, importedNames } = pendingPresetImport
+
+    setCustomDairyPresets(prev => ({ ...prev, ...importedCustom }))
+
+    if (applyImportedSettings && currentSettings && typeof currentSettings === 'object') {
+      setDairyKpiSettings(sanitizeDairyKpiSettings(currentSettings))
+      setSelectedDairyPreset('balanced')
+      setLastAppliedPreset({ name: 'balanced', at: new Date().toISOString() })
+    }
+
+    setPendingPresetImport(null)
+    window.alert(`Presets imported successfully (${importedNames.length} custom preset(s)).`)
+  }
+
+  function getKpiStatusStyle(actualPct, targetPct, tolerance = 8) {
+    const delta = Math.abs((actualPct || 0) - (targetPct || 0))
+    if (delta <= tolerance / 2) {
+      return {
+        label: 'On target',
+        bg: '#ecfdf5',
+        border: '#10b981',
+        color: '#065f46'
+      }
+    }
+    if (delta <= tolerance) {
+      return {
+        label: 'Near target',
+        bg: '#fffbeb',
+        border: '#f59e0b',
+        color: '#92400e'
+      }
+    }
+    return {
+      label: 'Off target',
+      bg: '#fef2f2',
+      border: '#ef4444',
+      color: '#991b1b'
+    }
+  }
 
   function validateAnimal(a) {
     const e = {}
@@ -1017,6 +1721,24 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
       {/* Tab Navigation - scrollable, larger touch targets on mobile */}
       <div style={{ borderBottom: '2px solid #e5e7eb', marginBottom: '20px' }}>
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap', overflowX: 'auto', scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch' }}>
+          {isDairySection && (
+            <button
+              onClick={() => setTab('addGroup')}
+              style={{
+                padding: window.innerWidth <= 600 ? '14px 10px' : '12px 20px',
+                minWidth: window.innerWidth <= 600 ? '120px' : 'auto',
+                border: 'none',
+                borderBottom: tab === 'addGroup' ? '3px solid var(--green)' : '3px solid transparent',
+                background: tab === 'addGroup' ? '#f0fdf4' : 'transparent',
+                color: tab === 'addGroup' ? 'var(--green)' : '#6b7280',
+                fontWeight: tab === 'addGroup' ? '600' : '400',
+                cursor: 'pointer',
+                fontSize: window.innerWidth <= 600 ? '15px' : '14px'
+              }}
+            >
+              🥛 Dairy Groups
+            </button>
+          )}
           <button
             onClick={() => setTab('list')}
             style={{
@@ -1393,7 +2115,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                             <input placeholder="Weight (kg)" value={inlineForm.weight || ''} onChange={e => handleInlineChange('weight', e.target.value)} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #e5e7eb', width: 120 }} />
                             <select value={inlineForm.groupId || ''} onChange={e => handleInlineChange('groupId', e.target.value)} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #e5e7eb' }}>
                               <option value="">-- No group --</option>
-                              {visibleGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                              {groupOptionsForForm.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                             </select>
                             <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
                               <button onClick={saveInlineEdit} style={{ padding: '8px 12px', background: 'var(--green)', color: '#fff', border: 'none', borderRadius: 6 }}>Save</button>
@@ -1657,7 +2379,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                 Group
                 <select id="animal-group" name="groupId" value={form.groupId} onChange={e => setForm({ ...form, groupId: e.target.value })}>
                   <option value="">-- No group --</option>
-                  {visibleGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                  {groupOptionsForForm.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
               </label>
 
@@ -1731,6 +2453,16 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               </label>
 
               <label>
+                Days in Milk (DIM)
+                <input id="animal-dim" name="daysInMilk" type="number" min="0" value={form.daysInMilk ?? ''} onChange={e => setForm({ ...form, daysInMilk: e.target.value })} />
+              </label>
+
+              <label>
+                Last calving date
+                <input id="animal-last-calving-date" name="lastCalvingDate" type="date" value={form.lastCalvingDate || ''} onChange={e => setForm({ ...form, lastCalvingDate: e.target.value })} />
+              </label>
+
+              <label>
                 Expected due
                 <input id="animal-expected-due" name="expectedDue" type="date" value={form.expectedDue} onChange={e => setForm({ ...form, expectedDue: e.target.value })} />
               </label>
@@ -1743,10 +2475,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               <label>
                 Lactation status
                 <select id="animal-lactation-status" name="lactationStatus" value={form.lactationStatus} onChange={e => setForm({ ...form, lactationStatus: e.target.value })}>
-                  <option>Lactating</option>
-                  <option>Dry</option>
-                  <option>NA</option>
-                  <option>Heifer</option>
+                  {DAIRY_LIFECYCLE_STAGES.map(stage => <option key={stage}>{stage}</option>)}
                 </select>
               </label>
 
@@ -1915,6 +2644,421 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               {editingId && <button type="button" onClick={() => { resetForm(); setTab('list') }} style={{ padding: '12px 24px', background: '#666', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '15px' }}>Cancel</button>}
             </div>
           </form>
+        </div>
+      )}
+
+      {isDairySection && tab === 'addGroup' && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 12, flexWrap: 'wrap' }}>
+            <h2 style={{ fontSize: '1.7rem', fontWeight: '700', color: '#059669', margin: 0 }}>🥛 Dairy Lifecycle Grouping</h2>
+            <div style={{ color: '#475569', fontSize: 14 }}>Set each cow stage: fresh, early/mid/late lactation, dry, heifer, transition, and more.</div>
+          </div>
+
+          <div className="card" style={{ padding: 14, marginBottom: 14, borderLeft: '4px solid #0ea5e9' }}>
+            <div style={{ fontWeight: 700, marginBottom: 10, color: '#0f172a' }}>Herd Targets & Alert Thresholds</div>
+            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
+              Last applied preset: {lastAppliedPreset.name} {lastAppliedPreset.at ? `at ${new Date(lastAppliedPreset.at).toLocaleString()}` : ''}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 900 ? '1fr' : '1fr auto auto', gap: 10, alignItems: 'end', marginBottom: 10 }}>
+              <label style={{ margin: 0 }}>
+                Profile Preset
+                <select value={selectedDairyPreset} onChange={e => applyDairyPreset(e.target.value)} style={{ width: '100%' }}>
+                  <option value="conservative">Conservative</option>
+                  <option value="balanced">Balanced</option>
+                  <option value="aggressive">Aggressive</option>
+                  {Object.keys(customDairyPresets).map(name => (
+                    <option key={name} value={`custom::${name}`}>
+                      Custom: {name}{customDairyPresets[name]?.notes ? ' [note]' : ''}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="button" onClick={() => applyDairyPreset(selectedDairyPreset)} style={{ padding: '9px 12px', background: '#e0f2fe', border: '1px solid #7dd3fc', borderRadius: 6, cursor: 'pointer', color: '#075985' }}>
+                Re-apply Preset
+              </button>
+              <button type="button" onClick={resetDairyKpiSettings} style={{ padding: '9px 12px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}>
+                Reset Defaults
+              </button>
+            </div>
+            <div style={{ fontSize: 13, color: '#475569', marginTop: -4, marginBottom: 10 }}>
+              {selectedPresetMeta.description}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 900 ? '1fr' : '1.2fr 1.3fr auto auto', gap: 10, alignItems: 'end', marginBottom: 10 }}>
+              <label style={{ margin: 0 }}>
+                Save Current as Custom Preset
+                <input
+                  type="text"
+                  value={customPresetName}
+                  onChange={e => setCustomPresetName(e.target.value)}
+                  placeholder="e.g., Rainy Season Plan"
+                  style={{ width: '100%' }}
+                />
+              </label>
+              <label style={{ margin: 0 }}>
+                Preset Notes
+                <input
+                  type="text"
+                  value={customPresetNotes}
+                  onChange={e => setCustomPresetNotes(e.target.value)}
+                  placeholder="Short note about when to use this preset"
+                  style={{ width: '100%' }}
+                />
+              </label>
+              <button type="button" onClick={saveCustomDairyPreset} style={{ padding: '9px 12px', background: '#dcfce7', border: '1px solid #86efac', borderRadius: 6, cursor: 'pointer', color: '#166534' }}>
+                Save Custom
+              </button>
+              <button type="button" onClick={deleteSelectedCustomPreset} disabled={!selectedDairyPreset.startsWith('custom::')} style={{ padding: '9px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, cursor: selectedDairyPreset.startsWith('custom::') ? 'pointer' : 'not-allowed', color: '#991b1b', opacity: selectedDairyPreset.startsWith('custom::') ? 1 : 0.6 }}>
+                Delete Custom
+              </button>
+            </div>
+            {selectedDairyPreset.startsWith('custom::') && (
+              <div style={{ marginTop: -2, marginBottom: 10, border: '1px solid #fcd34d', borderRadius: 8, background: '#fffbeb', padding: 10 }}>
+                {!isEditingSelectedPresetNote ? (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: 12, color: '#92400e' }}>
+                      <strong>Selected Note:</strong>
+                      <div style={{ marginTop: 4 }}>
+                        {renderPresetNoteContent(selectedPresetMeta.description)}
+                      </div>
+                    </div>
+                    <button type="button" onClick={startInlineEditSelectedCustomPresetNote} style={{ padding: '7px 10px', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 6, cursor: 'pointer', color: '#92400e', fontSize: 12 }}>
+                      Edit Note For Selected Custom Preset
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: 12, color: '#92400e', marginBottom: 6 }}>Editing note for {selectedPresetMeta.label}</div>
+                    <textarea
+                      ref={selectedPresetNoteEditorRef}
+                      value={selectedPresetNoteDraft}
+                      onChange={e => setSelectedPresetNoteDraft(e.target.value)}
+                      onInput={e => {
+                        e.currentTarget.style.height = 'auto'
+                        e.currentTarget.style.height = `${Math.max(96, e.currentTarget.scrollHeight)}px`
+                      }}
+                      rows={3}
+                      maxLength={240}
+                      style={{ width: '100%', resize: 'none', overflow: 'hidden', minHeight: 96 }}
+                    />
+                    <div style={{ marginTop: 6, marginBottom: 6, fontSize: 12, color: '#92400e' }}>
+                      Tip: start lines with `- ` or `* ` to create bullet notes.
+                    </div>
+                    <div style={{ marginTop: 4, marginBottom: 8, padding: 8, borderRadius: 6, border: '1px solid #fde68a', background: '#fffef7', fontSize: 12, color: '#78350f' }}>
+                      <strong>Preview</strong>
+                      <div style={{ marginTop: 4 }}>
+                        {renderPresetNoteContent(selectedPresetNoteDraft)}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, gap: 8, flexWrap: 'wrap' }}>
+                      <div style={{ fontSize: 12, color: '#92400e' }}>{String(selectedPresetNoteDraft || '').length}/240</div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button type="button" onClick={saveInlineSelectedCustomPresetNote} style={{ padding: '7px 10px', background: '#16a34a', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#fff', fontSize: 12 }}>
+                          Save Note
+                        </button>
+                        <button type="button" onClick={cancelInlineSelectedCustomPresetNote} style={{ padding: '7px 10px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer', color: '#334155', fontSize: 12 }}>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 900 ? '1fr' : 'auto auto auto', gap: 10, alignItems: 'center', marginBottom: 10 }}>
+              <button type="button" onClick={exportDairyPresets} style={{ padding: '8px 12px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 6, cursor: 'pointer', color: '#0c4a6e' }}>
+                Export Presets JSON
+              </button>
+              <button type="button" onClick={() => presetImportInputRef.current?.click()} style={{ padding: '8px 12px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 6, cursor: 'pointer', color: '#0c4a6e' }}>
+                Import Presets JSON
+              </button>
+              <input ref={presetImportInputRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={importDairyPresetsFile} />
+            </div>
+            {pendingPresetImport && (
+              <div style={{ marginBottom: 10, padding: '12px 14px', borderRadius: 8, border: '1px solid #bfdbfe', background: '#eff6ff' }}>
+                <div style={{ fontWeight: 700, color: '#1d4ed8', marginBottom: 8 }}>Import Preview</div>
+                <div style={{ fontSize: 13, color: '#334155', marginBottom: 6 }}>
+                  File: {pendingPresetImport.fileName} • {pendingPresetImport.importedNames.length} preset(s) • {pendingPresetImport.newNames.length} new • {pendingPresetImport.overwriteNames.length} overwrite
+                </div>
+                {pendingPresetImport.currentSettings && (
+                  <div style={{ fontSize: 13, color: '#334155', marginBottom: 6 }}>
+                    File also contains current settings that can be applied.
+                  </div>
+                )}
+                {pendingPresetImport.newNames.length > 0 && (
+                  <div style={{ fontSize: 13, marginBottom: 4, color: '#166534' }}>
+                    New: {pendingPresetImport.newNames.join(', ')}
+                  </div>
+                )}
+                {pendingPresetImport.overwriteNames.length > 0 && (
+                  <div style={{ fontSize: 13, marginBottom: 8, color: '#92400e' }}>
+                    Overwrite: {pendingPresetImport.overwriteNames.join(', ')}
+                  </div>
+                )}
+                {pendingPresetImport.importedNames.length > 0 && (
+                  <div style={{ fontSize: 12, color: '#475569', marginBottom: 8 }}>
+                    {pendingPresetImport.importedNames.slice(0, 3).map(name => {
+                      const note = pendingPresetImport.importedCustom?.[name]?.notes
+                      return `${name}${note ? `: ${note}` : ''}`
+                    }).join(' | ')}
+                    {pendingPresetImport.importedNames.length > 3 ? ' ...' : ''}
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button type="button" onClick={() => applyPresetImport({ applyImportedSettings: false })} style={{ padding: '8px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
+                    Import Presets Only
+                  </button>
+                  {pendingPresetImport.currentSettings && (
+                    <button type="button" onClick={() => applyPresetImport({ applyImportedSettings: true })} style={{ padding: '8px 12px', background: '#059669', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
+                      Import And Apply Settings
+                    </button>
+                  )}
+                  <button type="button" onClick={cancelPresetImportPreview} style={{ padding: '8px 12px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+            {isPresetLocked && (
+              <div style={{ marginBottom: 10, padding: '10px 12px', borderRadius: 6, border: '1px solid #fcd34d', background: '#fffbeb', color: '#92400e', display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <span>Built-in presets are locked to avoid accidental edits. Create a custom preset to edit targets.</span>
+                <button type="button" onClick={makeEditableCustomFromCurrent} style={{ padding: '8px 12px', background: '#fde68a', border: '1px solid #f59e0b', borderRadius: 6, cursor: 'pointer', color: '#78350f', fontWeight: 600 }}>
+                  Make Editable Copy
+                </button>
+              </div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 900 ? '1fr 1fr' : 'repeat(5, minmax(110px, 1fr))', gap: 10, marginBottom: 10 }}>
+              <label style={{ margin: 0 }}>
+                Milking %
+                <input disabled={isPresetLocked} type="number" min="0" max="100" value={dairyKpiSettings.milkingTargetPct} onChange={e => updateDairyKpiSetting('milkingTargetPct', e.target.value)} style={{ width: '100%' }} />
+              </label>
+              <label style={{ margin: 0 }}>
+                Fresh %
+                <input disabled={isPresetLocked} type="number" min="0" max="100" value={dairyKpiSettings.freshTargetPct} onChange={e => updateDairyKpiSetting('freshTargetPct', e.target.value)} style={{ width: '100%' }} />
+              </label>
+              <label style={{ margin: 0 }}>
+                Dry %
+                <input disabled={isPresetLocked} type="number" min="0" max="100" value={dairyKpiSettings.dryTargetPct} onChange={e => updateDairyKpiSetting('dryTargetPct', e.target.value)} style={{ width: '100%' }} />
+              </label>
+              <label style={{ margin: 0 }}>
+                Heifer %
+                <input disabled={isPresetLocked} type="number" min="0" max="100" value={dairyKpiSettings.heiferTargetPct} onChange={e => updateDairyKpiSetting('heiferTargetPct', e.target.value)} style={{ width: '100%' }} />
+              </label>
+              <label style={{ margin: 0 }}>
+                Pregnant %
+                <input disabled={isPresetLocked} type="number" min="0" max="100" value={dairyKpiSettings.pregnantTargetPct} onChange={e => updateDairyKpiSetting('pregnantTargetPct', e.target.value)} style={{ width: '100%' }} />
+              </label>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 900 ? '1fr 1fr' : 'repeat(5, minmax(110px, 1fr))', gap: 10, alignItems: 'end' }}>
+              <label style={{ margin: 0 }}>
+                Max Dry % Alert
+                <input disabled={isPresetLocked} type="number" min="0" max="100" value={dairyKpiSettings.dryMaxPct} onChange={e => updateDairyKpiSetting('dryMaxPct', e.target.value)} style={{ width: '100%' }} />
+              </label>
+              <label style={{ margin: 0 }}>
+                Min Milking % Alert
+                <input disabled={isPresetLocked} type="number" min="0" max="100" value={dairyKpiSettings.milkingMinPct} onChange={e => updateDairyKpiSetting('milkingMinPct', e.target.value)} style={{ width: '100%' }} />
+              </label>
+              <label style={{ margin: 0 }}>
+                Max Unknown Count
+                <input disabled={isPresetLocked} type="number" min="0" value={dairyKpiSettings.unknownMaxCount} onChange={e => updateDairyKpiSetting('unknownMaxCount', e.target.value)} style={{ width: '100%' }} />
+              </label>
+              <label style={{ margin: 0 }}>
+                Avg DIM Warn Above
+                <input disabled={isPresetLocked} type="number" min="0" value={dairyKpiSettings.avgDimWarnAbove} onChange={e => updateDairyKpiSetting('avgDimWarnAbove', e.target.value)} style={{ width: '100%' }} />
+              </label>
+              <label style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 6 }}>
+                <input disabled={isPresetLocked} type="checkbox" checked={dairyKpiSettings.requireCloseUpForPregnant} onChange={e => updateDairyKpiSetting('requireCloseUpForPregnant', e.target.checked)} />
+                Require close-up for pregnant
+              </label>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 14 }}>
+            <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.milking), dairyKPIs.targets.milking).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.milking), dairyKPIs.targets.milking).border}` }}>
+              <div style={{ fontSize: 12, color: '#64748b' }}>Milking Cows</div>
+              <div style={{ fontSize: 23, fontWeight: 700, color: '#065f46' }}>{dairyKPIs.milking}</div>
+              <div style={{ fontSize: 12, color: '#64748b' }}>{dairyKPIs.pct(dairyKPIs.milking)}% of herd • target {dairyKPIs.targets.milking}%</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.milking), dairyKPIs.targets.milking).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.milking), dairyKPIs.targets.milking).label}</div>
+            </div>
+            <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.fresh), dairyKPIs.targets.fresh).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.fresh), dairyKPIs.targets.fresh).border}` }}>
+              <div style={{ fontSize: 12, color: '#64748b' }}>Fresh Cows</div>
+              <div style={{ fontSize: 23, fontWeight: 700, color: '#0369a1' }}>{dairyKPIs.fresh}</div>
+              <div style={{ fontSize: 12, color: '#64748b' }}>{dairyKPIs.pct(dairyKPIs.fresh)}% of herd • target {dairyKPIs.targets.fresh}%</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.fresh), dairyKPIs.targets.fresh).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.fresh), dairyKPIs.targets.fresh).label}</div>
+            </div>
+            <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.dry), dairyKPIs.targets.dry).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.dry), dairyKPIs.targets.dry).border}` }}>
+              <div style={{ fontSize: 12, color: '#64748b' }}>Dry Cows</div>
+              <div style={{ fontSize: 23, fontWeight: 700, color: '#9a3412' }}>{dairyKPIs.dry}</div>
+              <div style={{ fontSize: 12, color: '#64748b' }}>{dairyKPIs.pct(dairyKPIs.dry)}% of herd • target {dairyKPIs.targets.dry}%</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.dry), dairyKPIs.targets.dry).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.dry), dairyKPIs.targets.dry).label}</div>
+            </div>
+            <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.heifers), dairyKPIs.targets.heifers, 12).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.heifers), dairyKPIs.targets.heifers, 12).border}` }}>
+              <div style={{ fontSize: 12, color: '#64748b' }}>Heifers/Youngstock</div>
+              <div style={{ fontSize: 23, fontWeight: 700, color: '#1d4ed8' }}>{dairyKPIs.heifers}</div>
+              <div style={{ fontSize: 12, color: '#64748b' }}>{dairyKPIs.pct(dairyKPIs.heifers)}% of herd • target {dairyKPIs.targets.heifers}%</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.heifers), dairyKPIs.targets.heifers, 12).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.heifers), dairyKPIs.targets.heifers, 12).label}</div>
+            </div>
+            <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.pregnant), dairyKPIs.targets.pregnant, 15).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.pregnant), dairyKPIs.targets.pregnant, 15).border}` }}>
+              <div style={{ fontSize: 12, color: '#64748b' }}>Pregnant</div>
+              <div style={{ fontSize: 23, fontWeight: 700, color: '#be185d' }}>{dairyKPIs.pregnant}</div>
+              <div style={{ fontSize: 12, color: '#64748b' }}>Avg DIM: {dairyKPIs.avgDIM ?? 'N/A'} • target {dairyKPIs.targets.pregnant}%</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.pregnant), dairyKPIs.targets.pregnant, 15).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.pregnant), dairyKPIs.targets.pregnant, 15).label}</div>
+            </div>
+          </div>
+
+          {dairyKPIs.alerts.length > 0 && (
+            <div className="card" style={{ marginBottom: 14, padding: 12, borderLeft: '4px solid #f59e0b', background: '#fffbeb' }}>
+              <div style={{ fontWeight: 700, marginBottom: 8, color: '#92400e' }}>Stage Alerts</div>
+              {dairyKPIs.alerts.map((a, idx) => (
+                <div key={idx} style={{ fontSize: 13, color: a.level === 'warning' ? '#92400e' : '#1e3a8a', marginBottom: 4 }}>
+                  • {a.text}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="card" style={{ padding: 16, marginBottom: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 600 ? '1fr' : '2fr 1fr', gap: 12 }}>
+              <input
+                type="text"
+                placeholder="Search by name, tag, breed, stage..."
+                value={dairyGroupingFilter}
+                onChange={e => setDairyGroupingFilter(e.target.value)}
+                style={{ padding: '9px 12px', borderRadius: 6, border: '1px solid #d1d5db' }}
+              />
+              <select
+                value={dairyLifecycleFilter}
+                onChange={e => setDairyLifecycleFilter(e.target.value)}
+                style={{ padding: '9px 12px', borderRadius: 6, border: '1px solid #d1d5db' }}
+              >
+                <option value="all">All Lifecycle Stages</option>
+                {DAIRY_LIFECYCLE_STAGES.map(stage => <option key={stage} value={stage}>{stage}</option>)}
+              </select>
+            </div>
+            <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: window.innerWidth <= 900 ? '1fr' : '1.3fr 1fr 1fr 1fr', gap: 10 }}>
+              <select
+                value={bulkLifecycleStage}
+                onChange={e => setBulkLifecycleStage(e.target.value)}
+                style={{ padding: '9px 12px', borderRadius: 6, border: '1px solid #d1d5db' }}
+              >
+                <option value="">Bulk: choose lifecycle stage</option>
+                {DAIRY_LIFECYCLE_STAGES.map(stage => <option key={stage} value={stage}>{stage}</option>)}
+              </select>
+              <button type="button" onClick={applyBulkLifecycleStage} disabled={!bulkLifecycleStage || selectedDairyAnimalIds.length === 0} style={{ padding: '9px 12px', background: '#059669', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', opacity: (!bulkLifecycleStage || selectedDairyAnimalIds.length === 0) ? 0.6 : 1 }}>
+                Apply to selected ({selectedDairyAnimalIds.length})
+              </button>
+              <button type="button" onClick={() => applyAutoSuggestionToIds(selectedDairyAnimalIds)} disabled={selectedDairyAnimalIds.length === 0} style={{ padding: '9px 12px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', opacity: selectedDairyAnimalIds.length === 0 ? 0.6 : 1 }}>
+                Auto-suggest selected
+              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="button" onClick={selectAllFilteredDairy} style={{ flex: 1, padding: '9px 12px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}>
+                  Select all filtered
+                </button>
+                <button type="button" onClick={clearSelectedDairy} style={{ flex: 1, padding: '9px 12px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}>
+                  Clear
+                </button>
+              </div>
+            </div>
+            <div style={{ marginTop: 8, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button type="button" onClick={() => applyAutoSuggestionToIds(dairyGroupingRows.map(a => a.id))} style={{ padding: '8px 12px', background: '#eff6ff', border: '1px solid #93c5fd', borderRadius: 6, cursor: 'pointer', color: '#1e40af' }}>
+                Auto-suggest all filtered ({dairyGroupingRows.length})
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 10, marginBottom: 18 }}>
+            {DAIRY_LIFECYCLE_STAGES.map(stage => (
+              <div key={stage} className="card" style={{ padding: 10, borderLeft: '4px solid #059669' }}>
+                <div style={{ fontSize: 12, color: '#475569', minHeight: 34 }}>{stage}</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: '#065f46' }}>{dairyStageSummary[stage] || 0}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="card" style={{ padding: 12 }}>
+            <div style={{ display: 'grid', gap: 10 }}>
+              {dairyGroupingRows.length === 0 && (
+                <div style={{ color: '#64748b', padding: 14 }}>No animals match this filter.</div>
+              )}
+              {dairyGroupingRows.map(a => (
+                <div key={a.id} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, background: '#fff' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 900 ? '1fr' : '1.3fr 1fr 1fr 0.8fr', gap: 10, alignItems: 'center' }}>
+                    <div>
+                      <div style={{ marginBottom: 4 }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedDairyAnimalIds.includes(a.id)}
+                          onChange={() => toggleDairySelection(a.id)}
+                        />
+                        <span style={{ marginLeft: 8, fontSize: 12, color: '#334155' }}>Select</span>
+                      </div>
+                      <div style={{ fontWeight: 700, color: '#0f172a' }}>{a.name || a.tag || a.id}</div>
+                      <div style={{ fontSize: 13, color: '#64748b' }}>{a.tag || a.id} • {a.breed || 'No breed'} • {a.sex === 'F' ? 'Female' : 'Male'} • DIM: {getAnimalDIM(a) ?? 'N/A'}</div>
+                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                        Suggestion: {suggestDairyLifecycleStage(a).stage} ({suggestDairyLifecycleStage(a).confidence})
+                      </div>
+                    </div>
+                    <label style={{ margin: 0 }}>
+                      Lifecycle group
+                      <select
+                        value={a.lactationStatus || 'Not Applicable'}
+                        onChange={e => updateDairyLifecycle(a.id, { lactationStatus: e.target.value })}
+                        style={{ width: '100%', marginTop: 4 }}
+                      >
+                        {DAIRY_LIFECYCLE_STAGES.map(stage => <option key={stage} value={stage}>{stage}</option>)}
+                      </select>
+                    </label>
+                    <label style={{ margin: 0 }}>
+                      Pregnancy
+                      <select
+                        value={a.pregnancyStatus || 'Unknown'}
+                        onChange={e => updateDairyLifecycle(a.id, { pregnancyStatus: e.target.value })}
+                        style={{ width: '100%', marginTop: 4 }}
+                      >
+                        <option>Not Pregnant</option>
+                        <option>Pregnant</option>
+                        <option>Unknown</option>
+                        <option>Not Applicable</option>
+                      </select>
+                    </label>
+                    <label style={{ margin: 0 }}>
+                      Parity
+                      <input
+                        type="number"
+                        min="0"
+                        value={a.parity ?? ''}
+                        onChange={e => updateDairyLifecycle(a.id, { parity: e.target.value })}
+                        style={{ width: '100%', marginTop: 4 }}
+                      />
+                    </label>
+                  </div>
+                  <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: window.innerWidth <= 900 ? '1fr' : '1fr 1fr auto', gap: 10 }}>
+                    <label style={{ margin: 0 }}>
+                      DIM
+                      <input
+                        type="number"
+                        min="0"
+                        value={a.daysInMilk ?? ''}
+                        onChange={e => updateDairyLifecycle(a.id, { daysInMilk: e.target.value })}
+                        style={{ width: '100%', marginTop: 4 }}
+                      />
+                    </label>
+                    <label style={{ margin: 0 }}>
+                      Last calving date
+                      <input
+                        type="date"
+                        value={a.lastCalvingDate || ''}
+                        onChange={e => updateDairyLifecycle(a.id, { lastCalvingDate: e.target.value })}
+                        style={{ width: '100%', marginTop: 4 }}
+                      />
+                    </label>
+                    <button type="button" onClick={() => updateDairyLifecycle(a.id, { lactationStatus: suggestDairyLifecycleStage(a).stage })} style={{ alignSelf: 'end', padding: '9px 12px', background: '#e0f2fe', border: '1px solid #7dd3fc', borderRadius: 6, cursor: 'pointer', color: '#075985' }}>
+                      Apply suggestion
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 

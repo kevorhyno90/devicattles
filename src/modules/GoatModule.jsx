@@ -147,37 +147,27 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
 
   // Auto-save whenever goats change
   useEffect(() => {
-    if (goats.length > 0) {
-      saveData(GOAT_KEY, goats)
-    }
+    saveData(GOAT_KEY, goats)
   }, [goats])
 
   // Auto-save health records
   useEffect(() => {
-    if (healthRecords.length > 0) {
-      saveData(HEALTH_KEY, healthRecords)
-    }
+    saveData(HEALTH_KEY, healthRecords)
   }, [healthRecords])
 
   // Auto-save breeding records
   useEffect(() => {
-    if (breedingRecords.length > 0) {
-      saveData(BREEDING_KEY, breedingRecords)
-    }
+    saveData(BREEDING_KEY, breedingRecords)
   }, [breedingRecords])
 
   // Auto-save kids
   useEffect(() => {
-    if (kids.length > 0) {
-      saveData(KIDS_KEY, kids)
-    }
+    saveData(KIDS_KEY, kids)
   }, [kids])
 
   // Auto-save kids health records
   useEffect(() => {
-    if (kidsHealthRecords.length > 0) {
-      saveData(KIDS_HEALTH_KEY, kidsHealthRecords)
-    }
+    saveData(KIDS_HEALTH_KEY, kidsHealthRecords)
   }, [kidsHealthRecords])
 
   // Filter goats
@@ -653,8 +643,134 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
     }
   }, [goats])
 
+  const goatPremiumStyles = `
+    .goat-premium {
+      --goat-bg-a: #f0fdf4;
+      --goat-bg-b: #eff6ff;
+      --goat-ink: #0f172a;
+      --goat-subtle: #475569;
+      --goat-border: #dbeafe;
+      font-family: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
+      max-width: 1480px;
+      margin: 0 auto;
+      border-radius: 24px;
+      border: 1px solid var(--goat-border);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(16, 185, 129, 0.12) 0, transparent 42%),
+        radial-gradient(circle at 100% 20%, rgba(59, 130, 246, 0.14) 0, transparent 40%),
+        linear-gradient(135deg, var(--goat-bg-a), var(--goat-bg-b));
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+      animation: goatFadeIn 0.55s ease-out;
+    }
+    @keyframes goatFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes goatRise {
+      from { opacity: 0; transform: translateY(10px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .goat-premium h1,
+    .goat-premium h2,
+    .goat-premium h3,
+    .goat-premium h4 {
+      color: var(--goat-ink);
+      letter-spacing: -0.02em;
+      font-family: "Sora", "Manrope", sans-serif;
+    }
+    .goat-premium p,
+    .goat-premium label,
+    .goat-premium small {
+      color: var(--goat-subtle);
+    }
+    .goat-premium input,
+    .goat-premium select,
+    .goat-premium textarea {
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .goat-premium input:focus,
+    .goat-premium select:focus,
+    .goat-premium textarea:focus {
+      outline: none;
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.16);
+    }
+    .goat-premium table {
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      border-radius: 14px;
+    }
+    .goat-premium .goat-hero {
+      position: relative;
+      overflow: hidden;
+    }
+    .goat-premium .goat-hero::after {
+      content: "";
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      border-radius: 999px;
+      right: -46px;
+      top: -64px;
+      background: radial-gradient(circle at center, rgba(16, 185, 129, 0.16), rgba(16, 185, 129, 0));
+      pointer-events: none;
+    }
+    .goat-premium .goat-stat-grid > div {
+      border: 1px solid #dbeafe;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      animation: goatRise 0.5s ease both;
+    }
+    .goat-premium .goat-stat-grid > div:nth-child(2) { animation-delay: 0.04s; }
+    .goat-premium .goat-stat-grid > div:nth-child(3) { animation-delay: 0.08s; }
+    .goat-premium .goat-stat-grid > div:nth-child(4) { animation-delay: 0.12s; }
+    .goat-premium .goat-stat-grid > div:nth-child(5) { animation-delay: 0.16s; }
+    .goat-premium .goat-stat-grid > div:nth-child(6) { animation-delay: 0.2s; }
+    .goat-premium button {
+      min-height: 44px;
+      touch-action: manipulation;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+    .goat-premium button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+    }
+    @media (max-width: 768px) {
+      .goat-premium {
+        padding: 14px !important;
+        border-radius: 16px;
+      }
+      .goat-premium .goat-hero {
+        padding: 14px !important;
+      }
+      .goat-premium .goat-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+      }
+      .goat-premium input,
+      .goat-premium select,
+      .goat-premium textarea,
+      .goat-premium button {
+        font-size: 16px;
+      }
+      .goat-premium input,
+      .goat-premium select,
+      .goat-premium textarea {
+        min-height: 42px;
+      }
+    }
+    @media (max-width: 520px) {
+      .goat-premium .goat-stat-grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  `
+
   return (
-    <div style={{ padding: '24px', background: '#f9fafb', minHeight: '100vh' }}>
+    <div className="goat-premium" style={{ padding: '24px', minHeight: '100vh' }}>
+      <style>{goatPremiumStyles}</style>
       {/* Toast notification */}
       {toast && (
         <div style={{
@@ -668,7 +784,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
       )}
 
       {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
+      <div className="goat-hero" style={{ marginBottom: '24px', border: '1px solid #bfdbfe', borderRadius: '18px', padding: '18px 20px', background: 'rgba(255, 255, 255, 0.85)' }}>
         <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}>🐐 Goat Management</h1>
         <p style={{ color: '#6b7280', fontSize: '14px' }}>Manage your goat herd with full tracking and analytics</p>
         {recordSource?.domain && recordSource?.item && (
@@ -710,7 +826,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
       {mainView === 'goats' && (
         <>
       {/* Stats Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+      <div className="goat-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '24px' }}>
         <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <div style={{ color: '#6b7280', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Total Goats</div>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>{stats.total}</div>

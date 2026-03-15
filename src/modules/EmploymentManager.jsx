@@ -137,7 +137,7 @@ const getEmployeeName = (employees, id) => {
   return found ? found.fullName : id || 'Unassigned'
 }
 
-export default function EmploymentManager() {
+export default function EmploymentManager({ initialTab = TABS.registry, recordSource = null }) {
   const [activeTab, setActiveTab] = useState(TABS.registry)
 
   const [employees, setEmployees] = useState([])
@@ -158,6 +158,13 @@ export default function EmploymentManager() {
   const [search, setSearch] = useState('')
   const [departmentFilter, setDepartmentFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+
+  useEffect(() => {
+    const allowed = new Set(Object.values(TABS))
+    if (allowed.has(initialTab)) {
+      setActiveTab(initialTab)
+    }
+  }, [initialTab])
 
   useEffect(() => {
     setEmployees(safeParse(localStorage.getItem(EMPLOYEE_KEY), []))
@@ -482,6 +489,11 @@ export default function EmploymentManager() {
             <p style={{ margin: '8px 0 0', color: '#334155', lineHeight: 1.5 }}>
               Comprehensive employment module for full staff registry, off planning, leave lifecycle, attendance tracking, and workforce analytics.
             </p>
+            {recordSource?.domain && recordSource?.item && (
+              <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
+                Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
+              </div>
+            )}
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <button

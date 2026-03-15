@@ -245,11 +245,16 @@ function AppContent() {
   const [poultryInitialView, setPoultryInitialView] = useState('flocks');
   const [canineInitialTab, setCanineInitialTab] = useState('list');
   const [bsfInitialTab, setBsfInitialTab] = useState('colonies');
+  const [cropsInitialTab, setCropsInitialTab] = useState('list');
+  const [cropsInitialSubmodule, setCropsInitialSubmodule] = useState('all');
+  const [employmentInitialTab, setEmploymentInitialTab] = useState('registry');
   const [animalsRecordSource, setAnimalsRecordSource] = useState(null);
   const [goatRecordSource, setGoatRecordSource] = useState(null);
   const [poultryRecordSource, setPoultryRecordSource] = useState(null);
   const [canineRecordSource, setCanineRecordSource] = useState(null);
   const [bsfRecordSource, setBsfRecordSource] = useState(null);
+  const [cropsRecordSource, setCropsRecordSource] = useState(null);
+  const [employmentRecordSource, setEmploymentRecordSource] = useState(null);
   
   // UI branding/settings - use hook to load/save from localStorage
   const SETTINGS_KEY = 'devinsfarm:ui:settings'
@@ -500,22 +505,19 @@ function AppContent() {
     }
   }, [authenticated]);
 
-  // Load animals for passing to health system and groups (deferred)
+  // Load animals for passing to health system and groups.
   useEffect(() => {
-    // Defer animal loading to not block initial render
-    const timer = setTimeout(() => {
-      try {
-        const stored = localStorage.getItem('cattalytics:animals');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          setAnimals(parsed);
-        }
-      } catch (e) {
+    try {
+      const stored = localStorage.getItem('cattalytics:animals');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setAnimals(Array.isArray(parsed) ? parsed : []);
+      } else {
         setAnimals([]);
       }
-    }, 100);
-    
-    return () => clearTimeout(timer);
+    } catch (e) {
+      setAnimals([]);
+    }
   }, [view]); // Reload when view changes to keep animals fresh
 
   useEffect(() => {
@@ -726,9 +728,10 @@ function AppContent() {
     const d = String(domain || '').toLowerCase()
     const i = String(item || '').toLowerCase()
 
+    if (d.includes('group') || i.includes('group')) return 'addGroup'
     if (d === 'health' && i.includes('treatment')) return 'treatment'
     if (i.includes('treatment')) return 'treatment'
-    if (d === 'nutrition' || i.includes('feed') || i.includes('ration') || i.includes('water')) return 'feeding'
+    if (d === 'nutrition' || i.includes('diet') || i.includes('feed') || i.includes('ration') || i.includes('water')) return 'feeding'
     if (d === 'measurements' || i.includes('weight') || i.includes('body condition') || i.includes('measurement')) return 'measurement'
     if (d === 'breeding' || i.includes('pregnancy') || i.includes('calving') || i.includes('service') || i.includes('heat')) return 'breeding'
     if (d === 'health' || i.includes('vaccin') || i.includes('diagnos') || i.includes('vet') || i.includes('allerg') || i.includes('quarantine')) return 'health'
@@ -740,7 +743,7 @@ function AppContent() {
     const d = String(domain || '').toLowerCase()
     const i = String(item || '').toLowerCase()
 
-    if (d === 'kids' || i.includes('kid') || i.includes('wean') || i.includes('colostrum')) return 'kids'
+    if (d.includes('kid') || i.includes('kid') || i.includes('wean') || i.includes('colostrum')) return 'kids'
     if (d === 'breeding' || i.includes('mating') || i.includes('kidding') || i.includes('pregnan')) return 'breeding'
     if (d === 'health' || i.includes('health') || i.includes('vaccine') || i.includes('deworm') || i.includes('treatment')) return 'health'
     return 'goats'
@@ -773,6 +776,38 @@ function AppContent() {
     if (d === 'feeding' || i.includes('feed') || i.includes('substrate')) return 'feeding'
     if (d === 'harvest' || d === 'processing' || d === 'finance' || i.includes('harvest') || i.includes('frass') || i.includes('sales') || i.includes('revenue') || i.includes('profit')) return 'harvest'
     return 'colonies'
+  }
+
+  const getCropsTabForRecord = (subsection, storageKey) => {
+    const s = String(subsection || '').toLowerCase()
+    const key = String(storageKey || '').toLowerCase()
+
+    if (s.includes('yield') || key.includes(':yields')) return 'yields'
+    if (s.includes('sales') || key.includes(':sales')) return 'sales'
+    if (s.includes('treatment') || key.includes(':treatments')) return 'treatments'
+    if (s.includes('cost') || key.includes(':costs')) return 'profitability'
+    return 'list'
+  }
+
+  const getCropSubmoduleForRecord = (subsection) => {
+    const s = String(subsection || '').toLowerCase()
+    if (s.includes('sweet banana')) return 'sweetBanana'
+    if (s.includes('banana')) return 'banana'
+    if (s.includes('vegetable')) return 'vegetables'
+    if (s.includes('herb')) return 'herbs'
+    if (s.includes('tea')) return 'tea'
+    if (s.includes('avocado')) return 'avocadoExport'
+    if (s.includes('fruit')) return 'fruits'
+    return 'all'
+  }
+
+  const getEmploymentTabForRecord = (subsection, storageKey) => {
+    const s = String(subsection || '').toLowerCase()
+    const key = String(storageKey || '').toLowerCase()
+    if (s.includes('off') || key.includes(':off')) return 'off'
+    if (s.includes('leave') || key.includes(':leaves')) return 'leaves'
+    if (s.includes('attendance') || key.includes(':attendance')) return 'attendance'
+    return 'registry'
   }
 
   const openLivestockRecord = (sectionKey, domain, item) => {
@@ -814,6 +849,54 @@ function AppContent() {
     }
 
     setView(sectionKey)
+  }
+
+  const openReportSection = (report) => {
+    if (!report) return
+    const moduleName = String(report.module || '').toLowerCase()
+    const subsectionName = String(report.subsection || '').toLowerCase()
+
+    if (moduleName.includes('livestock - dairy')) {
+      openLivestockRecord('animals', subsectionName, report.subsection || report.storageKey || '')
+      return
+    }
+
+    if (moduleName.includes('livestock - goat')) {
+      openLivestockRecord('goats', subsectionName, report.subsection || report.storageKey || '')
+      return
+    }
+
+    if (moduleName.includes('livestock - poultry')) {
+      openLivestockRecord('poultry', subsectionName, report.subsection || report.storageKey || '')
+      return
+    }
+
+    if (moduleName.includes('livestock - canine')) {
+      openLivestockRecord('canines', subsectionName, report.subsection || report.storageKey || '')
+      return
+    }
+
+    if (moduleName.includes('livestock - bsf')) {
+      openLivestockRecord('bsf', subsectionName, report.subsection || report.storageKey || '')
+      return
+    }
+
+    if (moduleName === 'crops') {
+      setCropsInitialTab(getCropsTabForRecord(report.subsection, report.storageKey))
+      setCropsInitialSubmodule(getCropSubmoduleForRecord(report.subsection))
+      setCropsRecordSource({ domain: report.module || 'Crops', item: report.subsection || report.storageKey || '' })
+      setView('crops')
+      return
+    }
+
+    if (moduleName === 'employment') {
+      setEmploymentInitialTab(getEmploymentTabForRecord(report.subsection, report.storageKey))
+      setEmploymentRecordSource({ domain: report.module || 'Employment', item: report.subsection || report.storageKey || '' })
+      setView('employment')
+      return
+    }
+
+    setView('dashboard')
   }
 
   const scoreColor = (score) => {
@@ -1470,7 +1553,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <ErrorBoundary><Crops /></ErrorBoundary>
+            <ErrorBoundary><Crops initialTab={cropsInitialTab} initialPlantSubmodule={cropsInitialSubmodule} recordSource={cropsRecordSource} /></ErrorBoundary>
           </section>
         )}
 
@@ -1533,7 +1616,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <ErrorBoundary><CustomReportBuilder /></ErrorBoundary>
+            <ErrorBoundary><CustomReportBuilder onOpenSection={openReportSection} /></ErrorBoundary>
           </section>
         )}
 
@@ -1609,7 +1692,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <ErrorBoundary><EmploymentManager /></ErrorBoundary>
+            <ErrorBoundary><EmploymentManager initialTab={employmentInitialTab} recordSource={employmentRecordSource} /></ErrorBoundary>
           </section>
         )}
 

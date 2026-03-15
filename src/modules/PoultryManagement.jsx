@@ -169,6 +169,68 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
     logAnimalActivity('Delete', 'Poultry Flock', flock?.name, `Deleted flock ${flock?.name}`)
   }
 
+  const handleSaveBird = async () => {
+    if (!birdForm.tag || !birdForm.flockId) {
+      showToast('Bird tag and flock are required', 'error')
+      return
+    }
+
+    let updated
+    const birdId = editingId || `BRD-${Date.now()}`
+
+    if (editingId) {
+      updated = birds.map((b) => (b.id === editingId ? { ...birdForm } : b))
+      showToast('Bird updated', 'success')
+      logAnimalActivity('Edit', 'Poultry Bird', birdForm.tag, `Updated bird ${birdForm.tag}`)
+    } else {
+      const newBird = { ...birdForm, id: birdId }
+      updated = [...birds, newBird]
+      showToast('Bird added', 'success')
+      logAnimalActivity('Create', 'Poultry Bird', birdForm.tag, `Added bird ${birdForm.tag}`)
+    }
+
+    if (birdForm.image && birdForm.image.startsWith('data:image')) {
+      try {
+        const blob = await fetch(birdForm.image).then((r) => r.blob())
+        const file = new File([blob], `${birdForm.tag}_bird.jpg`, { type: 'image/jpeg' })
+        await savePhoto(file, {
+          category: 'animals',
+          tags: ['poultry', birdForm.type.toLowerCase(), birdForm.breed.toLowerCase(), 'bird'],
+          entityType: 'poultry-bird',
+          entityId: birdId,
+          entityName: birdForm.tag
+        })
+      } catch (error) {
+        console.error('Error saving bird photo:', error)
+      }
+    }
+
+    setBirds(updated)
+    setShowForm(false)
+    setEditingId(null)
+    setBirdForm({
+      id: '', tag: '', flockId: '', type: 'Chicken', breed: 'Local',
+      sex: 'Female', hatchDate: '', weight: '', color: '', status: 'Active',
+      notes: '', image: ''
+    })
+  }
+
+  const handleDeleteBird = (id) => {
+    const bird = birds.find((b) => b.id === id)
+    if (!confirm(`Delete bird ${bird?.tag || id}?`)) return
+
+    setBirds(birds.filter((b) => b.id !== id))
+
+    try {
+      const photos = getPhotosByEntity('poultry-bird', id)
+      photos.forEach((photo) => deletePhoto(photo.id))
+    } catch (error) {
+      console.error('Error deleting bird photos:', error)
+    }
+
+    showToast('Bird deleted', 'success')
+  }
+
   const handleSaveEgg = () => {
     const validation = validatePoultryEggInput({
       flockId: eggForm.flockId,
@@ -297,9 +359,124 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
     }).reduce((sum, e) => sum + (Number(e.collected) || 0), 0)
   }
 
+  const poultryPremiumStyles = `
+    .poultry-premium {
+      --poultry-ink: #0f172a;
+      --poultry-subtle: #475569;
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+      max-width: 1480px;
+      margin: 0 auto;
+      border-radius: 24px;
+      border: 1px solid #dbeafe;
+      background:
+        radial-gradient(circle at 0 0, rgba(245, 158, 11, 0.14) 0, transparent 40%),
+        radial-gradient(circle at 100% 18%, rgba(14, 165, 233, 0.14) 0, transparent 42%),
+        linear-gradient(145deg, #fffbeb, #eff6ff);
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+      animation: poultryFadeIn 0.55s ease-out;
+    }
+    @keyframes poultryFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes poultryRise {
+      from { opacity: 0; transform: translateY(10px) scale(0.986); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .poultry-premium h1,
+    .poultry-premium h2,
+    .poultry-premium h3,
+    .poultry-premium h4 {
+      color: var(--poultry-ink);
+      letter-spacing: -0.02em;
+      font-family: "Chivo", "DM Sans", sans-serif;
+    }
+    .poultry-premium p,
+    .poultry-premium label,
+    .poultry-premium small {
+      color: var(--poultry-subtle);
+    }
+    .poultry-premium input,
+    .poultry-premium select,
+    .poultry-premium textarea {
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .poultry-premium input:focus,
+    .poultry-premium select:focus,
+    .poultry-premium textarea:focus {
+      outline: none;
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.16);
+    }
+    .poultry-premium .poultry-hero {
+      position: relative;
+      overflow: hidden;
+    }
+    .poultry-premium .poultry-hero::after {
+      content: "";
+      position: absolute;
+      width: 170px;
+      height: 170px;
+      border-radius: 999px;
+      top: -58px;
+      right: -46px;
+      background: radial-gradient(circle at center, rgba(251, 191, 36, 0.22), rgba(251, 191, 36, 0));
+      pointer-events: none;
+    }
+    .poultry-premium .poultry-stat-grid > div {
+      border: 1px solid #dbeafe;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      animation: poultryRise 0.52s ease both;
+    }
+    .poultry-premium .poultry-stat-grid > div:nth-child(2) { animation-delay: 0.05s; }
+    .poultry-premium .poultry-stat-grid > div:nth-child(3) { animation-delay: 0.1s; }
+    .poultry-premium .poultry-stat-grid > div:nth-child(4) { animation-delay: 0.15s; }
+    .poultry-premium button {
+      min-height: 44px;
+      touch-action: manipulation;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+    .poultry-premium button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+    }
+    @media (max-width: 768px) {
+      .poultry-premium {
+        padding: 14px !important;
+        border-radius: 16px;
+      }
+      .poultry-premium .poultry-hero {
+        padding: 14px !important;
+      }
+      .poultry-premium .poultry-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+      }
+      .poultry-premium input,
+      .poultry-premium select,
+      .poultry-premium textarea,
+      .poultry-premium button {
+        font-size: 16px;
+      }
+      .poultry-premium input,
+      .poultry-premium select,
+      .poultry-premium textarea {
+        min-height: 42px;
+      }
+    }
+    @media (max-width: 520px) {
+      .poultry-premium .poultry-stat-grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  `
+
   return (
-    <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '24px' }}>
+    <div className="poultry-premium" style={{ padding: '20px' }}>
+      <style>{poultryPremiumStyles}</style>
+      <div className="poultry-hero" style={{ marginBottom: '24px', border: '1px solid #bfdbfe', borderRadius: '18px', padding: '18px 20px', background: 'rgba(255, 255, 255, 0.85)' }}>
         <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: 'bold' }}>
           🐔 Poultry Management
         </h2>
@@ -314,7 +491,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+      <div className="poultry-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
         <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Total Flocks</div>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#3b82f6' }}>{stats.totalFlocks}</div>
@@ -335,7 +512,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
 
       {/* Navigation Tabs */}
       <div style={navTabsStyle}>
-        {['flocks', 'eggs', 'health'].map(tab => (
+        {['flocks', 'birds', 'eggs', 'health'].map(tab => (
           <button
             key={tab}
             onClick={() => { setView(tab); setShowForm(false); setEditingId(null) }}
@@ -346,7 +523,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
         ))}
         <div style={{ flex: 1 }} />
         <button
-          onClick={() => exportToJSON(view === 'flocks' ? flocks : view === 'eggs' ? eggRecords : healthRecords, `poultry_${view}_${new Date().toISOString().slice(0, 10)}.json`)}
+          onClick={() => exportToJSON(view === 'flocks' ? flocks : view === 'birds' ? birds : view === 'eggs' ? eggRecords : healthRecords, `poultry_${view}_${new Date().toISOString().slice(0, 10)}.json`)}
           style={{
             padding: '10px 20px',
             background: '#059669',
@@ -574,11 +751,196 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
         </div>
       )}
 
+      {/* Birds View */}
+      {view === 'birds' && !showForm && (
+        <div>
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              placeholder="Search birds by tag, breed, color..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                flex: 1,
+                minWidth: 220,
+                padding: '10px 16px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '14px'
+              }}
+            />
+            <button
+              onClick={() => {
+                setShowForm(true)
+                setEditingId(null)
+                setBirdForm({ id: '', tag: '', flockId: '', type: 'Chicken', breed: 'Local', sex: 'Female', hatchDate: '', weight: '', color: '', status: 'Active', notes: '', image: '' })
+              }}
+              style={{
+                padding: '10px 20px',
+                background: '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '600'
+              }}
+            >
+              ➕ Add Bird
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+            {birds
+              .filter((bird) => {
+                const q = searchTerm.toLowerCase()
+                return !q ||
+                  (bird.tag || '').toLowerCase().includes(q) ||
+                  (bird.breed || '').toLowerCase().includes(q) ||
+                  (bird.color || '').toLowerCase().includes(q)
+              })
+              .map((bird) => {
+                const flock = flocks.find((f) => f.id === bird.flockId)
+                return (
+                  <div key={bird.id} style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    {bird.image && (
+                      <img src={bird.image} alt={bird.tag} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '6px', marginBottom: '10px' }} />
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <h3 style={{ margin: 0, fontSize: 18 }}>{bird.tag}</h3>
+                      <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 999, background: bird.status === 'Active' ? '#dcfce7' : '#e5e7eb', color: bird.status === 'Active' ? '#166534' : '#475569', fontWeight: 700 }}>{bird.status}</span>
+                    </div>
+                    <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
+                      <div><strong>Flock:</strong> {flock?.name || 'Unknown'}</div>
+                      <div><strong>Type:</strong> {bird.type} • {bird.breed}</div>
+                      <div><strong>Sex:</strong> {bird.sex} • <strong>Weight:</strong> {bird.weight || 'N/A'} kg</div>
+                      {bird.hatchDate && <div><strong>Hatched:</strong> {bird.hatchDate}</div>}
+                      {bird.color && <div><strong>Color:</strong> {bird.color}</div>}
+                    </div>
+                    {bird.notes && <div style={{ marginTop: 8, fontSize: 12, color: '#6b7280' }}>{bird.notes}</div>}
+                    <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                      <button
+                        onClick={() => { setBirdForm(bird); setEditingId(bird.id); setShowForm(true) }}
+                        style={{ flex: 1, padding: '8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBird(bird.id)}
+                        style={{ flex: 1, padding: '8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+                      >
+                        🗑️ Delete
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+          </div>
+
+          {birds.length === 0 && (
+            <div style={{ background: 'white', padding: '60px 20px', borderRadius: '8px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginTop: '16px' }}>
+              <div style={{ fontSize: '64px', marginBottom: '16px' }}>🐤</div>
+              <div style={{ fontSize: '18px', color: '#1f2937', marginBottom: '8px' }}>No birds registered</div>
+              <div style={{ fontSize: '14px', color: '#6b7280' }}>Add bird-level records for complete registry coverage</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Bird Form */}
+      {view === 'birds' && showForm && (
+        <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <h3 style={{ margin: '0 0 16px 0' }}>{editingId ? 'Edit Bird' : 'Add Bird'}</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Bird Tag *</label>
+              <input type="text" value={birdForm.tag} onChange={(e) => setBirdForm({ ...birdForm, tag: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Flock *</label>
+              <select value={birdForm.flockId} onChange={(e) => setBirdForm({ ...birdForm, flockId: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+                <option value="">Select Flock</option>
+                {flocks.map((flock) => <option key={flock.id} value={flock.id}>{flock.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Type</label>
+              <select value={birdForm.type} onChange={(e) => setBirdForm({ ...birdForm, type: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+                {POULTRY_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Breed</label>
+              <select value={birdForm.breed} onChange={(e) => setBirdForm({ ...birdForm, breed: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+                {CHICKEN_BREEDS.map((breed) => <option key={breed} value={breed}>{breed}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Sex</label>
+              <select value={birdForm.sex} onChange={(e) => setBirdForm({ ...birdForm, sex: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+                <option value="Female">Female</option>
+                <option value="Male">Male</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Hatch Date</label>
+              <input type="date" value={birdForm.hatchDate} onChange={(e) => setBirdForm({ ...birdForm, hatchDate: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Weight (kg)</label>
+              <input type="number" value={birdForm.weight} onChange={(e) => setBirdForm({ ...birdForm, weight: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Color</label>
+              <input type="text" value={birdForm.color} onChange={(e) => setBirdForm({ ...birdForm, color: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Status</label>
+              <select value={birdForm.status} onChange={(e) => setBirdForm({ ...birdForm, status: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+                <option value="Active">Active</option>
+                <option value="Sold">Sold</option>
+                <option value="Dead">Dead</option>
+                <option value="Culled">Culled</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Notes</label>
+            <textarea value={birdForm.notes} onChange={(e) => setBirdForm({ ...birdForm, notes: e.target.value })} rows={2} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Photo</label>
+            <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, setBirdForm)} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+            {birdForm.image && <img src={birdForm.image} alt="Bird preview" style={{ width: '180px', height: '130px', objectFit: 'cover', borderRadius: '6px', marginTop: '12px' }} />}
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button onClick={handleSaveBird} style={{ flex: 1, padding: '12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
+              💾 Save Bird
+            </button>
+            <button onClick={() => { setShowForm(false); setEditingId(null) }} style={{ flex: 1, padding: '12px', background: '#6b7280', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Egg Production View */}
       {view === 'eggs' && !showForm && (
         <div>
+          {flocks.length === 0 && (
+            <div style={{ marginBottom: '16px', padding: '12px 14px', borderRadius: 8, border: '1px solid #f59e0b', background: '#fffbeb', color: '#92400e', fontSize: 13 }}>
+              Add at least one flock before recording eggs.
+              <button onClick={() => setView('flocks')} style={{ marginLeft: 10, padding: '5px 10px', border: 'none', borderRadius: 6, background: '#f59e0b', color: '#fff', fontWeight: 700 }}>
+                Open Flocks
+              </button>
+            </div>
+          )}
           <button
             onClick={() => { setShowForm(true); setEditingId(null); setEggForm({ id: '', flockId: '', date: new Date().toISOString().slice(0, 10), collected: '', broken: '', sold: '', used: '', price: '', notes: '' }) }}
+            disabled={flocks.length === 0}
             style={{ marginBottom: '16px', padding: '10px 20px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
           >
             ➕ Record Eggs
@@ -743,8 +1105,17 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
       {/* Health View */}
       {view === 'health' && !showForm && (
         <div>
+          {flocks.length === 0 && (
+            <div style={{ marginBottom: '16px', padding: '12px 14px', borderRadius: 8, border: '1px solid #f59e0b', background: '#fffbeb', color: '#92400e', fontSize: 13 }}>
+              Add at least one flock before recording health events.
+              <button onClick={() => setView('flocks')} style={{ marginLeft: 10, padding: '5px 10px', border: 'none', borderRadius: 6, background: '#f59e0b', color: '#fff', fontWeight: 700 }}>
+                Open Flocks
+              </button>
+            </div>
+          )}
           <button
             onClick={() => { setShowForm(true); setEditingId(null); setHealthForm({ id: '', flockId: '', date: new Date().toISOString().slice(0, 10), type: 'Vaccination', treatment: '', diagnosis: '', medication: '', dosage: '', cost: '', veterinarian: '', notes: '' }) }}
+            disabled={flocks.length === 0}
             style={{ marginBottom: '16px', padding: '10px 20px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
           >
             ➕ Add Health Record

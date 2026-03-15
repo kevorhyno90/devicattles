@@ -130,7 +130,7 @@ function buildAutoNarrative(report, metrics) {
   }
 }
 
-export default function CustomReportBuilder() {
+export default function CustomReportBuilder({ onOpenSection = null }) {
   const [catalog, setCatalog] = useState({ summary: { modules: 0, subsections: 0, totalRows: 0, generatedAt: new Date().toISOString() }, reports: [] })
   const [query, setQuery] = useState('')
   const [moduleFilter, setModuleFilter] = useState('all')
@@ -411,6 +411,11 @@ export default function CustomReportBuilder() {
     }
   }
 
+  const openSectionFromReport = (report) => {
+    if (!report || typeof onOpenSection !== 'function') return
+    onOpenSection(report)
+  }
+
   return (
     <section>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
@@ -565,6 +570,35 @@ export default function CustomReportBuilder() {
                   <div style={{ fontSize: 12, color: '#475569', marginTop: 3 }}>{report.rowCount} records</div>
                   <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{getSectionHelp(report.module, report.subsection)}</div>
                   <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{report.storageKey}</div>
+                  <div style={{ marginTop: 8 }}>
+                    <span
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        openSectionFromReport(report)
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          openSectionFromReport(report)
+                        }
+                      }}
+                      style={{
+                        display: 'inline-flex',
+                        padding: '4px 10px',
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        background: '#ecfdf5',
+                        color: '#047857',
+                        border: '1px solid #a7f3d0',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Open Real Section
+                    </span>
+                  </div>
                 </button>
               )
             })}
@@ -586,6 +620,7 @@ export default function CustomReportBuilder() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button onClick={() => openSectionFromReport(selectedReport)} style={{ background: '#0f766e', color: '#fff', border: 'none' }}>Open Real Section</button>
                   <button onClick={() => handleExport('csv')}>Download CSV</button>
                   <button onClick={() => handleExport('excel')}>Download Excel</button>
                   <button onClick={() => handleExport('pdf')}>Download PDF</button>
@@ -643,11 +678,17 @@ export default function CustomReportBuilder() {
                 </div>
               </div>
 
+              {selectedReport.rows.length === 0 && (
+                <div style={{ marginBottom: 10, padding: 10, borderRadius: 8, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#475569', fontSize: 13 }}>
+                  No records in this section yet. Open the real section to add or sync records.
+                </div>
+              )}
+
               <div style={{ overflow: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, maxHeight: 560 }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
                     <tr>
-                      {selectedReport.fields.map((field) => (
+                      {(selectedReport.fields.length ? selectedReport.fields : ['status']).map((field) => (
                         <th key={field} style={{ borderBottom: '1px solid #e2e8f0', padding: '8px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>
                           {field}
                         </th>
@@ -655,9 +696,9 @@ export default function CustomReportBuilder() {
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedReport.rows.slice(0, 1000).map((row, idx) => (
+                    {(selectedReport.rows.length ? selectedReport.rows.slice(0, 1000) : [{ status: 'No records yet' }]).map((row, idx) => (
                       <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        {selectedReport.fields.map((field) => (
+                        {(selectedReport.fields.length ? selectedReport.fields : ['status']).map((field) => (
                           <td key={field} style={{ padding: '7px 10px', verticalAlign: 'top' }}>
                             {String(row[field] ?? '')}
                           </td>
@@ -689,6 +730,14 @@ export default function CustomReportBuilder() {
               <div style={{ fontWeight: 700, color: '#0f172a' }}>{index + 1}. {section.module} - {section.subsection}</div>
               <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
                 Rows: {section.rowCount} | Fields: {section.fieldCount} | Fill Rate: {section.fillRate}%
+              </div>
+              <div style={{ marginTop: 6 }}>
+                <button
+                  onClick={() => openSectionFromReport(section)}
+                  style={{ padding: '4px 10px', borderRadius: 999, border: '1px solid #a7f3d0', background: '#ecfdf5', color: '#047857', fontWeight: 700, fontSize: 11 }}
+                >
+                  Open Real Section
+                </button>
               </div>
               <div style={{ marginTop: 6, fontSize: 13 }}><strong>Native:</strong> {section.nativeSummary}</div>
               <div style={{ marginTop: 6, fontSize: 13 }}><strong>Technical:</strong> {section.detailedTechnicalReport}</div>

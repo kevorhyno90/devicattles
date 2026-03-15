@@ -126,7 +126,6 @@ export default function AnimalMilkYield({ animals }){
     const animalName = animals?.find(a => a.id === animalId)?.name || animalId
     
     if(editingId) {
-      // Update existing record
       setItems(items.map(item => 
         item.id === editingId 
           ? {
@@ -141,49 +140,6 @@ export default function AnimalMilkYield({ animals }){
               spoiledMilk: spoiledMilkAmount,
               spoiledMilkPrice: spoiledMilkPriceAmount,
               spoiledMilkReason: spoiledMilkReasonText,
-              fatContent: parseFloat(fatContent) || null,
-              proteinContent: parseFloat(proteinContent) || null,
-              lactose: parseFloat(lactose) || null,
-              solidsNotFat: parseFloat(solidsNotFat) || null,
-              totalSolids: parseFloat(totalSolids) || null,
-              scc: parseInt(scc) || null,
-              temp: parseFloat(temp) || null,
-              ph: parseFloat(ph) || null,
-              quality,
-              pricePerLiter: priceAmount,
-              totalPrice,
-              buyer: buyer.trim() || 'Not specified',
-              sold,
-              notes: notes.trim(),
-              milkerId: milkerId.trim(),
-              milkerName: milkerName.trim(),
-              milkingDuration: parseInt(milkingDuration) || null,
-              equipmentUsed,
-              location: location.trim(),
-              weather,
-              feedQuality,
-              cowHealth,
-              lactationDay: parseInt(lactationDay) || null,
-              peakMilk,
-              colostrum,
-              antibiotics,
-              withdrawal
-            }
-          : item
-      ))
-      setEditingId(null)
-      // Update existing record
-      setItems(items.map(item => 
-        item.id === editingId 
-          ? {
-              ...item,
-              animalId,
-              animalName,
-              session,
-              liters: literAmount,
-              milkToCalf: milkToCalfAmount,
-              milkConsumed: milkConsumedAmount,
-              milkSold: milkSoldAmount,
               fatContent: parseFloat(fatContent) || null,
               proteinContent: parseFloat(proteinContent) || null,
               lactose: parseFloat(lactose) || null,
@@ -238,6 +194,9 @@ export default function AnimalMilkYield({ animals }){
         milkToCalf: milkToCalfAmount,
         milkConsumed: milkConsumedAmount,
         milkSold: milkSoldAmount,
+        spoiledMilk: spoiledMilkAmount,
+        spoiledMilkPrice: spoiledMilkPriceAmount,
+        spoiledMilkReason: spoiledMilkReasonText,
         fatContent: parseFloat(fatContent) || null,
         proteinContent: parseFloat(proteinContent) || null,
         lactose: parseFloat(lactose) || null,
@@ -546,6 +505,107 @@ export default function AnimalMilkYield({ animals }){
   })
 
   const phase2MilkInsights = getMilkPhase2Insights(filteredItems)
+  const litersValue = parseFloat(liters) || 0
+  const milkToCalfValue = parseFloat(milkToCalf) || 0
+  const milkConsumedValue = parseFloat(milkConsumed) || 0
+  const milkSoldValue = parseFloat(milkSold) || 0
+  const spoiledMilkValue = parseFloat(spoiledMilk) || 0
+  const allocationTotal = milkToCalfValue + milkConsumedValue + milkSoldValue + spoiledMilkValue
+  const unallocatedMilk = Math.max(litersValue - allocationTotal, 0)
+  const allocationOverrun = litersValue > 0 && allocationTotal > litersValue
+  const premiumStyles = `
+    .milk-premium {
+      background: linear-gradient(160deg, #f4fbf7 0%, #eef8ff 46%, #fff9ec 100%);
+      border: 1px solid #dbe7f2;
+      border-radius: 16px;
+      padding: 18px;
+      font-family: "Plus Jakarta Sans", "Nunito Sans", "Segoe UI", sans-serif;
+      color: #0f172a;
+      box-shadow: 0 14px 44px rgba(2, 6, 23, 0.08);
+    }
+    .milk-premium .card {
+      border: 1px solid #d8e4ef;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      background: #ffffff;
+    }
+    .milk-premium button {
+      border: 1px solid #cbd5e1;
+      border-radius: 9px;
+      padding: 8px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+    .milk-premium button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+    }
+    .milk-premium h3, .milk-premium h4, .milk-premium h5 {
+      letter-spacing: -0.01em;
+    }
+    .milk-premium input,
+    .milk-premium select,
+    .milk-premium textarea {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 9px 10px;
+      background: #fff;
+      box-sizing: border-box;
+      width: 100%;
+    }
+    .milk-premium table th,
+    .milk-premium table td {
+      border-color: #dbe4ea !important;
+    }
+    .milk-premium .milk-toolbar {
+      background: linear-gradient(125deg, #0f766e, #0ea5e9 66%, #22c55e);
+      border-radius: 14px;
+      padding: 16px;
+      color: #ecfeff;
+      box-shadow: 0 16px 36px rgba(15, 118, 110, 0.28);
+    }
+    .milk-premium .milk-toolbar h3 {
+      margin: 0;
+      font-size: 1.35rem;
+      color: #ffffff;
+    }
+    .milk-premium .milk-subtitle {
+      font-size: 12px;
+      color: #d1fae5;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+    .milk-premium .milk-toolbar button,
+    .milk-premium .milk-toolbar .tab-btn {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.28);
+      color: #ffffff;
+      font-size: 12px;
+    }
+    .milk-premium .milk-toolbar .tab-btn.active {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.45);
+    }
+    .milk-premium .milk-record-row {
+      border-bottom: 1px solid #e2e8f0;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+    .milk-premium .milk-record-row:hover {
+      background: linear-gradient(180deg, #f8fffb 0%, #f0f9ff 100%);
+    }
+    @media (max-width: 768px) {
+      .milk-premium {
+        padding: 12px;
+      }
+      .milk-premium .milk-toolbar {
+        padding: 12px;
+      }
+      .milk-premium .milk-toolbar h3 {
+        font-size: 1.1rem;
+      }
+    }
+  `
 
   // Export functions
   const handleExportCSV = () => {
@@ -556,6 +616,12 @@ export default function AnimalMilkYield({ animals }){
       Animal: item.animalName || item.animalId,
       Session: item.session,
       Liters: item.liters,
+      MilkToCalf: item.milkToCalf || 0,
+      MilkConsumed: item.milkConsumed || 0,
+      MilkSold: item.milkSold || 0,
+      SpoiledMilk: item.spoiledMilk || 0,
+      SpoiledLoss: item.spoiledMilkPrice || 0,
+      SpoiledReason: item.spoiledMilkReason || 'N/A',
       Fat: item.fatContent || 'N/A',
       Protein: item.proteinContent || 'N/A',
       Lactose: item.lactose || 'N/A',
@@ -600,9 +666,13 @@ export default function AnimalMilkYield({ animals }){
   }
 
   return (
-    <section>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-        <h3>🥛 Comprehensive Milk Production Tracker</h3>
+    <section className="milk-premium">
+      <style>{premiumStyles}</style>
+      <div className="milk-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+        <div>
+          <h3>🥛 Comprehensive Milk Production Tracker</h3>
+          <div className="milk-subtitle">Premium dairy operations dashboard with quality, allocation, revenue, and compliance intelligence.</div>
+        </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button onClick={handleExportCSV} title="Export to CSV" style={{ fontSize: 12 }}>📊 CSV</button>
           <button onClick={() => exportToExcel(filteredItems, 'milk_production.xlsx')} title="Export to Excel" style={{ fontSize: 12 }}>📈 Excel</button>
@@ -761,7 +831,7 @@ export default function AnimalMilkYield({ animals }){
 
       {/* Comprehensive Add/Edit Form */}
             {/* Monthly Totals Table */}
-            <div style={{ marginBottom: 20 }}>
+            <div className="card" style={{ marginBottom: 20, padding: 12 }}>
               <h5 style={{ color: '#059669', marginBottom: 8 }}>📅 Monthly Totals</h5>
               <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
                 <thead>
@@ -791,7 +861,7 @@ export default function AnimalMilkYield({ animals }){
               </table>
             </div>
 
-            <div style={{ marginBottom: 20 }}>
+            <div className="card" style={{ marginBottom: 20, padding: 12 }}>
               <h5 style={{ color: '#1d4ed8', marginBottom: 8 }}>🗓️ Yearly Totals</h5>
               <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
                 <thead>
@@ -822,7 +892,7 @@ export default function AnimalMilkYield({ animals }){
               </table>
             </div>
       {showAddForm && (
-        <div className="card" style={{ padding: 20, marginBottom: 20, background: '#f9fafb', border: '2px solid #059669' }}>
+        <div className="card" style={{ padding: 20, marginBottom: 20, background: '#f9fafb', border: '2px solid #059669', boxShadow: '0 14px 32px rgba(5, 150, 105, 0.12)' }}>
           <h4 style={{ marginTop: 0, color: '#059669' }}>
             {editingId ? '✏️ Edit Milk Production Record' : '➕ Add Comprehensive Milk Production Record'}
           </h4>
@@ -853,6 +923,46 @@ export default function AnimalMilkYield({ animals }){
               <label>Lactation Day</label>
               <input type="number" min="0" value={lactationDay} onChange={e => setLactationDay(e.target.value)} placeholder="Days in milk" />
             </div>
+          </div>
+
+          <h5 style={{ marginTop: 16, marginBottom: 12, color: '#666' }}>🧮 Milk Allocation & Loss</h5>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 }}>
+            <div>
+              <label>Milk Fed to Calf (L)</label>
+              <input type="number" step="0.1" min="0" value={milkToCalf} onChange={e => setMilkToCalf(e.target.value)} placeholder="e.g., 2.5" />
+            </div>
+            <div>
+              <label>Milk Consumed at Home (L)</label>
+              <input type="number" step="0.1" min="0" value={milkConsumed} onChange={e => setMilkConsumed(e.target.value)} placeholder="e.g., 1.0" />
+            </div>
+            <div>
+              <label>Milk Sold (L)</label>
+              <input type="number" step="0.1" min="0" value={milkSold} onChange={e => setMilkSold(e.target.value)} placeholder="e.g., 15.0" />
+            </div>
+            <div>
+              <label>Spoiled/Discarded Milk (L)</label>
+              <input type="number" step="0.1" min="0" value={spoiledMilk} onChange={e => setSpoiledMilk(e.target.value)} placeholder="e.g., 0.5" />
+            </div>
+            <div>
+              <label>Spoiled Milk Loss (KES)</label>
+              <input type="number" step="0.01" min="0" value={spoiledMilkPrice} onChange={e => setSpoiledMilkPrice(e.target.value)} placeholder="e.g., 120" />
+            </div>
+            <div>
+              <label>Reason for Spoilage</label>
+              <input type="text" value={spoiledMilkReason} onChange={e => setSpoiledMilkReason(e.target.value)} placeholder="Transport spill, no cooling, rejected..." />
+            </div>
+          </div>
+          <div style={{ marginTop: 10, padding: 12, background: allocationOverrun ? '#fee2e2' : '#f8fafc', border: `1px solid ${allocationOverrun ? '#ef4444' : '#e2e8f0'}`, borderRadius: 8 }}>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 13 }}>
+              <span><strong>Produced:</strong> {litersValue.toFixed(1)} L</span>
+              <span><strong>Allocated:</strong> {allocationTotal.toFixed(1)} L</span>
+              <span><strong>Unallocated:</strong> {unallocatedMilk.toFixed(1)} L</span>
+            </div>
+            {allocationOverrun && (
+              <div style={{ marginTop: 6, fontSize: 12, color: '#b91c1c' }}>
+                Allocation exceeds produced milk. Reduce sold/consumed/calf/spoiled values.
+              </div>
+            )}
           </div>
 
           {/* Milk Quality Parameters */}
@@ -927,8 +1037,9 @@ export default function AnimalMilkYield({ animals }){
               <div style={{ padding: 12, background: '#d1fae5', borderRadius: 6, border: '2px solid #059669' }}>
                 <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Revenue</div>
                 <div style={{ fontSize: 22, fontWeight: 'bold', color: '#059669' }}>
-                  KES {(parseFloat(liters) * parseFloat(pricePerLiter)).toFixed(2)}
+                  KES {(milkSoldValue * (parseFloat(pricePerLiter) || 0)).toFixed(2)}
                 </div>
+                <div style={{ fontSize: 11, color: '#065f46', marginTop: 4 }}>Based on milk sold only</div>
               </div>
             )}
           </div>
@@ -1239,7 +1350,7 @@ export default function AnimalMilkYield({ animals }){
 
       {/* Records List View */}
       {viewMode === 'list' && (
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="card" style={{ padding: 0, overflow: 'hidden', borderRadius: 14 }}>
           {filteredItems.length === 0 ? (
             <div style={{ padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>🥛</div>
@@ -1253,7 +1364,7 @@ export default function AnimalMilkYield({ animals }){
                 const sccStatus = item.scc ? (item.scc < 200000 ? 'good' : item.scc < 400000 ? 'warning' : 'poor') : null
                 
                 return (
-                  <div key={item.id} style={{ padding: 16, borderBottom: '1px solid #eee' }}>
+                  <div key={item.id} className="milk-record-row" style={{ padding: 16 }}>
                     {inlineEditId === item.id ? (
                       <div onKeyDown={handleKeyDown} style={{display:'flex',flexDirection:'column',gap:12}}>
                         <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
@@ -1270,17 +1381,34 @@ export default function AnimalMilkYield({ animals }){
                         </div>
                       </div>
                     ) : (
-                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',gap:14}}>
                         <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontWeight: 600, fontSize: 18, color: '#059669' }}>{item.liters.toFixed(1)} L</span>
-                        <span className="badge" style={{ background: '#e0f2fe' }}>{item.session}</span>
-                        <span className="badge" style={{ background: '#f3e8ff' }}>{item.quality}</span>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10, flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 700, fontSize: 20, color: '#047857' }}>{item.liters.toFixed(1)} L</span>
+                        <span className="badge" style={{ background: '#e0f2fe', color: '#0c4a6e' }}>{item.session}</span>
+                        <span className="badge" style={{ background: '#f1f5f9', color: '#334155' }}>{item.quality}</span>
                         {item.sold && <span className="badge" style={{ background: '#d1fae5', color: '#065f46' }}>✓ Sold</span>}
                         {item.totalPrice > 0 && <span style={{ fontWeight: 600, color: '#059669' }}>KES {item.totalPrice.toFixed(2)}</span>}
                         {item.fatContent && <span className="badge" style={{ background: '#fef3c7' }}>Fat: {item.fatContent}%</span>}
                         {item.proteinContent && <span className="badge" style={{ background: '#dbeafe' }}>Protein: {item.proteinContent}%</span>}
-                        <button onClick={() => { const a = (animals||[]).find(x=>x.id===item.animalId); if(a){ setShowAnimalCV(a); recordClick('animal', a.id, 'view_cv') } }} style={{ marginLeft: 8, padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>👁️ View CV</button>
+                        <button
+                          onClick={() => {
+                            const a = (animals||[]).find(x=>x.id===item.animalId)
+                            const cvAnimal = a || {
+                              id: item.animalId,
+                              tag: item.animalId,
+                              name: item.animalName || item.animalId,
+                              breed: 'Unknown',
+                              sex: 'F',
+                              groupId: ''
+                            }
+                            setShowAnimalCV(cvAnimal)
+                            recordClick('animal', cvAnimal.id, 'view_cv')
+                          }}
+                          style={{ marginLeft: 8, padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}
+                        >
+                          👁️ View CV
+                        </button>
                         {sccStatus && (
                           <span className="badge" style={{ 
                             background: sccStatus === 'good' ? '#d1fae5' : sccStatus === 'warning' ? '#fef3c7' : '#fee2e2',
@@ -1293,6 +1421,29 @@ export default function AnimalMilkYield({ animals }){
                       <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
                         <strong>{animal?.name || animal?.tag || item.animalId}</strong> • {new Date(item.timestamp || item.date).toLocaleString()}
                       </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 8, marginBottom: 6 }}>
+                        <div style={{ background: '#eff6ff', borderRadius: 8, padding: 8 }}>
+                          <div style={{ fontSize: 11, color: '#64748b' }}>Fed to calf</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#0369a1' }}>{(item.milkToCalf || 0).toFixed(1)} L</div>
+                        </div>
+                        <div style={{ background: '#eef2ff', borderRadius: 8, padding: 8 }}>
+                          <div style={{ fontSize: 11, color: '#64748b' }}>Consumed</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#4338ca' }}>{(item.milkConsumed || 0).toFixed(1)} L</div>
+                        </div>
+                        <div style={{ background: '#ecfdf5', borderRadius: 8, padding: 8 }}>
+                          <div style={{ fontSize: 11, color: '#64748b' }}>Sold</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#047857' }}>{(item.milkSold || 0).toFixed(1)} L</div>
+                        </div>
+                        <div style={{ background: '#fef2f2', borderRadius: 8, padding: 8 }}>
+                          <div style={{ fontSize: 11, color: '#64748b' }}>Spoiled</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#b91c1c' }}>{(item.spoiledMilk || 0).toFixed(1)} L</div>
+                        </div>
+                      </div>
+                      {!!item.spoiledMilkReason && (
+                        <div style={{ fontSize: 12, color: '#7f1d1d', marginBottom: 6 }}>
+                          Spoilage reason: {item.spoiledMilkReason}
+                        </div>
+                      )}
                       {item.temp && (
                         <div style={{ fontSize: 13, color: '#888' }}>Temperature: {item.temp}°C</div>
                       )}

@@ -263,9 +263,125 @@ export default function BSFFarming({ initialTab = 'colonies', recordSource = nul
   const totalHarvest = harvestRecords.reduce((sum, h) => sum + (parseFloat(h.weight) || 0), 0)
   const totalRevenue = harvestRecords.reduce((sum, h) => sum + (parseFloat(h.salePrice) || 0), 0)
 
+  const bsfPremiumStyles = `
+    .bsf-premium {
+      --bsf-ink: #0f172a;
+      --bsf-subtle: #475569;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 20px;
+      border-radius: 24px;
+      border: 1px solid #dbeafe;
+      background:
+        radial-gradient(circle at 2% 0, rgba(16, 185, 129, 0.14) 0, transparent 40%),
+        radial-gradient(circle at 100% 16%, rgba(245, 158, 11, 0.12) 0, transparent 40%),
+        linear-gradient(145deg, #f0fdf4, #fffbeb);
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+      animation: bsfFadeIn 0.55s ease-out;
+    }
+    @keyframes bsfFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bsfRise {
+      from { opacity: 0; transform: translateY(10px) scale(0.986); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .bsf-premium h1,
+    .bsf-premium h2,
+    .bsf-premium h3,
+    .bsf-premium h4 {
+      color: var(--bsf-ink);
+      letter-spacing: -0.02em;
+      font-family: "IBM Plex Sans", "Space Grotesk", sans-serif;
+    }
+    .bsf-premium p,
+    .bsf-premium label,
+    .bsf-premium small {
+      color: var(--bsf-subtle);
+    }
+    .bsf-premium input,
+    .bsf-premium select,
+    .bsf-premium textarea {
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .bsf-premium input:focus,
+    .bsf-premium select:focus,
+    .bsf-premium textarea:focus {
+      outline: none;
+      border-color: #22c55e;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.16);
+    }
+    .bsf-premium .bsf-hero {
+      position: relative;
+      overflow: hidden;
+    }
+    .bsf-premium .bsf-hero::after {
+      content: "";
+      position: absolute;
+      width: 160px;
+      height: 160px;
+      border-radius: 999px;
+      right: -42px;
+      top: -58px;
+      background: radial-gradient(circle at center, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0));
+      pointer-events: none;
+    }
+    .bsf-premium .bsf-stat-grid > div {
+      border: 1px solid #bbf7d0;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      animation: bsfRise 0.52s ease both;
+    }
+    .bsf-premium .bsf-stat-grid > div:nth-child(2) { animation-delay: 0.05s; }
+    .bsf-premium .bsf-stat-grid > div:nth-child(3) { animation-delay: 0.1s; }
+    .bsf-premium .bsf-stat-grid > div:nth-child(4) { animation-delay: 0.15s; }
+    .bsf-premium button {
+      min-height: 44px;
+      touch-action: manipulation;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+    .bsf-premium button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+    }
+    @media (max-width: 768px) {
+      .bsf-premium {
+        padding: 14px !important;
+        border-radius: 16px;
+      }
+      .bsf-premium .bsf-hero {
+        padding: 12px !important;
+      }
+      .bsf-premium .bsf-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+      }
+      .bsf-premium input,
+      .bsf-premium select,
+      .bsf-premium textarea,
+      .bsf-premium button {
+        font-size: 16px;
+      }
+      .bsf-premium input,
+      .bsf-premium select,
+      .bsf-premium textarea {
+        min-height: 42px;
+      }
+    }
+    @media (max-width: 520px) {
+      .bsf-premium .bsf-stat-grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  `
+
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+    <div className="bsf-premium">
+      <style>{bsfPremiumStyles}</style>
+      <div className="bsf-hero" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, border: '1px solid #bbf7d0', borderRadius: '16px', padding: '14px 16px', background: 'rgba(255, 255, 255, 0.78)' }}>
         <div>
           <h3 style={{ margin: 0 }}>🪰 BSF (Black Soldier Fly) Farming</h3>
           {recordSource?.domain && recordSource?.item && (
@@ -280,7 +396,7 @@ export default function BSFFarming({ initialTab = 'colonies', recordSource = nul
       </div>
 
       {/* Summary Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
+      <div className="bsf-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
         <div className="card" style={{ padding: 16, background: '#f0fdf4' }}>
           <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Active Colonies</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{activeColonies.length}</div>
