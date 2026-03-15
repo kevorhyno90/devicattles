@@ -258,7 +258,7 @@ function AppContent() {
   
   // UI branding/settings - use hook to load/save from localStorage
   const SETTINGS_KEY = 'devinsfarm:ui:settings'
-  const defaultSettings = { backgroundOn: false, background: 'bg-farm.svg', logo: 'jr-farm-logo.svg', uploadedLogo: '', theme: 'catalytics' }
+  const defaultSettings = { backgroundOn: false, background: 'bg-farm.svg', logo: 'jr-farm-logo.svg', uploadedLogo: '', theme: 'adaptive' }
   const [settings, setSettings] = useUISettings(SETTINGS_KEY, defaultSettings)
 
   // Cleanup stale data from removed Market Prices feature.
@@ -1061,7 +1061,7 @@ function AppContent() {
   }
 
   return (
-    <div className={`app ${settings.backgroundOn? 'bg-on' : ''} theme-${settings.theme || 'bold'}`} 
+    <div className={`app ${settings.backgroundOn? 'bg-on' : ''} theme-${settings.theme || 'adaptive'}`} 
       style={{
         ...(settings.backgroundOn && settings.background ? { backgroundImage: `url('/assets/${settings.background}')` } : {}),
         background: colors.bg.primary,
@@ -1772,10 +1772,11 @@ function AppContent() {
                       Theme
                     </label>
                     <select 
-                      value={settings.theme || 'catalytics'} 
+                      value={settings.theme || 'adaptive'} 
                       onChange={e=>setSettings(s=> ({ ...s, theme: e.target.value }))}
                       style={{ padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', fontWeight: '500' }}
                     >
+                      <option value="adaptive">Adaptive Farm (Best for Light & Dark)</option>
                       <option value="catalytics">Catalytics (Clean & Modern)</option>
                       <option value="light">Light</option>
                       <option value="bold">Bold Colorful</option>

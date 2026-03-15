@@ -472,8 +472,8 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
         padding: '8px 14px',
         fontWeight: 700,
         cursor: 'pointer',
-        background: activeTab === tab ? '#0f766e' : '#e5e7eb',
-        color: activeTab === tab ? '#ffffff' : '#1f2937'
+        background: activeTab === tab ? 'var(--action-success)' : 'var(--bg-tertiary)',
+        color: activeTab === tab ? 'var(--text-inverse)' : 'var(--text-primary)'
       }}
     >
       {label}
@@ -482,15 +482,15 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
-      <section style={{ background: 'linear-gradient(135deg, #ecfeff 0%, #f0fdf4 100%)', border: '1px solid #bae6fd', borderRadius: 16, padding: 18 }}>
+      <section style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 16, padding: 18 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 28, color: '#0f172a' }}>Employee Full Manager</h2>
-            <p style={{ margin: '8px 0 0', color: '#334155', lineHeight: 1.5 }}>
+            <h2 style={{ margin: 0, fontSize: 28, color: 'var(--text-primary)' }}>Employee Full Manager</h2>
+            <p style={{ margin: '8px 0 0', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
               Comprehensive employment module for full staff registry, off planning, leave lifecycle, attendance tracking, and workforce analytics.
             </p>
             {recordSource?.domain && recordSource?.item && (
-              <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
+              <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: 'var(--action-success)', background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
                 Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
               </div>
             )}
@@ -498,13 +498,13 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <button
               onClick={() => downloadText(`employment-registry-${Date.now()}.csv`, toCsv(employees), 'text/csv')}
-              style={{ border: '1px solid #0ea5e9', borderRadius: 8, background: '#ffffff', color: '#0369a1', fontWeight: 700, padding: '8px 12px', cursor: 'pointer' }}
+              style={{ border: '1px solid var(--border-primary)', borderRadius: 8, background: 'var(--bg-elevated)', color: 'var(--action-primary)', fontWeight: 700, padding: '8px 12px', cursor: 'pointer' }}
             >
               Export Registry CSV
             </button>
             <button
               onClick={exportAllData}
-              style={{ border: 'none', borderRadius: 8, background: '#0f766e', color: '#ffffff', fontWeight: 700, padding: '8px 12px', cursor: 'pointer' }}
+              style={{ border: 'none', borderRadius: 8, background: 'var(--action-success)', color: 'var(--text-inverse)', fontWeight: 700, padding: '8px 12px', cursor: 'pointer' }}
             >
               Download Full Employment Pack
             </button>
@@ -513,15 +513,15 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
           {overviewCards.map((card) => (
-            <div key={card.label} style={{ background: '#ffffff', border: '1px solid #dbeafe', borderRadius: 12, padding: 12 }}>
-              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 6 }}>{card.label}</div>
+            <div key={card.label} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 12, padding: 12 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>{card.label}</div>
               <div style={{ fontSize: 24, fontWeight: 800, color: card.color }}>{card.value}</div>
             </div>
           ))}
         </div>
       </section>
 
-      <section style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14 }}>
+      <section style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14 }}>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {tabButton(TABS.registry, 'Employee Registry')}
           {tabButton(TABS.off, 'Off Planner')}

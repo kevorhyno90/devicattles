@@ -805,7 +805,7 @@ export default function Crops({ initialTab = 'list', initialPlantSubmodule = 'al
                 }
                 setTab('addCrop')
               }}
-              style={{ background: 'var(--green)', color: '#fff', padding: '10px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}
+              style={{ background: 'var(--action-success)', color: 'var(--text-inverse)', padding: '10px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}
             >
               Add New Crop
             </button>
@@ -813,15 +813,15 @@ export default function Crops({ initialTab = 'list', initialPlantSubmodule = 'al
         </div>
 
         {recordSource?.domain && recordSource?.item && (
-          <div style={{ marginBottom: '12px', fontSize: '12px', fontWeight: 700, color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
+          <div style={{ marginBottom: '12px', fontSize: '12px', fontWeight: 700, color: 'var(--action-success)', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
             Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
           </div>
         )}
 
-        <div style={{ marginBottom: '20px', padding: '14px', borderRadius: '10px', border: '1px solid #d1fae5', background: '#f8fffb' }}>
+        <div style={{ marginBottom: '20px', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#065f46' }}>Plant Submodules</div>
-            <div style={{ fontSize: 12, color: '#0f766e', fontWeight: 700 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>Plant Submodules</div>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 700 }}>
               {Object.keys(PLANT_SUBMODULE_META).length} modules
               {plantSubmodule !== 'all' ? ` • ${activePlantDomainCount} domains • ${activePlantRecordCount} records` : ''}
             </div>
@@ -829,7 +829,7 @@ export default function Crops({ initialTab = 'list', initialPlantSubmodule = 'al
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: plantSubmodule === 'all' ? 0 : 10 }}>
             <button
               onClick={() => setPlantSubmodule('all')}
-              style={{ padding: '6px 10px', borderRadius: 999, border: `1px solid ${plantSubmodule === 'all' ? '#059669' : '#d1fae5'}`, background: plantSubmodule === 'all' ? '#ecfdf5' : '#ffffff', color: '#065f46', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
+              style={{ padding: '6px 10px', borderRadius: 999, border: `1px solid ${plantSubmodule === 'all' ? 'var(--action-success)' : 'var(--border-primary)'}`, background: plantSubmodule === 'all' ? 'var(--bg-tertiary)' : 'var(--bg-elevated)', color: 'var(--text-primary)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
             >
               🌱 All Plants
             </button>
@@ -837,7 +837,7 @@ export default function Crops({ initialTab = 'list', initialPlantSubmodule = 'al
               <button
                 key={key}
                 onClick={() => setPlantSubmodule(key)}
-                style={{ padding: '6px 10px', borderRadius: 999, border: `1px solid ${plantSubmodule === key ? '#059669' : '#d1fae5'}`, background: plantSubmodule === key ? '#ecfdf5' : '#ffffff', color: '#065f46', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
+                style={{ padding: '6px 10px', borderRadius: 999, border: `1px solid ${plantSubmodule === key ? 'var(--action-success)' : 'var(--border-primary)'}`, background: plantSubmodule === key ? 'var(--bg-tertiary)' : 'var(--bg-elevated)', color: 'var(--text-primary)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
               >
                 {meta.icon} {meta.label}
               </button>
@@ -847,15 +847,15 @@ export default function Crops({ initialTab = 'list', initialPlantSubmodule = 'al
           {plantSubmodule !== 'all' && (
             <div style={{ display: 'grid', gap: 8 }}>
               {Object.entries(activePlantCatalog).map(([domain, items]) => (
-                <div key={domain} style={{ border: '1px solid #e2f6ea', borderRadius: 10, padding: '8px 10px', background: '#ffffff' }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: '#047857', marginBottom: 6 }}>{domain}</div>
+                <div key={domain} style={{ border: '1px solid var(--border-primary)', borderRadius: 10, padding: '8px 10px', background: 'var(--bg-elevated)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>{domain}</div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {items.map(item => (
                       <button
                         key={item}
                         onClick={() => openPlantRecord(plantSubmodule, domain)}
                         title={`Open ${PLANT_SUBMODULE_META[plantSubmodule]?.label} → ${item}`}
-                        style={{ padding: '4px 9px', borderRadius: 999, background: '#ffffff', border: '1px solid #d1fae5', color: '#065f46', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                        style={{ padding: '4px 9px', borderRadius: 999, background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                       >
                         {item}
                       </button>
@@ -874,46 +874,46 @@ export default function Crops({ initialTab = 'list', initialPlantSubmodule = 'al
             <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Total Crops</div>
           </div>
           <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#f59e0b' }}>{stats.totalArea.toFixed(1)}</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--action-warning)' }}>{stats.totalArea.toFixed(1)}</div>
             <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Total Acres</div>
           </div>
           <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#059669' }}>{stats.active}</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--action-success)' }}>{stats.active}</div>
             <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Active Crops</div>
           </div>
           <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#6b7280' }}>{stats.harvested}</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-secondary)' }}>{stats.harvested}</div>
             <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Harvested</div>
           </div>
         </div>
 
-        <div style={{ marginBottom: '20px', padding: '14px 16px', borderRadius: '10px', border: `1px solid ${alertSummary.critical > 0 ? '#fecaca' : alertSummary.warning > 0 ? '#fdba74' : '#a7f3d0'}`, background: alertSummary.total > 0 ? (alertSummary.critical > 0 ? '#fef2f2' : '#fff7ed') : '#f0fdf4', display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ marginBottom: '20px', padding: '14px 16px', borderRadius: '10px', border: `1px solid ${alertSummary.critical > 0 ? 'var(--action-danger)' : alertSummary.warning > 0 ? 'var(--action-warning)' : 'var(--action-success)'}`, background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: alertSummary.critical > 0 ? '#991b1b' : alertSummary.warning > 0 ? '#9a3412' : '#166534' }}>Smart Crop Alerts</div>
-            <div style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>Smart Crop Alerts</div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
               {alertSummary.total > 0
                 ? `${alertSummary.total} active alerts: ${alertSummary.critical} critical and ${alertSummary.warning} warning signals from margin, sales follow-up, and treatment trends.`
                 : 'No active smart alerts for the current crop portfolio.'}
             </div>
           </div>
-          <button onClick={() => setTab('alerts')} style={{ padding: '8px 12px', borderRadius: 6, border: 'none', background: alertSummary.critical > 0 ? '#b91c1c' : '#047857', color: '#fff', cursor: 'pointer', fontWeight: 700 }}>
+          <button onClick={() => setTab('alerts')} style={{ padding: '8px 12px', borderRadius: 6, border: 'none', background: alertSummary.critical > 0 ? 'var(--action-danger)' : 'var(--action-success)', color: 'var(--text-inverse)', cursor: 'pointer', fontWeight: 700 }}>
             {alertSummary.total > 0 ? 'Review Alerts' : 'Open Alerts'}
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div style={{ borderBottom: '2px solid #e5e7eb', marginBottom: '20px' }}>
+        <div style={{ borderBottom: '2px solid var(--border-primary)', marginBottom: '20px' }}>
           <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-            <button onClick={() => setTab('list')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'list' ? '3px solid var(--green)' : '3px solid transparent', background: tab === 'list' ? '#f0fdf4' : 'transparent', color: tab === 'list' ? 'var(--green)' : '#6b7280', fontWeight: tab === 'list' ? '600' : '400', cursor: 'pointer' }}>📋 Crop List</button>
-            <button onClick={() => setTab('yields')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'yields' ? '3px solid var(--green)' : '3px solid transparent', background: tab === 'yields' ? '#f0fdf4' : 'transparent', color: tab === 'yields' ? 'var(--green)' : '#6b7280', fontWeight: tab === 'yields' ? '600' : '400', cursor: 'pointer' }}>🌾 Yields & Harvest</button>
-            <button onClick={() => setTab('sales')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'sales' ? '3px solid var(--green)' : '3px solid transparent', background: tab === 'sales' ? '#f0fdf4' : 'transparent', color: tab === 'sales' ? 'var(--green)' : '#6b7280', fontWeight: tab === 'sales' ? '600' : '400', cursor: 'pointer' }}>💰 Sales & Revenue</button>
-            <button onClick={() => setTab('treatments')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'treatments' ? '3px solid var(--green)' : '3px solid transparent', background: tab === 'treatments' ? '#f0fdf4' : 'transparent', color: tab === 'treatments' ? 'var(--green)' : '#6b7280', fontWeight: tab === 'treatments' ? '600' : '400', cursor: 'pointer' }}>🧪 Treatments & Inputs</button>
-            <button onClick={() => setTab('pests')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'pests' ? '3px solid #f59e0b' : '3px solid transparent', background: tab === 'pests' ? '#fff7ed' : 'transparent', color: tab === 'pests' ? '#f59e0b' : '#6b7280', fontWeight: tab === 'pests' ? '600' : '400', cursor: 'pointer' }}>🐛 Pest Management</button>
-            <button onClick={() => setTab('diseases')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'diseases' ? '3px solid #dc2626' : '3px solid transparent', background: tab === 'diseases' ? '#fef2f2' : 'transparent', color: tab === 'diseases' ? '#dc2626' : '#6b7280', fontWeight: tab === 'diseases' ? '600' : '400', cursor: 'pointer' }}>🦠 Disease Management</button>
-            <button onClick={() => setTab('reminders')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'reminders' ? '3px solid #059669' : '3px solid transparent', background: tab === 'reminders' ? '#f0fdf4' : 'transparent', color: tab === 'reminders' ? '#059669' : '#6b7280', fontWeight: tab === 'reminders' ? '600' : '400', cursor: 'pointer' }}>🔔 Reminders</button>
-            <button onClick={() => setTab('alerts')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'alerts' ? '3px solid #dc2626' : '3px solid transparent', background: tab === 'alerts' ? '#fef2f2' : 'transparent', color: tab === 'alerts' ? '#dc2626' : '#6b7280', fontWeight: tab === 'alerts' ? '600' : '400', cursor: 'pointer' }}>🚨 Smart Alerts ({alertSummary.total})</button>
-            <button onClick={() => setTab('profitability')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'profitability' ? '3px solid #1d4ed8' : '3px solid transparent', background: tab === 'profitability' ? '#eff6ff' : 'transparent', color: tab === 'profitability' ? '#1d4ed8' : '#6b7280', fontWeight: tab === 'profitability' ? '600' : '400', cursor: 'pointer' }}>📈 Profitability</button>
-            <button onClick={() => setTab('cv')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'cv' ? '3px solid #0f766e' : '3px solid transparent', background: tab === 'cv' ? '#ecfeff' : 'transparent', color: tab === 'cv' ? '#0f766e' : '#6b7280', fontWeight: tab === 'cv' ? '600' : '400', cursor: 'pointer' }}>📄 Crop CV Report</button>
+            <button onClick={() => setTab('list')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'list' ? '3px solid var(--action-success)' : '3px solid transparent', background: tab === 'list' ? 'var(--bg-secondary)' : 'transparent', color: tab === 'list' ? 'var(--action-success)' : 'var(--text-secondary)', fontWeight: tab === 'list' ? '600' : '400', cursor: 'pointer' }}>📋 Crop List</button>
+            <button onClick={() => setTab('yields')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'yields' ? '3px solid var(--action-success)' : '3px solid transparent', background: tab === 'yields' ? 'var(--bg-secondary)' : 'transparent', color: tab === 'yields' ? 'var(--action-success)' : 'var(--text-secondary)', fontWeight: tab === 'yields' ? '600' : '400', cursor: 'pointer' }}>🌾 Yields & Harvest</button>
+            <button onClick={() => setTab('sales')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'sales' ? '3px solid var(--action-success)' : '3px solid transparent', background: tab === 'sales' ? 'var(--bg-secondary)' : 'transparent', color: tab === 'sales' ? 'var(--action-success)' : 'var(--text-secondary)', fontWeight: tab === 'sales' ? '600' : '400', cursor: 'pointer' }}>💰 Sales & Revenue</button>
+            <button onClick={() => setTab('treatments')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'treatments' ? '3px solid var(--action-success)' : '3px solid transparent', background: tab === 'treatments' ? 'var(--bg-secondary)' : 'transparent', color: tab === 'treatments' ? 'var(--action-success)' : 'var(--text-secondary)', fontWeight: tab === 'treatments' ? '600' : '400', cursor: 'pointer' }}>🧪 Treatments & Inputs</button>
+            <button onClick={() => setTab('pests')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'pests' ? '3px solid var(--action-warning)' : '3px solid transparent', background: tab === 'pests' ? 'var(--bg-secondary)' : 'transparent', color: tab === 'pests' ? 'var(--action-warning)' : 'var(--text-secondary)', fontWeight: tab === 'pests' ? '600' : '400', cursor: 'pointer' }}>🐛 Pest Management</button>
+            <button onClick={() => setTab('diseases')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'diseases' ? '3px solid var(--action-danger)' : '3px solid transparent', background: tab === 'diseases' ? 'var(--bg-secondary)' : 'transparent', color: tab === 'diseases' ? 'var(--action-danger)' : 'var(--text-secondary)', fontWeight: tab === 'diseases' ? '600' : '400', cursor: 'pointer' }}>🦠 Disease Management</button>
+            <button onClick={() => setTab('reminders')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'reminders' ? '3px solid var(--action-success)' : '3px solid transparent', background: tab === 'reminders' ? 'var(--bg-secondary)' : 'transparent', color: tab === 'reminders' ? 'var(--action-success)' : 'var(--text-secondary)', fontWeight: tab === 'reminders' ? '600' : '400', cursor: 'pointer' }}>🔔 Reminders</button>
+            <button onClick={() => setTab('alerts')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'alerts' ? '3px solid var(--action-danger)' : '3px solid transparent', background: tab === 'alerts' ? 'var(--bg-secondary)' : 'transparent', color: tab === 'alerts' ? 'var(--action-danger)' : 'var(--text-secondary)', fontWeight: tab === 'alerts' ? '600' : '400', cursor: 'pointer' }}>🚨 Smart Alerts ({alertSummary.total})</button>
+            <button onClick={() => setTab('profitability')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'profitability' ? '3px solid var(--action-primary)' : '3px solid transparent', background: tab === 'profitability' ? 'var(--bg-secondary)' : 'transparent', color: tab === 'profitability' ? 'var(--action-primary)' : 'var(--text-secondary)', fontWeight: tab === 'profitability' ? '600' : '400', cursor: 'pointer' }}>📈 Profitability</button>
+            <button onClick={() => setTab('cv')} style={{ padding: '12px 20px', border: 'none', borderBottom: tab === 'cv' ? '3px solid var(--action-primary)' : '3px solid transparent', background: tab === 'cv' ? 'var(--bg-secondary)' : 'transparent', color: tab === 'cv' ? 'var(--action-primary)' : 'var(--text-secondary)', fontWeight: tab === 'cv' ? '600' : '400', cursor: 'pointer' }}>📄 Crop CV Report</button>
           </div>
         </div>
       </div>

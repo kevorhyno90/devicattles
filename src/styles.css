@@ -25,8 +25,10 @@
         --bg:#f6fbff;
         --muted:#555;
         --card-bg: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,255,250,0.95));
+  --font-sans: "Nunito Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-heading: "Merriweather", "Georgia", "Times New Roman", serif;
 }
-body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin:0;background-color:var(--bg);color:#111;background-image:none;line-height:1.5}
+body{font-family:var(--font-sans); margin:0;background-color:var(--bg);color:#111;background-image:none;line-height:1.5}
 .app header{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 18px rgba(0,0,0,0.08)}
 .app header h1{margin:0;font-size:1.2rem;color:#fff}
 .app header img.logo{height:44px;border-radius:6px;background:transparent}
@@ -882,6 +884,156 @@ body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica
 .app.theme-catalytics .muted{color:#64748b;font-weight:500}
 .app.theme-catalytics p{color:#374151;font-weight:500;line-height:1.6}
 
+/* Adaptive Farm theme (readability-first for light/dark mode) */
+.app.theme-adaptive{
+  background-color:var(--bg-primary);
+  color:var(--text-primary);
+  --muted:var(--text-secondary);
+  --accent1:#1f7a4c;
+  --accent2:#9a6b21;
+  --accent3:#0e7490;
+  --green:#1f7a4c;
+  --bg:var(--bg-primary);
+  --card-bg:var(--bg-elevated);
+  --font-sans:"Nunito Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-heading:"Merriweather", "Georgia", "Times New Roman", serif;
+}
+.app.theme-adaptive header{
+  background:linear-gradient(90deg,#1f7a4c,#2f855a);
+  color:#ffffff;
+  border-bottom:1px solid rgba(0,0,0,0.1);
+}
+.app.theme-adaptive .brand-wordmark{color:#ffffff;font-weight:800}
+.app.theme-adaptive .brand-tag{color:rgba(255,255,255,0.95)}
+.app.theme-adaptive .logo-wrap{background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.25)}
+.app.theme-adaptive .panel,
+.app.theme-adaptive .card,
+.app.theme-adaptive section,
+.app.theme-adaptive .section,
+.app.theme-adaptive .kpi-card,
+.app.theme-adaptive .summary-card,
+.app.theme-adaptive .notification-item,
+.app.theme-adaptive .quick-actions,
+.app.theme-adaptive .alert-section,
+.app.theme-adaptive .notification-settings,
+.app.theme-adaptive .backup-reminder,
+.app.theme-adaptive .backup-stats,
+.app.theme-adaptive .backup-section,
+.app.theme-adaptive .restore-section,
+.app.theme-adaptive .backup-best-practices{
+  background:var(--bg-elevated);
+  border:1px solid var(--border-primary);
+  color:var(--text-primary);
+  box-shadow:var(--shadow-sm);
+}
+.app.theme-adaptive h1,
+.app.theme-adaptive h2,
+.app.theme-adaptive h3,
+.app.theme-adaptive h4,
+.app.theme-adaptive h5,
+.app.theme-adaptive h6,
+.app.theme-adaptive .animal-meta,
+.app.theme-adaptive .kpi-value,
+.app.theme-adaptive .summary-count{
+  color:var(--text-primary);
+}
+.app.theme-adaptive p,
+.app.theme-adaptive label,
+.app.theme-adaptive .muted,
+.app.theme-adaptive .animal-sub,
+.app.theme-adaptive .summary-label,
+.app.theme-adaptive .notification-content p,
+.app.theme-adaptive .notification-date,
+.app.theme-adaptive .backup-info li,
+.app.theme-adaptive .last-backup,
+.app.theme-adaptive .stat-label{
+  color:var(--text-secondary);
+}
+.app.theme-adaptive th,
+.app.theme-adaptive td{
+  color:var(--text-primary);
+  border-bottom:1px solid var(--border-primary);
+}
+.app.theme-adaptive th{background:var(--bg-secondary)}
+.app.theme-adaptive input,
+.app.theme-adaptive select,
+.app.theme-adaptive textarea,
+.app.theme-adaptive .add-row input,
+.app.theme-adaptive .animal-grid input,
+.app.theme-adaptive .animal-grid select,
+.app.theme-adaptive .animal-grid textarea{
+  background:var(--bg-elevated);
+  border:1px solid var(--border-secondary);
+  color:var(--text-primary);
+}
+.app.theme-adaptive input:focus,
+.app.theme-adaptive select:focus,
+.app.theme-adaptive textarea:focus{
+  border-color:var(--border-focus);
+  outline:none;
+  box-shadow:0 0 0 3px rgba(14,116,144,0.18);
+}
+.app.theme-adaptive .btn-primary,
+.app.theme-adaptive .btn-backup,
+.app.theme-adaptive .add-row button,
+.app.theme-adaptive .action-btn,
+.app.theme-adaptive .controls button,
+.app.theme-adaptive .drawer button{
+  background:linear-gradient(135deg,#1f7a4c,#2f855a);
+  color:#ffffff;
+}
+.app.theme-adaptive .btn-primary:hover,
+.app.theme-adaptive .btn-backup:hover,
+.app.theme-adaptive .add-row button:hover,
+.app.theme-adaptive .action-btn:hover{
+  box-shadow:0 4px 12px rgba(31,122,76,0.28);
+}
+
+.app.theme-adaptive input,
+.app.theme-adaptive select,
+.app.theme-adaptive textarea {
+  border-color: var(--border-secondary);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.app.theme-adaptive input:focus,
+.app.theme-adaptive select:focus,
+.app.theme-adaptive textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(14,122,79,0.18);
+}
+
+[data-theme='dark'] .app.theme-adaptive{
+  --accent1:#34d399;
+  --accent2:#fbbf24;
+  --accent3:#22d3ee;
+  --green:#34d399;
+}
+[data-theme='dark'] .app.theme-adaptive header{
+  background:linear-gradient(90deg,#0f3a2a,#124633);
+  border-bottom:1px solid #1f2937;
+}
+[data-theme='dark'] .app.theme-adaptive .brand-tag{color:rgba(229,231,235,0.92)}
+[data-theme='dark'] .app.theme-adaptive .logo-wrap{background:rgba(15,58,42,0.75);border:1px solid #14532d}
+[data-theme='dark'] .app.theme-adaptive .badge{
+  background:#123625;
+  color:#86efac;
+  border:1px solid #14532d;
+}
+[data-theme='dark'] .app.theme-adaptive .flag{
+  background:#3d2a10;
+  color:#fde68a;
+  border:1px solid #78350f;
+}
+[data-theme='dark'] .app.theme-adaptive .dismiss-btn{
+  background:#1f2937;
+  color:#e5e7eb;
+}
+[data-theme='dark'] .app.theme-adaptive .dismiss-btn:hover{
+  background:#374151;
+}
+
 /* Cyberpunk theme (dark, neon magenta/cyan) */
 .app.theme-cyberpunk{background-color:#0a0814;color:#f0f8ff;--muted:rgba(240,248,255,0.8)}
 .app.theme-cyberpunk{--accent1:#00e5ff;--accent2:#ff00c8;--accent3:#7a05ff}
@@ -915,6 +1067,7 @@ nav button.active{background:linear-gradient(90deg, rgba(255,255,255,0.14), rgba
 main{padding:16px}
 .section{background:var(--card-bg);padding:12px;border-radius:12px;box-shadow:0 8px 28px rgba(27,38,30,0.06)}
 h1, h2, h3, h4, h5, h6{color:inherit;margin-top:0;margin-bottom:0.5em}
+h1, h2, h3, h4{font-family:var(--font-heading); letter-spacing:0.01em}
 p{margin-top:0;margin-bottom:1em}
 .add-row{display:flex;gap:8px;margin-bottom:12px}
 .add-row input{flex:1;padding:8px;border:1px solid #ddd;border-radius:6px;color:inherit}
@@ -946,6 +1099,59 @@ footer{padding:12px 16px;font-size:0.85rem;color:var(--muted)}
 .flag.green{background:#eefaf0;color:#1f6f2a;border:1px solid #dff3de}
 .vitals-row{display:flex;gap:8px;align-items:center;margin-top:8px}
 .vitals-item{background:#fbfffb;border:1px solid #eef6ee;padding:6px 8px;border-radius:6px;font-size:0.9rem}
+
+/* Global form-system defaults for better mobile and contrast accessibility */
+.app input,
+.app select,
+.app textarea,
+.app button {
+  font-family: var(--font-sans);
+  font-size: 15px;
+}
+
+.app input,
+.app select,
+.app textarea {
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--border-secondary, #d1d5db);
+  background: var(--bg-elevated, #ffffff);
+  color: var(--text-primary, #1f2937);
+  padding: 8px 12px;
+}
+
+.app input::placeholder,
+.app textarea::placeholder {
+  color: var(--text-tertiary, #9ca3af);
+}
+
+.app input:focus,
+.app select:focus,
+.app textarea:focus {
+  outline: none;
+  border-color: var(--border-focus, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(14, 122, 79, 0.16);
+}
+
+.app button {
+  min-height: 42px;
+  border-radius: 10px;
+  touch-action: manipulation;
+}
+
+.app table th,
+.app table td {
+  border-bottom-color: var(--border-primary, #e5e7eb);
+}
+
+@media (max-width: 768px) {
+  .app input,
+  .app select,
+  .app textarea,
+  .app button {
+    font-size: 16px;
+  }
+}
 
 /* Print Styles */
 @media print {

@@ -23,36 +23,36 @@ export const themes = {
   light: {
     // Background colors
     bg: {
-      primary: '#ffffff',
-      secondary: '#f9fafb',
-      tertiary: '#f3f4f6',
+      primary: '#f8faf7',
+      secondary: '#f1f5f2',
+      tertiary: '#e9efe9',
       elevated: '#ffffff'
     },
     // Text colors
     text: {
-      primary: '#1f2937',
-      secondary: '#6b7280',
-      tertiary: '#9ca3af',
+      primary: '#15231b',
+      secondary: '#3e5648',
+      tertiary: '#5f7568',
       inverse: '#ffffff'
     },
     // Border colors
     border: {
-      primary: '#e5e7eb',
-      secondary: '#d1d5db',
-      focus: '#3b82f6'
+      primary: '#c9d8cd',
+      secondary: '#a8beb0',
+      focus: '#0e7a4f'
     },
     // Action colors
     action: {
-      primary: '#3b82f6',
-      primaryHover: '#2563eb',
-      success: '#10b981',
-      successHover: '#059669',
+      primary: '#0e7a4f',
+      primaryHover: '#0b5f3d',
+      success: '#198754',
+      successHover: '#146c43',
       danger: '#ef4444',
       dangerHover: '#dc2626',
-      warning: '#f59e0b',
-      warningHover: '#d97706',
-      purple: '#8b5cf6',
-      purpleHover: '#7c3aed'
+      warning: '#a46d17',
+      warningHover: '#875812',
+      purple: '#2f6f66',
+      purpleHover: '#285d56'
     },
     // Shadows
     shadow: {
@@ -63,47 +63,47 @@ export const themes = {
     },
     // Chart colors
     chart: {
-      primary: '#3b82f6',
-      secondary: '#10b981',
-      tertiary: '#f59e0b',
+      primary: '#0e7a4f',
+      secondary: '#1f6a8a',
+      tertiary: '#a46d17',
       quaternary: '#ef4444',
-      quinary: '#8b5cf6',
-      senary: '#06b6d4'
+      quinary: '#2f6f66',
+      senary: '#7f3f00'
     }
   },
   dark: {
     // Background colors
     bg: {
-      primary: '#111827',
-      secondary: '#1f2937',
-      tertiary: '#374151',
-      elevated: '#1f2937'
+      primary: '#0f1412',
+      secondary: '#18201c',
+      tertiary: '#223029',
+      elevated: '#1b241f'
     },
     // Text colors
     text: {
-      primary: '#f9fafb',
-      secondary: '#d1d5db',
-      tertiary: '#9ca3af',
-      inverse: '#1f2937'
+      primary: '#e8f0eb',
+      secondary: '#c7d6ce',
+      tertiary: '#9db2a6',
+      inverse: '#0f1412'
     },
     // Border colors
     border: {
-      primary: '#374151',
-      secondary: '#4b5563',
-      focus: '#60a5fa'
+      primary: '#2e3d35',
+      secondary: '#40564a',
+      focus: '#52c488'
     },
     // Action colors
     action: {
-      primary: '#60a5fa',
-      primaryHover: '#3b82f6',
-      success: '#34d399',
-      successHover: '#10b981',
+      primary: '#3cb179',
+      primaryHover: '#2f8d61',
+      success: '#52c488',
+      successHover: '#3ea26f',
       danger: '#f87171',
       dangerHover: '#ef4444',
-      warning: '#fbbf24',
-      warningHover: '#f59e0b',
-      purple: '#a78bfa',
-      purpleHover: '#8b5cf6'
+      warning: '#d5a54a',
+      warningHover: '#b98932',
+      purple: '#4c9f93',
+      purpleHover: '#3f8379'
     },
     // Shadows
     shadow: {
@@ -114,12 +114,12 @@ export const themes = {
     },
     // Chart colors (brighter for dark mode)
     chart: {
-      primary: '#60a5fa',
-      secondary: '#34d399',
-      tertiary: '#fbbf24',
+      primary: '#52c488',
+      secondary: '#64b8d6',
+      tertiary: '#d5a54a',
       quaternary: '#f87171',
-      quinary: '#a78bfa',
-      senary: '#22d3ee'
+      quinary: '#4c9f93',
+      senary: '#f3b65d'
     }
   }
 };
