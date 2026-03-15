@@ -431,9 +431,9 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
         <style>{caninePremiumStyles}</style>
         <div className="canine-hero" style={{ marginBottom: '20px' }}>
           <h3 style={{ marginTop: 0 }}>🐕 Canine Management</h3>
-          <p style={{ color: '#666', fontSize: '14px' }}>Comprehensive dog management with health, vaccination, and husbandry tracking</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Comprehensive dog management with health, vaccination, and husbandry tracking</p>
           {recordSource?.domain && recordSource?.item && (
-            <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
+            <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: 'var(--action-success)', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
               Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
             </div>
           )}
@@ -484,9 +484,9 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                 value={listSearch}
                 onChange={(e) => setListSearch(e.target.value)}
                 placeholder="Search by name, breed, or tag..."
-                style={{ padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13 }}
+                style={{ padding: '10px 12px', border: '1px solid var(--border-secondary)', borderRadius: 8, fontSize: 13 }}
               />
-              <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} style={{ padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13 }}>
+              <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} style={{ padding: '10px 12px', border: '1px solid var(--border-secondary)', borderRadius: 8, fontSize: 13 }}>
                 <option value="all">All Roles</option>
                 {roles.map((role) => <option key={role} value={role}>{role}</option>)}
               </select>
@@ -496,20 +496,20 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
                   {filteredCanines.map(dog => (
-                    <div key={dog.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '14px', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <div key={dog.id} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: '8px', padding: '14px', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                       {inlineEditId === dog.id ? (
                         <div onKeyDown={handleKeyDown} style={{display:'flex',flexDirection:'column',gap:8}}>
-                          <input value={inlineData.name} onChange={e=>setInlineData({...inlineData,name:e.target.value})} placeholder="Name" style={{padding:'6px',border:'1px solid #d1d5db',borderRadius:4,fontSize:13}} autoFocus />
-                          <select value={inlineData.role} onChange={e=>setInlineData({...inlineData,role:e.target.value})} style={{padding:'6px',border:'1px solid #d1d5db',borderRadius:4,fontSize:13}}>
+                          <input value={inlineData.name} onChange={e=>setInlineData({...inlineData,name:e.target.value})} placeholder="Name" style={{padding:'6px',border:'1px solid var(--border-secondary)',borderRadius:4,fontSize:13}} autoFocus />
+                          <select value={inlineData.role} onChange={e=>setInlineData({...inlineData,role:e.target.value})} style={{padding:'6px',border:'1px solid var(--border-secondary)',borderRadius:4,fontSize:13}}>
                             {roles.map(r=><option key={r}>{r}</option>)}
                           </select>
-                          <select value={inlineData.trainingLevel} onChange={e=>setInlineData({...inlineData,trainingLevel:e.target.value})} style={{padding:'6px',border:'1px solid #d1d5db',borderRadius:4,fontSize:13}}>
+                          <select value={inlineData.trainingLevel} onChange={e=>setInlineData({...inlineData,trainingLevel:e.target.value})} style={{padding:'6px',border:'1px solid var(--border-secondary)',borderRadius:4,fontSize:13}}>
                             {trainingLevels.map(t=><option key={t}>{t}</option>)}
                           </select>
-                          <input type="number" value={inlineData.weight} onChange={e=>setInlineData({...inlineData,weight:e.target.value})} placeholder="Weight (kg)" style={{padding:'6px',border:'1px solid #d1d5db',borderRadius:4,fontSize:13}} />
+                          <input type="number" value={inlineData.weight} onChange={e=>setInlineData({...inlineData,weight:e.target.value})} placeholder="Weight (kg)" style={{padding:'6px',border:'1px solid var(--border-secondary)',borderRadius:4,fontSize:13}} />
                           <div style={{display:'flex',gap:4}}>
-                            <button onClick={saveInlineEdit} style={{flex:1,padding:'6px',background:'#10b981',color:'#fff',border:'none',borderRadius:4,fontSize:11}}>✓ Save</button>
-                            <button onClick={cancelInlineEdit} style={{flex:1,padding:'6px',background:'#ef4444',color:'#fff',border:'none',borderRadius:4,fontSize:11}}>✕ Cancel</button>
+                            <button onClick={saveInlineEdit} style={{flex:1,padding:'6px',background:'var(--action-success)',color:'var(--text-inverse)',border:'none',borderRadius:4,fontSize:11}}>✓ Save</button>
+                            <button onClick={cancelInlineEdit} style={{flex:1,padding:'6px',background:'var(--action-danger)',color:'var(--text-inverse)',border:'none',borderRadius:4,fontSize:11}}>✕ Cancel</button>
                           </div>
                         </div>
                       ) : (
@@ -530,9 +530,9 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                     </div>
                     <div style={{ marginTop: '8px', display: 'flex', gap: '4px' }}>
                       <button onClick={(e) => { e.stopPropagation(); startInlineEdit(dog); }} style={{ flex: 1, padding: '4px 8px', background: '#ffffcc', color: '#333', border: '1px solid #ffdd00', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '500' }}>⚡ Quick</button>
-                      <button onClick={(e) => { e.stopPropagation(); recordClick('animal', dog.id, 'view_cv'); setSelectedCanine(dog); setShowCV(true); }} style={{ flex: 1, padding: '4px 8px', background: '#059669', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>👁️ View</button>
-                      <button onClick={(e) => { e.stopPropagation(); editCanine(dog); }} style={{ flex: 1, padding: '4px 8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>✏️</button>
-                      <button onClick={(e) => { e.stopPropagation(); deleteCanine(dog.id); }} style={{ flex: 1, padding: '4px 8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>🗑️</button>
+                      <button onClick={(e) => { e.stopPropagation(); recordClick('animal', dog.id, 'view_cv'); setSelectedCanine(dog); setShowCV(true); }} style={{ flex: 1, padding: '4px 8px', background: '#059669', color: 'var(--text-inverse)', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>👁️ View</button>
+                      <button onClick={(e) => { e.stopPropagation(); editCanine(dog); }} style={{ flex: 1, padding: '4px 8px', background: 'var(--action-primary)', color: 'var(--text-inverse)', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>✏️</button>
+                      <button onClick={(e) => { e.stopPropagation(); deleteCanine(dog.id); }} style={{ flex: 1, padding: '4px 8px', background: 'var(--action-danger)', color: 'var(--text-inverse)', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>🗑️</button>
                     </div>
                           </div>
                         )}
@@ -543,39 +543,39 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
               )}
 
               {filteredCanines.length === 0 && !showForm && (
-                <div style={{ background: 'white', border: '2px dashed #d1d5db', borderRadius: '8px', padding: '40px 20px', textAlign: 'center', marginBottom: '20px' }}>
+                <div style={{ background: 'var(--bg-elevated)', border: '2px dashed var(--border-secondary)', borderRadius: '8px', padding: '40px 20px', textAlign: 'center', marginBottom: '20px' }}>
                   <div style={{ fontSize: '32px', marginBottom: '10px' }}>🐕</div>
                   <p style={{ margin: '0', color: '#666' }}>{canines.length === 0 ? 'No canines registered yet' : 'No canines match the current filters'}</p>
                 </div>
               )}
 
               {showForm && (
-                <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
+                <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
                   <h4>{editingId ? 'Edit Canine' : 'Add New Canine'}</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                    <input type="text" id="dog-name" name="dogName" placeholder="Dog name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                    <input type="text" id="dog-breed" name="breed" placeholder="Breed" value={formData.breed} onChange={e => setFormData({...formData, breed: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                    <input type="text" id="dog-name" name="dogName" placeholder="Dog name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }} />
+                    <input type="text" id="dog-breed" name="breed" placeholder="Breed" value={formData.breed} onChange={e => setFormData({...formData, breed: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }} />
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <label htmlFor="dob" style={{ fontSize: '13px', marginBottom: '4px', fontWeight: '500' }}>Date of Birth</label>
-                      <input id="dob" name="dob" type="date" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                      <input id="dob" name="dob" type="date" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }} />
                     </div>
-                    <input type="number" id="dog-weight" name="weight" placeholder="Weight (kg)" value={formData.weight} onChange={e => setFormData({...formData, weight: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                    <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
+                    <input type="number" id="dog-weight" name="weight" placeholder="Weight (kg)" value={formData.weight} onChange={e => setFormData({...formData, weight: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }} />
+                    <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }}>
                       {roles.map(r => <option key={r} value={r}>{r}</option>)}
                     </select>
-                    <select value={formData.workType} onChange={e => setFormData({...formData, workType: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
+                    <select value={formData.workType} onChange={e => setFormData({...formData, workType: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }}>
                       {workTypes.map(w => <option key={w} value={w}>{w}</option>)}
                     </select>
                   </div>
-                  <select value={formData.trainingLevel} onChange={e => setFormData({...formData, trainingLevel: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', marginBottom: '12px' }}>
+                  <select value={formData.trainingLevel} onChange={e => setFormData({...formData, trainingLevel: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px', marginBottom: '12px' }}>
                     {trainingLevels.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
-                  <textarea placeholder="Notes" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', minHeight: '80px', marginBottom: '12px', fontFamily: 'inherit' }} />
+                  <textarea placeholder="Notes" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px', minHeight: '80px', marginBottom: '12px', fontFamily: 'inherit' }} />
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={addCanine} style={{ flex: 1, padding: '10px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
+                    <button onClick={addCanine} style={{ flex: 1, padding: '10px', background: 'var(--action-success)', color: 'var(--text-inverse)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
                       {editingId ? 'Update' : 'Add Canine'}
                     </button>
-                    <button onClick={() => { setShowForm(false); setEditingId(null); }} style={{ flex: 1, padding: '10px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
+                    <button onClick={() => { setShowForm(false); setEditingId(null); }} style={{ flex: 1, padding: '10px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
                       Cancel
                     </button>
                   </div>
@@ -583,7 +583,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
               )}
 
               {!showForm && (
-                <button onClick={() => setShowForm(true)} style={{ width: '100%', padding: '12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
+                <button onClick={() => setShowForm(true)} style={{ width: '100%', padding: '12px', background: 'var(--action-primary)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
                   + Add Canine
                 </button>
               )}
@@ -598,7 +598,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                   <div key={dog.id} style={{ marginBottom: '24px' }}>
                     <h5 style={{ margin: '0 0 12px 0', color: '#1f2937' }}>🐕 {dog.name}</h5>
                     {dog.healthRecords.map(record => (
-                      <div key={record.id} style={{ background: 'white', padding: '12px', borderRadius: '6px', border: '1px solid #e5e7eb', marginBottom: '10px' }}>
+                      <div key={record.id} style={{ background: 'var(--bg-elevated)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-primary)', marginBottom: '10px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
                           <strong>{record.condition}</strong>
                           <span style={{ fontSize: '12px', background: record.severity === 'Critical' ? '#fee2e2' : record.severity === 'Moderate' ? '#fef3c7' : '#dbeafe', color: record.severity === 'Critical' ? '#991b1b' : record.severity === 'Moderate' ? '#92400e' : '#1e40af', padding: '2px 8px', borderRadius: '12px' }}>
@@ -610,7 +610,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                           {record.treatment && <div>💊 Treatment: {record.treatment}</div>}
                           {record.vetNotes && <div>📝 Notes: {record.vetNotes}</div>}
                         </div>
-                        <button onClick={() => deleteHealthRecord(dog.id, record.id)} style={{ marginTop: '8px', padding: '4px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+                        <button onClick={() => deleteHealthRecord(dog.id, record.id)} style={{ marginTop: '8px', padding: '4px 12px', background: 'var(--action-danger)', color: 'var(--text-inverse)', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
                           Delete
                         </button>
                       </div>
@@ -619,7 +619,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                 )
               ))}
               {canines.every(dog => !dog.healthRecords || dog.healthRecords.length === 0) && (
-                <div style={{ background: 'white', border: '2px dashed #d1d5db', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
+                <div style={{ background: 'var(--bg-elevated)', border: '2px dashed var(--border-secondary)', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
                   <p style={{ margin: 0, color: '#666' }}>No health records yet. Select a canine from the list to add health records.</p>
                 </div>
               )}
@@ -634,7 +634,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                   <div key={dog.id} style={{ marginBottom: '24px' }}>
                     <h5 style={{ margin: '0 0 12px 0', color: '#1f2937' }}>🐕 {dog.name}</h5>
                     {dog.vaccineRecords.map(record => (
-                      <div key={record.id} style={{ background: 'white', padding: '12px', borderRadius: '6px', border: '1px solid #e5e7eb', marginBottom: '10px' }}>
+                      <div key={record.id} style={{ background: 'var(--bg-elevated)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-primary)', marginBottom: '10px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
                           <strong>{record.vaccineType}</strong>
                           {record.boosterDue && (
@@ -648,7 +648,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                           {record.vet && <div>🏥 Vet: {record.vet}</div>}
                           {record.notes && <div>📝 Notes: {record.notes}</div>}
                         </div>
-                        <button onClick={() => deleteVaccineRecord(dog.id, record.id)} style={{ marginTop: '8px', padding: '4px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+                        <button onClick={() => deleteVaccineRecord(dog.id, record.id)} style={{ marginTop: '8px', padding: '4px 12px', background: 'var(--action-danger)', color: 'var(--text-inverse)', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
                           Delete
                         </button>
                       </div>
@@ -657,7 +657,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                 )
               ))}
               {canines.every(dog => !dog.vaccineRecords || dog.vaccineRecords.length === 0) && (
-                <div style={{ background: 'white', border: '2px dashed #d1d5db', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
+                <div style={{ background: 'var(--bg-elevated)', border: '2px dashed var(--border-secondary)', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
                   <p style={{ margin: 0, color: '#666' }}>No vaccination records yet. Select a canine from the list to add vaccination records.</p>
                 </div>
               )}
@@ -672,7 +672,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                   <div key={dog.id} style={{ marginBottom: '24px' }}>
                     <h5 style={{ margin: '0 0 12px 0', color: '#1f2937' }}>🐕 {dog.name}</h5>
                     {dog.husbandryLog.map(record => (
-                      <div key={record.id} style={{ background: 'white', padding: '12px', borderRadius: '6px', border: '1px solid #e5e7eb', marginBottom: '10px' }}>
+                      <div key={record.id} style={{ background: 'var(--bg-elevated)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-primary)', marginBottom: '10px' }}>
                         <div style={{ fontSize: '13px', lineHeight: '1.6', color: '#666' }}>
                           <strong>{record.date}</strong>
                           <div>🍽️ Feed: {record.feedType} ({record.quantity}) - {record.frequency}</div>
@@ -687,7 +687,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                 )
               ))}
               {canines.every(dog => !dog.husbandryLog || dog.husbandryLog.length === 0) && (
-                <div style={{ background: 'white', border: '2px dashed #d1d5db', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
+                <div style={{ background: 'var(--bg-elevated)', border: '2px dashed var(--border-secondary)', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
                   <p style={{ margin: 0, color: '#666' }}>No husbandry logs yet. Select a canine from the list to add care records.</p>
                 </div>
               )}
@@ -697,10 +697,10 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
           {selectedCanine && (
             <div>
               <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                <button onClick={() => setSelectedCanine(null)} style={{ padding: '8px 16px', background: '#e5e7eb', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>← Back</button>
+                <button onClick={() => setSelectedCanine(null)} style={{ padding: '8px 16px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>← Back</button>
                 <h3 style={{ margin: 0, flex: 1 }}>🐕 {selectedCanine.name} ({selectedCanine.breed})</h3>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => setShowCV(true)} style={{ padding: '8px 12px', background: '#059669', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}>👁️ View CV</button>
+                  <button onClick={() => setShowCV(true)} style={{ padding: '8px 12px', background: '#059669', color: 'var(--text-inverse)', border: 'none', borderRadius: 6, cursor: 'pointer' }}>👁️ View CV</button>
                 </div>
               </div>
 
@@ -716,7 +716,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
               </div>
 
               {detailTab === 'info' && (
-                <div style={{ background: 'white', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-primary)' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                     <div><strong>Name:</strong> {selectedCanine.name}</div>
                     <div><strong>Breed:</strong> {selectedCanine.breed}</div>
@@ -732,7 +732,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                       <strong>Notes:</strong> {selectedCanine.notes}
                     </div>
                   )}
-                  <button onClick={() => editCanine(selectedCanine)} style={{ padding: '10px 16px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                  <button onClick={() => editCanine(selectedCanine)} style={{ padding: '10px 16px', background: 'var(--action-primary)', color: 'var(--text-inverse)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
                     ✏️ Edit Details
                   </button>
                 </div>
@@ -740,20 +740,20 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
 
               {detailTab === 'health' && (
                 <div>
-                  <div style={{ background: 'white', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', marginBottom: '16px' }}>
+                  <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-primary)', marginBottom: '16px' }}>
                     <h4 style={{ marginTop: 0 }}>🏥 Add Health Record</h4>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                      <input type="text" id="health-condition" name="condition" placeholder="Condition/Illness" value={healthForm.condition} onChange={e => setHealthForm({...healthForm, condition: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                      <select value={healthForm.severity} onChange={e => setHealthForm({...healthForm, severity: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
+                      <input type="text" id="health-condition" name="condition" placeholder="Condition/Illness" value={healthForm.condition} onChange={e => setHealthForm({...healthForm, condition: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }} />
+                      <select value={healthForm.severity} onChange={e => setHealthForm({...healthForm, severity: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }}>
                         <option>Minor</option>
                         <option>Moderate</option>
                         <option>Severe</option>
                       </select>
-                      <input type="date" id="health-date" name="healthDate" value={healthForm.date} onChange={e => setHealthForm({...healthForm, date: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                      <input type="text" id="health-vet" name="veterinarian" placeholder="Veterinarian" value={healthForm.vet} onChange={e => setHealthForm({...healthForm, vet: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                      <input type="date" id="health-date" name="healthDate" value={healthForm.date} onChange={e => setHealthForm({...healthForm, date: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }} />
+                      <input type="text" id="health-vet" name="veterinarian" placeholder="Veterinarian" value={healthForm.vet} onChange={e => setHealthForm({...healthForm, vet: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }} />
                     </div>
-                    <textarea placeholder="Treatment & Notes" value={healthForm.treatment} onChange={e => setHealthForm({...healthForm, treatment: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', minHeight: '80px', marginBottom: '12px', fontFamily: 'inherit' }} />
-                    <button onClick={() => addHealthRecord(selectedCanine.id)} style={{ padding: '10px 16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
+                    <textarea placeholder="Treatment & Notes" value={healthForm.treatment} onChange={e => setHealthForm({...healthForm, treatment: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px', minHeight: '80px', marginBottom: '12px', fontFamily: 'inherit' }} />
+                    <button onClick={() => addHealthRecord(selectedCanine.id)} style={{ padding: '10px 16px', background: 'var(--action-success)', color: 'var(--text-inverse)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
                       + Record Health Issue
                     </button>
                   </div>
@@ -762,7 +762,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                     <div>
                       <h4>📋 Health History</h4>
                       {selectedCanine.healthRecords.map(record => (
-                        <div key={record.id} style={{ background: 'white', padding: '12px', borderRadius: '6px', border: '1px solid #e5e7eb', marginBottom: '10px' }}>
+                        <div key={record.id} style={{ background: 'var(--bg-elevated)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-primary)', marginBottom: '10px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <div>
                               <strong>{record.condition}</strong> ({record.severity})
@@ -784,22 +784,22 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
 
               {detailTab === 'vaccine' && (
                 <div>
-                  <div style={{ background: 'white', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', marginBottom: '16px' }}>
+                  <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-primary)', marginBottom: '16px' }}>
                     <h4 style={{ marginTop: 0 }}>💉 Record Vaccination</h4>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                      <select value={vaccineForm.vaccineType} onChange={e => setVaccineForm({...vaccineForm, vaccineType: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
+                      <select value={vaccineForm.vaccineType} onChange={e => setVaccineForm({...vaccineForm, vaccineType: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }}>
                         <option>Rabies</option>
                         <option>DHPP (Distemper)</option>
                         <option>Bordetella</option>
                         <option>Leptospirosis</option>
                         <option>Other</option>
                       </select>
-                      <input type="date" id="vaccine-date" name="vaccineDate" value={vaccineForm.date} onChange={e => setVaccineForm({...vaccineForm, date: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                      <input type="text" id="vaccine-vet" name="vaccineVeterinarian" placeholder="Veterinarian" value={vaccineForm.vet} onChange={e => setVaccineForm({...vaccineForm, vet: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                      <input type="date" id="vaccine-booster-due" name="boosterDue" placeholder="Booster Due" value={vaccineForm.boosterDue} onChange={e => setVaccineForm({...vaccineForm, boosterDue: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                      <input type="date" id="vaccine-date" name="vaccineDate" value={vaccineForm.date} onChange={e => setVaccineForm({...vaccineForm, date: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }} />
+                      <input type="text" id="vaccine-vet" name="vaccineVeterinarian" placeholder="Veterinarian" value={vaccineForm.vet} onChange={e => setVaccineForm({...vaccineForm, vet: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }} />
+                      <input type="date" id="vaccine-booster-due" name="boosterDue" placeholder="Booster Due" value={vaccineForm.boosterDue} onChange={e => setVaccineForm({...vaccineForm, boosterDue: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }} />
                     </div>
-                    <textarea placeholder="Notes" value={vaccineForm.notes} onChange={e => setVaccineForm({...vaccineForm, notes: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', minHeight: '60px', marginBottom: '12px', fontFamily: 'inherit' }} />
-                    <button onClick={() => addVaccineRecord(selectedCanine.id)} style={{ padding: '10px 16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
+                    <textarea placeholder="Notes" value={vaccineForm.notes} onChange={e => setVaccineForm({...vaccineForm, notes: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px', minHeight: '60px', marginBottom: '12px', fontFamily: 'inherit' }} />
+                    <button onClick={() => addVaccineRecord(selectedCanine.id)} style={{ padding: '10px 16px', background: 'var(--action-success)', color: 'var(--text-inverse)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
                       + Record Vaccine
                     </button>
                   </div>
@@ -808,7 +808,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                     <div>
                       <h4>📋 Vaccination Records</h4>
                       {selectedCanine.vaccineRecords.map(record => (
-                        <div key={record.id} style={{ background: 'white', padding: '12px', borderRadius: '6px', border: '1px solid #e5e7eb', marginBottom: '10px' }}>
+                        <div key={record.id} style={{ background: 'var(--bg-elevated)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-primary)', marginBottom: '10px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <div>
                               <strong>{record.vaccineType}</strong>
@@ -830,32 +830,32 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
 
               {detailTab === 'husbandry' && (
                 <div>
-                  <div style={{ background: 'white', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', marginBottom: '16px' }}>
+                  <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-primary)', marginBottom: '16px' }}>
                     <h4 style={{ marginTop: 0 }}>🍽️ Husbandry Record</h4>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                      <input type="text" id="husbandry-feed-type" name="feedType" placeholder="Feed Type" value={husbandryForm.feedType} onChange={e => setHusbandryForm({...husbandryForm, feedType: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                      <input type="text" id="husbandry-quantity" name="quantity" placeholder="Quantity per meal" value={husbandryForm.quantity} onChange={e => setHusbandryForm({...husbandryForm, quantity: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                      <select value={husbandryForm.frequency} onChange={e => setHusbandryForm({...husbandryForm, frequency: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
+                      <input type="text" id="husbandry-feed-type" name="feedType" placeholder="Feed Type" value={husbandryForm.feedType} onChange={e => setHusbandryForm({...husbandryForm, feedType: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }} />
+                      <input type="text" id="husbandry-quantity" name="quantity" placeholder="Quantity per meal" value={husbandryForm.quantity} onChange={e => setHusbandryForm({...husbandryForm, quantity: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }} />
+                      <select value={husbandryForm.frequency} onChange={e => setHusbandryForm({...husbandryForm, frequency: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }}>
                         <option>Once Daily</option>
                         <option>Twice Daily</option>
                         <option>Thrice Daily</option>
                       </select>
-                      <input type="text" id="husbandry-housing" name="housing" placeholder="Housing/Shelter" value={husbandryForm.housing} onChange={e => setHusbandryForm({...husbandryForm, housing: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
-                      <select value={husbandryForm.exercise} onChange={e => setHusbandryForm({...husbandryForm, exercise: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
+                      <input type="text" id="husbandry-housing" name="housing" placeholder="Housing/Shelter" value={husbandryForm.housing} onChange={e => setHusbandryForm({...husbandryForm, housing: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }} />
+                      <select value={husbandryForm.exercise} onChange={e => setHusbandryForm({...husbandryForm, exercise: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }}>
                         <option>Minimal</option>
                         <option>Moderate</option>
                         <option>Active</option>
                         <option>Very Active</option>
                       </select>
-                      <select value={husbandryForm.grooming} onChange={e => setHusbandryForm({...husbandryForm, grooming: e.target.value})} style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
+                      <select value={husbandryForm.grooming} onChange={e => setHusbandryForm({...husbandryForm, grooming: e.target.value})} style={{ padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px' }}>
                         <option>Weekly</option>
                         <option>Bi-weekly</option>
                         <option>Monthly</option>
                         <option>As needed</option>
                       </select>
                     </div>
-                    <input type="text" id="husbandry-supplements" name="supplements" placeholder="Supplements/Vitamins" value={husbandryForm.supplements} onChange={e => setHusbandryForm({...husbandryForm, supplements: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', marginBottom: '12px' }} />
-                    <button onClick={() => addHusbandryRecord(selectedCanine.id)} style={{ padding: '10px 16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
+                    <input type="text" id="husbandry-supplements" name="supplements" placeholder="Supplements/Vitamins" value={husbandryForm.supplements} onChange={e => setHusbandryForm({...husbandryForm, supplements: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid var(--border-secondary)', borderRadius: '4px', marginBottom: '12px' }} />
+                    <button onClick={() => addHusbandryRecord(selectedCanine.id)} style={{ padding: '10px 16px', background: 'var(--action-success)', color: 'var(--text-inverse)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>
                       + Log Husbandry
                     </button>
                   </div>
@@ -864,7 +864,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                     <div>
                       <h4>📋 Husbandry Log</h4>
                       {selectedCanine.husbandryLog.map(record => (
-                        <div key={record.id} style={{ background: 'white', padding: '12px', borderRadius: '6px', border: '1px solid #e5e7eb', marginBottom: '10px' }}>
+                        <div key={record.id} style={{ background: 'var(--bg-elevated)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-primary)', marginBottom: '10px' }}>
                           <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
                             <strong>{record.date}</strong>
                             <div>🍽️ Feed: {record.feedType} ({record.quantity}) - {record.frequency}</div>

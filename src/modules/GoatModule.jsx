@@ -784,11 +784,11 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
       )}
 
       {/* Header */}
-      <div className="goat-hero" style={{ marginBottom: '24px', border: '1px solid #bfdbfe', borderRadius: '18px', padding: '18px 20px', background: 'rgba(255, 255, 255, 0.85)' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}>🐐 Goat Management</h1>
-        <p style={{ color: '#6b7280', fontSize: '14px' }}>Manage your goat herd with full tracking and analytics</p>
+      <div className="goat-hero" style={{ marginBottom: '24px', border: '1px solid var(--border-primary)', borderRadius: '18px', padding: '18px 20px', background: 'var(--bg-elevated)' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '8px' }}>🐐 Goat Management</h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Manage your goat herd with full tracking and analytics</p>
         {recordSource?.domain && recordSource?.item && (
-          <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
+          <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: 'var(--action-success)', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
             Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
           </div>
         )}
@@ -827,30 +827,30 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
         <>
       {/* Stats Cards */}
       <div className="goat-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ color: '#6b7280', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Total Goats</div>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>{stats.total}</div>
+        <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Total Goats</div>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--action-success)' }}>{stats.total}</div>
         </div>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ color: '#6b7280', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Active</div>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#10b981' }}>{stats.active}</div>
+        <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Active</div>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--action-success)' }}>{stats.active}</div>
         </div>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ color: '#6b7280', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Pregnant</div>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{stats.pregnant}</div>
+        <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Pregnant</div>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--action-warning)' }}>{stats.pregnant}</div>
         </div>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ color: '#6b7280', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Milking</div>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#8b5cf6' }}>{stats.milking}</div>
+        <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Milking</div>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--action-primary)' }}>{stats.milking}</div>
         </div>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ color: '#6b7280', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Avg Weight</div>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#3b82f6' }}>{stats.avgWeight} kg</div>
+        <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>Avg Weight</div>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--action-primary)' }}>{stats.avgWeight} kg</div>
         </div>
       </div>
 
       {/* Tabs and Controls */}
-      <div style={{ background: 'white', padding: '16px', borderRadius: '8px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+      <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', marginBottom: '24px', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '16px' }}>
           {[
             { id: 'all', label: 'All Goats', count: goats.length },
@@ -871,8 +871,8 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             onClick={handleAddNew}
             style={{
               padding: '8px 16px',
-              background: '#10b981',
-              color: 'white',
+              background: 'var(--action-success)',
+              color: 'var(--text-inverse)',
               border: 'none',
               borderRadius: '6px',
               fontSize: '14px',
@@ -893,7 +893,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{
               padding: '10px 12px',
-              border: '1px solid #d1d5db',
+              border: '1px solid var(--border-secondary)',
               borderRadius: '6px',
               fontSize: '14px'
             }}
@@ -903,7 +903,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             onChange={(e) => setFilterBreed(e.target.value)}
             style={{
               padding: '10px 12px',
-              border: '1px solid #d1d5db',
+              border: '1px solid var(--border-secondary)',
               borderRadius: '6px',
               fontSize: '14px'
             }}
@@ -918,7 +918,7 @@ export default function GoatModule({ initialMainView = 'goats', recordSource = n
             onChange={(e) => setFilterGender(e.target.value)}
             style={{
               padding: '10px 12px',
-              border: '1px solid #d1d5db',
+              border: '1px solid var(--border-secondary)',
               borderRadius: '6px',
               fontSize: '14px'
             }}

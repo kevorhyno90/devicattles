@@ -476,15 +476,15 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
   return (
     <div className="poultry-premium" style={{ padding: '20px' }}>
       <style>{poultryPremiumStyles}</style>
-      <div className="poultry-hero" style={{ marginBottom: '24px', border: '1px solid #bfdbfe', borderRadius: '18px', padding: '18px 20px', background: 'rgba(255, 255, 255, 0.85)' }}>
+      <div className="poultry-hero" style={{ marginBottom: '24px', border: '1px solid var(--border-primary)', borderRadius: '18px', padding: '18px 20px', background: 'var(--bg-elevated)' }}>
         <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: 'bold' }}>
           🐔 Poultry Management
         </h2>
-        <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+        <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>
           Manage flocks, track egg production, and monitor poultry health
         </p>
         {recordSource?.domain && recordSource?.item && (
-          <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
+          <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: 'var(--action-success)', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
             Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
           </div>
         )}
@@ -492,21 +492,21 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
 
       {/* Stats */}
       <div className="poultry-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Total Flocks</div>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#3b82f6' }}>{stats.totalFlocks}</div>
+        <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Flocks</div>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--action-primary)' }}>{stats.totalFlocks}</div>
         </div>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Live Birds</div>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>{stats.totalBirds}</div>
+        <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Live Birds</div>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--action-success)' }}>{stats.totalBirds}</div>
         </div>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Eggs Today</div>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{stats.totalEggsToday}</div>
+        <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Eggs Today</div>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--action-warning)' }}>{stats.totalEggsToday}</div>
         </div>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Eggs This Week</div>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#8b5cf6' }}>{stats.totalEggsWeek}</div>
+        <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Eggs This Week</div>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--action-primary)' }}>{stats.totalEggsWeek}</div>
         </div>
       </div>
 
@@ -526,8 +526,8 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
           onClick={() => exportToJSON(view === 'flocks' ? flocks : view === 'birds' ? birds : view === 'eggs' ? eggRecords : healthRecords, `poultry_${view}_${new Date().toISOString().slice(0, 10)}.json`)}
           style={{
             padding: '10px 20px',
-            background: '#059669',
-            color: 'white',
+            background: 'var(--action-success)',
+            color: 'var(--text-inverse)',
             border: 'none',
             borderRadius: '6px',
             cursor: 'pointer',
@@ -551,7 +551,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               style={{
                 flex: 1,
                 padding: '10px 16px',
-                border: '1px solid #d1d5db',
+                border: '1px solid var(--border-secondary)',
                 borderRadius: '6px',
                 fontSize: '14px'
               }}
@@ -560,8 +560,8 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               onClick={() => { setShowForm(true); setEditingId(null); setFlockForm({ id: '', name: '', type: 'Chicken', breed: 'Local', purpose: 'Layers', quantity: '', housing: 'Deep Litter', acquiredDate: '', cost: '', mortality: 0, notes: '', image: '' }) }}
               style={{
                 padding: '10px 20px',
-                background: '#10b981',
-                color: 'white',
+                background: 'var(--action-success)',
+                color: 'var(--text-inverse)',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
@@ -575,35 +575,35 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
             {filteredFlocks.map(flock => (
-              <div key={flock.id} style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div key={flock.id} style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
                 {flock.image && (
                   <img src={flock.image} alt={flock.name} style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '6px', marginBottom: '12px' }} />
                 )}
                 <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>{flock.name}</h3>
-                <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
+                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
                   <div><strong>{flock.type}</strong> • {flock.breed} • {flock.purpose}</div>
                   <div style={{ marginTop: '4px' }}>
                     <strong>Live:</strong> {(Number(flock.quantity) || 0) - (Number(flock.mortality) || 0)} birds
-                    {flock.mortality > 0 && <span style={{ color: '#ef4444', marginLeft: '8px' }}>({flock.mortality} lost)</span>}
+                    {flock.mortality > 0 && <span style={{ color: 'var(--action-danger)', marginLeft: '8px' }}>({flock.mortality} lost)</span>}
                   </div>
                   <div><strong>Housing:</strong> {flock.housing}</div>
                   {flock.acquiredDate && <div><strong>Acquired:</strong> {flock.acquiredDate}</div>}
                 </div>
                 {flock.notes && (
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '12px', fontStyle: 'italic' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', fontStyle: 'italic' }}>
                     {flock.notes}
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     onClick={() => { setFlockForm(flock); setEditingId(flock.id); setShowForm(true) }}
-                    style={{ flex: 1, padding: '8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+                    style={{ flex: 1, padding: '8px', background: 'var(--action-primary)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
                   >
                     ✏️ Edit
                   </button>
                   <button
                     onClick={() => handleDeleteFlock(flock.id)}
-                    style={{ flex: 1, padding: '8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+                    style={{ flex: 1, padding: '8px', background: 'var(--action-danger)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
                   >
                     🗑️ Delete
                   </button>
@@ -613,10 +613,10 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
           </div>
 
           {filteredFlocks.length === 0 && (
-            <div style={{ background: 'white', padding: '60px 20px', borderRadius: '8px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <div style={{ background: 'var(--bg-elevated)', padding: '60px 20px', borderRadius: '8px', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🐔</div>
-              <div style={{ fontSize: '18px', color: '#1f2937', marginBottom: '8px' }}>No flocks found</div>
-              <div style={{ fontSize: '14px', color: '#6b7280' }}>Add your first flock to get started</div>
+              <div style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '8px' }}>No flocks found</div>
+              <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Add your first flock to get started</div>
             </div>
           )}
         </div>
@@ -624,7 +624,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
 
       {/* Flock Form */}
       {view === 'flocks' && showForm && (
-        <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'var(--bg-elevated)', padding: '24px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
           <h3 style={{ margin: '0 0 16px 0' }}>{editingId ? 'Edit Flock' : 'Add New Flock'}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', marginBottom: '16px' }}>
             <div>
@@ -633,7 +633,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="text"
                 value={flockForm.name}
                 onChange={(e) => setFlockForm({ ...flockForm, name: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -641,7 +641,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               <select
                 value={flockForm.type}
                 onChange={(e) => setFlockForm({ ...flockForm, type: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               >
                 {POULTRY_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
               </select>
@@ -651,7 +651,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               <select
                 value={flockForm.breed}
                 onChange={(e) => setFlockForm({ ...flockForm, breed: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               >
                 {CHICKEN_BREEDS.map(breed => <option key={breed} value={breed}>{breed}</option>)}
               </select>
@@ -661,7 +661,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               <select
                 value={flockForm.purpose}
                 onChange={(e) => setFlockForm({ ...flockForm, purpose: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               >
                 {PURPOSES.map(purpose => <option key={purpose} value={purpose}>{purpose}</option>)}
               </select>
@@ -672,7 +672,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="number"
                 value={flockForm.quantity}
                 onChange={(e) => setFlockForm({ ...flockForm, quantity: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -681,7 +681,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="number"
                 value={flockForm.mortality}
                 onChange={(e) => setFlockForm({ ...flockForm, mortality: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -689,7 +689,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               <select
                 value={flockForm.housing}
                 onChange={(e) => setFlockForm({ ...flockForm, housing: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               >
                 {HOUSING_TYPES.map(housing => <option key={housing} value={housing}>{housing}</option>)}
               </select>
@@ -700,7 +700,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="date"
                 value={flockForm.acquiredDate}
                 onChange={(e) => setFlockForm({ ...flockForm, acquiredDate: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -709,7 +709,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="number"
                 value={flockForm.cost}
                 onChange={(e) => setFlockForm({ ...flockForm, cost: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
           </div>
@@ -719,7 +719,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               value={flockForm.notes}
               onChange={(e) => setFlockForm({ ...flockForm, notes: e.target.value })}
               rows={3}
-              style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
             />
           </div>
           <div style={{ marginBottom: '16px' }}>
@@ -728,7 +728,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               type="file"
               accept="image/*"
               onChange={(e) => handleImageUpload(e, setFlockForm)}
-              style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
             />
             {flockForm.image && (
               <img src={flockForm.image} alt="Preview" style={{ width: '200px', height: '150px', objectFit: 'cover', borderRadius: '6px', marginTop: '12px' }} />
@@ -737,13 +737,13 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               onClick={handleSaveFlock}
-              style={{ flex: 1, padding: '12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
+              style={{ flex: 1, padding: '12px', background: 'var(--action-success)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
             >
               💾 Save Flock
             </button>
             <button
               onClick={() => { setShowForm(false); setEditingId(null) }}
-              style={{ flex: 1, padding: '12px', background: '#6b7280', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
+              style={{ flex: 1, padding: '12px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
             >
               Cancel
             </button>
@@ -764,7 +764,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 flex: 1,
                 minWidth: 220,
                 padding: '10px 16px',
-                border: '1px solid #d1d5db',
+                border: '1px solid var(--border-secondary)',
                 borderRadius: '6px',
                 fontSize: '14px'
               }}
@@ -777,8 +777,8 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               }}
               style={{
                 padding: '10px 20px',
-                background: '#10b981',
-                color: 'white',
+                background: 'var(--action-success)',
+                color: 'var(--text-inverse)',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
@@ -802,32 +802,32 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               .map((bird) => {
                 const flock = flocks.find((f) => f.id === bird.flockId)
                 return (
-                  <div key={bird.id} style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                  <div key={bird.id} style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
                     {bird.image && (
                       <img src={bird.image} alt={bird.tag} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '6px', marginBottom: '10px' }} />
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                       <h3 style={{ margin: 0, fontSize: 18 }}>{bird.tag}</h3>
-                      <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 999, background: bird.status === 'Active' ? '#dcfce7' : '#e5e7eb', color: bird.status === 'Active' ? '#166534' : '#475569', fontWeight: 700 }}>{bird.status}</span>
+                      <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 999, background: bird.status === 'Active' ? 'var(--bg-secondary)' : 'var(--bg-tertiary)', color: bird.status === 'Active' ? 'var(--action-success)' : 'var(--text-secondary)', fontWeight: 700 }}>{bird.status}</span>
                     </div>
-                    <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
+                    <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                       <div><strong>Flock:</strong> {flock?.name || 'Unknown'}</div>
                       <div><strong>Type:</strong> {bird.type} • {bird.breed}</div>
                       <div><strong>Sex:</strong> {bird.sex} • <strong>Weight:</strong> {bird.weight || 'N/A'} kg</div>
                       {bird.hatchDate && <div><strong>Hatched:</strong> {bird.hatchDate}</div>}
                       {bird.color && <div><strong>Color:</strong> {bird.color}</div>}
                     </div>
-                    {bird.notes && <div style={{ marginTop: 8, fontSize: 12, color: '#6b7280' }}>{bird.notes}</div>}
+                    {bird.notes && <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-secondary)' }}>{bird.notes}</div>}
                     <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                       <button
                         onClick={() => { setBirdForm(bird); setEditingId(bird.id); setShowForm(true) }}
-                        style={{ flex: 1, padding: '8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+                        style={{ flex: 1, padding: '8px', background: 'var(--action-primary)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
                       >
                         ✏️ Edit
                       </button>
                       <button
                         onClick={() => handleDeleteBird(bird.id)}
-                        style={{ flex: 1, padding: '8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+                        style={{ flex: 1, padding: '8px', background: 'var(--action-danger)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
                       >
                         🗑️ Delete
                       </button>
@@ -838,10 +838,10 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
           </div>
 
           {birds.length === 0 && (
-            <div style={{ background: 'white', padding: '60px 20px', borderRadius: '8px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginTop: '16px' }}>
+            <div style={{ background: 'var(--bg-elevated)', padding: '60px 20px', borderRadius: '8px', textAlign: 'center', boxShadow: 'var(--shadow-sm)', marginTop: '16px' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🐤</div>
-              <div style={{ fontSize: '18px', color: '#1f2937', marginBottom: '8px' }}>No birds registered</div>
-              <div style={{ fontSize: '14px', color: '#6b7280' }}>Add bird-level records for complete registry coverage</div>
+              <div style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '8px' }}>No birds registered</div>
+              <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Add bird-level records for complete registry coverage</div>
             </div>
           )}
         </div>
@@ -849,54 +849,54 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
 
       {/* Bird Form */}
       {view === 'birds' && showForm && (
-        <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'var(--bg-elevated)', padding: '24px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
           <h3 style={{ margin: '0 0 16px 0' }}>{editingId ? 'Edit Bird' : 'Add Bird'}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '16px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Bird Tag *</label>
-              <input type="text" value={birdForm.tag} onChange={(e) => setBirdForm({ ...birdForm, tag: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+              <input type="text" value={birdForm.tag} onChange={(e) => setBirdForm({ ...birdForm, tag: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Flock *</label>
-              <select value={birdForm.flockId} onChange={(e) => setBirdForm({ ...birdForm, flockId: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+              <select value={birdForm.flockId} onChange={(e) => setBirdForm({ ...birdForm, flockId: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}>
                 <option value="">Select Flock</option>
                 {flocks.map((flock) => <option key={flock.id} value={flock.id}>{flock.name}</option>)}
               </select>
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Type</label>
-              <select value={birdForm.type} onChange={(e) => setBirdForm({ ...birdForm, type: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+              <select value={birdForm.type} onChange={(e) => setBirdForm({ ...birdForm, type: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}>
                 {POULTRY_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
               </select>
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Breed</label>
-              <select value={birdForm.breed} onChange={(e) => setBirdForm({ ...birdForm, breed: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+              <select value={birdForm.breed} onChange={(e) => setBirdForm({ ...birdForm, breed: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}>
                 {CHICKEN_BREEDS.map((breed) => <option key={breed} value={breed}>{breed}</option>)}
               </select>
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Sex</label>
-              <select value={birdForm.sex} onChange={(e) => setBirdForm({ ...birdForm, sex: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+              <select value={birdForm.sex} onChange={(e) => setBirdForm({ ...birdForm, sex: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}>
                 <option value="Female">Female</option>
                 <option value="Male">Male</option>
               </select>
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Hatch Date</label>
-              <input type="date" value={birdForm.hatchDate} onChange={(e) => setBirdForm({ ...birdForm, hatchDate: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+              <input type="date" value={birdForm.hatchDate} onChange={(e) => setBirdForm({ ...birdForm, hatchDate: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Weight (kg)</label>
-              <input type="number" value={birdForm.weight} onChange={(e) => setBirdForm({ ...birdForm, weight: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+              <input type="number" value={birdForm.weight} onChange={(e) => setBirdForm({ ...birdForm, weight: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Color</label>
-              <input type="text" value={birdForm.color} onChange={(e) => setBirdForm({ ...birdForm, color: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+              <input type="text" value={birdForm.color} onChange={(e) => setBirdForm({ ...birdForm, color: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Status</label>
-              <select value={birdForm.status} onChange={(e) => setBirdForm({ ...birdForm, status: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+              <select value={birdForm.status} onChange={(e) => setBirdForm({ ...birdForm, status: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}>
                 <option value="Active">Active</option>
                 <option value="Sold">Sold</option>
                 <option value="Dead">Dead</option>
@@ -907,20 +907,20 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
 
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Notes</label>
-            <textarea value={birdForm.notes} onChange={(e) => setBirdForm({ ...birdForm, notes: e.target.value })} rows={2} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+            <textarea value={birdForm.notes} onChange={(e) => setBirdForm({ ...birdForm, notes: e.target.value })} rows={2} style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }} />
           </div>
 
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Photo</label>
-            <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, setBirdForm)} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+            <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, setBirdForm)} style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }} />
             {birdForm.image && <img src={birdForm.image} alt="Bird preview" style={{ width: '180px', height: '130px', objectFit: 'cover', borderRadius: '6px', marginTop: '12px' }} />}
           </div>
 
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={handleSaveBird} style={{ flex: 1, padding: '12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
+            <button onClick={handleSaveBird} style={{ flex: 1, padding: '12px', background: 'var(--action-success)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
               💾 Save Bird
             </button>
-            <button onClick={() => { setShowForm(false); setEditingId(null) }} style={{ flex: 1, padding: '12px', background: '#6b7280', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
+            <button onClick={() => { setShowForm(false); setEditingId(null) }} style={{ flex: 1, padding: '12px', background: 'var(--bg-tertiary)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
               Cancel
             </button>
           </div>
@@ -941,15 +941,15 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
           <button
             onClick={() => { setShowForm(true); setEditingId(null); setEggForm({ id: '', flockId: '', date: new Date().toISOString().slice(0, 10), collected: '', broken: '', sold: '', used: '', price: '', notes: '' }) }}
             disabled={flocks.length === 0}
-            style={{ marginBottom: '16px', padding: '10px 20px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
+            style={{ marginBottom: '16px', padding: '10px 20px', background: 'var(--action-success)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
           >
             ➕ Record Eggs
           </button>
 
-          <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+          <div style={{ background: 'var(--bg-elevated)', borderRadius: '8px', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
+                <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '2px solid var(--border-primary)' }}>
                   <th style={{ padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: '600' }}>Date</th>
                   <th style={{ padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: '600' }}>Flock</th>
                   <th style={{ padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600' }}>Collected</th>
@@ -964,11 +964,11 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 {eggRecords.sort((a, b) => new Date(b.date) - new Date(a.date)).map(record => {
                   const flock = flocks.find(f => f.id === record.flockId)
                   return (
-                    <tr key={record.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                    <tr key={record.id} style={{ borderBottom: '1px solid var(--border-primary)' }}>
                       <td style={{ padding: '12px', fontSize: '13px' }}>{record.date}</td>
                       <td style={{ padding: '12px', fontSize: '13px' }}>{flock?.name || 'Unknown'}</td>
                       <td style={{ padding: '12px', fontSize: '13px', textAlign: 'right' }}>{record.collected}</td>
-                      <td style={{ padding: '12px', fontSize: '13px', textAlign: 'right', color: '#ef4444' }}>{record.broken || 0}</td>
+                      <td style={{ padding: '12px', fontSize: '13px', textAlign: 'right', color: 'var(--action-danger)' }}>{record.broken || 0}</td>
                       <td style={{ padding: '12px', fontSize: '13px', textAlign: 'right' }}>{record.sold || 0}</td>
                       <td style={{ padding: '12px', fontSize: '13px', textAlign: 'right' }}>{record.used || 0}</td>
                       <td style={{ padding: '12px', fontSize: '13px', textAlign: 'right', fontWeight: '600', color: '#059669' }}>
@@ -977,13 +977,13 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                       <td style={{ padding: '12px', textAlign: 'center' }}>
                         <button
                           onClick={() => { setEggForm(record); setEditingId(record.id); setShowForm(true) }}
-                          style={{ padding: '6px 12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', marginRight: '6px' }}
+                          style={{ padding: '6px 12px', background: 'var(--action-primary)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', marginRight: '6px' }}
                         >
                           ✏️ Edit
                         </button>
                         <button
                           onClick={() => { if (confirm('Delete this record?')) setEggRecords(eggRecords.filter(e => e.id !== record.id)) }}
-                          style={{ padding: '6px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}
+                          style={{ padding: '6px 12px', background: 'var(--action-danger)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}
                         >
                           🗑️
                         </button>
@@ -996,10 +996,10 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
           </div>
 
           {eggRecords.length === 0 && (
-            <div style={{ background: 'white', padding: '60px 20px', borderRadius: '8px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginTop: '16px' }}>
+            <div style={{ background: 'var(--bg-elevated)', padding: '60px 20px', borderRadius: '8px', textAlign: 'center', boxShadow: 'var(--shadow-sm)', marginTop: '16px' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🥚</div>
               <div style={{ fontSize: '18px', color: '#1f2937', marginBottom: '8px' }}>No egg records</div>
-              <div style={{ fontSize: '14px', color: '#6b7280' }}>Start recording daily egg production</div>
+              <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Start recording daily egg production</div>
             </div>
           )}
         </div>
@@ -1007,7 +1007,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
 
       {/* Egg Form */}
       {view === 'eggs' && showForm && (
-        <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'var(--bg-elevated)', padding: '24px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
           <h3 style={{ margin: '0 0 16px 0' }}>{editingId ? 'Edit Egg Record' : 'Record Egg Production'}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', marginBottom: '16px' }}>
             <div>
@@ -1015,7 +1015,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               <select
                 value={eggForm.flockId}
                 onChange={(e) => setEggForm({ ...eggForm, flockId: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               >
                 <option value="">Select Flock</option>
                 {flocks.map(flock => <option key={flock.id} value={flock.id}>{flock.name}</option>)}
@@ -1027,7 +1027,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="date"
                 value={eggForm.date}
                 onChange={(e) => setEggForm({ ...eggForm, date: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -1036,7 +1036,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="number"
                 value={eggForm.collected}
                 onChange={(e) => setEggForm({ ...eggForm, collected: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -1045,7 +1045,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="number"
                 value={eggForm.broken}
                 onChange={(e) => setEggForm({ ...eggForm, broken: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -1054,7 +1054,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="number"
                 value={eggForm.sold}
                 onChange={(e) => setEggForm({ ...eggForm, sold: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -1063,7 +1063,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="number"
                 value={eggForm.used}
                 onChange={(e) => setEggForm({ ...eggForm, used: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -1072,7 +1072,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="number"
                 value={eggForm.price}
                 onChange={(e) => setEggForm({ ...eggForm, price: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
           </div>
@@ -1082,19 +1082,19 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               value={eggForm.notes}
               onChange={(e) => setEggForm({ ...eggForm, notes: e.target.value })}
               rows={2}
-              style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
             />
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               onClick={handleSaveEgg}
-              style={{ flex: 1, padding: '12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
+              style={{ flex: 1, padding: '12px', background: 'var(--action-success)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
             >
               💾 Save Record
             </button>
             <button
               onClick={() => { setShowForm(false); setEditingId(null) }}
-              style={{ flex: 1, padding: '12px', background: '#6b7280', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
+              style={{ flex: 1, padding: '12px', background: 'var(--bg-tertiary)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
             >
               Cancel
             </button>
@@ -1116,7 +1116,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
           <button
             onClick={() => { setShowForm(true); setEditingId(null); setHealthForm({ id: '', flockId: '', date: new Date().toISOString().slice(0, 10), type: 'Vaccination', treatment: '', diagnosis: '', medication: '', dosage: '', cost: '', veterinarian: '', notes: '' }) }}
             disabled={flocks.length === 0}
-            style={{ marginBottom: '16px', padding: '10px 20px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
+            style={{ marginBottom: '16px', padding: '10px 20px', background: 'var(--action-success)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
           >
             ➕ Add Health Record
           </button>
@@ -1125,22 +1125,22 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
             {healthRecords.sort((a, b) => new Date(b.date) - new Date(a.date)).map(record => {
               const flock = flocks.find(f => f.id === record.flockId)
               return (
-                <div key={record.id} style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <div key={record.id} style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
                     <div>
                       <h4 style={{ margin: '0 0 4px 0', fontSize: '16px' }}>{flock?.name || 'Unknown Flock'}</h4>
-                      <div style={{ fontSize: '13px', color: '#6b7280' }}>{record.date} • {record.type}</div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{record.date} • {record.type}</div>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         onClick={() => { setHealthForm(record); setEditingId(record.id); setShowForm(true) }}
-                        style={{ padding: '6px 12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}
+                        style={{ padding: '6px 12px', background: 'var(--action-primary)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}
                       >
                         ✏️ Edit
                       </button>
                       <button
                         onClick={() => { if (confirm('Delete this record?')) setHealthRecords(healthRecords.filter(h => h.id !== record.id)) }}
-                        style={{ padding: '6px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}
+                        style={{ padding: '6px 12px', background: 'var(--action-danger)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}
                       >
                         🗑️
                       </button>
@@ -1152,7 +1152,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                     {record.medication && <div><strong>Medication:</strong> {record.medication} {record.dosage && `(${record.dosage})`}</div>}
                     {record.veterinarian && <div><strong>Vet:</strong> {record.veterinarian}</div>}
                     {record.cost && <div><strong>Cost:</strong> KES {Number(record.cost).toLocaleString()}</div>}
-                    {record.notes && <div style={{ marginTop: '8px', fontStyle: 'italic', color: '#6b7280' }}>{record.notes}</div>}
+                    {record.notes && <div style={{ marginTop: '8px', fontStyle: 'italic', color: 'var(--text-secondary)' }}>{record.notes}</div>}
                   </div>
                 </div>
               )
@@ -1160,10 +1160,10 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
           </div>
 
           {healthRecords.length === 0 && (
-            <div style={{ background: 'white', padding: '60px 20px', borderRadius: '8px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <div style={{ background: 'var(--bg-elevated)', padding: '60px 20px', borderRadius: '8px', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏥</div>
               <div style={{ fontSize: '18px', color: '#1f2937', marginBottom: '8px' }}>No health records</div>
-              <div style={{ fontSize: '14px', color: '#6b7280' }}>Track vaccinations, treatments, and health events</div>
+              <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Track vaccinations, treatments, and health events</div>
             </div>
           )}
         </div>
@@ -1171,7 +1171,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
 
       {/* Health Form */}
       {view === 'health' && showForm && (
-        <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'var(--bg-elevated)', padding: '24px', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
           <h3 style={{ margin: '0 0 16px 0' }}>{editingId ? 'Edit Health Record' : 'Add Health Record'}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', marginBottom: '16px' }}>
             <div>
@@ -1179,7 +1179,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               <select
                 value={healthForm.flockId}
                 onChange={(e) => setHealthForm({ ...healthForm, flockId: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               >
                 <option value="">Select Flock</option>
                 {flocks.map(flock => <option key={flock.id} value={flock.id}>{flock.name}</option>)}
@@ -1191,7 +1191,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="date"
                 value={healthForm.date}
                 onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -1199,7 +1199,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               <select
                 value={healthForm.type}
                 onChange={(e) => setHealthForm({ ...healthForm, type: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               >
                 <option>Vaccination</option>
                 <option>Treatment</option>
@@ -1215,7 +1215,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="text"
                 value={healthForm.diagnosis}
                 onChange={(e) => setHealthForm({ ...healthForm, diagnosis: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -1224,7 +1224,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="text"
                 value={healthForm.treatment}
                 onChange={(e) => setHealthForm({ ...healthForm, treatment: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -1233,7 +1233,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="text"
                 value={healthForm.medication}
                 onChange={(e) => setHealthForm({ ...healthForm, medication: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -1242,7 +1242,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="text"
                 value={healthForm.dosage}
                 onChange={(e) => setHealthForm({ ...healthForm, dosage: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -1251,7 +1251,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="text"
                 value={healthForm.veterinarian}
                 onChange={(e) => setHealthForm({ ...healthForm, veterinarian: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
             <div>
@@ -1260,7 +1260,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
                 type="number"
                 value={healthForm.cost}
                 onChange={(e) => setHealthForm({ ...healthForm, cost: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
               />
             </div>
           </div>
@@ -1270,19 +1270,19 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
               value={healthForm.notes}
               onChange={(e) => setHealthForm({ ...healthForm, notes: e.target.value })}
               rows={3}
-              style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--border-secondary)', borderRadius: '6px' }}
             />
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               onClick={handleSaveHealth}
-              style={{ flex: 1, padding: '12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
+              style={{ flex: 1, padding: '12px', background: 'var(--action-success)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
             >
               💾 Save Record
             </button>
             <button
               onClick={() => { setShowForm(false); setEditingId(null) }}
-              style={{ flex: 1, padding: '12px', background: '#6b7280', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
+              style={{ flex: 1, padding: '12px', background: 'var(--bg-tertiary)', color: 'var(--text-inverse)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
             >
               Cancel
             </button>
@@ -1296,8 +1296,8 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
           position: 'fixed',
           bottom: '20px',
           right: '20px',
-          background: toast.type === 'error' ? '#ef4444' : toast.type === 'success' ? '#10b981' : '#3b82f6',
-          color: 'white',
+          background: toast.type === 'error' ? 'var(--action-danger)' : toast.type === 'success' ? 'var(--action-success)' : 'var(--action-primary)',
+          color: 'var(--text-inverse)',
           padding: '12px 20px',
           borderRadius: '8px',
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)',

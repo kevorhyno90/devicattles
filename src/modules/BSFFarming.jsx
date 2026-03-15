@@ -49,10 +49,10 @@ export default function BSFFarming({ initialTab = 'colonies', recordSource = nul
 
   useEffect(() => {
     const allowed = new Set(['colonies', 'feeding', 'harvest'])
-    if (allowed.has(initialTab) && initialTab !== activeTab) {
+    if (allowed.has(initialTab)) {
       setActiveTab(initialTab)
     }
-  }, [initialTab, activeTab])
+  }, [initialTab])
 
   const tabsWrapStyle = {
     display: 'flex',
@@ -381,11 +381,11 @@ export default function BSFFarming({ initialTab = 'colonies', recordSource = nul
   return (
     <div className="bsf-premium">
       <style>{bsfPremiumStyles}</style>
-      <div className="bsf-hero" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, border: '1px solid #bbf7d0', borderRadius: '16px', padding: '14px 16px', background: 'rgba(255, 255, 255, 0.78)' }}>
+      <div className="bsf-hero" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, border: '1px solid var(--border-primary)', borderRadius: '16px', padding: '14px 16px', background: 'var(--bg-elevated)' }}>
         <div>
           <h3 style={{ margin: 0 }}>🪰 BSF (Black Soldier Fly) Farming</h3>
           {recordSource?.domain && recordSource?.item && (
-            <div style={{ marginTop: '8px', fontSize: '12px', fontWeight: 700, color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
+            <div style={{ marginTop: '8px', fontSize: '12px', fontWeight: 700, color: 'var(--action-success)', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
               Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
             </div>
           )}
@@ -397,21 +397,21 @@ export default function BSFFarming({ initialTab = 'colonies', recordSource = nul
 
       {/* Summary Stats */}
       <div className="bsf-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <div className="card" style={{ padding: 16, background: '#f0fdf4' }}>
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Active Colonies</div>
-          <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{activeColonies.length}</div>
+        <div className="card" style={{ padding: 16, background: 'var(--bg-elevated)' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Active Colonies</div>
+          <div style={{ fontSize: 24, fontWeight: 'bold', color: 'var(--action-success)' }}>{activeColonies.length}</div>
         </div>
-        <div className="card" style={{ padding: 16, background: '#eff6ff' }}>
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Population</div>
-          <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>{totalPopulation.toLocaleString()}</div>
+        <div className="card" style={{ padding: 16, background: 'var(--bg-elevated)' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Total Population</div>
+          <div style={{ fontSize: 24, fontWeight: 'bold', color: 'var(--action-primary)' }}>{totalPopulation.toLocaleString()}</div>
         </div>
-        <div className="card" style={{ padding: 16, background: '#fef3c7' }}>
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Harvest (kg)</div>
-          <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f59e0b' }}>{totalHarvest.toFixed(1)}</div>
+        <div className="card" style={{ padding: 16, background: 'var(--bg-elevated)' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Total Harvest (kg)</div>
+          <div style={{ fontSize: 24, fontWeight: 'bold', color: 'var(--action-warning)' }}>{totalHarvest.toFixed(1)}</div>
         </div>
-        <div className="card" style={{ padding: 16, background: '#d1fae5' }}>
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Revenue</div>
-          <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{formatCurrency(totalRevenue)}</div>
+        <div className="card" style={{ padding: 16, background: 'var(--bg-elevated)' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Total Revenue</div>
+          <div style={{ fontSize: 24, fontWeight: 'bold', color: 'var(--action-success)' }}>{formatCurrency(totalRevenue)}</div>
         </div>
       </div>
 
