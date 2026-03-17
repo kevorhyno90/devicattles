@@ -221,10 +221,12 @@ export default function SyncSettings() {
   async function handlePushAll(retryCount = 0) {
     if (!confirm('Push all local data to Firebase? This will overwrite cloud data.')) return
     setPushing(true)
+    setSyncStatus('syncing')
     setSyncError('')
     try {
       const result = await pushAllToFirebase()
       setPushing(false)
+      setSyncStatus('synced')
       const now = new Date().toLocaleString()
       localStorage.setItem('devinsfarm:lastSyncTime', now)
       localStorage.removeItem('devinsfarm:lastSyncError')
@@ -233,6 +235,7 @@ export default function SyncSettings() {
       alert(`✅ Success! Pushed ${result.count} collections (${result.itemCount} items) to cloud.`)
     } catch (error) {
       setPushing(false)
+      setSyncStatus(getSyncStatus())
       localStorage.setItem('devinsfarm:lastSyncError', error.message)
       setSyncError(error.message)
       alert(`❌ Push failed: ${error.message}\n\nTroubleshooting tips:\n- Check your internet connection\n- Make sure you are logged in\n- Try again later\n- If on mobile, try a different browser (Chrome may block sync)`)
@@ -246,10 +249,12 @@ export default function SyncSettings() {
   async function handlePullAll(retryCount = 0) {
     if (!confirm('Pull all data from Firebase? This will overwrite local data.')) return
     setPulling(true)
+    setSyncStatus('syncing')
     setSyncError('')
     try {
       const result = await pullAllFromFirebase()
       setPulling(false)
+      setSyncStatus('synced')
       const now = new Date().toLocaleString()
       localStorage.setItem('devinsfarm:lastSyncTime', now)
       localStorage.removeItem('devinsfarm:lastSyncError')
@@ -261,6 +266,7 @@ export default function SyncSettings() {
       }
     } catch (error) {
       setPulling(false)
+      setSyncStatus(getSyncStatus())
       localStorage.setItem('devinsfarm:lastSyncError', error.message)
       setSyncError(error.message)
       alert(`❌ Pull failed: ${error.message}\n\nTroubleshooting tips:\n- Check your internet connection\n- Make sure you are logged in\n- Try again later\n- If on mobile, try a different browser (Chrome may block sync)`)

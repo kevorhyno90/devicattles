@@ -29,8 +29,9 @@ const EXCLUDED_SYNC_STORES = new Set(['notifications', 'reminders'])
 // Single-writer queue to serialize and rate-limit commits to Firestore.
 const writeQueue = []
 let writeInProgress = false
-// Increase the inter-write delay to avoid write bursts that can trigger quota errors.
-const INTER_WRITE_DELAY_MS = 1000
+// Keep small pacing between writes; 300ms still avoids bursts but feels much faster
+// for manual push/pull confirmation.
+const INTER_WRITE_DELAY_MS = 300
 
 // Track which diagnostic warnings we've already emitted to avoid log spam
 const _emittedWarnings = new Set()
@@ -781,6 +782,7 @@ export async function pushAllToFirebase() {
   const userUid = auth && auth.currentUser && auth.currentUser.uid
   if (!userUid) throw new Error('No user logged in')
   const ops = []
+  const touchedCollections = new Set()
   let itemCount = 0
   for (const storeName of Object.keys(STORES)) {
     try {
@@ -790,6 +792,7 @@ export async function pushAllToFirebase() {
       for (const item of localData) {
         if (!item || !item.id) continue
         ops.push({ colRef, item })
+        touchedCollections.add(storeName)
         itemCount++
       }
     } catch (e) { console.warn(`pushAllToFirebase skip ${storeName}:`, e) }
@@ -824,7 +827,7 @@ export async function pushAllToFirebase() {
   }
 
   syncStatus = 'synced'
-  return { success: true, itemCount }
+  return { success: true, count: touchedCollections.size, itemCount }
 }
 
 export async function pullAllFromFirebase() {
@@ -833,16 +836,24 @@ export async function pullAllFromFirebase() {
   const userUid = auth && auth.currentUser && auth.currentUser.uid
   if (!userUid) throw new Error('No user logged in')
   let count = 0
-  for (const storeName of Object.keys(STORES)) {
-    try {
-      const colRef = getUserCollectionRef(storeName)
-      const snap = await getDocs(colRef)
-      const data = snap.docs.map(d => d.data())
-      if (data.length) {
-        try { localStorage.setItem(storeName, JSON.stringify(data)) } catch(e){}
-        count++
+  const storeNames = Object.keys(STORES)
+  const CONCURRENCY = 4
+
+  for (let i = 0; i < storeNames.length; i += CONCURRENCY) {
+    const chunk = storeNames.slice(i, i + CONCURRENCY)
+    await Promise.all(chunk.map(async (storeName) => {
+      try {
+        const colRef = getUserCollectionRef(storeName)
+        const snap = await getDocs(colRef)
+        const data = snap.docs.map(d => d.data())
+        if (data.length) {
+          try { localStorage.setItem(storeName, JSON.stringify(data)) } catch(e){}
+          count++
+        }
+      } catch (e) {
+        console.warn(`pullAllFromFirebase skip ${storeName}:`, e)
       }
-    } catch (e) { console.warn(`pullAllFromFirebase skip ${storeName}:`, e) }
+    }))
   }
   syncStatus = 'synced'
   window.dispatchEvent(new Event('dataUpdated'))
