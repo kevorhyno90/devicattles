@@ -775,7 +775,7 @@ export function stopRealtimeSync() {
   listeners = []
 }
 
-export async function pushAllToFirebase() {
+export async function pushAllToFirebase(onProgress) {
   if (!isSyncEnabled()) throw new Error('Sync is not enabled')
   syncStatus = 'syncing'
   // Use STORES mapping to push each store
@@ -783,19 +783,31 @@ export async function pushAllToFirebase() {
   if (!userUid) throw new Error('No user logged in')
   const ops = []
   const touchedCollections = new Set()
+  const storePendingItems = new Map()
+  let completedStores = 0
   let itemCount = 0
   for (const storeName of Object.keys(STORES)) {
     try {
       const localData = loadData(storeName, []) || []
       if (!Array.isArray(localData) || localData.length === 0) continue
       const colRef = getUserCollectionRef(storeName)
+      let queuedForStore = 0
       for (const item of localData) {
         if (!item || !item.id) continue
-        ops.push({ colRef, item })
+        ops.push({ colRef, item, storeName })
         touchedCollections.add(storeName)
+        queuedForStore++
         itemCount++
       }
+      if (queuedForStore > 0) {
+        storePendingItems.set(storeName, queuedForStore)
+      }
     } catch (e) { console.warn(`pushAllToFirebase skip ${storeName}:`, e) }
+  }
+
+  const totalStores = touchedCollections.size
+  if (typeof onProgress === 'function') {
+    onProgress({ mode: 'push', done: 0, total: totalStores, current: totalStores ? 'Preparing upload...' : 'No local data found' })
   }
 
   // Firestore batch limit is 500; use a safe chunk size
@@ -811,6 +823,22 @@ export async function pushAllToFirebase() {
           } catch (e) { console.warn('pushAllToFirebase: failed to queue item', e) }
         }
         await batch.commit()
+        if (totalStores > 0) {
+          for (const op of chunk) {
+            const remaining = (storePendingItems.get(op.storeName) || 0) - 1
+            if (remaining <= 0) {
+              if (storePendingItems.has(op.storeName)) {
+                storePendingItems.delete(op.storeName)
+                completedStores++
+              }
+            } else {
+              storePendingItems.set(op.storeName, remaining)
+            }
+          }
+          if (typeof onProgress === 'function') {
+            onProgress({ mode: 'push', done: completedStores, total: totalStores, current: 'Uploading collections...' })
+          }
+        }
       } catch (err) {
         const msg = String((err && (err.message || err.code)) || '')
         if (err && (err.code === 'resource-exhausted' || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('resource-exhausted'))) {
@@ -827,10 +855,13 @@ export async function pushAllToFirebase() {
   }
 
   syncStatus = 'synced'
+  if (typeof onProgress === 'function') {
+    onProgress({ mode: 'push', done: totalStores, total: totalStores, current: 'Completed' })
+  }
   return { success: true, count: touchedCollections.size, itemCount }
 }
 
-export async function pullAllFromFirebase() {
+export async function pullAllFromFirebase(onProgress) {
   if (!isSyncEnabled()) throw new Error('Sync is not enabled')
   syncStatus = 'syncing'
   const userUid = auth && auth.currentUser && auth.currentUser.uid
@@ -838,6 +869,11 @@ export async function pullAllFromFirebase() {
   let count = 0
   const storeNames = Object.keys(STORES)
   const CONCURRENCY = 4
+  let processed = 0
+
+  if (typeof onProgress === 'function') {
+    onProgress({ mode: 'pull', done: 0, total: storeNames.length, current: storeNames.length ? 'Fetching cloud data...' : 'No stores configured' })
+  }
 
   for (let i = 0; i < storeNames.length; i += CONCURRENCY) {
     const chunk = storeNames.slice(i, i + CONCURRENCY)
@@ -852,10 +888,18 @@ export async function pullAllFromFirebase() {
         }
       } catch (e) {
         console.warn(`pullAllFromFirebase skip ${storeName}:`, e)
+      } finally {
+        processed++
+        if (typeof onProgress === 'function') {
+          onProgress({ mode: 'pull', done: processed, total: storeNames.length, current: storeName })
+        }
       }
     }))
   }
   syncStatus = 'synced'
+  if (typeof onProgress === 'function') {
+    onProgress({ mode: 'pull', done: storeNames.length, total: storeNames.length, current: 'Completed' })
+  }
   window.dispatchEvent(new Event('dataUpdated'))
   return { success: true, count }
 }

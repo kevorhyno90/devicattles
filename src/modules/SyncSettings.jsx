@@ -36,6 +36,7 @@ export default function SyncSettings() {
   
   const [pushing, setPushing] = useState(false)
   const [pulling, setPulling] = useState(false)
+  const [manualSyncProgress, setManualSyncProgress] = useState(null)
   const [pendingQueue, setPendingQueue] = useState(0)
   const [queueItems, setQueueItems] = useState([])
   const [persistencePref, setPersistencePref] = useState('default')
@@ -223,10 +224,17 @@ export default function SyncSettings() {
     setPushing(true)
     setSyncStatus('syncing')
     setSyncError('')
+    setManualSyncProgress({ mode: 'push', done: 0, total: 0, current: 'Preparing upload...' })
     try {
-      const result = await pushAllToFirebase()
+      const result = await pushAllToFirebase((progress) => {
+        setManualSyncProgress(progress)
+      })
       setPushing(false)
       setSyncStatus('synced')
+      setManualSyncProgress((prev) => {
+        const total = prev?.total ?? result.count
+        return { mode: 'push', done: total, total, current: 'Completed' }
+      })
       const now = new Date().toLocaleString()
       localStorage.setItem('devinsfarm:lastSyncTime', now)
       localStorage.removeItem('devinsfarm:lastSyncError')
@@ -236,6 +244,7 @@ export default function SyncSettings() {
     } catch (error) {
       setPushing(false)
       setSyncStatus(getSyncStatus())
+      setManualSyncProgress(null)
       localStorage.setItem('devinsfarm:lastSyncError', error.message)
       setSyncError(error.message)
       alert(`❌ Push failed: ${error.message}\n\nTroubleshooting tips:\n- Check your internet connection\n- Make sure you are logged in\n- Try again later\n- If on mobile, try a different browser (Chrome may block sync)`)
@@ -251,10 +260,17 @@ export default function SyncSettings() {
     setPulling(true)
     setSyncStatus('syncing')
     setSyncError('')
+    setManualSyncProgress({ mode: 'pull', done: 0, total: 0, current: 'Fetching cloud data...' })
     try {
-      const result = await pullAllFromFirebase()
+      const result = await pullAllFromFirebase((progress) => {
+        setManualSyncProgress(progress)
+      })
       setPulling(false)
       setSyncStatus('synced')
+      setManualSyncProgress((prev) => {
+        const total = prev?.total ?? 0
+        return { mode: 'pull', done: total, total, current: 'Completed' }
+      })
       const now = new Date().toLocaleString()
       localStorage.setItem('devinsfarm:lastSyncTime', now)
       localStorage.removeItem('devinsfarm:lastSyncError')
@@ -267,6 +283,7 @@ export default function SyncSettings() {
     } catch (error) {
       setPulling(false)
       setSyncStatus(getSyncStatus())
+      setManualSyncProgress(null)
       localStorage.setItem('devinsfarm:lastSyncError', error.message)
       setSyncError(error.message)
       alert(`❌ Pull failed: ${error.message}\n\nTroubleshooting tips:\n- Check your internet connection\n- Make sure you are logged in\n- Try again later\n- If on mobile, try a different browser (Chrome may block sync)`)
@@ -716,6 +733,13 @@ export default function SyncSettings() {
                   <button style={getButtonStyle('neutral')}>📥 Import Data</button>
                 </label>
               </div>
+              {manualSyncProgress && (pushing || pulling) && (
+                <div style={{ marginTop: 10, fontSize: 13, color: 'var(--text-secondary, #4b5563)' }}>
+                  <strong>{manualSyncProgress.mode === 'push' ? 'Push Progress:' : 'Pull Progress:'}</strong>{' '}
+                  {manualSyncProgress.done}/{manualSyncProgress.total || 0}
+                  {manualSyncProgress.current ? ` • ${manualSyncProgress.current}` : ''}
+                </div>
+              )}
               <div style={{ marginTop: 12, display: 'flex', gap: 10, alignItems: 'center' }}>
                 <div style={{ fontSize: 13, color: 'var(--text-secondary, #4b5563)' }}>Pending queue: <strong>{pendingQueue}</strong></div>
                 <button onClick={() => { if (window.__firestoreFlushQueue) { window.__firestoreFlushQueue(); setTimeout(() => { try { setPendingQueue(window.__firestoreQueueLength()) } catch(e){} }, 1000) } }} style={getButtonStyle('neutral')}>Flush Queue</button>
