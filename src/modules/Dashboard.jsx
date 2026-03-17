@@ -295,8 +295,9 @@ export default function Dashboard({ onNavigate }) {
       {/* Service Worker Status */}
       {typeof window !== 'undefined' && 'serviceWorker' in navigator && (
         <div style={{
-          background: navigator.serviceWorker.controller ? '#ecfdf5' : '#fef3c7',
-          color: navigator.serviceWorker.controller ? '#065f46' : '#92400e',
+            background: 'var(--bg-elevated)',
+            color: navigator.serviceWorker.controller ? '#10b981' : '#f59e0b',
+            border: `1px solid ${navigator.serviceWorker.controller ? '#10b981' : '#f59e0b'}`,
           padding: '8px 12px',
           borderRadius: 6,
           marginBottom: 16,
@@ -324,7 +325,7 @@ export default function Dashboard({ onNavigate }) {
 
       {/* Livestock Data Quality */}
       {livestockQuality && (
-        <div className="card" style={{ padding: '20px', marginBottom: '20px', border: `1px solid ${livestockQuality.summary.totalIssues > 0 ? '#fca5a5' : '#86efac'}`, background: livestockQuality.summary.totalIssues > 0 ? '#fff7f7' : '#f0fdf4' }}>
+        <div className="card" style={{ padding: '20px', marginBottom: '20px', border: `1px solid ${livestockQuality.summary.totalIssues > 0 ? '#fca5a5' : '#86efac'}`, background: 'var(--bg-elevated)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
             <h3 style={{ margin: 0 }}>📋 Livestock Data Quality</h3>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -353,10 +354,10 @@ export default function Dashboard({ onNavigate }) {
           {livestockQuality.summary.totalIssues > 0 ? (
             <div style={{ display: 'grid', gap: 10 }}>
               {livestockQuality.issues.map((issue) => (
-                <div key={issue.id} style={{ padding: '10px 12px', borderRadius: 8, background: '#ffffff', border: '1px solid #fecaca', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <div key={issue.id} style={{ padding: '10px 12px', borderRadius: 8, background: 'var(--bg-elevated)', border: '1px solid #fecaca', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 13 }}>{issue.module} • {issue.severity.toUpperCase()}</div>
-                    <div style={{ fontSize: 13, color: '#374151' }}>{issue.message}</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{issue.message}</div>
                   </div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {issue.fixable && (
@@ -393,7 +394,7 @@ export default function Dashboard({ onNavigate }) {
       {/* Bulk Fix Preview */}
       {showBulkFixPreview && livestockQuality && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.45)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ width: 'min(760px, 100%)', maxHeight: '80vh', overflowY: 'auto', background: '#ffffff', borderRadius: 12, border: '1px solid #e5e7eb', padding: 20 }}>
+          <div style={{ width: 'min(760px, 100%)', maxHeight: '80vh', overflowY: 'auto', background: 'var(--bg-elevated)', borderRadius: 12, border: '1px solid var(--border-primary, #e5e7eb)', padding: 20 }}>
             <h3 style={{ marginTop: 0, marginBottom: 8 }}>Bulk Auto-Fix Preview</h3>
             <p style={{ marginTop: 0, color: '#475569', fontSize: 14 }}>
               Select which fix types should run. Only safe, predefined fixes are shown.
@@ -404,8 +405,8 @@ export default function Dashboard({ onNavigate }) {
                 const count = livestockQuality.issues.filter((i) => i.fixable && i.code === code).length
                 const checked = selectedFixCodes.includes(code)
                 return (
-                  <label key={code} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: 10, border: '1px solid #e5e7eb', borderRadius: 8, background: checked ? '#f0fdf4' : '#f8fafc', cursor: 'pointer' }}>
-                    <span style={{ fontSize: 14, color: '#1f2937' }}>{fixCodeLabel(code)}</span>
+                  <label key={code} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: 10, border: '1px solid #e5e7eb', borderRadius: 8, background: 'var(--bg-secondary)', cursor: 'pointer' }}>
+                    <span style={{ fontSize: 14, color: 'var(--text-primary)' }}>{fixCodeLabel(code)}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span style={{ fontSize: 12, color: '#475569' }}>{count} issue(s)</span>
                       <input type="checkbox" checked={checked} onChange={() => toggleFixCode(code)} />
@@ -526,12 +527,12 @@ export default function Dashboard({ onNavigate }) {
             {integratedFinance.sources.map(source => (
               <div key={source.source} style={{ 
                 padding: '16px', 
-                background: source.net >= 0 ? '#f0fdf4' : '#fef2f2', 
+                background: 'var(--bg-elevated)', 
                 borderRadius: '12px', 
                 border: `2px solid ${source.net >= 0 ? '#86efac' : '#fca5a5'}`,
                 boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
               }}>
-                <div style={{ fontWeight: '700', fontSize: '16px', marginBottom: '12px', color: '#1f2937' }}>
+                <div style={{ fontWeight: '700', fontSize: '16px', marginBottom: '12px', color: 'var(--text-primary)' }}>
                   {source.source}
                 </div>
                 <div style={{ display: 'grid', gap: '8px' }}>
@@ -551,7 +552,7 @@ export default function Dashboard({ onNavigate }) {
                     paddingTop: '8px',
                     marginTop: '4px'
                   }}>
-                    <span style={{ fontWeight: '600', color: '#374151' }}>Net:</span>
+                    <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Net:</span>
                     <span style={{ 
                       fontWeight: '700', 
                       fontSize: '18px',
@@ -574,19 +575,19 @@ export default function Dashboard({ onNavigate }) {
             paddingTop: '20px',
             borderTop: '2px solid #e5e7eb'
           }}>
-            <div style={{ textAlign: 'center', padding: '16px', background: '#ecfdf5', borderRadius: '8px' }}>
+            <div style={{ textAlign: 'center', padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '1px solid #10b981' }}>
               <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '8px' }}>Total Income</div>
               <div style={{ fontSize: '28px', fontWeight: '700', color: '#15803d' }}>
                 KES {totalIncome.toFixed(2)}
               </div>
             </div>
-            <div style={{ textAlign: 'center', padding: '16px', background: '#fef2f2', borderRadius: '8px' }}>
+            <div style={{ textAlign: 'center', padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '1px solid #ef4444' }}>
               <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '8px' }}>Total Expenses</div>
               <div style={{ fontSize: '28px', fontWeight: '700', color: '#dc2626' }}>
                 KES {totalExpenses.toFixed(2)}
               </div>
             </div>
-            <div style={{ textAlign: 'center', padding: '16px', background: netProfit >= 0 ? '#f0fdf4' : '#fef2f2', borderRadius: '8px' }}>
+            <div style={{ textAlign: 'center', padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: `1px solid ${netProfit >= 0 ? '#10b981' : '#ef4444'}` }}>
               <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '8px' }}>Net Profit/Loss</div>
               <div style={{ fontSize: '28px', fontWeight: '700', color: netProfit >= 0 ? '#059669' : '#dc2626' }}>
                 {netProfit >= 0 ? '+' : ''}KES {netProfit.toFixed(2)}
@@ -710,14 +711,14 @@ export default function Dashboard({ onNavigate }) {
       </div>
 
       {/* All Farm Modules Overview - Comprehensive */}
-      <div className="card" style={{ padding: '20px', marginTop: '24px', background: 'linear-gradient(135deg, #f0fdf4 0%, #dbeafe 100%)' }}>
+      <div className="card" style={{ padding: '20px', marginTop: '24px', background: 'var(--bg-secondary)' }}>
         <h3 style={{ margin: '0 0 20px 0', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           🌾 Complete Farm Overview - All Modules & Submodules
         </h3>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
           {/* Crops Module */}
-          <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #86efac', cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => onNavigate && onNavigate('crops')}>
+          <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '2px solid #86efac', cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => onNavigate && onNavigate('crops')}>
             <div style={{ fontSize: '28px', marginBottom: '8px' }}>🌾</div>
             <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Crop OS</div>
             <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#059669' }}>{crops?.total || 0}</div>
@@ -728,7 +729,7 @@ export default function Dashboard({ onNavigate }) {
           
           {/* Crop Yield */}
           {cropYield && cropYield.totalRecords > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fcd34d' }}>
+            <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '2px solid #fcd34d' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>📊</div>
               <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Crop Yield</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#d97706' }}>{cropYield.totalYield?.toFixed(0) || 0}</div>
@@ -740,7 +741,7 @@ export default function Dashboard({ onNavigate }) {
           
           {/* Crop Sales */}
           {cropSales && cropSales.totalSales > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #60a5fa' }}>
+            <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '2px solid #60a5fa' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>💵</div>
               <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Crop Sales</div>
               <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px', color: '#2563eb' }}>KES {cropSales.totalRevenue?.toFixed(0) || 0}</div>
@@ -752,7 +753,7 @@ export default function Dashboard({ onNavigate }) {
           
           {/* Azolla Farming */}
           {azolla && azolla.totalBeds > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #6ee7b7' }}>
+            <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '2px solid #6ee7b7' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🌿</div>
               <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Azolla Beds</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#047857' }}>{azolla.totalBeds}</div>
@@ -764,7 +765,7 @@ export default function Dashboard({ onNavigate }) {
           
           {/* BSF Farming */}
           {bsf && bsf.totalUnits > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #f9a8d4' }}>
+            <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '2px solid #f9a8d4' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🪰</div>
               <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>BSF Units</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#be185d' }}>{bsf.totalUnits}</div>
@@ -776,7 +777,7 @@ export default function Dashboard({ onNavigate }) {
           
           {/* Poultry */}
           {poultry && poultry.total > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fde047', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('poultry')}>
+            <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '2px solid #fde047', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('poultry')}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🐔</div>
               <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Poultry</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#ca8a04' }}>{poultry.total}</div>
@@ -788,7 +789,7 @@ export default function Dashboard({ onNavigate }) {
           
           {/* Canines */}
           {canines && canines.total > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #c4b5fd', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('canines')}>
+            <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '2px solid #c4b5fd', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('canines')}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🐕</div>
               <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Canines</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#7c3aed' }}>{canines.total}</div>
@@ -800,7 +801,7 @@ export default function Dashboard({ onNavigate }) {
           
           {/* Calves */}
           {calves && calves.total > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fca5a5', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('calves')}>
+            <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '2px solid #fca5a5', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('calves')}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🐮</div>
               <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Calves</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#dc2626' }}>{calves.total}</div>
@@ -812,7 +813,7 @@ export default function Dashboard({ onNavigate }) {
           
           {/* Pastures */}
           {pastures && pastures.total > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #86efac', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('pastures')}>
+            <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '2px solid #86efac', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('pastures')}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🌾</div>
               <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Pastures</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#16a34a' }}>{pastures.total}</div>
@@ -824,7 +825,7 @@ export default function Dashboard({ onNavigate }) {
           
           {/* Schedules */}
           {schedules && schedules.total > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #f0abfc', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('schedules')}>
+            <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '2px solid #f0abfc', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('schedules')}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>📅</div>
               <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Schedules</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#c026d3' }}>{schedules.today}</div>
@@ -836,7 +837,7 @@ export default function Dashboard({ onNavigate }) {
           
           {/* Notifications */}
           {notifications && notifications.total > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fbbf24', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('notifications')}>
+            <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '2px solid #fbbf24', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('notifications')}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🔔</div>
               <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Notifications</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#d97706' }}>{notifications.unread}</div>
@@ -848,7 +849,7 @@ export default function Dashboard({ onNavigate }) {
           
           {/* Measurements */}
           {measurements && measurements.total > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #7dd3fc' }}>
+            <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '2px solid #7dd3fc' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>📏</div>
               <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Measurements</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#0284c7' }}>{measurements.total}</div>
@@ -860,7 +861,7 @@ export default function Dashboard({ onNavigate }) {
           
           {/* Treatments */}
           {treatments && treatments.total > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fdba74' }}>
+            <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '2px solid #fdba74' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>💊</div>
               <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Treatments</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#ea580c' }}>{treatments.total}</div>
@@ -872,7 +873,7 @@ export default function Dashboard({ onNavigate }) {
           
           {/* Feeding */}
           {feeding && feeding.total > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fbcfe8' }}>
+            <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '2px solid #fbcfe8' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🍽️</div>
               <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Feeding Records</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#db2777' }}>{feeding.total}</div>
@@ -1036,7 +1037,7 @@ export default function Dashboard({ onNavigate }) {
             gap: 12,
             marginTop: 16,
             padding: 12,
-            background: '#f9fafb',
+            background: 'var(--bg-secondary)',
             borderRadius: 8
           }}>
             <div>
@@ -1046,6 +1047,7 @@ export default function Dashboard({ onNavigate }) {
                   const highest = feedCosts.monthlyData.reduce((max, m) => m.amount > max.amount ? m : max, feedCosts.monthlyData[0])
                   return `${highest.month}: $${(highest.amount || 0).toFixed(0)}`
                 })()}
++++
               </div>
             </div>
             <div>
@@ -1082,7 +1084,7 @@ export default function Dashboard({ onNavigate }) {
 
       {/* Performance & Enhancements Status */}
       <div className="card" style={{ padding: '20px', marginTop: '24px', background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', border: '2px solid #f59e0b' }}>
-        <h3 style={{ margin: '0 0 16px 0', color: '#92400e' }}>🚀 Performance & Recent Enhancements</h3>
+        <h3 style={{ margin: '0 0 16px 0', color: 'var(--text-secondary)' }}>🚀 Performance & Recent Enhancements</h3>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
           <div style={{ background: '#fff', padding: '12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
@@ -1119,7 +1121,7 @@ export default function Dashboard({ onNavigate }) {
         </div>
 
         <div style={{ background: '#fffbeb', padding: '12px', borderRadius: '8px', marginBottom: '12px', border: '1px solid #fbbf24' }}>
-          <div style={{ fontWeight: '600', marginBottom: '8px', color: '#92400e' }}>✨ Recently Added:</div>
+          <div style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}>✨ Recently Added:</div>
           <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '14px', color: '#78350f' }}>
             <li>⚡ Inline Editing in 7+ modules (Animals, Finance, Tasks, Crops)</li>
             <li>🔍 Global Search with Ctrl+K shortcut</li>
@@ -1132,7 +1134,7 @@ export default function Dashboard({ onNavigate }) {
         </div>
 
         {cacheStats && (
-          <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '8px', marginBottom: '12px', border: '1px solid #bbf7d0' }}>
+          <div style={{ background: 'var(--bg-elevated)', padding: '12px', borderRadius: '8px', marginBottom: '12px', border: '1px solid #bbf7d0' }}>
             <div style={{ fontWeight: '600', marginBottom: '8px', color: '#166534' }}>🗂️ Cache Performance:</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px', fontSize: '13px' }}>
               <div>
@@ -1292,12 +1294,12 @@ export default function Dashboard({ onNavigate }) {
             {alertsSummary.medium > 0 && (
               <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', textAlign: 'center', border: '2px solid #f59e0b' }}>
                 <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b' }}>{alertsSummary.medium}</div>
-                <div style={{ fontSize: '12px', color: '#92400e' }}>⚡ Medium</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>⚡ Medium</div>
               </div>
             )}
             
             <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', textAlign: 'center', border: '2px solid #6b7280' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#374151' }}>{alertsSummary.total}</div>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{alertsSummary.total}</div>
               <div style={{ fontSize: '12px', color: '#4b5563' }}>📋 Total</div>
             </div>
           </div>

@@ -79,8 +79,11 @@ export default function SyncSettings() {
       } catch (e) {}
 
       if (user) {
-        const enabled = initSync()
-        setSyncEnabledState(Boolean(enabled))
+        // Always enable sync when a user is signed in so push/pull
+        // work without requiring the toggle to be manually flipped.
+        setSyncEnabled(true)
+        initSync()
+        setSyncEnabledState(true)
         setSyncStatus(getSyncStatus())
       } else {
         setSyncEnabledState(false)
@@ -689,15 +692,15 @@ export default function SyncSettings() {
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button 
                   onClick={handlePushAll} 
-                  disabled={pushing || !syncEnabled}
-                  style={getButtonStyle('success', !syncEnabled || pushing)}
+                    disabled={pushing || !firebaseUser}
+                    style={getButtonStyle('success', !firebaseUser || pushing)}
                 >
                   {pushing ? '⏳ Pushing...' : '⬆️ Push All to Cloud'}
                 </button>
                 <button 
                   onClick={handlePullAll} 
-                  disabled={pulling || !syncEnabled}
-                  style={getButtonStyle('info', !syncEnabled || pulling)}
+                    disabled={pulling || !firebaseUser}
+                    style={getButtonStyle('info', !firebaseUser || pulling)}
                 >
                   {pulling ? '⏳ Pulling...' : '⬇️ Pull All from Cloud'}
                 </button>

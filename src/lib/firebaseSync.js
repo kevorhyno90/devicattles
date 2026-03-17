@@ -606,8 +606,12 @@ export async function startFirestoreSync() {
  */
 export function isSyncEnabled() {
   try {
-    if (DISABLE_SYNC) return false
-    return syncEnabled && isFirebaseConfigured() && auth && auth.currentUser !== null
+     // Do not use the static DISABLE_SYNC constant here – it is evaluated at
+     // module-load time, so a fresh session where the user hasn't enabled sync
+     // yet will always return false even after the user logs in and calls
+     // setSyncEnabled(true).  Rely solely on the dynamic `syncEnabled` variable
+     // which is kept up to date by setSyncEnabled() and initSync().
+     return syncEnabled && isFirebaseConfigured() && auth && auth.currentUser !== null
   } catch (error) {
     return false
   }
