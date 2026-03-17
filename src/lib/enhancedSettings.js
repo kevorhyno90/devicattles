@@ -53,8 +53,49 @@ const DEFAULT_ENHANCED_SETTINGS = {
     vaccinationReminders: true,
     lowStockThreshold: 10 // percentage
   },
+
+  // 4. Integrations
+  integrations: {
+    weather: {
+      enabled: true,
+      provider: 'openweathermap',
+      apiKey: '',
+      locationOverride: '',
+      units: 'metric',
+      refreshMinutes: 30
+    },
+    sms: {
+      enabled: false,
+      provider: 'webhook',
+      accountSid: '',
+      authToken: '',
+      senderId: '',
+      defaultRecipient: '',
+      webhookUrl: ''
+    },
+    email: {
+      enabled: false,
+      provider: 'webhook',
+      fromName: 'Devins Farm',
+      fromAddress: '',
+      replyTo: '',
+      smtpHost: '',
+      smtpPort: 587,
+      username: '',
+      password: '',
+      webhookUrl: ''
+    },
+    analytics: {
+      enabled: true,
+      provider: 'local',
+      trackUsage: true,
+      trackErrors: true,
+      predictiveInsights: false,
+      exportSnapshots: true
+    }
+  },
   
-  // 4. Data Management
+  // 5. Data Management
   dataManagement: {
     autoBackup: true,
     backupFrequency: 7, // days
@@ -68,7 +109,7 @@ const DEFAULT_ENHANCED_SETTINGS = {
     syncFrequency: 30 // minutes
   },
   
-  // 5. Security & Privacy
+  // 6. Security & Privacy
   security: {
     requireAuth: false,
     sessionTimeout: 480, // minutes (8 hours)
@@ -79,11 +120,11 @@ const DEFAULT_ENHANCED_SETTINGS = {
     encryptData: false,
     showSensitiveData: true,
     twoFactorAuth: false,
-    // auditLog removed
+    auditLog: true,
     dataSharing: false
   },
   
-  // 6. System Preferences
+  // 7. System Preferences
   system: {
     defaultView: 'dashboard',
     itemsPerPage: 20,
@@ -99,10 +140,20 @@ const DEFAULT_ENHANCED_SETTINGS = {
     defaultTaskSort: 'dueDate',
     showCompletedTasks: false,
     theme: 'catalytics'
-  },
-  
-  // 7. Custom Fields (user-defined settings)
-  customFields: {}
+  }
+}
+
+function stripLegacyCustomFields(settings) {
+  if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
+    return settings
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(settings, 'customFields')) {
+    return settings
+  }
+
+  const { customFields, ...rest } = settings
+  return rest
 }
 
 // Currency options
@@ -158,17 +209,43 @@ export function getEnhancedSettings() {
   try {
     const raw = localStorage.getItem(ENHANCED_SETTINGS_KEY)
     if (raw) {
-      const stored = JSON.parse(raw)
+      const stored = stripLegacyCustomFields(JSON.parse(raw))
       // Deep merge with defaults to ensure all properties exist
-      return {
+      const merged = {
         farmInfo: { ...DEFAULT_ENHANCED_SETTINGS.farmInfo, ...(stored.farmInfo || {}) },
         regional: { ...DEFAULT_ENHANCED_SETTINGS.regional, ...(stored.regional || {}) },
         notifications: { ...DEFAULT_ENHANCED_SETTINGS.notifications, ...(stored.notifications || {}) },
+        integrations: {
+          ...DEFAULT_ENHANCED_SETTINGS.integrations,
+          ...(stored.integrations || {}),
+          weather: {
+            ...DEFAULT_ENHANCED_SETTINGS.integrations.weather,
+            ...((stored.integrations && stored.integrations.weather) || {})
+          },
+          sms: {
+            ...DEFAULT_ENHANCED_SETTINGS.integrations.sms,
+            ...((stored.integrations && stored.integrations.sms) || {})
+          },
+          email: {
+            ...DEFAULT_ENHANCED_SETTINGS.integrations.email,
+            ...((stored.integrations && stored.integrations.email) || {})
+          },
+          analytics: {
+            ...DEFAULT_ENHANCED_SETTINGS.integrations.analytics,
+            ...((stored.integrations && stored.integrations.analytics) || {})
+          }
+        },
         dataManagement: { ...DEFAULT_ENHANCED_SETTINGS.dataManagement, ...(stored.dataManagement || {}) },
         security: { ...DEFAULT_ENHANCED_SETTINGS.security, ...(stored.security || {}) },
-        system: { ...DEFAULT_ENHANCED_SETTINGS.system, ...(stored.system || {}) },
-        customFields: { ...DEFAULT_ENHANCED_SETTINGS.customFields, ...(stored.customFields || {}) }
+        system: { ...DEFAULT_ENHANCED_SETTINGS.system, ...(stored.system || {}) }
       }
+
+      // Remove legacy customFields from persisted global settings.
+      if (raw !== JSON.stringify(stored)) {
+        localStorage.setItem(ENHANCED_SETTINGS_KEY, JSON.stringify(merged))
+      }
+
+      return merged
     }
     return DEFAULT_ENHANCED_SETTINGS
   } catch (err) {
@@ -338,6 +415,7 @@ export function importEnhancedSettings(file) {
 
 // Settings History Management
 const SETTINGS_HISTORY_KEY = 'devinsfarm:enhanced:settings:history'
+const USER_SETTINGS_HISTORY_KEY = 'devinsfarm:user:settings:history'
 const MAX_HISTORY_ENTRIES = 20
 
 // Save settings with history tracking
@@ -431,60 +509,107 @@ export function clearSettingsHistory() {
   }
 }
 
-// Custom Fields Management
-// Add custom field
-export function addCustomField(fieldKey, fieldValue, fieldType = 'text', fieldLabel = '') {
+// Get user-specific settings history
+export function getUserSettingsHistory(userId) {
   try {
-    const settings = getEnhancedSettings()
-    settings.customFields[fieldKey] = {
-      value: fieldValue,
-      type: fieldType, // 'text', 'number', 'boolean', 'date', 'select'
-      label: fieldLabel || fieldKey,
-      createdAt: new Date().toISOString()
-    }
-    return saveEnhancedSettings(settings)
+    if (!userId) return []
+    const raw = localStorage.getItem(USER_SETTINGS_HISTORY_KEY)
+    const byUser = raw ? JSON.parse(raw) : {}
+    return Array.isArray(byUser[userId]) ? byUser[userId] : []
   } catch (err) {
-    console.error('Failed to add custom field:', err)
+    console.error('Failed to get user settings history:', err)
+    return []
+  }
+}
+
+// Save user settings with history tracking
+export function saveUserSettingsWithHistory(userId, settings, comment = '', userName = 'Current User') {
+  try {
+    if (!userId) return false
+
+    const saved = saveUserSettings(userId, settings)
+    if (!saved) return false
+
+    const raw = localStorage.getItem(USER_SETTINGS_HISTORY_KEY)
+    const byUser = raw ? JSON.parse(raw) : {}
+    const history = Array.isArray(byUser[userId]) ? byUser[userId] : []
+
+    const entry = {
+      id: `user-history-${userId}-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      settings: JSON.parse(JSON.stringify(settings)),
+      comment: comment || 'Settings updated',
+      user: userName || 'Current User'
+    }
+
+    history.unshift(entry)
+    if (history.length > MAX_HISTORY_ENTRIES) {
+      history.splice(MAX_HISTORY_ENTRIES)
+    }
+
+    byUser[userId] = history
+    localStorage.setItem(USER_SETTINGS_HISTORY_KEY, JSON.stringify(byUser))
+    return true
+  } catch (err) {
+    console.error('Failed to save user settings with history:', err)
     return false
   }
 }
 
-// Update custom field
-export function updateCustomField(fieldKey, fieldValue) {
+// Restore user settings from user-specific history
+export function restoreUserSettingsFromHistory(userId, historyId) {
   try {
-    const settings = getEnhancedSettings()
-    if (!settings.customFields[fieldKey]) {
-      return { success: false, error: 'Field not found' }
+    if (!userId) {
+      return { success: false, error: 'User is required' }
     }
-    settings.customFields[fieldKey].value = fieldValue
-    settings.customFields[fieldKey].updatedAt = new Date().toISOString()
-    return saveEnhancedSettings(settings) ? { success: true } : { success: false, error: 'Failed to save' }
+
+    const raw = localStorage.getItem(USER_SETTINGS_HISTORY_KEY)
+    const byUser = raw ? JSON.parse(raw) : {}
+    const history = Array.isArray(byUser[userId]) ? byUser[userId] : []
+    const entry = history.find(h => h.id === historyId)
+
+    if (!entry) {
+      return { success: false, error: 'History entry not found' }
+    }
+
+    if (!saveUserSettings(userId, entry.settings)) {
+      return { success: false, error: 'Failed to save restored settings' }
+    }
+
+    const restoreEntry = {
+      id: `user-history-${userId}-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      settings: JSON.parse(JSON.stringify(entry.settings)),
+      comment: `Restored from ${new Date(entry.timestamp).toLocaleString()}`,
+      user: 'Current User'
+    }
+
+    history.unshift(restoreEntry)
+    if (history.length > MAX_HISTORY_ENTRIES) {
+      history.splice(MAX_HISTORY_ENTRIES)
+    }
+    byUser[userId] = history
+    localStorage.setItem(USER_SETTINGS_HISTORY_KEY, JSON.stringify(byUser))
+
+    return { success: true, settings: entry.settings }
   } catch (err) {
-    console.error('Failed to update custom field:', err)
+    console.error('Failed to restore user settings:', err)
     return { success: false, error: err.message }
   }
 }
 
-// Delete custom field
-export function deleteCustomField(fieldKey) {
+// Clear user-specific settings history
+export function clearUserSettingsHistory(userId) {
   try {
-    const settings = getEnhancedSettings()
-    delete settings.customFields[fieldKey]
-    return saveEnhancedSettings(settings)
+    if (!userId) return false
+    const raw = localStorage.getItem(USER_SETTINGS_HISTORY_KEY)
+    const byUser = raw ? JSON.parse(raw) : {}
+    delete byUser[userId]
+    localStorage.setItem(USER_SETTINGS_HISTORY_KEY, JSON.stringify(byUser))
+    return true
   } catch (err) {
-    console.error('Failed to delete custom field:', err)
+    console.error('Failed to clear user settings history:', err)
     return false
-  }
-}
-
-// Get all custom fields
-export function getCustomFields() {
-  try {
-    const settings = getEnhancedSettings()
-    return settings.customFields || {}
-  } catch (err) {
-    console.error('Failed to get custom fields:', err)
-    return {}
   }
 }
 
@@ -497,7 +622,14 @@ export function getUserSettings(userId) {
     if (!userId) return null
     const raw = localStorage.getItem(USER_SETTINGS_KEY)
     const userSettings = raw ? JSON.parse(raw) : {}
-    return userSettings[userId] || null
+    const userData = stripLegacyCustomFields(userSettings[userId]) || null
+
+    if (raw && userSettings[userId] && userData !== userSettings[userId]) {
+      userSettings[userId] = userData
+      localStorage.setItem(USER_SETTINGS_KEY, JSON.stringify(userSettings))
+    }
+
+    return userData
   } catch (err) {
     console.error('Failed to get user settings:', err)
     return null
@@ -537,10 +669,29 @@ export function getEffectiveSettings(userId = null) {
       farmInfo: { ...globalSettings.farmInfo, ...(userSettings.farmInfo || {}) },
       regional: { ...globalSettings.regional, ...(userSettings.regional || {}) },
       notifications: { ...globalSettings.notifications, ...(userSettings.notifications || {}) },
+      integrations: {
+        ...globalSettings.integrations,
+        ...(userSettings.integrations || {}),
+        weather: {
+          ...globalSettings.integrations.weather,
+          ...((userSettings.integrations && userSettings.integrations.weather) || {})
+        },
+        sms: {
+          ...globalSettings.integrations.sms,
+          ...((userSettings.integrations && userSettings.integrations.sms) || {})
+        },
+        email: {
+          ...globalSettings.integrations.email,
+          ...((userSettings.integrations && userSettings.integrations.email) || {})
+        },
+        analytics: {
+          ...globalSettings.integrations.analytics,
+          ...((userSettings.integrations && userSettings.integrations.analytics) || {})
+        }
+      },
       dataManagement: { ...globalSettings.dataManagement, ...(userSettings.dataManagement || {}) },
       security: { ...globalSettings.security, ...(userSettings.security || {}) },
-      system: { ...globalSettings.system, ...(userSettings.system || {}) },
-      customFields: { ...globalSettings.customFields, ...(userSettings.customFields || {}) }
+      system: { ...globalSettings.system, ...(userSettings.system || {}) }
     }
   } catch (err) {
     console.error('Failed to get effective settings:', err)

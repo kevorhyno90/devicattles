@@ -76,6 +76,16 @@ function normalizeRowsForExport(crop, bundle) {
     value: r.amount || ''
   }))
 
+  ;(bundle.subsectionRecords || []).forEach(r => rows.push({
+    section: 'Subsection Records',
+    cropId: crop.id,
+    cropName: crop.name,
+    date: r.date || '',
+    item: `${r.domain || 'General'}: ${r.subsection || 'Record'}`,
+    quantity: r.quantity ? `${r.quantity || ''} ${r.unit || ''}`.trim() : (r.status || ''),
+    value: r.value || r.notes || ''
+  }))
+
   bundle.pests.forEach(r => rows.push({
     section: 'Pests',
     cropId: crop.id,
@@ -115,6 +125,7 @@ export default function CropCV({
   salesRecords,
   treatmentRecords,
   costRecords,
+  subsectionRecords = [],
   pestRecords,
   diseaseRecords,
   reminders,
@@ -156,6 +167,7 @@ export default function CropCV({
       sales: salesRecords.filter(include),
       treatments: treatmentRecords.filter(include),
       costs: costRecords.filter(include),
+      subsectionRecords: subsectionRecords.filter(include),
       pests: pestRecords.filter(include),
       diseases: diseaseRecords.filter(include),
       reminders: reminders.filter(include)
@@ -172,6 +184,7 @@ export default function CropCV({
       sales: salesRecords.filter(include).length,
       treatments: treatmentRecords.filter(include).length,
       costs: costRecords.filter(include).length,
+      subsectionRecords: subsectionRecords.filter(include).length,
       pests: pestRecords.filter(include).length,
       diseases: diseaseRecords.filter(include).length,
       reminders: reminders.filter(include).length,
@@ -182,7 +195,7 @@ export default function CropCV({
         return sum + (Number(crop.seedCost) || 0) + treatmentCost + ledgerCost
       }, 0)
     }
-  }, [visibleCrops, yieldRecords, salesRecords, treatmentRecords, costRecords, pestRecords, diseaseRecords, reminders])
+  }, [visibleCrops, yieldRecords, salesRecords, treatmentRecords, costRecords, subsectionRecords, pestRecords, diseaseRecords, reminders])
 
   const totalsWithMargin = {
     ...totals,
@@ -201,6 +214,7 @@ export default function CropCV({
       sales: salesRecords.filter(include),
       treatments: treatmentRecords.filter(include),
       costs: costRecords.filter(include),
+      subsectionRecords: subsectionRecords.filter(include),
       pests: pestRecords.filter(include),
       diseases: diseaseRecords.filter(include),
       reminders: reminders.filter(include)
@@ -216,6 +230,7 @@ export default function CropCV({
         sales: salesRecords.filter(r => r.cropId === crop.id),
         treatments: treatmentRecords.filter(r => r.cropId === crop.id),
         costs: costRecords.filter(r => r.cropId === crop.id),
+        subsectionRecords: subsectionRecords.filter(r => r.cropId === crop.id),
         pests: pestRecords.filter(r => r.cropId === crop.id),
         diseases: diseaseRecords.filter(r => r.cropId === crop.id),
         reminders: reminders.filter(r => r.cropId === crop.id)
@@ -233,6 +248,7 @@ export default function CropCV({
         sales: salesRecords.filter(r => r.cropId === crop.id),
         treatments: treatmentRecords.filter(r => r.cropId === crop.id),
         costs: costRecords.filter(r => r.cropId === crop.id),
+        subsectionRecords: subsectionRecords.filter(r => r.cropId === crop.id),
         pests: pestRecords.filter(r => r.cropId === crop.id),
         diseases: diseaseRecords.filter(r => r.cropId === crop.id),
         reminders: reminders.filter(r => r.cropId === crop.id)
@@ -249,6 +265,7 @@ export default function CropCV({
       sales: salesRecords.filter(r => r.cropId === crop.id),
       treatments: treatmentRecords.filter(r => r.cropId === crop.id),
       costs: costRecords.filter(r => r.cropId === crop.id),
+      subsectionRecords: subsectionRecords.filter(r => r.cropId === crop.id),
       pests: pestRecords.filter(r => r.cropId === crop.id),
       diseases: diseaseRecords.filter(r => r.cropId === crop.id),
       reminders: reminders.filter(r => r.cropId === crop.id)
@@ -275,6 +292,7 @@ export default function CropCV({
       yields: yieldRecords.filter(r => r.cropId === crop.id),
       sales: salesRecords.filter(r => r.cropId === crop.id),
       treatments: treatmentRecords.filter(r => r.cropId === crop.id),
+      subsectionRecords: subsectionRecords.filter(r => r.cropId === crop.id),
       pests: pestRecords.filter(r => r.cropId === crop.id),
       diseases: diseaseRecords.filter(r => r.cropId === crop.id),
       reminders: reminders.filter(r => r.cropId === crop.id)
@@ -297,6 +315,7 @@ export default function CropCV({
           sales: bundle.sales.filter(r => r.cropId === crop.id),
           treatments: bundle.treatments.filter(r => r.cropId === crop.id),
           costs: bundle.costs.filter(r => r.cropId === crop.id),
+          subsectionRecords: bundle.subsectionRecords.filter(r => r.cropId === crop.id),
           pests: bundle.pests.filter(r => r.cropId === crop.id),
           diseases: bundle.diseases.filter(r => r.cropId === crop.id),
           reminders: bundle.reminders.filter(r => r.cropId === crop.id)
@@ -312,6 +331,7 @@ export default function CropCV({
         sales: bundle.sales.length,
         treatments: bundle.treatments.length,
         costs: bundle.costs.length,
+        subsectionRecords: bundle.subsectionRecords.length,
         pests: bundle.pests.length,
         diseases: bundle.diseases.length,
         reminders: bundle.reminders.length
@@ -336,7 +356,7 @@ export default function CropCV({
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
         <div>
           <h3 style={{ margin: '0 0 6px 0' }}>Crop CV Report Center</h3>
-          <div style={{ fontSize: 13, color: '#64748b' }}>Comprehensive records for {moduleLabel}</div>
+          <div style={{ fontSize: 13, color: '#475569' }}>Comprehensive records for {moduleLabel}</div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button onClick={exportModuleJSON} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer' }}>Export Module JSON</button>
@@ -352,6 +372,7 @@ export default function CropCV({
         <div style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 8, padding: 10 }}><strong>{totals.sales}</strong><div style={{ fontSize: 12 }}>Sales Logs</div></div>
         <div style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 8, padding: 10 }}><strong>{totals.treatments}</strong><div style={{ fontSize: 12 }}>Treatment Logs</div></div>
         <div style={{ background: '#e0f2fe', border: '1px solid #7dd3fc', borderRadius: 8, padding: 10 }}><strong>{totals.costs}</strong><div style={{ fontSize: 12 }}>Cost Logs</div></div>
+        <div style={{ background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 8, padding: 10 }}><strong>{totals.subsectionRecords}</strong><div style={{ fontSize: 12 }}>Subsection Logs</div></div>
         <div style={{ background: '#fff7ed', border: '1px solid #fdba74', borderRadius: 8, padding: 10 }}><strong>{totals.pests}</strong><div style={{ fontSize: 12 }}>Pest Logs</div></div>
         <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: 10 }}><strong>{totals.diseases}</strong><div style={{ fontSize: 12 }}>Disease Logs</div></div>
         <div style={{ background: '#ecfeff', border: '1px solid #a5f3fc', borderRadius: 8, padding: 10 }}><strong>KES {totalsWithMargin.revenue.toFixed(2)}</strong><div style={{ fontSize: 12 }}>Revenue</div></div>
@@ -375,7 +396,7 @@ export default function CropCV({
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontWeight: 700 }}>{crop.name} ({crop.id})</div>
-                <div style={{ fontSize: 12, color: '#64748b' }}>
+                <div style={{ fontSize: 12, color: '#475569' }}>
                   {plantMeta[crop.plantSubmodule]?.label || 'Unassigned'} • {crop.variety || 'No variety'} • {crop.status || 'No status'}
                 </div>
                 <div style={{ fontSize: 12, color: margin >= 0 ? '#15803d' : '#dc2626', fontWeight: 700, marginTop: 4 }}>
@@ -390,18 +411,19 @@ export default function CropCV({
             </div>
               )
             })()}
-            <div style={{ marginTop: 8, fontSize: 13, color: '#334155', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 6 }}>
+            <div style={{ marginTop: 8, fontSize: 13, color: '#1f2937', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 6 }}>
               <div>Yields: {countBy(yieldRecords, crop.id)}</div>
               <div>Sales: {countBy(salesRecords, crop.id)}</div>
               <div>Treatments: {countBy(treatmentRecords, crop.id)}</div>
               <div>Costs: {countBy(costRecords, crop.id)}</div>
+              <div>Subsections: {countBy(subsectionRecords, crop.id)}</div>
               <div>Pests: {countBy(pestRecords, crop.id)}</div>
               <div>Diseases: {countBy(diseaseRecords, crop.id)}</div>
               <div>Reminders: {countBy(reminders, crop.id)}</div>
             </div>
           </div>
         ))}
-        {visibleCrops.length === 0 && <div style={{ color: '#64748b' }}>No crops available in this plant module for CV reporting yet.</div>}
+        {visibleCrops.length === 0 && <div style={{ color: '#475569' }}>No crops available in this plant module for CV reporting yet.</div>}
       </div>
     </div>
   )

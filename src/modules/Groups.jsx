@@ -234,7 +234,7 @@ export default function Groups({ animals = [] }) {
       <div className="health-header">
         <div>
           <h2 style={{ margin: 0 }}>👥 Groups & Herds</h2>
-          <div style={{ fontSize: '14px', color: '#64748b' }}>Manage animal groups, herds, and production units</div>
+          <div style={{ fontSize: '14px', color: '#475569' }}>Manage animal groups, herds, and production units</div>
         </div>
 
   {showRecordCV && (
@@ -258,25 +258,25 @@ export default function Groups({ animals = [] }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
         <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
           <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--green)' }}>{groups.length}</div>
-          <div style={{ fontSize: '14px', color: '#64748b' }}>Total Groups</div>
+          <div style={{ fontSize: '14px', color: '#475569' }}>Total Groups</div>
         </div>
         <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
           <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--green)' }}>
             {groups.filter(g => g.status === 'Active').length}
           </div>
-          <div style={{ fontSize: '14px', color: '#64748b' }}>Active Groups</div>
+          <div style={{ fontSize: '14px', color: '#475569' }}>Active Groups</div>
         </div>
         <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
           <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--green)' }}>
             {groups.reduce((sum, g) => sum + (g.animalIds?.length || 0), 0)}
           </div>
-          <div style={{ fontSize: '14px', color: '#64748b' }}>Total Animals in Groups</div>
+          <div style={{ fontSize: '14px', color: '#475569' }}>Total Animals in Groups</div>
         </div>
         <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
           <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--green)' }}>
             {[...new Set(groups.map(g => g.type))].length}
           </div>
-          <div style={{ fontSize: '14px', color: '#64748b' }}>Group Types</div>
+          <div style={{ fontSize: '14px', color: '#475569' }}>Group Types</div>
         </div>
       </div>
 
@@ -313,7 +313,7 @@ export default function Groups({ animals = [] }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
               <div>
                 <h3 style={{ margin: 0, color: 'var(--green)', fontSize: '18px' }}>{group.name}</h3>
-                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>{group.id}</div>
+                <div style={{ fontSize: '12px', color: '#475569', marginTop: '4px' }}>{group.id}</div>
               </div>
               <span style={{
                 padding: '4px 12px',
@@ -329,19 +329,19 @@ export default function Groups({ animals = [] }) {
 
             <div style={{ fontSize: '14px', marginBottom: '12px' }}>
               <div style={{ marginBottom: '6px' }}>
-                <span style={{ color: '#64748b' }}>Type:</span>{' '}
+                <span style={{ color: '#475569' }}>Type:</span>{' '}
                 <strong>{group.type}</strong>
               </div>
               <div style={{ marginBottom: '6px' }}>
-                <span style={{ color: '#64748b' }}>Purpose:</span>{' '}
+                <span style={{ color: '#475569' }}>Purpose:</span>{' '}
                 <strong>{group.purpose}</strong>
               </div>
               <div style={{ marginBottom: '6px' }}>
-                <span style={{ color: '#64748b' }}>Location:</span>{' '}
+                <span style={{ color: '#475569' }}>Location:</span>{' '}
                 {group.location || 'Not set'}
               </div>
               <div style={{ marginBottom: '6px' }}>
-                <span style={{ color: '#64748b' }}>Manager:</span>{' '}
+                <span style={{ color: '#475569' }}>Manager:</span>{' '}
                 {group.manager || 'Not assigned'}
               </div>
             </div>
@@ -493,7 +493,7 @@ export default function Groups({ animals = [] }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <div>
                 <h3 style={{ margin: 0 }}>{selectedGroup.name}</h3>
-                <div style={{ fontSize: '14px', color: '#64748b' }}>{selectedGroup.id}</div>
+                <div style={{ fontSize: '14px', color: '#475569' }}>{selectedGroup.id}</div>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button onClick={() => setShowRecordCV(selectedGroup)} style={{ padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>👁️ View CV</button>
@@ -557,7 +557,7 @@ export default function Groups({ animals = [] }) {
                       )}
                     </>
                   ) : (
-                    <div style={{ color: '#64748b' }}>No production goals set</div>
+                    <div style={{ color: '#475569' }}>No production goals set</div>
                   )}
                 </div>
               </div>
@@ -590,7 +590,7 @@ export default function Groups({ animals = [] }) {
                   })}
                 </div>
               ) : (
-                <p style={{ color: '#64748b', fontSize: '14px' }}>No animals in this group yet</p>
+                <p style={{ color: '#475569', fontSize: '14px' }}>No animals in this group yet</p>
               )}
             </div>
           </div>

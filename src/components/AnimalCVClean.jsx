@@ -60,7 +60,7 @@ export default function AnimalCV({ animal = {}, groups = [], onClose = () => {},
             ) : animal.photo ? (
               <img src={animal.photo} alt={animal.name} style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 8 }} />
             ) : (
-              <div style={{ width: '100%', height: 220, borderRadius: 8, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>No photo</div>
+              <div style={{ width: '100%', height: 220, borderRadius: 8, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4b5563' }}>No photo</div>
             )}
 
             <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>

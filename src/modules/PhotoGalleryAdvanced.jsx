@@ -259,12 +259,12 @@ export default function PhotoGalleryAdvanced() {
   const categories = ['all', 'animals', 'crops', 'equipment', 'facilities', 'products', 'general']
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1600px', margin: '0 auto' }}>
+    <div style={{ padding: '20px', maxWidth: '1600px', margin: '0 auto', color: 'var(--text-primary)' }}>
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: 'bold' }}>
           📸 Photo Gallery
         </h2>
-        <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+        <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>
           Smart photo management with AI-powered tagging
         </p>
       </div>
@@ -276,33 +276,34 @@ export default function PhotoGalleryAdvanced() {
         gap: '16px',
         marginBottom: '24px'
       }}>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Total Photos</div>
+        <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid var(--border-primary)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Photos</div>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#3b82f6' }}>{stats.total || 0}</div>
         </div>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Categories</div>
+        <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid var(--border-primary)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Categories</div>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>
             {stats.byCategory ? Object.keys(stats.byCategory).length : 0}
           </div>
         </div>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Unique Tags</div>
+        <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid var(--border-primary)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Unique Tags</div>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#8b5cf6' }}>{allTags.length}</div>
         </div>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Filtered</div>
+        <div style={{ background: 'var(--bg-elevated)', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid var(--border-primary)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Filtered</div>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{filteredPhotos.length}</div>
         </div>
       </div>
 
       {/* Controls */}
       <div style={{
-        background: 'white',
+        background: 'var(--bg-elevated)',
         padding: '16px',
         borderRadius: '8px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        marginBottom: '24px'
+        marginBottom: '24px',
+        border: '1px solid var(--border-primary)'
       }}>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
           {/* Upload button */}
@@ -384,7 +385,7 @@ export default function PhotoGalleryAdvanced() {
           )}
 
           {selectionMode && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6b7280', fontSize: '13px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '13px' }}>
               {selectedPhotoIds.size} selected
             </div>
           )}
@@ -395,8 +396,8 @@ export default function PhotoGalleryAdvanced() {
               onClick={() => setViewMode('grid')}
               style={{
                 padding: '8px 16px',
-                background: viewMode === 'grid' ? '#3b82f6' : '#f3f4f6',
-                color: viewMode === 'grid' ? 'white' : '#1f2937',
+                background: viewMode === 'grid' ? '#3b82f6' : 'var(--bg-secondary)',
+                color: viewMode === 'grid' ? 'white' : 'var(--text-primary)',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
@@ -409,8 +410,8 @@ export default function PhotoGalleryAdvanced() {
               onClick={() => setViewMode('list')}
               style={{
                 padding: '8px 16px',
-                background: viewMode === 'list' ? '#3b82f6' : '#f3f4f6',
-                color: viewMode === 'list' ? 'white' : '#1f2937',
+                background: viewMode === 'list' ? '#3b82f6' : 'var(--bg-secondary)',
+                color: viewMode === 'list' ? 'white' : 'var(--text-primary)',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
@@ -429,7 +430,7 @@ export default function PhotoGalleryAdvanced() {
               value={bulkTags}
               onChange={(e) => setBulkTags(e.target.value)}
               placeholder="Add tags to selected (comma separated)"
-              style={{ flex: 1, minWidth: '240px', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px' }}
+              style={{ flex: 1, minWidth: '240px', padding: '10px 12px', border: '1px solid var(--border-primary)', borderRadius: '6px', fontSize: '14px', background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
             />
             <button
               onClick={handleApplyBulkTags}
@@ -451,9 +452,11 @@ export default function PhotoGalleryAdvanced() {
             style={{
               width: '100%',
               padding: '10px 16px',
-              border: '1px solid #e5e7eb',
+              border: '1px solid var(--border-primary)',
               borderRadius: '6px',
-              fontSize: '14px'
+              fontSize: '14px',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-primary)'
             }}
           />
         </div>
@@ -469,8 +472,8 @@ export default function PhotoGalleryAdvanced() {
               }}
               style={{
                 padding: '6px 14px',
-                background: selectedCategory === cat ? '#3b82f6' : '#f3f4f6',
-                color: selectedCategory === cat ? 'white' : '#1f2937',
+                background: selectedCategory === cat ? '#3b82f6' : 'var(--bg-secondary)',
+                color: selectedCategory === cat ? 'white' : 'var(--text-primary)',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
@@ -486,7 +489,7 @@ export default function PhotoGalleryAdvanced() {
         {/* Top tags */}
         {stats.topTags && stats.topTags.length > 0 && (
           <div>
-            <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '8px' }}>Popular Tags:</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Popular Tags:</div>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {stats.topTags.map(([tag, count]) => (
                 <button
@@ -497,8 +500,8 @@ export default function PhotoGalleryAdvanced() {
                   }}
                   style={{
                     padding: '4px 10px',
-                    background: selectedTag === tag ? '#8b5cf6' : '#f3f4f6',
-                    color: selectedTag === tag ? 'white' : '#6b7280',
+                    background: selectedTag === tag ? '#8b5cf6' : 'var(--bg-secondary)',
+                    color: selectedTag === tag ? 'white' : 'var(--text-secondary)',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
@@ -516,15 +519,16 @@ export default function PhotoGalleryAdvanced() {
       {/* Photos Grid/List */}
       {filteredPhotos.length === 0 ? (
         <div style={{
-          background: 'white',
+          background: 'var(--bg-elevated)',
           padding: '60px 20px',
           borderRadius: '8px',
           textAlign: 'center',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          border: '1px solid var(--border-primary)'
         }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>📷</div>
-          <div style={{ fontSize: '18px', color: '#1f2937', marginBottom: '8px' }}>No photos found</div>
-          <div style={{ fontSize: '14px', color: '#6b7280' }}>
+          <div style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '8px' }}>No photos found</div>
+          <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
             {searchQuery || selectedTag ? 'Try adjusting your filters' : 'Upload your first photo to get started'}
           </div>
         </div>
@@ -571,7 +575,7 @@ export default function PhotoGalleryAdvanced() {
                 <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {photo.filename}
                 </div>
-                <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'capitalize' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
                   {photo.category}
                 </div>
               </div>
@@ -624,7 +628,7 @@ export default function PhotoGalleryAdvanced() {
           ))}
         </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'var(--bg-elevated)', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid var(--border-primary)' }}>
           {filteredPhotos.map((photo, index) => (
             <div
               key={photo.id}
@@ -634,13 +638,13 @@ export default function PhotoGalleryAdvanced() {
                 gridTemplateColumns: selectionMode ? 'auto auto 1fr auto' : 'auto 1fr auto',
                 gap: '12px',
                 padding: '16px',
-                borderBottom: index < filteredPhotos.length - 1 ? '1px solid #e5e7eb' : 'none',
+                borderBottom: index < filteredPhotos.length - 1 ? '1px solid var(--border-primary)' : 'none',
                 cursor: 'pointer',
                 transition: 'background 0.2s',
                 alignItems: 'center'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-secondary)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg-elevated)'}
             >
               {selectionMode && (
                 <input
@@ -662,7 +666,7 @@ export default function PhotoGalleryAdvanced() {
               />
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ fontSize: '14px', fontWeight: '500' }}>{photo.filename}</div>
-                <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                   {photo.analysis.width} × {photo.analysis.height} • {(photo.analysis.size / 1024).toFixed(0)} KB • {photo.category}
                 </div>
                 {photo.tags && photo.tags.length > 0 && (
@@ -673,9 +677,9 @@ export default function PhotoGalleryAdvanced() {
                         style={{
                           fontSize: '11px',
                           padding: '2px 8px',
-                          background: '#f3f4f6',
+                          background: 'var(--bg-secondary)',
                           borderRadius: '4px',
-                          color: '#6b7280'
+                          color: 'var(--text-secondary)'
                         }}
                       >
                         #{tag}
@@ -685,7 +689,7 @@ export default function PhotoGalleryAdvanced() {
                 )}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                   {new Date(photo.metadata.uploadDate).toLocaleDateString()}
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
@@ -729,14 +733,16 @@ export default function PhotoGalleryAdvanced() {
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: 'white',
+              background: 'var(--bg-elevated)',
               borderRadius: '12px',
               maxWidth: '900px',
               width: '100%',
               maxHeight: '90vh',
               overflowY: 'auto',
               display: 'flex',
-              flexDirection: 'column'
+              flexDirection: 'column',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-primary)'
             }}
           >
             {/* Header */}
@@ -745,7 +751,7 @@ export default function PhotoGalleryAdvanced() {
               justifyContent: 'space-between',
               alignItems: 'center',
               padding: '20px',
-              borderBottom: '1px solid #e5e7eb'
+              borderBottom: '1px solid var(--border-primary)'
             }}>
               <h3 style={{ margin: 0, fontSize: '18px' }}>{selectedPhoto.filename}</h3>
               <div style={{ display: 'flex', gap: '12px' }}>
@@ -784,7 +790,7 @@ export default function PhotoGalleryAdvanced() {
                     border: 'none',
                     fontSize: '24px',
                     cursor: 'pointer',
-                    color: '#6b7280'
+                    color: 'var(--text-secondary)'
                   }}
                 >
                   ×
@@ -793,7 +799,7 @@ export default function PhotoGalleryAdvanced() {
             </div>
 
             {/* Image */}
-            <div style={{ padding: '20px', background: '#f9fafb' }}>
+            <div style={{ padding: '20px', background: 'var(--bg-secondary)' }}>
               <img
                 src={selectedPhoto.base64}
                 alt={selectedPhoto.filename}
@@ -809,7 +815,7 @@ export default function PhotoGalleryAdvanced() {
             {/* Details */}
             <div style={{ padding: '20px' }}>
               <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px', fontWeight: '500' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '500' }}>
                   Image Properties
                 </div>
                 <div style={{ fontSize: '13px', lineHeight: '1.8' }}>
@@ -823,7 +829,7 @@ export default function PhotoGalleryAdvanced() {
 
               {selectedPhoto.analysis.dominantColors && (
                 <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px', fontWeight: '500' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '500' }}>
                     Dominant Colors
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -853,7 +859,7 @@ export default function PhotoGalleryAdvanced() {
 
               {selectedPhoto.tags && selectedPhoto.tags.length > 0 && (
                 <div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px', fontWeight: '500' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '500' }}>
                     AI Tags ({selectedPhoto.tags.length})
                   </div>
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -898,31 +904,33 @@ export default function PhotoGalleryAdvanced() {
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: 'white',
+              background: 'var(--bg-elevated)',
               borderRadius: '10px',
               padding: '20px',
               width: '100%',
               maxWidth: '480px',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.15)'
+              boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-primary)'
             }}
           >
             <h3 style={{ margin: '0 0 12px', fontSize: '18px' }}>Edit Photo</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', marginBottom: '12px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Filename</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>Filename</label>
                 <input
                   type="text"
                   value={editForm.filename}
                   onChange={(e) => setEditForm({ ...editForm, filename: e.target.value })}
-                  style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '10px', border: '1px solid var(--border-primary)', borderRadius: '8px', fontSize: '14px', background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Category</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>Category</label>
                 <select
                   value={editForm.category}
                   onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                  style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', background: 'white' }}
+                  style={{ width: '100%', padding: '10px', border: '1px solid var(--border-primary)', borderRadius: '8px', fontSize: '14px', background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
                 >
                   {categories.filter(c => c !== 'all').map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
@@ -930,13 +938,13 @@ export default function PhotoGalleryAdvanced() {
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Tags (comma separated)</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>Tags (comma separated)</label>
                 <input
                   type="text"
                   value={editForm.tags}
                   onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })}
                   placeholder="e.g., goat, pasture, vaccine"
-                  style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '10px', border: '1px solid var(--border-primary)', borderRadius: '8px', fontSize: '14px', background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
                 />
               </div>
             </div>
@@ -948,7 +956,7 @@ export default function PhotoGalleryAdvanced() {
               >
                 {replacing ? 'Replacing…' : '♻️ Replace Image'}
               </button>
-              <span style={{ fontSize: '12px', color: '#6b7280' }}>Re-run analysis and keep existing tags.</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Re-run analysis and keep existing tags.</span>
               <input
                 ref={replaceInputRef}
                 type="file"

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { isFirebaseConfigured } from '../lib/firebase'
-import { isFirebaseAuthAvailable, loginWithFirebase, registerWithFirebase, logoutFromFirebase, getCurrentFirebaseUser } from '../lib/firebaseAuth'
+import { isFirebaseAuthAvailable, loginWithFirebase, registerWithFirebase, logoutFromFirebase, getCurrentFirebaseUser, onFirebaseAuthChange, getFirebaseRememberSessionPreference, setFirebaseRememberSessionPreference } from '../lib/firebaseAuth'
 import { 
   isSyncEnabled, 
   setSyncEnabled, 
@@ -11,6 +11,7 @@ import {
 } from '../lib/sync'
 
 export default function SyncSettings() {
+  const LAST_FIREBASE_EMAIL_KEY = 'devinsfarm:firebase:lastEmail'
   const canEnablePersistenceInCurrentEnv = !import.meta.env.DEV || import.meta.env.VITE_ALLOW_DEV_FIRESTORE_PERSISTENCE === 'true'
   const [configured, setConfigured] = useState(false)
   const [syncEnabled, setSyncEnabledState] = useState(false)
@@ -39,6 +40,7 @@ export default function SyncSettings() {
   const [queueItems, setQueueItems] = useState([])
   const [persistencePref, setPersistencePref] = useState('default')
   const [persistenceMode, setPersistenceMode] = useState(typeof window !== 'undefined' ? (window.__firestorePersistenceMode || 'unknown') : 'unknown')
+  const [rememberSession, setRememberSession] = useState(true)
 
   useEffect(() => {
     setConfigured(isFirebaseConfigured())
@@ -48,6 +50,13 @@ export default function SyncSettings() {
     setLastSyncTime(localStorage.getItem('devinsfarm:lastSyncTime'))
     setSyncError(localStorage.getItem('devinsfarm:lastSyncError') || '')
     setFirebaseUser(getCurrentFirebaseUser())
+    setRememberSession(getFirebaseRememberSessionPreference())
+    try {
+      const rememberedEmail = localStorage.getItem(LAST_FIREBASE_EMAIL_KEY) || ''
+      if (rememberedEmail) {
+        setLoginEmail(rememberedEmail)
+      }
+    } catch (e) {}
     try {
       const pref = localStorage.getItem('devinsfarm:firestore:persistence')
       setPersistencePref(pref === 'enabled' || pref === 'disabled' ? pref : 'default')
@@ -60,6 +69,25 @@ export default function SyncSettings() {
       setPersistenceMode('unknown')
     }
     
+    const unsubscribeAuth = onFirebaseAuthChange((user) => {
+      setFirebaseUser(user)
+
+      try {
+        if (user?.email) {
+          localStorage.setItem(LAST_FIREBASE_EMAIL_KEY, user.email)
+        }
+      } catch (e) {}
+
+      if (user) {
+        const enabled = initSync()
+        setSyncEnabledState(Boolean(enabled))
+        setSyncStatus(getSyncStatus())
+      } else {
+        setSyncEnabledState(false)
+        setSyncStatus('offline')
+      }
+    })
+
     // Update sync status periodically
     const interval = setInterval(() => {
       const nextSyncStatus = getSyncStatus()
@@ -86,7 +114,10 @@ export default function SyncSettings() {
       } catch (e) {}
     }, 10000)
     
-    return () => clearInterval(interval)
+    return () => {
+      clearInterval(interval)
+      try { unsubscribeAuth() } catch (e) {}
+    }
   }, [])
 
   function handlePersistenceChange(nextValue) {
@@ -111,16 +142,33 @@ export default function SyncSettings() {
     }
   }
 
+  async function handleRememberSessionToggle() {
+    const nextValue = !rememberSession
+    const result = await setFirebaseRememberSessionPreference(nextValue)
+    if (result.success) {
+      setRememberSession(nextValue)
+      alert(nextValue
+        ? '✅ This device will keep you signed in and auto-resume sync.'
+        : '⚠️ This device will stop keeping a long-lived Firebase session after you sign out or close the session.')
+    } else {
+      alert('Failed to update sign-in persistence: ' + result.error)
+    }
+  }
+
   async function handleLogin(e) {
     e.preventDefault()
     setLoginError('')
     
     const result = await loginWithFirebase(loginEmail, loginPassword)
     if (result.success) {
+      try { localStorage.setItem(LAST_FIREBASE_EMAIL_KEY, loginEmail) } catch (e) {}
       setFirebaseUser(getCurrentFirebaseUser())
       setShowLogin(false)
       initSync()
-      alert('✅ Logged in successfully! You can now enable sync.')
+      setSyncEnabled(true)
+      setSyncEnabledState(true)
+      setSyncStatus(getSyncStatus())
+      alert('✅ Logged in successfully! Sync has been enabled for this device.')
     } else {
       setLoginError(result.error)
     }
@@ -132,10 +180,14 @@ export default function SyncSettings() {
     
     const result = await registerWithFirebase(registerEmail, registerPassword, registerName)
     if (result.success) {
+      try { localStorage.setItem(LAST_FIREBASE_EMAIL_KEY, registerEmail) } catch (e) {}
       setFirebaseUser(getCurrentFirebaseUser())
       setShowRegister(false)
       initSync()
-      alert('✅ Account created successfully! You can now enable sync.')
+      setSyncEnabled(true)
+      setSyncEnabledState(true)
+      setSyncStatus(getSyncStatus())
+      alert('✅ Account created successfully! Sync has been enabled for this device.')
     } else {
       setRegisterError(result.error)
     }
@@ -271,13 +323,93 @@ export default function SyncSettings() {
     }
   }
 
+  const baseButtonStyle = {
+    border: 'none',
+    borderRadius: 6,
+    padding: '8px 12px',
+    cursor: 'pointer',
+    fontWeight: 600,
+    fontSize: 13,
+    transition: 'opacity 0.2s ease'
+  }
+
+  const buttonVariants = {
+    neutral: {
+      background: 'var(--bg-tertiary, #e5e7eb)',
+      color: 'var(--text-primary, #1f2937)'
+    },
+    success: {
+      background: '#059669',
+      color: '#ffffff'
+    },
+    danger: {
+      background: '#dc2626',
+      color: '#ffffff'
+    },
+    info: {
+      background: '#0f766e',
+      color: '#ffffff'
+    },
+    primary: {
+      background: '#2563eb',
+      color: '#ffffff'
+    },
+    softDanger: {
+      background: 'rgba(239, 68, 68, 0.14)',
+      border: '1px solid rgba(239, 68, 68, 0.45)',
+      color: 'var(--text-primary, #1f2937)'
+    }
+  }
+
+  const getButtonStyle = (variant = 'neutral', disabled = false, extra = {}) => ({
+    ...baseButtonStyle,
+    ...(buttonVariants[variant] || buttonVariants.neutral),
+    ...(disabled ? { opacity: 0.55, cursor: 'not-allowed' } : {}),
+    ...extra
+  })
+
+  const statusBadgeVariants = {
+    synced: {
+      background: 'rgba(16, 185, 129, 0.18)',
+      border: '1px solid rgba(16, 185, 129, 0.45)',
+      color: '#d1fae5'
+    },
+    syncing: {
+      background: 'rgba(245, 158, 11, 0.18)',
+      border: '1px solid rgba(245, 158, 11, 0.45)',
+      color: '#fef3c7'
+    },
+    error: {
+      background: 'rgba(239, 68, 68, 0.18)',
+      border: '1px solid rgba(239, 68, 68, 0.45)',
+      color: '#fee2e2'
+    },
+    offline: {
+      background: 'rgba(107, 114, 128, 0.22)',
+      border: '1px solid rgba(148, 163, 184, 0.35)',
+      color: 'var(--text-primary, #e5e7eb)'
+    }
+  }
+
+  const getSyncStatusBadgeStyle = (status) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '4px 8px',
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 700,
+    ...(statusBadgeVariants[status] || statusBadgeVariants.offline)
+  })
+
   if (!configured) {
     return (
       <section>
         <h2>🔄 Cloud Sync Settings</h2>
         <div style={{ 
-          background: '#fef3c7', 
-          border: '1px solid #f59e0b', 
+          background: 'rgba(251, 146, 60, 0.14)', 
+          border: '1px solid rgba(251, 146, 60, 0.45)', 
+          color: 'var(--text-primary, #1f2937)',
           padding: 20, 
           borderRadius: 8,
           marginTop: 20 
@@ -308,8 +440,9 @@ export default function SyncSettings() {
 
       {/* Firebase Status */}
       <div style={{ 
-        background: '#d1fae5', 
-        border: '1px solid #10b981', 
+        background: 'rgba(16, 185, 129, 0.16)', 
+        border: '1px solid rgba(16, 185, 129, 0.45)', 
+        color: 'var(--text-primary, #1f2937)',
         padding: 15, 
         borderRadius: 8,
         marginTop: 20 
@@ -318,7 +451,7 @@ export default function SyncSettings() {
           <span style={{ fontSize: 24 }}>✅</span>
           <div>
             <strong>Firebase Configured</strong>
-            <div style={{ fontSize: 13, color: '#065f46' }}>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary, #4b5563)' }}>
               Cloud sync is available
             </div>
           </div>
@@ -326,60 +459,36 @@ export default function SyncSettings() {
       </div>
 
       {/* Firestore Persistence Controls */}
-      <div style={{ marginTop: 20, padding: 15, border: '1px solid #cbd5e1', borderRadius: 8, background: '#f8fafc' }}>
+      <div style={{ marginTop: 20, padding: 15, border: '1px solid var(--border-primary, #cbd5e1)', borderRadius: 8, background: 'var(--bg-secondary, #f8fafc)', color: 'var(--text-primary, #1f2937)' }}>
         <h3 style={{ margin: '0 0 8px 0' }}>💾 Firestore Persistence</h3>
-        <div style={{ fontSize: 13, color: '#475569', marginBottom: 10 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary, #475569)', marginBottom: 10 }}>
           Current runtime mode: <strong>{persistenceMode}</strong>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button
             onClick={() => handlePersistenceChange('enabled')}
-            style={{
-              background: persistencePref === 'enabled' ? '#059669' : '#e5e7eb',
-              color: persistencePref === 'enabled' ? '#fff' : '#1f2937',
-              border: 'none',
-              borderRadius: 6,
-              padding: '8px 12px',
-              cursor: 'pointer',
-              fontWeight: 600
-            }}
+            style={getButtonStyle(persistencePref === 'enabled' ? 'success' : 'neutral')}
           >
             Enable
           </button>
           <button
             onClick={() => handlePersistenceChange('disabled')}
-            style={{
-              background: persistencePref === 'disabled' ? '#dc2626' : '#e5e7eb',
-              color: persistencePref === 'disabled' ? '#fff' : '#1f2937',
-              border: 'none',
-              borderRadius: 6,
-              padding: '8px 12px',
-              cursor: 'pointer',
-              fontWeight: 600
-            }}
+            style={getButtonStyle(persistencePref === 'disabled' ? 'danger' : 'neutral')}
           >
             Disable
           </button>
           <button
             onClick={() => handlePersistenceChange('default')}
-            style={{
-              background: persistencePref === 'default' ? '#0f766e' : '#e5e7eb',
-              color: persistencePref === 'default' ? '#fff' : '#1f2937',
-              border: 'none',
-              borderRadius: 6,
-              padding: '8px 12px',
-              cursor: 'pointer',
-              fontWeight: 600
-            }}
+            style={getButtonStyle(persistencePref === 'default' ? 'info' : 'neutral')}
           >
             Use Default
           </button>
         </div>
-        <div style={{ fontSize: 12, color: '#6b7280', marginTop: 10 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary, #4b5563)', marginTop: 10 }}>
           Applies after reload. Default policy: enabled in production, disabled in dev/Codespaces.
         </div>
         {!canEnablePersistenceInCurrentEnv && (
-          <div style={{ fontSize: 12, color: '#9a3412', marginTop: 6 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-primary, #1f2937)', marginTop: 6 }}>
             Dev safety is active: Enable is blocked in this environment to prevent restart loops.
           </div>
         )}
@@ -388,12 +497,28 @@ export default function SyncSettings() {
       {/* Authentication Section */}
       <div style={{ marginTop: 30 }}>
         <h3>🔐 Authentication</h3>
+        <div style={{ marginTop: 12, marginBottom: 18, padding: 14, background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.35)', borderRadius: 8, color: 'var(--text-primary, #1f2937)' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={rememberSession}
+              onChange={handleRememberSessionToggle}
+              style={{ width: 18, height: 18, marginTop: 2 }}
+            />
+            <span>
+              <strong>Always keep me signed in on this device</strong>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary, #4b5563)', marginTop: 4 }}>
+                Keeps your Firebase session on this browser/device and helps auto-resume sync after reload.
+              </div>
+            </span>
+          </label>
+        </div>
         {!firebaseUser ? (
           <div>
             <p>You must be logged in to enable sync.</p>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setShowLogin(true)}>Login</button>
-              <button onClick={() => setShowRegister(true)}>Create Account</button>
+              <button onClick={() => setShowLogin(true)} style={getButtonStyle('primary')}>Login</button>
+              <button onClick={() => setShowRegister(true)} style={getButtonStyle('neutral')}>Create Account</button>
             </div>
 
             {/* Login Form */}
@@ -401,9 +526,10 @@ export default function SyncSettings() {
               <div style={{ 
                 marginTop: 20, 
                 padding: 20, 
-                background: '#f9fafb', 
+                background: 'var(--bg-secondary, #f9fafb)', 
                 borderRadius: 8,
-                border: '1px solid #e5e7eb'
+                border: '1px solid var(--border-primary, #e5e7eb)',
+                color: 'var(--text-primary, #1f2937)'
               }}>
                 <h4 style={{ marginTop: 0 }}>Login</h4>
                 <form onSubmit={handleLogin}>
@@ -428,13 +554,13 @@ export default function SyncSettings() {
                     />
                   </div>
                   {loginError && (
-                    <div style={{ color: '#dc2626', marginBottom: 15, fontSize: 14 }}>
+                    <div style={{ color: 'var(--action-danger, #dc2626)', marginBottom: 15, fontSize: 14 }}>
                       {loginError}
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: 10 }}>
-                    <button type="submit">Login</button>
-                    <button type="button" onClick={() => setShowLogin(false)}>Cancel</button>
+                    <button type="submit" style={getButtonStyle('primary')}>Login</button>
+                    <button type="button" onClick={() => setShowLogin(false)} style={getButtonStyle('neutral')}>Cancel</button>
                   </div>
                 </form>
               </div>
@@ -445,9 +571,10 @@ export default function SyncSettings() {
               <div style={{ 
                 marginTop: 20, 
                 padding: 20, 
-                background: '#f9fafb', 
+                background: 'var(--bg-secondary, #f9fafb)', 
                 borderRadius: 8,
-                border: '1px solid #e5e7eb'
+                border: '1px solid var(--border-primary, #e5e7eb)',
+                color: 'var(--text-primary, #1f2937)'
               }}>
                 <h4 style={{ marginTop: 0 }}>Create Account</h4>
                 <form onSubmit={handleRegister}>
@@ -483,13 +610,13 @@ export default function SyncSettings() {
                     />
                   </div>
                   {registerError && (
-                    <div style={{ color: '#dc2626', marginBottom: 15, fontSize: 14 }}>
+                    <div style={{ color: 'var(--action-danger, #dc2626)', marginBottom: 15, fontSize: 14 }}>
                       {registerError}
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: 10 }}>
-                    <button type="submit">Create Account</button>
-                    <button type="button" onClick={() => setShowRegister(false)}>Cancel</button>
+                    <button type="submit" style={getButtonStyle('success')}>Create Account</button>
+                    <button type="button" onClick={() => setShowRegister(false)} style={getButtonStyle('neutral')}>Cancel</button>
                   </div>
                 </form>
               </div>
@@ -499,15 +626,16 @@ export default function SyncSettings() {
           <div>
             <div style={{ 
               padding: 15, 
-              background: '#f9fafb', 
+              background: 'var(--bg-secondary, #f9fafb)', 
               borderRadius: 8,
-              border: '1px solid #e5e7eb',
+              border: '1px solid var(--border-primary, #e5e7eb)',
+              color: 'var(--text-primary, #1f2937)',
               marginBottom: 15
             }}>
               <strong>Logged in as:</strong> {firebaseUser.email}
               <button 
                 onClick={handleLogout}
-                style={{ marginLeft: 15, fontSize: 12, padding: '4px 12px' }}
+                style={getButtonStyle('neutral', false, { marginLeft: 15, fontSize: 12, padding: '4px 12px' })}
               >
                 Logout
               </button>
@@ -524,7 +652,7 @@ export default function SyncSettings() {
                 />
                 <div>
                   <strong>Enable Auto-Sync</strong>
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary, #4b5563)' }}>
                     Automatically sync data across all your devices in real-time
                   </div>
                 </div>
@@ -534,34 +662,19 @@ export default function SyncSettings() {
             {/* Sync Status with last sync time and error details */}
             <div style={{ marginTop: 20 }}>
               <strong>Sync Status:</strong>{' '}
-              <span style={{
-                padding: '4px 8px',
-                borderRadius: 4,
-                fontSize: 12,
-                fontWeight: 600,
-                background: 
-                  syncStatus === 'synced' ? '#d1fae5' :
-                  syncStatus === 'syncing' ? '#fed7aa' :
-                  syncStatus === 'error' ? '#fee2e2' :
-                  '#e5e7eb',
-                color:
-                  syncStatus === 'synced' ? '#065f46' :
-                  syncStatus === 'syncing' ? '#92400e' :
-                  syncStatus === 'error' ? '#991b1b' :
-                  '#374151'
-              }}>
+              <span style={getSyncStatusBadgeStyle(syncStatus)}>
                 {syncStatus === 'synced' && '✅ Synced'}
                 {syncStatus === 'syncing' && '🔄 Syncing...'}
                 {syncStatus === 'error' && '❌ Error'}
                 {syncStatus === 'offline' && '⏸️ Offline'}
               </span>
               {lastSyncTime && (
-                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary, #4b5563)', marginTop: 4 }}>
                   <span>Last sync: {lastSyncTime}</span>
                 </div>
               )}
               {syncError && (
-                <div style={{ fontSize: 12, color: '#991b1b', marginTop: 4 }}>
+                <div style={{ fontSize: 12, color: 'var(--action-danger, #991b1b)', marginTop: 4 }}>
                   <span>Error: {syncError}</span>
                 </div>
               )}
@@ -570,46 +683,46 @@ export default function SyncSettings() {
             {/* Manual Sync Controls */}
             <div style={{ marginTop: 30 }}>
               <h3>Manual Sync</h3>
-              <p style={{ fontSize: 14, color: '#6b7280' }}>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary, #4b5563)' }}>
                 Use these if you need to manually sync data between devices
               </p>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button 
                   onClick={handlePushAll} 
                   disabled={pushing || !syncEnabled}
-                  style={{ opacity: (!syncEnabled || pushing) ? 0.5 : 1 }}
+                  style={getButtonStyle('success', !syncEnabled || pushing)}
                 >
                   {pushing ? '⏳ Pushing...' : '⬆️ Push All to Cloud'}
                 </button>
                 <button 
                   onClick={handlePullAll} 
                   disabled={pulling || !syncEnabled}
-                  style={{ opacity: (!syncEnabled || pulling) ? 0.5 : 1 }}
+                  style={getButtonStyle('info', !syncEnabled || pulling)}
                 >
                   {pulling ? '⏳ Pulling...' : '⬇️ Pull All from Cloud'}
                 </button>
-                <button onClick={handleExport}>📤 Export Local Data</button>
+                <button onClick={handleExport} style={getButtonStyle('primary')}>📤 Export Local Data</button>
                 <label style={{ display: 'inline-block' }}>
                   <input type="file" accept="application/json" style={{ display: 'none' }} onChange={e => handleImport(e.target.files && e.target.files[0])} />
-                  <button>📥 Import Data</button>
+                  <button style={getButtonStyle('neutral')}>📥 Import Data</button>
                 </label>
               </div>
               <div style={{ marginTop: 12, display: 'flex', gap: 10, alignItems: 'center' }}>
-                <div style={{ fontSize: 13, color: '#6b7280' }}>Pending queue: <strong>{pendingQueue}</strong></div>
-                <button onClick={() => { if (window.__firestoreFlushQueue) { window.__firestoreFlushQueue(); setTimeout(() => { try { setPendingQueue(window.__firestoreQueueLength()) } catch(e){} }, 1000) } }}>Flush Queue</button>
-                <button onClick={() => { if (window.__firestoreClearQueue) { window.__firestoreClearQueue(); setPendingQueue(0) } }} style={{ background: '#fee2e2' }}>Clear Queue</button>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary, #4b5563)' }}>Pending queue: <strong>{pendingQueue}</strong></div>
+                <button onClick={() => { if (window.__firestoreFlushQueue) { window.__firestoreFlushQueue(); setTimeout(() => { try { setPendingQueue(window.__firestoreQueueLength()) } catch(e){} }, 1000) } }} style={getButtonStyle('neutral')}>Flush Queue</button>
+                <button onClick={() => { if (window.__firestoreClearQueue) { window.__firestoreClearQueue(); setPendingQueue(0) } }} style={getButtonStyle('softDanger')}>Clear Queue</button>
               </div>
               {/* Admin: Inspect queued ops */}
               <div style={{ marginTop: 12 }}>
                 <h4 style={{ margin: '8px 0' }}>Queued Operations</h4>
                 {queueItems && queueItems.length ? (
-                  <div style={{ maxHeight: 260, overflow: 'auto', border: '1px solid #e5e7eb', padding: 8, borderRadius: 6 }}>
+                  <div style={{ maxHeight: 260, overflow: 'auto', border: '1px solid var(--border-primary, #e5e7eb)', padding: 8, borderRadius: 6, background: 'var(--bg-elevated, #ffffff)', color: 'var(--text-primary, #1f2937)' }}>
                     {queueItems.map((op, idx) => (
-                      <div key={idx} style={{ borderBottom: '1px dashed #e5e7eb', padding: 8 }}>
+                      <div key={idx} style={{ borderBottom: '1px dashed var(--border-primary, #e5e7eb)', padding: 8 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div style={{ fontSize: 13 }}><strong>{op.storeName}</strong> — {Array.isArray(op.items) ? op.items.length : 0} item(s)</div>
                           <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={() => { try { alert(JSON.stringify(op, null, 2)) } catch(e){} }}>Inspect</button>
+                            <button onClick={() => { try { alert(JSON.stringify(op, null, 2)) } catch(e){} }} style={getButtonStyle('neutral')}>Inspect</button>
                             <button
                               onClick={() => {
                                 if (window.__firestoreClearOp) {
@@ -620,7 +733,7 @@ export default function SyncSettings() {
                                   }, 250);
                                 }
                               }}
-                              style={{ background: '#fee2e2' }}
+                              style={getButtonStyle('softDanger')}
                             >
                               Remove
                             </button>
@@ -630,10 +743,10 @@ export default function SyncSettings() {
                     ))}
                   </div>
                 ) : (
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>No queued operations</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary, #4b5563)' }}>No queued operations</div>
                 )}
               </div>
-              <p style={{ fontSize: 12, color: '#6b7280', marginTop: 10 }}>
+              <p style={{ fontSize: 12, color: 'var(--text-secondary, #4b5563)', marginTop: 10 }}>
                 <strong>Note:</strong> Push overwrites cloud data. Pull overwrites local data and reloads the app.
               </p>
             </div>
@@ -645,9 +758,10 @@ export default function SyncSettings() {
       <div style={{ 
         marginTop: 40, 
         padding: 20, 
-        background: '#eff6ff', 
+        background: 'rgba(59, 130, 246, 0.12)', 
         borderRadius: 8,
-        border: '1px solid #3b82f6'
+        border: '1px solid rgba(59, 130, 246, 0.45)',
+        color: 'var(--text-primary, #1f2937)'
       }}>
         <h3 style={{ marginTop: 0 }}>ℹ️ How Sync Works</h3>
         <ul style={{ lineHeight: 1.8, marginBottom: 0 }}>

@@ -75,7 +75,7 @@ export default function AppShell() {
             Loading Farm Management System
           </h2>
           <p style={{
-            color: '#6b7280',
+            color: '#4b5563',
             fontSize: '14px'
           }}>
             Preparing your dashboard...

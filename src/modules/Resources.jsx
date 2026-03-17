@@ -137,8 +137,8 @@ export default function Resources(){
             ) : (
               <div style={{display:'flex',alignItems:'center',gap:8}}>
                 <div style={{flex:1}}>
-                  <div style={{fontWeight:600}}>{r.name} <small style={{color:'#666'}}>({r.id})</small></div>
-                  <div style={{fontSize:13,color:'#666'}}>{r.qty} units • {r.condition}</div>
+                  <div style={{fontWeight:600}}>{r.name} <small style={{color: '#4b5563'}}>({r.id})</small></div>
+                  <div style={{fontSize:13,color: '#4b5563'}}>{r.qty} units • {r.condition}</div>
                 </div>
                 <div style={{display:'flex',gap:8}}>
                   <button onClick={()=>startInlineEdit(r)}>⚡ Quick</button>

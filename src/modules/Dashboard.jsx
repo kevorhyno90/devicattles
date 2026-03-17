@@ -407,7 +407,7 @@ export default function Dashboard({ onNavigate }) {
                   <label key={code} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: 10, border: '1px solid #e5e7eb', borderRadius: 8, background: checked ? '#f0fdf4' : '#f8fafc', cursor: 'pointer' }}>
                     <span style={{ fontSize: 14, color: '#1f2937' }}>{fixCodeLabel(code)}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 12, color: '#64748b' }}>{count} issue(s)</span>
+                      <span style={{ fontSize: 12, color: '#475569' }}>{count} issue(s)</span>
                       <input type="checkbox" checked={checked} onChange={() => toggleFixCode(code)} />
                     </span>
                   </label>
@@ -536,11 +536,11 @@ export default function Dashboard({ onNavigate }) {
                 </div>
                 <div style={{ display: 'grid', gap: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                    <span style={{ color: '#6b7280' }}>Income:</span>
+                    <span style={{ color: '#4b5563' }}>Income:</span>
                     <span style={{ color: '#15803d', fontWeight: '600' }}>+KES {source.income.toFixed(2)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                    <span style={{ color: '#6b7280' }}>Expenses:</span>
+                    <span style={{ color: '#4b5563' }}>Expenses:</span>
                     <span style={{ color: '#dc2626', fontWeight: '600' }}>-KES {source.expenses.toFixed(2)}</span>
                   </div>
                   <div style={{ 
@@ -575,23 +575,23 @@ export default function Dashboard({ onNavigate }) {
             borderTop: '2px solid #e5e7eb'
           }}>
             <div style={{ textAlign: 'center', padding: '16px', background: '#ecfdf5', borderRadius: '8px' }}>
-              <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Total Income</div>
+              <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '8px' }}>Total Income</div>
               <div style={{ fontSize: '28px', fontWeight: '700', color: '#15803d' }}>
                 KES {totalIncome.toFixed(2)}
               </div>
             </div>
             <div style={{ textAlign: 'center', padding: '16px', background: '#fef2f2', borderRadius: '8px' }}>
-              <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Total Expenses</div>
+              <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '8px' }}>Total Expenses</div>
               <div style={{ fontSize: '28px', fontWeight: '700', color: '#dc2626' }}>
                 KES {totalExpenses.toFixed(2)}
               </div>
             </div>
             <div style={{ textAlign: 'center', padding: '16px', background: netProfit >= 0 ? '#f0fdf4' : '#fef2f2', borderRadius: '8px' }}>
-              <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Net Profit/Loss</div>
+              <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '8px' }}>Net Profit/Loss</div>
               <div style={{ fontSize: '28px', fontWeight: '700', color: netProfit >= 0 ? '#059669' : '#dc2626' }}>
                 {netProfit >= 0 ? '+' : ''}KES {netProfit.toFixed(2)}
               </div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>
                 Margin: {profitMargin.toFixed(1)}%
               </div>
             </div>
@@ -717,22 +717,20 @@ export default function Dashboard({ onNavigate }) {
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
           {/* Crops Module */}
-          {crops && crops.total > 0 && (
-            <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #86efac', cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => onNavigate && onNavigate('crops')}>
-              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🌱</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Crops</div>
-              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#059669' }}>{crops.total}</div>
-              <div style={{ fontSize: '11px', color: '#059669' }}>
-                {crops.active} active • {crops.totalArea?.toFixed(1) || 0} acres
-              </div>
+          <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #86efac', cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => onNavigate && onNavigate('crops')}>
+            <div style={{ fontSize: '28px', marginBottom: '8px' }}>🌾</div>
+            <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Crop OS</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#059669' }}>{crops?.total || 0}</div>
+            <div style={{ fontSize: '11px', color: '#059669' }}>
+              {(crops?.active || 0)} active • {crops?.totalArea?.toFixed(1) || 0} acres
             </div>
-          )}
+          </div>
           
           {/* Crop Yield */}
           {cropYield && cropYield.totalRecords > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fcd34d' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>📊</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Crop Yield</div>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Crop Yield</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#d97706' }}>{cropYield.totalYield?.toFixed(0) || 0}</div>
               <div style={{ fontSize: '11px', color: '#d97706' }}>
                 Avg: {cropYield.avgYield?.toFixed(1) || 0} per harvest
@@ -744,7 +742,7 @@ export default function Dashboard({ onNavigate }) {
           {cropSales && cropSales.totalSales > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #60a5fa' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>💵</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Crop Sales</div>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Crop Sales</div>
               <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px', color: '#2563eb' }}>KES {cropSales.totalRevenue?.toFixed(0) || 0}</div>
               <div style={{ fontSize: '11px', color: '#2563eb' }}>
                 {cropSales.totalSales} sales
@@ -756,7 +754,7 @@ export default function Dashboard({ onNavigate }) {
           {azolla && azolla.totalBeds > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #6ee7b7' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🌿</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Azolla Beds</div>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Azolla Beds</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#047857' }}>{azolla.totalBeds}</div>
               <div style={{ fontSize: '11px', color: '#047857' }}>
                 {azolla.activeBeds} active • {azolla.totalProduction?.toFixed(1) || 0}kg
@@ -768,7 +766,7 @@ export default function Dashboard({ onNavigate }) {
           {bsf && bsf.totalUnits > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #f9a8d4' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🪰</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>BSF Units</div>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>BSF Units</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#be185d' }}>{bsf.totalUnits}</div>
               <div style={{ fontSize: '11px', color: '#be185d' }}>
                 {bsf.activeUnits} active • {bsf.totalProduction?.toFixed(1) || 0}kg larvae
@@ -780,7 +778,7 @@ export default function Dashboard({ onNavigate }) {
           {poultry && poultry.total > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fde047', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('poultry')}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🐔</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Poultry</div>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Poultry</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#ca8a04' }}>{poultry.total}</div>
               <div style={{ fontSize: '11px', color: '#ca8a04' }}>
                 {poultry.totalEggs} eggs • {poultry.activeFlocks} flocks
@@ -792,7 +790,7 @@ export default function Dashboard({ onNavigate }) {
           {canines && canines.total > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #c4b5fd', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('canines')}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🐕</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Canines</div>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Canines</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#7c3aed' }}>{canines.total}</div>
               <div style={{ fontSize: '11px', color: '#7c3aed' }}>
                 {canines.active} active dogs
@@ -804,7 +802,7 @@ export default function Dashboard({ onNavigate }) {
           {calves && calves.total > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fca5a5', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('calves')}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🐮</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Calves</div>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Calves</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#dc2626' }}>{calves.total}</div>
               <div style={{ fontSize: '11px', color: '#dc2626' }}>
                 {calves.byAge?.['0-3m'] || 0} young • {calves.byAge?.['12m+'] || 0} mature
@@ -816,7 +814,7 @@ export default function Dashboard({ onNavigate }) {
           {pastures && pastures.total > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #86efac', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('pastures')}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🌾</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Pastures</div>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Pastures</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#16a34a' }}>{pastures.total}</div>
               <div style={{ fontSize: '11px', color: '#16a34a' }}>
                 {pastures.totalArea?.toFixed(1) || 0} acres • {pastures.available} available
@@ -828,7 +826,7 @@ export default function Dashboard({ onNavigate }) {
           {schedules && schedules.total > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #f0abfc', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('schedules')}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>📅</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Schedules</div>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Schedules</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#c026d3' }}>{schedules.today}</div>
               <div style={{ fontSize: '11px', color: '#c026d3' }}>
                 Today • {schedules.upcoming} upcoming
@@ -840,7 +838,7 @@ export default function Dashboard({ onNavigate }) {
           {notifications && notifications.total > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fbbf24', cursor: 'pointer' }} onClick={() => onNavigate && onNavigate('notifications')}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🔔</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Notifications</div>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Notifications</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#d97706' }}>{notifications.unread}</div>
               <div style={{ fontSize: '11px', color: '#d97706' }}>
                 Unread • {notifications.urgent} urgent
@@ -852,7 +850,7 @@ export default function Dashboard({ onNavigate }) {
           {measurements && measurements.total > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #7dd3fc' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>📏</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Measurements</div>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Measurements</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#0284c7' }}>{measurements.total}</div>
               <div style={{ fontSize: '11px', color: '#0284c7' }}>
                 Avg weight: {measurements.avgWeight?.toFixed(1) || 0}kg
@@ -864,7 +862,7 @@ export default function Dashboard({ onNavigate }) {
           {treatments && treatments.total > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fdba74' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>💊</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Treatments</div>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Treatments</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#ea580c' }}>{treatments.total}</div>
               <div style={{ fontSize: '11px', color: '#ea580c' }}>
                 {treatments.active} active • {treatments.completionRate}% done
@@ -876,7 +874,7 @@ export default function Dashboard({ onNavigate }) {
           {feeding && feeding.total > 0 && (
             <div style={{ padding: '16px', background: 'white', borderRadius: '8px', border: '2px solid #fbcfe8' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>🍽️</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>Feeding Records</div>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>Feeding Records</div>
               <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: '#db2777' }}>{feeding.total}</div>
               <div style={{ fontSize: '11px', color: '#db2777' }}>
                 KES {feeding.totalCost?.toFixed(0) || 0} • {feeding.totalQuantity?.toFixed(0) || 0}kg
@@ -891,7 +889,7 @@ export default function Dashboard({ onNavigate }) {
         <div className="chart-container" style={{ marginTop: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <h3>📈 Feed Cost Analysis</h3>
-            <div style={{ fontSize: 12, color: '#666' }}>
+            <div style={{ fontSize: 12, color: '#4b5563' }}>
               <span style={{ marginRight: 12 }}>
                 <strong>Total Transactions:</strong> {feedCosts.monthlyData.reduce((sum, m) => sum + (m.count || 0), 0)}
               </span>
@@ -922,7 +920,7 @@ export default function Dashboard({ onNavigate }) {
               flexDirection: 'column',
               justifyContent: 'space-between',
               fontSize: 10,
-              color: '#666',
+              color: '#4b5563',
               paddingRight: 8,
               textAlign: 'right'
             }}>
@@ -1013,7 +1011,7 @@ export default function Dashboard({ onNavigate }) {
                       style={{ 
                         marginTop: 8,
                         fontSize: 10,
-                        color: '#666',
+                        color: '#4b5563',
                         textAlign: 'center',
                         fontWeight: isHighest || isLowest ? 'bold' : 'normal'
                       }}
@@ -1021,7 +1019,7 @@ export default function Dashboard({ onNavigate }) {
                       {month.month}
                     </div>
                     {(month.count || 0) > 0 && (
-                      <div style={{ fontSize: 9, color: '#999', marginTop: 2 }}>
+                      <div style={{ fontSize: 9, color: '#4b5563', marginTop: 2 }}>
                         {month.count} tx
                       </div>
                     )}
@@ -1042,7 +1040,7 @@ export default function Dashboard({ onNavigate }) {
             borderRadius: 8
           }}>
             <div>
-              <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Highest Month</div>
+              <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Highest Month</div>
               <div style={{ fontSize: 14, fontWeight: 'bold', color: '#ef4444' }}>
                 {(() => {
                   const highest = feedCosts.monthlyData.reduce((max, m) => m.amount > max.amount ? m : max, feedCosts.monthlyData[0])
@@ -1051,7 +1049,7 @@ export default function Dashboard({ onNavigate }) {
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Lowest Month</div>
+              <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Lowest Month</div>
               <div style={{ fontSize: 14, fontWeight: 'bold', color: '#10b981' }}>
                 {(() => {
                   const lowest = feedCosts.monthlyData.reduce((min, m) => m.amount < min.amount ? m : min, feedCosts.monthlyData[0])
@@ -1060,7 +1058,7 @@ export default function Dashboard({ onNavigate }) {
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Cost per Animal (Monthly)</div>
+              <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Cost per Animal (Monthly)</div>
               <div style={{ fontSize: 14, fontWeight: 'bold', color: '#3b82f6' }}>
                 ${animals.total > 0 && feedCosts.avgMonthly 
                   ? (feedCosts.avgMonthly / animals.total).toFixed(2)
@@ -1068,7 +1066,7 @@ export default function Dashboard({ onNavigate }) {
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Projected Next Month</div>
+              <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Projected Next Month</div>
               <div style={{ fontSize: 14, fontWeight: 'bold', color: '#6366f1' }}>
                 ${(() => {
                   if (feedCosts.monthlyData.length < 2) return feedCosts.avgMonthly ? feedCosts.avgMonthly.toFixed(0) : '0'
@@ -1088,34 +1086,34 @@ export default function Dashboard({ onNavigate }) {
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
           <div style={{ background: '#fff', padding: '12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>✅ Quick Wins</div>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>✅ Quick Wins</div>
             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#059669' }}>5/5</div>
-            <div style={{ fontSize: '12px', color: '#6b7280' }}>100% Complete</div>
+            <div style={{ fontSize: '12px', color: '#4b5563' }}>100% Complete</div>
           </div>
           
           <div style={{ background: '#fff', padding: '12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>⚡ Performance</div>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>⚡ Performance</div>
             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#2563eb' }}>90%</div>
-            <div style={{ fontSize: '12px', color: '#6b7280' }}>Faster Lists</div>
+            <div style={{ fontSize: '12px', color: '#4b5563' }}>Faster Lists</div>
           </div>
           
           <div style={{ background: '#fff', padding: '12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>💾 Memory</div>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>💾 Memory</div>
             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c3aed' }}>70%</div>
-            <div style={{ fontSize: '12px', color: '#6b7280' }}>Less Usage</div>
+            <div style={{ fontSize: '12px', color: '#4b5563' }}>Less Usage</div>
           </div>
           
           <div style={{ background: '#fff', padding: '12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>💰 Cost</div>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>💰 Cost</div>
             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#059669' }}>$0</div>
-            <div style={{ fontSize: '12px', color: '#6b7280' }}>All FREE</div>
+            <div style={{ fontSize: '12px', color: '#4b5563' }}>All FREE</div>
           </div>
           
           {cacheStats && (
             <div style={{ background: '#fff', padding: '12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>🗂️ Cache</div>
+              <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>🗂️ Cache</div>
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b' }}>{cacheStats.hitRate}</div>
-              <div style={{ fontSize: '12px', color: '#6b7280' }}>Hit Rate</div>
+              <div style={{ fontSize: '12px', color: '#4b5563' }}>Hit Rate</div>
             </div>
           )}
         </div>
@@ -1138,19 +1136,19 @@ export default function Dashboard({ onNavigate }) {
             <div style={{ fontWeight: '600', marginBottom: '8px', color: '#166534' }}>🗂️ Cache Performance:</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px', fontSize: '13px' }}>
               <div>
-                <div style={{ color: '#6b7280' }}>Hit Rate</div>
+                <div style={{ color: '#4b5563' }}>Hit Rate</div>
                 <div style={{ fontWeight: 'bold', color: '#059669' }}>{cacheStats.hitRate}</div>
               </div>
               <div>
-                <div style={{ color: '#6b7280' }}>Cache Size</div>
+                <div style={{ color: '#4b5563' }}>Cache Size</div>
                 <div style={{ fontWeight: 'bold', color: '#059669' }}>{cacheStats.cacheSize} entries</div>
               </div>
               <div>
-                <div style={{ color: '#6b7280' }}>Memory</div>
+                <div style={{ color: '#4b5563' }}>Memory</div>
                 <div style={{ fontWeight: 'bold', color: '#059669' }}>{cacheStats.memoryUsage}</div>
               </div>
               <div>
-                <div style={{ color: '#6b7280' }}>Hits/Misses</div>
+                <div style={{ color: '#4b5563' }}>Hits/Misses</div>
                 <div style={{ fontWeight: 'bold', color: '#059669' }}>{cacheStats.hits}/{cacheStats.misses}</div>
               </div>
             </div>
@@ -1167,25 +1165,25 @@ export default function Dashboard({ onNavigate }) {
                 <div style={{ fontWeight: '600', marginBottom: '8px', color: '#1e3a8a' }}>🥛 Milk Yield Forecast</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', fontSize: '13px' }}>
                   <div style={{ background: '#fff', padding: '8px', borderRadius: '6px' }}>
-                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Current Daily Avg</div>
+                    <div style={{ color: '#4b5563', fontSize: '12px' }}>Current Daily Avg</div>
                     <div style={{ fontWeight: 'bold', color: '#1e40af' }}>{predictions.milkYield.currentAverage?.toFixed(1) || 0} L</div>
                   </div>
                   <div style={{ background: '#fff', padding: '8px', borderRadius: '6px' }}>
-                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Predicted Daily Avg</div>
+                    <div style={{ color: '#4b5563', fontSize: '12px' }}>Predicted Daily Avg</div>
                     <div style={{ fontWeight: 'bold', color: '#2563eb' }}>{predictions.milkYield.predictedAverage?.toFixed(1) || 0} L</div>
                   </div>
                   <div style={{ background: '#fff', padding: '8px', borderRadius: '6px' }}>
-                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Next Week Total</div>
+                    <div style={{ color: '#4b5563', fontSize: '12px' }}>Next Week Total</div>
                     <div style={{ fontWeight: 'bold', color: '#7c3aed' }}>{predictions.milkYield.nextWeekTotal?.toFixed(0) || 0} L</div>
                   </div>
                   <div style={{ background: '#fff', padding: '8px', borderRadius: '6px' }}>
-                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Trend</div>
+                    <div style={{ color: '#4b5563', fontSize: '12px' }}>Trend</div>
                     <div style={{ fontWeight: 'bold', color: predictions.milkYield.trend === 'increasing' ? '#059669' : predictions.milkYield.trend === 'decreasing' ? '#dc2626' : '#6b7280' }}>
                       {predictions.milkYield.trend === 'increasing' ? '↗' : predictions.milkYield.trend === 'decreasing' ? '↘' : '→'} {predictions.milkYield.trend || 'stable'}
                     </div>
                   </div>
                   <div style={{ background: '#fff', padding: '8px', borderRadius: '6px' }}>
-                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Confidence</div>
+                    <div style={{ color: '#4b5563', fontSize: '12px' }}>Confidence</div>
                     <div style={{ fontWeight: 'bold', color: '#059669' }}>{predictions.milkYield.confidence || 0}%</div>
                   </div>
                 </div>
@@ -1200,10 +1198,10 @@ export default function Dashboard({ onNavigate }) {
                   {predictions.crops.slice(0, 3).map((crop, idx) => (
                     <div key={idx} style={{ background: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px' }}>
                       <div style={{ fontWeight: '600', color: '#1e40af', marginBottom: '4px' }}>{crop.cropName}</div>
-                      <div style={{ color: '#6b7280', fontSize: '12px' }}>Variety: {crop.variety}</div>
+                      <div style={{ color: '#4b5563', fontSize: '12px' }}>Variety: {crop.variety}</div>
                       <div style={{ color: '#059669', fontWeight: '500', marginTop: '4px' }}>Yield: {crop.predictedYield?.toFixed(0) || 0} kg</div>
-                      <div style={{ color: '#6b7280', fontSize: '11px' }}>Harvest: {crop.harvestDate ? new Date(crop.harvestDate).toLocaleDateString() : 'TBD'}</div>
-                      <div style={{ color: '#6b7280', fontSize: '11px' }}>Days: {crop.daysUntilHarvest || 0}</div>
+                      <div style={{ color: '#4b5563', fontSize: '11px' }}>Harvest: {crop.harvestDate ? new Date(crop.harvestDate).toLocaleDateString() : 'TBD'}</div>
+                      <div style={{ color: '#4b5563', fontSize: '11px' }}>Days: {crop.daysUntilHarvest || 0}</div>
                       <div style={{ color: '#7c3aed', fontSize: '11px', marginTop: '4px' }}>Confidence: {crop.confidence || 0}%</div>
                     </div>
                   ))}
@@ -1217,12 +1215,12 @@ export default function Dashboard({ onNavigate }) {
                 <div style={{ fontWeight: '600', marginBottom: '8px', color: '#1e3a8a' }}>💰 Expense Forecast</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', fontSize: '13px' }}>
                   <div style={{ background: '#fff', padding: '10px', borderRadius: '6px' }}>
-                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Next Month</div>
+                    <div style={{ color: '#4b5563', fontSize: '12px' }}>Next Month</div>
                     <div style={{ fontWeight: 'bold', color: '#dc2626' }}>KES {predictions.expenses.nextMonth?.toLocaleString() || 0}</div>
                     <div style={{ color: '#7c3aed', fontSize: '11px', marginTop: '4px' }}>Confidence: {predictions.expenses.confidence || 0}%</div>
                   </div>
                   <div style={{ background: '#fff', padding: '10px', borderRadius: '6px' }}>
-                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Next Quarter</div>
+                    <div style={{ color: '#4b5563', fontSize: '12px' }}>Next Quarter</div>
                     <div style={{ fontWeight: 'bold', color: '#dc2626' }}>KES {predictions.expenses.nextQuarter?.toLocaleString() || 0}</div>
                     <div style={{ color: '#7c3aed', fontSize: '11px', marginTop: '4px' }}>Confidence: {predictions.expenses.confidence || 0}%</div>
                   </div>
@@ -1300,7 +1298,7 @@ export default function Dashboard({ onNavigate }) {
             
             <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', textAlign: 'center', border: '2px solid #6b7280' }}>
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#374151' }}>{alertsSummary.total}</div>
-              <div style={{ fontSize: '12px', color: '#6b7280' }}>📋 Total</div>
+              <div style={{ fontSize: '12px', color: '#4b5563' }}>📋 Total</div>
             </div>
           </div>
           

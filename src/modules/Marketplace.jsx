@@ -375,6 +375,16 @@ export default function Marketplace() {
     setTimeout(() => setToast(null), 3000)
   }
 
+  const openInventoryOrders = () => {
+    try {
+      window.dispatchEvent(new CustomEvent('cattalytics:navigate', {
+        detail: { view: 'inventory', subView: 'orders' }
+      }))
+    } catch (e) {
+      console.error('Navigation bridge failed:', e)
+    }
+  }
+
   // Filtering and sorting
   const filteredListings = listings
     .filter(l => {
@@ -425,7 +435,7 @@ export default function Marketplace() {
         )}
         <h2 style={{ margin: 0 }}>🏪 Marketplace</h2>
       </div>
-      <p style={{ color: '#666', marginBottom: 8, margin: 0 }}>Buy & sell livestock, equipment, and farm supplies</p>
+      <p style={{ color: '#4b5563', marginBottom: 8, margin: 0 }}>Buy & sell livestock, equipment, and farm supplies</p>
       
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 8, marginTop: 16, marginBottom: 20, borderBottom: '2px solid #e5e7eb' }}>
@@ -781,7 +791,7 @@ export default function Marketplace() {
 
       {/* Listings Grid */}
       {filteredListings.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#666' }}>
+        <div style={{ textAlign: 'center', padding: 40, color: '#4b5563' }}>
           <div style={{ fontSize: 48, marginBottom: 10 }}>🔍</div>
           <div>No listings found. Try adjusting your filters or post a new listing!</div>
         </div>
@@ -848,7 +858,7 @@ export default function Marketplace() {
                       {listing.status}
                     </div>
                     <h3 style={{ margin: '0 0 5px 0', fontSize: 16 }}>{listing.title}</h3>
-                    <div style={{ fontSize: 12, color: '#666' }}>
+                    <div style={{ fontSize: 12, color: '#4b5563' }}>
                       {listing.category} {listing.type && `• ${listing.type}`}
                     </div>
                   </div>
@@ -872,7 +882,7 @@ export default function Marketplace() {
                 {/* Description */}
                 <p style={{ 
                   fontSize: 13, 
-                  color: '#666', 
+                  color: '#4b5563', 
                   margin: '10px 0',
                   height: 60,
                   overflow: 'hidden',
@@ -895,7 +905,7 @@ export default function Marketplace() {
                 </div>
                 
                 {/* Metadata */}
-                <div style={{ fontSize: 12, color: '#666', marginBottom: 10 }}>
+                <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 10 }}>
                   <div>📍 {listing.location}</div>
                   <div>👤 {listing.seller}</div>
                   {listing.condition && <div>⚙️ {listing.condition}</div>}
@@ -907,7 +917,7 @@ export default function Marketplace() {
                   display: 'flex', 
                   justifyContent: 'space-between', 
                   fontSize: 12,
-                  color: '#666',
+                  color: '#4b5563',
                   padding: '10px 0',
                   borderTop: '1px solid #e2e8f0'
                 }}>
@@ -988,7 +998,7 @@ export default function Marketplace() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 20 }}>
               <div>
                 <h2 style={{ margin: '0 0 10px 0' }}>{selectedListing.title}</h2>
-                <div style={{ fontSize: 14, color: '#666' }}>
+                <div style={{ fontSize: 14, color: '#4b5563' }}>
                   {selectedListing.category} {selectedListing.type && `• ${selectedListing.type}`}
                 </div>
               </div>
@@ -1065,7 +1075,7 @@ export default function Marketplace() {
             {/* Description */}
             <div style={{ marginBottom: 20 }}>
               <h3>Description</h3>
-              <p style={{ color: '#666', lineHeight: 1.6 }}>{selectedListing.description}</p>
+              <p style={{ color: '#4b5563', lineHeight: 1.6 }}>{selectedListing.description}</p>
             </div>
             
             {/* Details */}
@@ -1093,7 +1103,7 @@ export default function Marketplace() {
               <h3>Rating & Reviews</h3>
               <div style={{ fontSize: 24, color: '#f59e0b', marginBottom: 10 }}>
                 {'⭐'.repeat(Math.round(selectedListing.rating))}
-                <span style={{ fontSize: 16, color: '#666', marginLeft: 10 }}>
+                <span style={{ fontSize: 16, color: '#4b5563', marginLeft: 10 }}>
                   {selectedListing.rating > 0 ? selectedListing.rating.toFixed(1) : 'No ratings yet'}
                   {selectedListing.reviews > 0 && ` (${selectedListing.reviews} review${selectedListing.reviews > 1 ? 's' : ''})`}
                 </span>
@@ -1279,11 +1289,28 @@ export default function Marketplace() {
       {/* Orders Tab */}
       {activeTab === 'orders' && (
         <div>
-          <h3 style={{ marginBottom: 16 }}>📦 My Orders</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+            <h3 style={{ margin: 0 }}>📦 My Orders</h3>
+            <button
+              onClick={openInventoryOrders}
+              style={{
+                padding: '8px 14px',
+                borderRadius: 8,
+                border: '1px solid #c7d2fe',
+                background: '#eef2ff',
+                color: '#3730a3',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+              title="Open Inventory and jump directly to Orders"
+            >
+              ↗ Open in Inventory Orders
+            </button>
+          </div>
           {orders.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 40, background: '#f9fafb', borderRadius: 8 }}>
               <p style={{ fontSize: 48, margin: 0 }}>📦</p>
-              <p style={{ color: '#6b7280', marginTop: 16 }}>No orders yet</p>
+              <p style={{ color: '#4b5563', marginTop: 16 }}>No orders yet</p>
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 16 }}>
@@ -1292,7 +1319,7 @@ export default function Marketplace() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                     <div>
                       <h4 style={{ margin: 0, marginBottom: 4 }}>{order.listingTitle}</h4>
-                      <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>Order ID: {order.id}</p>
+                      <p style={{ margin: 0, color: '#4b5563', fontSize: 14 }}>Order ID: {order.id}</p>
                     </div>
                     <span style={{
                       padding: '4px 12px',
@@ -1307,8 +1334,8 @@ export default function Marketplace() {
                   </div>
                   
                   <p style={{ margin: '8px 0', fontSize: 18, fontWeight: 'bold', color: '#10b981' }}>{order.currency} {order.price.toLocaleString()}</p>
-                  <p style={{ margin: '4px 0', fontSize: 14, color: '#6b7280' }}>Seller: {order.seller}</p>
-                  <p style={{ margin: '4px 0', fontSize: 14, color: '#6b7280' }}>Order Date: {order.orderDate}</p>
+                  <p style={{ margin: '4px 0', fontSize: 14, color: '#4b5563' }}>Seller: {order.seller}</p>
+                  <p style={{ margin: '4px 0', fontSize: 14, color: '#4b5563' }}>Order Date: {order.orderDate}</p>
                   
                   {/* Tracking Steps */}
                   <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #e5e7eb' }}>
@@ -1335,7 +1362,7 @@ export default function Marketplace() {
                               {step.step}
                             </p>
                             {step.date && (
-                              <p style={{ margin: 0, fontSize: 12, color: '#9ca3af' }}>
+                              <p style={{ margin: 0, fontSize: 12, color: '#4b5563' }}>
                                 {new Date(step.date).toLocaleString()}
                               </p>
                             )}
@@ -1358,7 +1385,7 @@ export default function Marketplace() {
           {negotiations.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 40, background: '#f9fafb', borderRadius: 8 }}>
               <p style={{ fontSize: 48, margin: 0 }}>💰</p>
-              <p style={{ color: '#6b7280', marginTop: 16 }}>No negotiations yet</p>
+              <p style={{ color: '#4b5563', marginTop: 16 }}>No negotiations yet</p>
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 16 }}>
@@ -1367,7 +1394,7 @@ export default function Marketplace() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                     <div>
                       <h4 style={{ margin: 0, marginBottom: 4 }}>{neg.listingTitle}</h4>
-                      <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>Negotiation ID: {neg.id}</p>
+                      <p style={{ margin: 0, color: '#4b5563', fontSize: 14 }}>Negotiation ID: {neg.id}</p>
                     </div>
                     <span style={{
                       padding: '4px 12px',
@@ -1383,16 +1410,16 @@ export default function Marketplace() {
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 12 }}>
                     <div>
-                      <p style={{ margin: 0, fontSize: 12, color: '#6b7280' }}>Original Price</p>
+                      <p style={{ margin: 0, fontSize: 12, color: '#4b5563' }}>Original Price</p>
                       <p style={{ margin: '4px 0', fontSize: 16, fontWeight: 600 }}>KES {neg.originalPrice.toLocaleString()}</p>
                     </div>
                     <div>
-                      <p style={{ margin: 0, fontSize: 12, color: '#6b7280' }}>Your Offer</p>
+                      <p style={{ margin: 0, fontSize: 12, color: '#4b5563' }}>Your Offer</p>
                       <p style={{ margin: '4px 0', fontSize: 16, fontWeight: 600, color: '#f59e0b' }}>KES {neg.offerPrice.toLocaleString()}</p>
                     </div>
                   </div>
                   
-                  <p style={{ margin: '12px 0 4px 0', fontSize: 14, color: '#6b7280' }}>Date: {neg.date}</p>
+                  <p style={{ margin: '12px 0 4px 0', fontSize: 14, color: '#4b5563' }}>Date: {neg.date}</p>
                   
                   {neg.status === 'Pending' && (
                     <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
@@ -1430,7 +1457,7 @@ export default function Marketplace() {
           {messages.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 40, background: '#f9fafb', borderRadius: 8 }}>
               <p style={{ fontSize: 48, margin: 0 }}>💬</p>
-              <p style={{ color: '#6b7280', marginTop: 16 }}>No messages yet</p>
+              <p style={{ color: '#4b5563', marginTop: 16 }}>No messages yet</p>
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 16 }}>
@@ -1439,7 +1466,7 @@ export default function Marketplace() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                     <div>
                       <h4 style={{ margin: 0, marginBottom: 4 }}>{msg.listingTitle}</h4>
-                      <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>From: {msg.from} → To: {msg.to}</p>
+                      <p style={{ margin: 0, color: '#4b5563', fontSize: 14 }}>From: {msg.from} → To: {msg.to}</p>
                     </div>
                     {!msg.read && (
                       <span style={{ padding: '4px 8px', background: '#3b82f6', color: 'white', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>
@@ -1449,7 +1476,7 @@ export default function Marketplace() {
                   </div>
                   
                   <p style={{ margin: '12px 0', fontSize: 14, color: '#374151', lineHeight: 1.6 }}>{msg.text}</p>
-                  <p style={{ margin: 0, fontSize: 12, color: '#9ca3af' }}>{msg.timestamp}</p>
+                  <p style={{ margin: 0, fontSize: 12, color: '#4b5563' }}>{msg.timestamp}</p>
                 </div>
               ))}
             </div>
@@ -1462,7 +1489,7 @@ export default function Marketplace() {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowNegotiateModal(false)}>
           <div style={{ background: 'white', padding: 30, borderRadius: 12, maxWidth: 500, width: '90%' }} onClick={e => e.stopPropagation()}>
             <h3 style={{ marginTop: 0 }}>💰 Make an Offer</h3>
-            <p style={{ color: '#666', fontSize: 14 }}>{selectedListing.title}</p>
+            <p style={{ color: '#4b5563', fontSize: 14 }}>{selectedListing.title}</p>
             <p style={{ fontWeight: 'bold', fontSize: 18, margin: '10px 0' }}>Original Price: {selectedListing.currency} {selectedListing.price.toLocaleString()}</p>
             
             <label style={{ display: 'block', marginTop: 16, marginBottom: 6, fontWeight: 500 }}>Your Offer ({selectedListing.currency})</label>
@@ -1487,7 +1514,7 @@ export default function Marketplace() {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowMessageModal(false)}>
           <div style={{ background: 'white', padding: 30, borderRadius: 12, maxWidth: 500, width: '90%' }} onClick={e => e.stopPropagation()}>
             <h3 style={{ marginTop: 0 }}>💬 Message Seller</h3>
-            <p style={{ color: '#666', fontSize: 14 }}>{selectedListing.title}</p>
+            <p style={{ color: '#4b5563', fontSize: 14 }}>{selectedListing.title}</p>
             <p style={{ fontWeight: 500, margin: '10px 0' }}>To: {selectedListing.seller}</p>
             
             <label style={{ display: 'block', marginTop: 16, marginBottom: 6, fontWeight: 500 }}>Message</label>
@@ -1514,12 +1541,12 @@ export default function Marketplace() {
             <h3 style={{ marginTop: 0 }}>🛒 Confirm Purchase</h3>
             <div style={{ background: '#f9fafb', padding: 16, borderRadius: 8, marginBottom: 16 }}>
               <p style={{ margin: '4px 0', fontWeight: 500 }}>{selectedListing.title}</p>
-              <p style={{ margin: '4px 0', color: '#666', fontSize: 14 }}>Seller: {selectedListing.seller}</p>
-              <p style={{ margin: '4px 0', color: '#666', fontSize: 14 }}>Location: {selectedListing.location}</p>
+              <p style={{ margin: '4px 0', color: '#4b5563', fontSize: 14 }}>Seller: {selectedListing.seller}</p>
+              <p style={{ margin: '4px 0', color: '#4b5563', fontSize: 14 }}>Location: {selectedListing.location}</p>
               <p style={{ margin: '12px 0 4px 0', fontSize: 20, fontWeight: 'bold', color: '#10b981' }}>{selectedListing.currency} {selectedListing.price.toLocaleString()}</p>
             </div>
             
-            <p style={{ fontSize: 14, color: '#666', marginBottom: 20 }}>Click "Proceed to Payment" to complete your purchase.</p>
+            <p style={{ fontSize: 14, color: '#4b5563', marginBottom: 20 }}>Click "Proceed to Payment" to complete your purchase.</p>
             
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={createOrder} style={{ flex: 1, padding: 12, background: '#10b981', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Proceed to Payment</button>

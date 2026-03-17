@@ -421,7 +421,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
         <div>
           <h2 style={{ margin: 0 }}>Professional Reports Center</h2>
-          <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+          <div style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>
             Comprehensive reports for every module and nested subsection. Reports update automatically after record edits.
           </div>
         </div>
@@ -487,7 +487,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
               ))}
             </select>
             {!!selectedReportHelp && (
-              <div style={{ marginTop: 6, fontSize: 11, color: '#64748b' }}>
+              <div style={{ marginTop: 6, fontSize: 11, color: '#475569' }}>
                 {selectedReportHelp}
               </div>
             )}
@@ -548,7 +548,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
           </div>
           <div style={{ maxHeight: 600, overflowY: 'auto' }}>
             {visibleReports.length === 0 && (
-              <div style={{ padding: 16, color: '#64748b' }}>No reports found for current filters.</div>
+              <div style={{ padding: 16, color: '#475569' }}>No reports found for current filters.</div>
             )}
             {visibleReports.map((report) => {
               const active = report.id === selectedReportId
@@ -568,7 +568,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
                 >
                   <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>{report.module} - {report.subsection}</div>
                   <div style={{ fontSize: 12, color: '#475569', marginTop: 3 }}>{report.rowCount} records</div>
-                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{getSectionHelp(report.module, report.subsection)}</div>
+                  <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>{getSectionHelp(report.module, report.subsection)}</div>
                   <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{report.storageKey}</div>
                   <div style={{ marginTop: 8 }}>
                     <span
@@ -607,7 +607,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
 
         <div className="card" style={{ padding: 14 }}>
           {!selectedReport && (
-            <div style={{ color: '#64748b' }}>Select a report on the left to preview full records.</div>
+            <div style={{ color: '#475569' }}>Select a report on the left to preview full records.</div>
           )}
 
           {selectedReport && (
@@ -615,7 +615,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
                 <div>
                   <h3 style={{ margin: 0 }}>{selectedReport.module} - {selectedReport.subsection}</h3>
-                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>
                     Source key: {selectedReport.storageKey} | Rows: {selectedReport.rowCount} | Fields: {selectedReport.fields.length}
                   </div>
                 </div>
@@ -728,7 +728,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
           {masterSections.map((section, index) => (
             <div key={section.id} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 10, background: '#fff' }}>
               <div style={{ fontWeight: 700, color: '#0f172a' }}>{index + 1}. {section.module} - {section.subsection}</div>
-              <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>
                 Rows: {section.rowCount} | Fields: {section.fieldCount} | Fill Rate: {section.fillRate}%
               </div>
               <div style={{ marginTop: 6 }}>
@@ -744,7 +744,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
             </div>
           ))}
           {masterSections.length === 0 && (
-            <div style={{ color: '#64748b' }}>No sections available for current scope.</div>
+            <div style={{ color: '#475569' }}>No sections available for current scope.</div>
           )}
         </div>
       </div>

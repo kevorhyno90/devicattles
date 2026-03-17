@@ -172,7 +172,7 @@ export default function WeatherDashboard({ onNavigate }) {
           marginBottom: '20px'
         }}>
           <h3>Location</h3>
-          <p style={{ margin: 0, color: '#555' }}>
+          <p style={{ margin: 0, color: '#374151' }}>
             Location is fixed to Nyaronde, KE. Location editing is currently disabled.
           </p>
           <div style={{ marginTop: '10px' }}>
@@ -190,7 +190,7 @@ export default function WeatherDashboard({ onNavigate }) {
           marginBottom: '20px'
         }}>
           <h3>OpenWeatherMap API Key</h3>
-          <p style={{ fontSize: '14px', color: '#666', marginBottom: '10px' }}>
+          <p style={{ fontSize: '14px', color: '#4b5563', marginBottom: '10px' }}>
             Get a free API key at <a href="https://openweathermap.org/api" target="_blank" rel="noopener">openweathermap.org</a>
             <br />Leave blank to use demo mode (limited features)
           </p>
@@ -347,13 +347,13 @@ export default function WeatherDashboard({ onNavigate }) {
             }}>
               <h4 style={{ margin: '0 0 15px 0', fontSize: '16px' }}>☀️ Sun Times</h4>
               <div style={{ marginBottom: '10px' }}>
-                <div style={{ fontSize: '14px', color: '#666' }}>Sunrise</div>
+                <div style={{ fontSize: '14px', color: '#4b5563' }}>Sunrise</div>
                 <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
                   {formatTime(weather.sunrise)}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '14px', color: '#666' }}>Sunset</div>
+                <div style={{ fontSize: '14px', color: '#4b5563' }}>Sunset</div>
                 <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
                   {formatTime(weather.sunset)}
                 </div>
@@ -367,7 +367,7 @@ export default function WeatherDashboard({ onNavigate }) {
                   fontSize: '13px'
                 }}>
                   <strong>UV {sunAdvice.uvLevel.toUpperCase()}</strong>
-                  <div style={{ marginTop: '5px', color: '#666' }}>
+                  <div style={{ marginTop: '5px', color: '#4b5563' }}>
                     {sunAdvice.advice}
                   </div>
                 </div>
@@ -384,19 +384,19 @@ export default function WeatherDashboard({ onNavigate }) {
               <h4 style={{ margin: '0 0 15px 0', fontSize: '16px' }}>📊 Details</h4>
               <div style={{ fontSize: '14px' }}>
                 <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#666' }}>Cloudiness:</span>
+                  <span style={{ color: '#4b5563' }}>Cloudiness:</span>
                   <strong>{weather.cloudiness}%</strong>
                 </div>
                 <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#666' }}>Visibility:</span>
+                  <span style={{ color: '#4b5563' }}>Visibility:</span>
                   <strong>{(weather.visibility / 1000).toFixed(1)} km</strong>
                 </div>
                 <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#666' }}>Coordinates:</span>
+                  <span style={{ color: '#4b5563' }}>Coordinates:</span>
                   <strong>{weather.coordinates.lat.toFixed(2)}, {weather.coordinates.lon.toFixed(2)}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#666' }}>Updated:</span>
+                  <span style={{ color: '#4b5563' }}>Updated:</span>
                   <strong>{formatTime(weather.timestamp)}</strong>
                 </div>
               </div>
@@ -435,16 +435,16 @@ export default function WeatherDashboard({ onNavigate }) {
                   </div>
                   <div style={{
                     fontSize: '12px',
-                    color: '#666',
+                    color: '#4b5563',
                     textTransform: 'capitalize',
                     marginBottom: '8px'
                   }}>
                     {day.condition}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#666' }}>
+                  <div style={{ fontSize: '12px', color: '#4b5563' }}>
                     💧 {day.rainfall}mm
                   </div>
-                  <div style={{ fontSize: '12px', color: '#666' }}>
+                  <div style={{ fontSize: '12px', color: '#4b5563' }}>
                     💨 {day.windSpeed} m/s
                   </div>
                 </div>
@@ -491,7 +491,7 @@ export default function WeatherDashboard({ onNavigate }) {
                           <h4 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>
                             {item.title}
                           </h4>
-                          <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
+                          <p style={{ margin: 0, fontSize: '14px', color: '#4b5563' }}>
                             {item.message}
                           </p>
                         </div>

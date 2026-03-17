@@ -10,7 +10,7 @@ import React from 'react'
  */
 export function LineChart({ data, width = 600, height = 300, title = '', xLabel = '', yLabel = '', color = '#059669' }) {
   if (!data || data.length === 0) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>No data available</div>
+    return <div style={{ padding: '40px', textAlign: 'center', color: '#4b5563' }}>No data available</div>
   }
 
   const padding = { top: 40, right: 40, bottom: 50, left: 60 }
@@ -141,7 +141,7 @@ export function LineChart({ data, width = 600, height = 300, title = '', xLabel 
  */
 export function BarChart({ data, width = 600, height = 300, title = '', xLabel = '', yLabel = '', color = '#3b82f6' }) {
   if (!data || data.length === 0) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>No data available</div>
+    return <div style={{ padding: '40px', textAlign: 'center', color: '#4b5563' }}>No data available</div>
   }
 
   const padding = { top: 40, right: 40, bottom: 50, left: 60 }
@@ -260,7 +260,7 @@ export function BarChart({ data, width = 600, height = 300, title = '', xLabel =
  */
 export function PieChart({ data, width = 300, height = 300, title = '' }) {
   if (!data || data.length === 0) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>No data available</div>
+    return <div style={{ padding: '40px', textAlign: 'center', color: '#4b5563' }}>No data available</div>
   }
 
   const total = data.reduce((sum, d) => sum + d.value, 0)

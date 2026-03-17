@@ -1,21 +1,67 @@
 import React, { useState, useEffect, lazy, Suspense, useContext } from 'react'
+import Crops from './modules/Crops'
 // Helper function to retry failed lazy loads (important for Android Chrome)
-const lazyWithRetry = (importFunc) => {
-  return lazy(() => {
-    return importFunc().catch((error) => {
-      console.error('Module load failed, retrying:', error)
-      // Show a visible error for debugging
-      if (window && window.alert) {
-        window.alert('Module failed to load: ' + error.message)
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
+const createLazyLoadFailureModule = (error) => ({
+  default: function LazyLoadFailure() {
+    return (
+      <div style={{
+        padding: '24px',
+        margin: '12px 0',
+        borderRadius: '12px',
+        border: '1px solid #fecaca',
+        background: '#fef2f2',
+        color: '#7f1d1d'
+      }}>
+        <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>Module failed to load</h3>
+        <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.5 }}>
+          The module chunk could not be loaded right now. This no longer forces an app restart.
+          Please try switching tabs and opening the module again.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            marginTop: '12px',
+            background: '#991b1b',
+            color: 'white',
+            border: 'none',
+            padding: '10px 14px',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600
+          }}
+        >
+          Reload app
+        </button>
+        {import.meta.env.DEV && error?.message && (
+          <p style={{ margin: '8px 0 0 0', fontSize: '12px', opacity: 0.85 }}>
+            Details: {error.message}
+          </p>
+        )}
+      </div>
+    )
+  }
+})
+
+const lazyWithRetry = (importFunc, retries = 2) => {
+  return lazy(async () => {
+    let lastError = null
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
+      try {
+        return await importFunc()
+      } catch (error) {
+        lastError = error
+        console.error(`Module load attempt ${attempt + 1} failed:`, error)
+        if (attempt < retries) {
+          await wait((attempt + 1) * 800)
+        }
       }
-      // Retry after a short delay
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          console.log('Retrying module load...')
-          importFunc().then(resolve).catch(reject)
-        }, 1000)
-      })
-    })
+    }
+
+    // Return an inline fallback module so the app remains stable.
+    return createLazyLoadFailureModule(lastError)
   })
 }
 // Defer heavy Firebase imports until after initial render
@@ -61,7 +107,6 @@ const Tasks = lazyWithRetry(() => import('./modules/Tasks'))
 const Finance = lazyWithRetry(() => import('./modules/Finance'))
 const EmploymentManager = lazyWithRetry(() => import('./modules/EmploymentManager'))
 const Schedules = lazyWithRetry(() => import('./modules/Schedules'))
-const Crops = lazyWithRetry(() => import('./modules/CropsWithSubsections'))
 const Inventory = lazyWithRetry(() => import('./modules/Inventory'))
 const Pastures = lazyWithRetry(() => import('./modules/Pastures'))
 const HealthSystem = lazyWithRetry(() => import('./modules/HealthSystem'))
@@ -197,6 +242,7 @@ import { getCurrentUserName, getCurrentUserRole } from './lib/auth'
 
 // App content component that uses theme
 function AppContent() {
+  const appSafeMode = typeof window !== 'undefined' && window.__APP_SAFE_MODE__ === true
   const getColorsFromCSS = () => {
     if (typeof window === 'undefined' || !window.getComputedStyle) return {
       bg: { primary: '#ffffff', secondary: '#f9fafb', tertiary: '#f3f4f6', elevated: '#ffffff' },
@@ -248,6 +294,7 @@ function AppContent() {
   const [cropsInitialTab, setCropsInitialTab] = useState('list');
   const [cropsInitialSubmodule, setCropsInitialSubmodule] = useState('all');
   const [employmentInitialTab, setEmploymentInitialTab] = useState('registry');
+  const [inventoryInitialView, setInventoryInitialView] = useState('supplies');
   const [animalsRecordSource, setAnimalsRecordSource] = useState(null);
   const [goatRecordSource, setGoatRecordSource] = useState(null);
   const [poultryRecordSource, setPoultryRecordSource] = useState(null);
@@ -255,6 +302,13 @@ function AppContent() {
   const [bsfRecordSource, setBsfRecordSource] = useState(null);
   const [cropsRecordSource, setCropsRecordSource] = useState(null);
   const [employmentRecordSource, setEmploymentRecordSource] = useState(null);
+
+  const openCropOS = () => {
+    setCropsInitialTab('portfolio')
+    setCropsInitialSubmodule('all')
+    setCropsRecordSource(null)
+    setView('crops')
+  }
   
   // UI branding/settings - use hook to load/save from localStorage
   const SETTINGS_KEY = 'devinsfarm:ui:settings'
@@ -295,6 +349,26 @@ function AppContent() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Cross-module navigation bridge (e.g., Marketplace -> Inventory Orders)
+  useEffect(() => {
+    const handleNavigate = (event) => {
+      const detail = event?.detail || {}
+      const targetView = detail.view
+
+      if (!targetView) return
+
+      if (targetView === 'inventory') {
+        const nextSubView = detail.subView || 'supplies'
+        setInventoryInitialView(nextSubView)
+      }
+
+      setView(targetView)
+    }
+
+    window.addEventListener('cattalytics:navigate', handleNavigate)
+    return () => window.removeEventListener('cattalytics:navigate', handleNavigate)
+  }, [setView])
 
   // PWA Install Prompt
   useEffect(() => {
@@ -406,7 +480,7 @@ function AppContent() {
 
   // Start notification/reminder checker and sync (deferred for performance)
   useEffect(() => {
-    if (authenticated) {
+    if (authenticated && !appSafeMode) {
       let disposed = false
       let countInterval = null
       let autoCheckInterval = null
@@ -452,8 +526,25 @@ function AppContent() {
         updateUnreadCount();
         countInterval = setInterval(updateUnreadCount, 30000); // Every 30 seconds
 
-        // Check auto notifications every hour
-        autoCheckInterval = setInterval(checkAllAutoNotifications, 60 * 60 * 1000);
+        // Check auto notifications based on settings (defaults to 60 minutes).
+        let lastAutoCheckAt = Date.now()
+        autoCheckInterval = setInterval(async () => {
+          if (disposed) return
+          try {
+            const { getEnhancedSettings } = await import('./lib/enhancedSettings')
+            const prefs = getEnhancedSettings()?.notifications || {}
+            const frequencyMinutes = Math.max(1, Number(prefs.autoNotificationFrequency) || 60)
+            const due = (Date.now() - lastAutoCheckAt) >= frequencyMinutes * 60 * 1000
+            if (due) {
+              checkAllAutoNotifications()
+              lastAutoCheckAt = Date.now()
+            }
+          } catch (error) {
+            // Fallback behavior if settings are unavailable.
+            checkAllAutoNotifications()
+            lastAutoCheckAt = Date.now()
+          }
+        }, 60 * 1000)
 
         // Listen for new notifications
         unreadListener = updateUnreadCount
@@ -503,7 +594,7 @@ function AppContent() {
         }
       };
     }
-  }, [authenticated]);
+  }, [authenticated, appSafeMode]);
 
   // Load animals for passing to health system and groups.
   useEffect(() => {
@@ -786,6 +877,7 @@ function AppContent() {
     if (s.includes('sales') || key.includes(':sales')) return 'sales'
     if (s.includes('treatment') || key.includes(':treatments')) return 'treatments'
     if (s.includes('cost') || key.includes(':costs')) return 'profitability'
+    if (key.includes(':subsections') || s.includes('banana') || s.includes('vegetable') || s.includes('herb') || s.includes('tea') || s.includes('avocado') || s.includes('fruit')) return 'subsections'
     return 'list'
   }
 
@@ -1106,7 +1198,7 @@ function AppContent() {
               borderRadius: '6px',
               cursor: 'pointer',
               fontSize: '14px',
-              fontWeight: '500',
+              fontWeight: '700',
               transition: 'all 0.2s'
             }}
           >🌟 Home</button>
@@ -1122,7 +1214,7 @@ function AppContent() {
               borderRadius: '6px',
               cursor: 'pointer',
               fontSize: '14px',
-              fontWeight: '500',
+              fontWeight: '700',
               transition: 'all 0.2s'
             }}
           >🩺 ezyVet Dashboard</button>
@@ -1138,19 +1230,20 @@ function AppContent() {
               borderRadius: '6px',
               cursor: 'pointer',
               fontSize: '14px',
-              fontWeight: '500'
+              fontWeight: '700'
             }}
           >
             🔔 Notifications
             {unreadNotifications > 0 && (
               <span style={{
                 marginLeft: 4,
-                background: '#ef4444',
-                color: 'white',
+                background: 'var(--header-alert-bg, #ef4444)',
+                color: 'var(--header-alert-text, #ffffff)',
                 borderRadius: 10,
                 padding: '1px 5px',
                 fontSize: 10,
-                fontWeight: '600'
+                fontWeight: '800',
+                border: '1px solid var(--header-chip-border, rgba(0,0,0,0.15))'
               }}>
                 {unreadNotifications}
               </span>
@@ -1168,7 +1261,7 @@ function AppContent() {
               borderRadius: '6px',
               cursor: 'pointer',
               fontSize: '14px',
-              fontWeight: '500'
+              fontWeight: '700'
             }}
           >
             🔔 Smart Alerts
@@ -1184,7 +1277,7 @@ function AppContent() {
               borderRadius: '6px',
               cursor: 'pointer',
               fontSize: '14px',
-              fontWeight: '500'
+              fontWeight: '700'
             }}
           >
             🔔 Alert Rules
@@ -1267,20 +1360,6 @@ function AppContent() {
               fontWeight: '500'
             }}
           >🌱 Pastures</button>)}
-          {showNavMore && (<button 
-            className={view==='crops'? 'active':''} 
-            onClick={()=>setView('crops')}
-            style={{
-              background: view==='crops' ? '#059669' : '#f3f4f6',
-              color: view==='crops' ? '#fff' : '#1f2937',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >🌾 Crops</button>)}
           <button 
             className={view==='tasks'? 'active':''} 
             onClick={()=>setView('tasks')}
@@ -1296,6 +1375,21 @@ function AppContent() {
               fontWeight: '500'
             }}
           >✅ Tasks</button>
+          <button
+            className={view==='crops' ? 'active' : ''}
+            onClick={openCropOS}
+            style={{
+              background: view==='crops' ? '#0f766e' : '#f3f4f6',
+              color: view==='crops' ? '#fff' : '#1f2937',
+              order: -8,
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >🌾 Crop OS</button>
           <button
             className={view==='employment'? 'active':''}
             onClick={()=>setView('employment')}
@@ -1562,7 +1656,7 @@ function AppContent() {
             <button onClick={() => setView('dashboard')} style={{ marginBottom: '16px', background: '#6b7280', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back to Dashboard
             </button>
-            <ErrorBoundary><Inventory /></ErrorBoundary>
+            <ErrorBoundary><Inventory initialView={inventoryInitialView} /></ErrorBoundary>
           </section>
         )}
 
@@ -1696,25 +1790,28 @@ function AppContent() {
           </section>
         )}
 
-        {view === 'settings' && (
-          <section>
+        {view === 'settings' && (() => {
+          const activeSettingsTab = settings.settingsTab || 'enhanced'
+
+          return (
+          <section style={{ color: 'var(--text-primary, #1f2937)' }}>
             <div style={{ marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '8px' }}>Settings</h2>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '8px', color: 'var(--text-primary, #1f2937)' }}>Settings</h2>
               <p style={{ color: 'var(--muted)', margin: 0 }}>Customize your application appearance and preferences</p>
             </div>
             
             {/* Tabs for Settings */}
-            <div style={{ display: 'flex', gap: 10, marginBottom: 20, borderBottom: '2px solid #e5e7eb', overflowX: 'auto' }}>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 20, borderBottom: '2px solid var(--border-primary, #e5e7eb)', overflowX: 'auto' }}>
               <button
                 onClick={() => setSettings(s => ({ ...s, settingsTab: 'enhanced' }))}
                 style={{
                   background: 'none',
                   border: 'none',
-                  borderBottom: (settings.settingsTab || 'enhanced') === 'enhanced' ? '2px solid #059669' : '2px solid transparent',
+                  borderBottom: activeSettingsTab === 'enhanced' ? '2px solid #059669' : '2px solid transparent',
                   padding: '10px 20px',
                   cursor: 'pointer',
-                  fontWeight: (settings.settingsTab || 'enhanced') === 'enhanced' ? 600 : 400,
-                  color: (settings.settingsTab || 'enhanced') === 'enhanced' ? '#059669' : '#6b7280',
+                  fontWeight: activeSettingsTab === 'enhanced' ? 600 : 400,
+                  color: activeSettingsTab === 'enhanced' ? '#059669' : 'var(--text-secondary, #6b7280)',
                   whiteSpace: 'nowrap'
                 }}
               >
@@ -1725,11 +1822,11 @@ function AppContent() {
                 style={{
                   background: 'none',
                   border: 'none',
-                  borderBottom: settings.settingsTab === 'appearance' ? '2px solid #059669' : '2px solid transparent',
+                  borderBottom: activeSettingsTab === 'appearance' ? '2px solid #059669' : '2px solid transparent',
                   padding: '10px 20px',
                   cursor: 'pointer',
-                  fontWeight: settings.settingsTab === 'appearance' ? 600 : 400,
-                  color: settings.settingsTab === 'appearance' ? '#059669' : '#6b7280',
+                  fontWeight: activeSettingsTab === 'appearance' ? 600 : 400,
+                  color: activeSettingsTab === 'appearance' ? '#059669' : 'var(--text-secondary, #6b7280)',
                   whiteSpace: 'nowrap'
                 }}
               >
@@ -1740,11 +1837,11 @@ function AppContent() {
                 style={{
                   background: 'none',
                   border: 'none',
-                  borderBottom: settings.settingsTab === 'sync' ? '2px solid #059669' : '2px solid transparent',
+                  borderBottom: activeSettingsTab === 'sync' ? '2px solid #059669' : '2px solid transparent',
                   padding: '10px 20px',
                   cursor: 'pointer',
-                  fontWeight: settings.settingsTab === 'sync' ? 600 : 400,
-                  color: settings.settingsTab === 'sync' ? '#059669' : '#6b7280',
+                  fontWeight: activeSettingsTab === 'sync' ? 600 : 400,
+                  color: activeSettingsTab === 'sync' ? '#059669' : 'var(--text-secondary, #6b7280)',
                   whiteSpace: 'nowrap'
                 }}
               >
@@ -1753,13 +1850,13 @@ function AppContent() {
             </div>
 
             {/* Enhanced Settings Tab */}
-            {(settings.settingsTab || 'enhanced') === 'enhanced' && <ErrorBoundary><EnhancedSettings /></ErrorBoundary>}
+            {activeSettingsTab === 'enhanced' && <ErrorBoundary><EnhancedSettings /></ErrorBoundary>}
 
             {/* Sync Settings Tab */}
-            {settings.settingsTab === 'sync' && <ErrorBoundary><SyncSettings /></ErrorBoundary>}
+            {activeSettingsTab === 'sync' && <ErrorBoundary><SyncSettings /></ErrorBoundary>}
 
             {/* Appearance Settings Tab */}
-            {(settings.settingsTab || 'appearance') === 'appearance' && (
+            {activeSettingsTab === 'appearance' && (
             <div style={{ display: 'grid', gap: '24px', maxWidth: '800px' }}>
               
               {/* Appearance Section */}
@@ -1774,7 +1871,7 @@ function AppContent() {
                     <select 
                       value={settings.theme || 'adaptive'} 
                       onChange={e=>setSettings(s=> ({ ...s, theme: e.target.value }))}
-                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', fontWeight: '500' }}
+                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-secondary, #d1d5db)', fontSize: '14px', fontWeight: '500', color: 'var(--text-primary, #1f2937)', background: 'var(--bg-elevated, #ffffff)' }}
                     >
                       <option value="adaptive">Adaptive Farm (Best for Light & Dark)</option>
                       <option value="catalytics">Catalytics (Clean & Modern)</option>
@@ -1808,7 +1905,7 @@ function AppContent() {
                       <select 
                         value={settings.background} 
                         onChange={e=>setSettings(s=> ({ ...s, background: e.target.value }))}
-                        style={{ padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', fontWeight: '500' }}
+                        style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-secondary, #d1d5db)', fontSize: '14px', fontWeight: '500', color: 'var(--text-primary, #1f2937)', background: 'var(--bg-elevated, #ffffff)' }}
                       >
                         <option value="">None</option>
                         <option value="bg-farm.svg">Farm (default)</option>
@@ -1832,8 +1929,9 @@ function AppContent() {
                     <select 
                       value={settings.logo} 
                       onChange={e=>setSettings(s=> ({ ...s, logo: e.target.value }))}
-                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', fontWeight: '500' }}
+                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-secondary, #d1d5db)', fontSize: '14px', fontWeight: '500', color: 'var(--text-primary, #1f2937)', background: 'var(--bg-elevated, #ffffff)' }}
                     >
+                      <option value="jr-farm-logo.svg">Classic Logo</option>
                       <option value="logo-wordmark.svg">Wordmark</option>
                       <option value="logo-badge.svg">Badge</option>
                       <option value="logo-icon.svg">Icon</option>
@@ -1855,7 +1953,7 @@ function AppContent() {
                         reader.onload = ev => { const data = ev.target.result; setSettings(s=> ({ ...s, uploadedLogo: data, logo: 'uploaded' })) }
                         reader.readAsDataURL(f)
                       }}
-                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', fontWeight: '500' }}
+                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-secondary, #d1d5db)', fontSize: '14px', fontWeight: '500', color: 'var(--text-primary, #1f2937)', background: 'var(--bg-elevated, #ffffff)' }}
                     />
                     <p style={{ fontSize: '12px', color: 'var(--muted)', margin: 0 }}>
                       Supports PNG, JPG, and SVG files
@@ -1870,13 +1968,13 @@ function AppContent() {
                 <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '16px', color: 'inherit' }}>Data Management</h3>
                 <div style={{ display: 'grid', gap: '16px' }}>
                   
-                  <div style={{ padding: '16px', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: '8px' }}>
-                    <h4 style={{ fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0', color: '#92400e' }}>Reset Application Data</h4>
-                    <p style={{ fontSize: '14px', margin: '0 0 12px 0', color: '#92400e' }}>
-                      This will clear all your local demo data including animals, tasks, and settings.
+                  <div style={{ padding: '16px', background: 'rgba(251, 146, 60, 0.14)', border: '1px solid rgba(251, 146, 60, 0.45)', borderRadius: '8px', color: 'var(--text-primary, #1f2937)' }}>
+                    <h4 style={{ fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0', color: 'var(--text-primary, #1f2937)' }}>Reset Application Data</h4>
+                    <p style={{ fontSize: '14px', margin: '0 0 12px 0', color: 'var(--text-secondary, #4b5563)' }}>
+                      This will clear all local app data on this device, including animals, tasks, sync metadata, and settings.
                     </p>
                     <button 
-                      onClick={()=>{ if(confirm('Are you sure you want to clear all local demo data? This action cannot be undone.')){ localStorage.clear(); location.reload() }}}
+                      onClick={()=>{ if(confirm('Are you sure you want to clear all local app data on this device? This action cannot be undone.')){ localStorage.clear(); location.reload() }}}
                       style={{ 
                         background: '#dc2626', 
                         color: '#ffffff', 
@@ -1898,7 +1996,8 @@ function AppContent() {
             </div>
             )}
           </section>
-        )}
+          )
+        })()}
         </Suspense>
       </main>
 

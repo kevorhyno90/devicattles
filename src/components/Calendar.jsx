@@ -36,7 +36,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
     feeding: { label: 'Feeding', color: '#10b981', icon: '🌾' },
     milking: { label: 'Milking', color: '#f59e0b', icon: '🥛' },
     checkup: { label: 'Checkup', color: '#06b6d4', icon: '🩺' },
-    other: { label: 'Other', color: '#6b7280', icon: '📌' }
+    other: { label: 'Other', color: '#4b5563', icon: '📌' }
   };
 
   // Filter events by category and search
@@ -269,7 +269,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
                     </div>
                   ))}
                   {dayEvents.length > 3 && (
-                    <div style={{ fontSize: '0.8rem', color: '#6b7280', textAlign: 'center', marginTop: 2 }}>
+                    <div style={{ fontSize: '0.8rem', color: '#4b5563', textAlign: 'center', marginTop: 2 }}>
                       +{dayEvents.length - 3} more
                     </div>
                   )}
@@ -317,7 +317,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
         <div style={{ maxHeight: 600, overflowY: 'auto' }}>
           {hours.map(hour => (
             <div key={hour} style={{ display: 'grid', gridTemplateColumns: '60px repeat(7, 1fr)', gap: 1, background: '#e5e7eb', marginBottom: 1 }}>
-              <div style={{ padding: 8, background: '#f3f4f6', fontSize: '0.75rem', textAlign: 'right', color: '#6b7280' }}>
+              <div style={{ padding: 8, background: '#f3f4f6', fontSize: '0.75rem', textAlign: 'right', color: '#4b5563' }}>
                 {hour.toString().padStart(2, '0')}:00
               </div>
               {weekDates.map((date, i) => {
@@ -378,7 +378,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
           <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937' }}>
             {currentDate.toLocaleDateString('en-US', { weekday: 'long' })}
           </div>
-          <div style={{ fontSize: '1.1rem', color: '#6b7280', marginTop: 4 }}>
+          <div style={{ fontSize: '1.1rem', color: '#4b5563', marginTop: 4 }}>
             {currentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </div>
           <div style={{ marginTop: 12, fontSize: '0.9rem', color: '#374151' }}>
@@ -394,7 +394,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
 
             return (
               <div key={hour} style={{ display: 'flex', gap: 12, marginBottom: 1, background: '#e5e7eb', minHeight: 60 }}>
-                <div style={{ width: 80, padding: 12, background: '#f3f4f6', fontSize: '0.9rem', textAlign: 'right', color: '#6b7280' }}>
+                <div style={{ width: 80, padding: 12, background: '#f3f4f6', fontSize: '0.9rem', textAlign: 'right', color: '#4b5563' }}>
                   {hour.toString().padStart(2, '0')}:00
                 </div>
                 <div style={{ 
@@ -642,17 +642,17 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
             <strong>Event Date:</strong> {hoveredEvent.date}
           </div>
           {hoveredEvent.description && (
-            <div style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: 4 }}>
+            <div style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: 4 }}>
               <strong>Description:</strong> {hoveredEvent.description}
             </div>
           )}
           {hoveredEvent.time && (
-            <div style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
+            <div style={{ fontSize: '0.8rem', color: '#4b5563' }}>
               <strong>Time:</strong> 🕐 {hoveredEvent.time}
             </div>
           )}
           {hoveredEvent.animal && (
-            <div style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
+            <div style={{ fontSize: '0.8rem', color: '#4b5563' }}>
               <strong>Animal:</strong> 🐄 {hoveredEvent.animal}
             </div>
           )}
@@ -696,7 +696,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
                 background: 'none',
                 border: 'none',
                 fontSize: 22,
-                color: '#6b7280',
+                color: '#4b5563',
                 cursor: 'pointer',
               }}
               onClick={() => setModalEvent(null)}
@@ -714,12 +714,12 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
               </div>
             )}
             {modalEvent.description && (
-              <div style={{ fontSize: '0.95rem', color: '#6b7280', marginBottom: 8 }}>
+              <div style={{ fontSize: '0.95rem', color: '#4b5563', marginBottom: 8 }}>
                 <strong>Description:</strong> {modalEvent.description}
               </div>
             )}
             {modalEvent.animal && (
-              <div style={{ fontSize: '0.95rem', color: '#6b7280', marginBottom: 8 }}>
+              <div style={{ fontSize: '0.95rem', color: '#4b5563', marginBottom: 8 }}>
                 <strong>Animal:</strong> 🐄 {modalEvent.animal}
               </div>
             )}

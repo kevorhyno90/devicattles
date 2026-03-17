@@ -282,7 +282,7 @@ export default function DashboardCustomizer({ onClose }) {
               <div key={category} style={{ marginBottom: 24 }}>
                 <h4 style={{
                   margin: '0 0 12px 0',
-                  color: '#6b7280',
+                  color: '#4b5563',
                   fontSize: 12,
                   textTransform: 'uppercase',
                   letterSpacing: 1
@@ -309,13 +309,13 @@ export default function DashboardCustomizer({ onClose }) {
                     >
                       <div style={{ fontSize: 32, marginBottom: 8 }}>{widget.icon}</div>
                       <div style={{ fontWeight: 'bold', marginBottom: 4 }}>{widget.name}</div>
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>{widget.description}</div>
+                      <div style={{ fontSize: 12, color: '#4b5563' }}>{widget.description}</div>
                       <div style={{
                         marginTop: 8,
                         display: 'flex',
                         gap: 8,
                         fontSize: 11,
-                        color: '#9ca3af'
+                        color: '#4b5563'
                       }}>
                         <span>Size: {widget.defaultSize.w}x{widget.defaultSize.h}</span>
                         {widget.resizable && <span>• Resizable</span>}
@@ -358,10 +358,10 @@ export default function DashboardCustomizer({ onClose }) {
                   <div style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8 }}>
                     {preset.name}
                   </div>
-                  <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 12 }}>
+                  <div style={{ fontSize: 14, color: '#4b5563', marginBottom: 12 }}>
                     {preset.description}
                   </div>
-                  <div style={{ fontSize: 12, color: '#9ca3af' }}>
+                  <div style={{ fontSize: 12, color: '#4b5563' }}>
                     {preset.layout.length} widgets
                   </div>
                 </div>
@@ -522,7 +522,7 @@ export default function DashboardCustomizer({ onClose }) {
           borderRadius: '0 0 12px 12px'
         }}>
           <h4 style={{ margin: '0 0 12px 0', fontSize: 14 }}>💡 Quick Guide</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16, fontSize: 13, color: '#6b7280' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16, fontSize: 13, color: '#4b5563' }}>
             <div>• <strong>Click widget</strong> to select and show controls</div>
             <div>• <strong>Arrow buttons</strong> to move widget</div>
             <div>• <strong>W+/W-</strong> to adjust width</div>
@@ -555,7 +555,7 @@ function WidgetPreview({ widget }) {
       return (
         <div style={{ width: '100%' }}>
           <div style={{ fontSize: 32, fontWeight: 'bold', color: '#059669' }}>{data.total}</div>
-          <div style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>Total Animals</div>
+          <div style={{ fontSize: 14, color: '#4b5563', marginTop: 4 }}>Total Animals</div>
           <div style={{ marginTop: 12, fontSize: 12 }}>
             {Object.entries(data.bySpecies).map(([species, count]) => (
               <div key={species} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
@@ -582,7 +582,7 @@ function WidgetPreview({ widget }) {
                 fontSize: 12
               }}>
                 <div style={{ fontWeight: 'bold' }}>{task.title}</div>
-                <div style={{ color: '#6b7280', fontSize: 11, marginTop: 4 }}>
+                <div style={{ color: '#4b5563', fontSize: 11, marginTop: 4 }}>
                   Due: {task.dueDate}
                 </div>
               </div>

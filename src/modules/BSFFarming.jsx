@@ -495,7 +495,7 @@ export default function BSFFarming({ initialTab = 'colonies', recordSource = nul
             <div style={{ padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>🪰</div>
               <h4>No BSF colonies yet</h4>
-              <p style={{ color: '#666' }}>Add your first colony to start tracking</p>
+              <p style={{ color: '#4b5563' }}>Add your first colony to start tracking</p>
             </div>
           ) : (
             <div style={{ maxHeight: 600, overflowY: 'auto' }}>
@@ -526,13 +526,13 @@ export default function BSFFarming({ initialTab = 'colonies', recordSource = nul
                             background: colony.status === 'Active' ? 'var(--bg-secondary)' : colony.status === 'Growing' ? 'var(--bg-secondary)' : 'var(--bg-tertiary)' 
                           }}>{colony.status}</span>
                         </div>
-                        <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
+                        <div style={{ fontSize: 14, color: '#4b5563', marginBottom: 4 }}>
                           <strong>Location:</strong> {colony.location} • <strong>Established:</strong> {new Date(colony.establishedDate).toLocaleDateString()} ({daysActive} days ago)
                         </div>
-                        <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+                        <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 4 }}>
                           <strong>Population:</strong> {parseInt(colony.population || 0).toLocaleString()} • <strong>Substrate:</strong> {colony.substrate} ({colony.substrateAmount}kg)
                         </div>
-                        <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+                        <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 4 }}>
                           <strong>Temp:</strong> {colony.temperature}°C • <strong>Humidity:</strong> {colony.humidity}%
                         </div>
                         {colony.notes && (
@@ -607,7 +607,7 @@ export default function BSFFarming({ initialTab = 'colonies', recordSource = nul
                         <span style={{ fontWeight: 600 }}>{colony?.name || record.colonyId}</span>
                         {record.cost && <span className="badge" style={{ background: '#fee2e2' }}>{formatCurrency(parseFloat(record.cost))}</span>}
                       </div>
-                      <div style={{ fontSize: 13, color: '#666' }}>
+                      <div style={{ fontSize: 13, color: '#4b5563' }}>
                         {new Date(record.date).toLocaleDateString()} • {record.substrate} • {record.amount}kg
                       </div>
                       {record.notes && <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>{record.notes}</div>}
@@ -693,7 +693,7 @@ export default function BSFFarming({ initialTab = 'colonies', recordSource = nul
                         <span className="badge" style={{ background: '#fef3c7' }}>{record.quality}</span>
                         {record.salePrice && <span className="badge" style={{ background: '#d1fae5' }}>{formatCurrency(parseFloat(record.salePrice))}</span>}
                       </div>
-                      <div style={{ fontSize: 13, color: '#666' }}>
+                      <div style={{ fontSize: 13, color: '#4b5563' }}>
                         {new Date(record.date).toLocaleDateString()} • Qty: {record.quantity} • Weight: {record.weight}kg
                         {record.purpose && ` • ${record.purpose}`}
                       </div>

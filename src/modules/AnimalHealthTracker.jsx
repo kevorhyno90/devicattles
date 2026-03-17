@@ -180,7 +180,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
       .filter(r => r.animalId === animalId)
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0]
 
-    if (!recentHealth) return { status: 'unknown', color: '#9ca3af' }
+    if (!recentHealth) return { status: 'unknown', color: '#4b5563' }
     
     if (recentHealth.severity === 'critical') return { status: 'critical', color: '#dc2626' }
     if (recentHealth.severity === 'severe') return { status: 'severe', color: '#ea580c' }
@@ -240,7 +240,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
         <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#111', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           🏥 Animal Health Tracker
         </h1>
-        <p style={{ color: '#666', fontSize: '14px' }}>
+        <p style={{ color: '#4b5563', fontSize: '14px' }}>
           Monitor animal health, vaccinations, and treatments
         </p>
       </div>
@@ -330,7 +330,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
             {/* Animals */}
             <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
               {filteredAnimals.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#999' }}>
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#4b5563' }}>
                   <div style={{ fontSize: '48px', marginBottom: '12px' }}>🐄</div>
                   <div>No animals found</div>
                 </div>
@@ -357,7 +357,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
                         <div>
                           <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '600' }}>{animal.name}</h3>
-                          <div style={{ fontSize: '12px', color: '#666' }}>{animal.tag || animal.id}</div>
+                          <div style={{ fontSize: '12px', color: '#4b5563' }}>{animal.tag || animal.id}</div>
                         </div>
                         <div style={{
                           width: '10px',
@@ -366,7 +366,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
                           background: healthStatus.color
                         }} />
                       </div>
-                      <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: '#666' }}>
+                      <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: '#4b5563' }}>
                         <span>📋 {recordCount} records</span>
                         <span>💉 {vaccineCount} vaccines</span>
                       </div>
@@ -385,7 +385,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px' }}>
                 <div>
                   <h2 style={{ margin: '0 0 8px 0', fontSize: '20px', fontWeight: '600' }}>{selectedAnimal.name}</h2>
-                  <div style={{ fontSize: '14px', color: '#666' }}>
+                  <div style={{ fontSize: '14px', color: '#4b5563' }}>
                     {selectedAnimal.type || 'Animal'} • {selectedAnimal.tag || selectedAnimal.id}
                   </div>
                 </div>
@@ -641,7 +641,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: '12px', color: '#666' }}>
+                            <div style={{ fontSize: '12px', color: '#4b5563' }}>
                               {new Date(record.timestamp).toLocaleString()}
                             </div>
                           </div>
@@ -662,25 +662,25 @@ export default function AnimalHealthTracker({ onNavigate }) {
                         </div>
                         
                         {record.symptoms && (
-                          <div style={{ fontSize: '13px', color: '#666', marginBottom: '4px' }}>
+                          <div style={{ fontSize: '13px', color: '#4b5563', marginBottom: '4px' }}>
                             <strong>Symptoms:</strong> {record.symptoms}
                           </div>
                         )}
                         
                         {record.medication && (
-                          <div style={{ fontSize: '13px', color: '#666', marginBottom: '4px' }}>
+                          <div style={{ fontSize: '13px', color: '#4b5563', marginBottom: '4px' }}>
                             <strong>Medication:</strong> {record.medication} {record.dosage && `(${record.dosage})`}
                           </div>
                         )}
                         
                         {record.veterinarian && (
-                          <div style={{ fontSize: '13px', color: '#666', marginBottom: '4px' }}>
+                          <div style={{ fontSize: '13px', color: '#4b5563', marginBottom: '4px' }}>
                             <strong>Vet:</strong> {record.veterinarian}
                           </div>
                         )}
                         
                         {record.cost && (
-                          <div style={{ fontSize: '13px', color: '#666', marginBottom: '4px' }}>
+                          <div style={{ fontSize: '13px', color: '#4b5563', marginBottom: '4px' }}>
                             <strong>Cost:</strong> ${record.cost}
                           </div>
                         )}
@@ -696,7 +696,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
                   {healthRecords.filter(r => r.animalId === selectedAnimal.id).length === 0 &&
                    vaccinations.filter(v => v.animalId === selectedAnimal.id).length === 0 &&
                    treatments.filter(t => t.animalId === selectedAnimal.id).length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '40px 20px', color: '#999' }}>
+                    <div style={{ textAlign: 'center', padding: '40px 20px', color: '#4b5563' }}>
                       <div style={{ fontSize: '48px', marginBottom: '12px' }}>📋</div>
                       <div>No health records yet</div>
                     </div>

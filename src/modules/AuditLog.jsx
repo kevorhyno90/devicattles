@@ -54,7 +54,7 @@ export default function AuditLog() {
         </table>
       </div>
 
-      <div style={{ marginTop: 16, fontSize: 13, color: '#666', textAlign: 'center' }}>
+      <div style={{ marginTop: 16, fontSize: 13, color: '#4b5563', textAlign: 'center' }}>
         Showing {filteredAudit.length} of {audit.length} entries
       </div>
     </section>

@@ -16,7 +16,7 @@ export default function CalfOverviewRow({ calf, batchMode, selected, onBatchSele
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
           <div>
             <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>{calf.name || 'Unnamed Calf'}</h4>
-            <div style={{ fontSize: '0.9rem', color: '#666', marginTop: 4 }}>
+            <div style={{ fontSize: '0.9rem', color: '#4b5563', marginTop: 4 }}>
               {calf.tag && <span style={{ marginRight: 12 }}>🏷️ {calf.tag}</span>}
               <span style={{ marginRight: 12 }}>{calf.sex === 'F' ? '♀' : '♂'} {calf.breed}</span>
               <span>📊 {calf.healthStatus || '-'}</span>

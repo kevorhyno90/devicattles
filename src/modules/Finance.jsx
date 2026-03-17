@@ -38,6 +38,27 @@ const INCOME_CATEGORIES = [
 
 const PAYMENT_METHODS = ['Cash', 'M-Pesa', 'Bank Transfer', 'Credit Card', 'Debit Card', 'Check']
 
+const normalizeTransaction = (entry = {}) => {
+  const safeNotes = Array.isArray(entry.notes)
+    ? entry.notes
+    : (typeof entry.notes === 'string' && entry.notes.trim()
+      ? [{ id: `legacy-note-${entry.id || Date.now()}`, text: entry.notes.trim(), date: entry.date || new Date().toISOString(), author: 'Legacy Record' }]
+      : [])
+
+  const amount = Number(entry.amount)
+  return {
+    ...entry,
+    amount: Number.isFinite(amount) ? amount : 0,
+    notes: safeNotes,
+    date: entry.date || new Date().toISOString().slice(0,10),
+    paymentMethod: entry.paymentMethod || 'Cash',
+    category: entry.category || 'Other',
+    subcategory: entry.subcategory || 'Miscellaneous',
+    description: entry.description || 'Untitled transaction',
+    type: entry.type || (amount >= 0 ? 'income' : 'expense')
+  }
+}
+
 export default function Finance(){
   const KEY = 'cattalytics:finance'
   const [items, setItems] = useState([])
@@ -98,7 +119,8 @@ export default function Finance(){
           return
         }
         if (confirm(`Import ${data.length} transactions? This will merge with existing data.`)) {
-          setItems([...items, ...data])
+          const safeData = (Array.isArray(data) ? data : []).map(normalizeTransaction)
+          setItems([...items, ...safeData])
           alert(`Imported ${data.length} transactions`)
         }
       })
@@ -112,9 +134,12 @@ export default function Finance(){
           const imported = data.map(t => ({
             ...t,
             amount: parseFloat(t.amount) || 0,
-            notes: t.notes ? JSON.parse(t.notes) : []
+            notes: (() => {
+              if (!t.notes) return []
+              try { return JSON.parse(t.notes) } catch (e) { return [] }
+            })()
           }))
-          setItems([...items, ...imported])
+          setItems([...items, ...imported].map(normalizeTransaction))
           alert(`Imported ${imported.length} transactions`)
         }
       })
@@ -129,13 +154,21 @@ export default function Finance(){
     const note = window.prompt('Add note for transaction ' + tx.id,'')
     if(note === null) return
     const ts = new Date().toISOString()
-    setItems(items.map(i => i.id === tx.id ? { ...i, notes: [...(i.notes||[]), { date: ts, text: note }] } : i ))
+    setItems(items.map(i => i.id === tx.id ? { ...i, notes: [...(Array.isArray(i.notes) ? i.notes : []), { date: ts, text: note }] } : i ))
   }
 
   useEffect(()=>{
-    const raw = localStorage.getItem(KEY)
-    if(raw) setItems(JSON.parse(raw))
-    else setItems(SAMPLE)
+    try {
+      const raw = localStorage.getItem(KEY)
+      if(raw) {
+        const parsed = JSON.parse(raw)
+        setItems((Array.isArray(parsed) ? parsed : SAMPLE).map(normalizeTransaction))
+      } else {
+        setItems(SAMPLE.map(normalizeTransaction))
+      }
+    } catch (error) {
+      setItems(SAMPLE.map(normalizeTransaction))
+    }
   }, [])
 
   useEffect(()=> localStorage.setItem(KEY, JSON.stringify(items)), [items])
@@ -156,7 +189,7 @@ export default function Finance(){
       createdDate: new Date().toISOString()
     }
     
-    setItems([...items, newEntry])
+    setItems([...items, normalizeTransaction(newEntry)])
     logFinanceActivity(
       'created',
       `Added ${newEntry.type}: ${newEntry.description} - KES ${Math.abs(newEntry.amount).toLocaleString()}`,
@@ -260,7 +293,7 @@ export default function Finance(){
     if(!noteText.trim()) return
     setItems(items.map(i => i.id === entryId ? {
       ...i,
-      notes: [...(i.notes || []), { 
+      notes: [...(Array.isArray(i.notes) ? i.notes : []), { 
         id: Date.now(), 
         text: noteText.trim(), 
         date: new Date().toISOString(),
@@ -425,13 +458,13 @@ export default function Finance(){
           <div className="card" style={{ padding: '20px', background: '#f0fdf4' }}>
             <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#15803d' }}>Total Income</h3>
             <div style={{ fontSize: '28px', fontWeight: '700', color: '#15803d' }}>KES {stats.totalIncome.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>This Month: KES {stats.monthlyIncome.toFixed(2)}</div>
+            <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>This Month: KES {stats.monthlyIncome.toFixed(2)}</div>
           </div>
           
           <div className="card" style={{ padding: '20px', background: '#fef2f2' }}>
             <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#dc2626' }}>Total Expenses</h3>
             <div style={{ fontSize: '28px', fontWeight: '700', color: '#dc2626' }}>KES {stats.totalExpenses.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>This Month: KES {stats.monthlyExpenses.toFixed(2)}</div>
+            <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>This Month: KES {stats.monthlyExpenses.toFixed(2)}</div>
           </div>
 
           <div className="card" style={{ padding: '20px', background: stats.netProfit >= 0 ? '#ecfdf5' : '#fef2f2' }}>
@@ -439,7 +472,7 @@ export default function Finance(){
             <div style={{ fontSize: '28px', fontWeight: '700', color: stats.netProfit >= 0 ? '#059669' : '#dc2626' }}>
               {stats.netProfit >= 0 ? '+' : ''}KES {stats.netProfit.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
             </div>
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>This Month: {stats.monthlyNet >= 0 ? '+' : ''}KES {stats.monthlyNet.toFixed(2)}</div>
+            <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>This Month: {stats.monthlyNet >= 0 ? '+' : ''}KES {stats.monthlyNet.toFixed(2)}</div>
           </div>
           
           <div className="card" style={{ padding: '20px', background: profitMargin >= 0 ? '#eff6ff' : '#fef2f2' }}>
@@ -447,7 +480,7 @@ export default function Finance(){
             <div style={{ fontSize: '28px', fontWeight: '700', color: profitMargin >= 0 ? '#2563eb' : '#dc2626' }}>
               {profitMargin.toFixed(1)}%
             </div>
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+            <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>
               {profitMargin >= 20 ? '🎉 Excellent' : profitMargin >= 10 ? '👍 Good' : profitMargin >= 0 ? '⚠️ Low' : '❌ Loss'}
             </div>
           </div>
@@ -461,10 +494,10 @@ export default function Finance(){
               {integratedSummary.sources.map(source => (
                 <div key={source.source} style={{ padding: '12px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                   <div style={{ fontWeight: '600', fontSize: '14px', marginBottom: '8px', color: '#374151' }}>{source.source}</div>
-                  <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px' }}>
                     Income: <span style={{ color: '#15803d', fontWeight: '600' }}>KES {source.income.toFixed(2)}</span>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px' }}>
                     Expenses: <span style={{ color: '#dc2626', fontWeight: '600' }}>KES {source.expenses.toFixed(2)}</span>
                   </div>
                   <div style={{ fontSize: '12px', borderTop: '1px solid #e5e7eb', paddingTop: '4px', marginTop: '4px' }}>
@@ -562,7 +595,7 @@ export default function Finance(){
             style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
           />
           {searchTerm && (
-            <div style={{ marginTop: '4px', fontSize: '14px', color: '#6b7280' }}>
+            <div style={{ marginTop: '4px', fontSize: '14px', color: '#4b5563' }}>
               Found {filteredItems.length} transaction{filteredItems.length !== 1 ? 's' : ''}
             </div>
           )}
@@ -671,7 +704,7 @@ export default function Finance(){
                   </div>
                 </div>
                 
-                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: 4 }}>
+                <div style={{ fontSize: '0.75rem', color: '#4b5563', marginTop: 4 }}>
                   💡 Press Enter to save, Escape to cancel
                 </div>
               </div>
@@ -724,6 +757,7 @@ export default function Finance(){
       {modalOpenId && (() => {
         const entry = items.find(e => e.id === modalOpenId)
         if(!entry) return null
+        const entryNotes = Array.isArray(entry.notes) ? entry.notes : []
         return (
           <div className="drawer-overlay" onClick={() => setModalOpenId(null)}>
             <div className="drawer" onClick={e => e.stopPropagation()}>
@@ -753,7 +787,7 @@ export default function Finance(){
                       />
                     </div>
                     <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                      {(entry.notes || []).slice().reverse().map(note => (
+                      {entryNotes.slice().reverse().map(note => (
                         <div key={note.id} style={{ padding: '12px', background: '#f9fafb', borderRadius: '8px', marginBottom: '12px' }}>
                           <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '4px' }}>
                             {note.author} • {new Date(note.date).toLocaleString()}
@@ -761,7 +795,7 @@ export default function Finance(){
                           <div>{note.text}</div>
                         </div>
                       ))}
-                      {(!entry.notes || entry.notes.length === 0) && (
+                      {entryNotes.length === 0 && (
                         <div style={{ color: 'var(--muted)', fontStyle: 'italic', padding: '20px', textAlign: 'center' }}>No notes yet</div>
                       )}
                     </div>

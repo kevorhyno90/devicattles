@@ -112,7 +112,7 @@ export const InlineEditField = ({ value, onSave, type = 'text', placeholder = 'C
       onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
       onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
     >
-      {value || <span style={{ color: '#999', fontStyle: 'italic' }}>{placeholder}</span>}
+      {value || <span style={{ color: '#4b5563', fontStyle: 'italic' }}>{placeholder}</span>}
     </div>
   )
 }
@@ -207,7 +207,7 @@ export const InlineEditTable = ({
                 style={{ 
                   padding: '40px', 
                   textAlign: 'center',
-                  color: '#999',
+                  color: '#4b5563',
                   fontStyle: 'italic'
                 }}
               >
@@ -321,7 +321,7 @@ export const InlineEditTable = ({
                             e.currentTarget.style.borderColor = 'transparent'
                           }}
                         >
-                          {cellValue || <span style={{ color: '#999', fontStyle: 'italic' }}>Click to edit</span>}
+                          {cellValue || <span style={{ color: '#4b5563', fontStyle: 'italic' }}>Click to edit</span>}
                         </div>
                       )}
                     </td>
@@ -359,7 +359,7 @@ export const InlineEditTable = ({
         background: '#f5f5f5', 
         borderRadius: '4px',
         fontSize: '12px',
-        color: '#666'
+        color: '#4b5563'
       }}>
         💡 <strong>Tip:</strong> Click any cell to edit inline. Press <kbd>Enter</kbd> to save, <kbd>Esc</kbd> to cancel.
       </div>
@@ -385,7 +385,7 @@ export const InlineEditCard = ({ data, onSave, onDelete }) => {
             <label style={{ 
               display: 'block', 
               fontWeight: '600', 
-              color: '#555',
+              color: '#374151',
               marginBottom: '5px',
               fontSize: '13px',
               textTransform: 'capitalize'

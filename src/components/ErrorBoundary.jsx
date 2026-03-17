@@ -83,7 +83,7 @@ class ErrorBoundary extends React.Component {
           
           <p style={{
             fontSize: '16px',
-            color: '#6b7280',
+            color: '#4b5563',
             marginBottom: '24px',
             lineHeight: '1.5'
           }}>

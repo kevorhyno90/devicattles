@@ -533,7 +533,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
 
       {activeTab === TABS.registry && (
         <section style={{ display: 'grid', gap: 14 }}>
-          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14 }}>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14, color: 'var(--text-primary)' }}>
             <h3 style={{ marginTop: 0 }}>{editingEmployeeId ? 'Edit Employee' : 'Register Employee'}</h3>
             <form onSubmit={submitEmployee} style={{ display: 'grid', gap: 10 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10 }}>
@@ -634,7 +634,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
                   {editingEmployeeId ? 'Update Employee' : 'Add Employee'}
                 </button>
                 {editingEmployeeId && (
-                  <button type="button" onClick={resetEmployeeForm} style={{ border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', color: '#0f172a', fontWeight: 700, padding: '9px 14px', cursor: 'pointer' }}>
+                  <button type="button" onClick={resetEmployeeForm} style={{ border: '1px solid var(--border-primary)', borderRadius: 8, background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontWeight: 700, padding: '9px 14px', cursor: 'pointer' }}>
                     Cancel Edit
                   </button>
                 )}
@@ -642,7 +642,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
             </form>
           </div>
 
-          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14 }}>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14, color: 'var(--text-primary)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 12 }}>
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by ID, name, role, email" />
               <select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)}>
@@ -658,7 +658,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
                 <option value="inactive">Inactive</option>
                 <option value="terminated">Terminated</option>
               </select>
-              <button onClick={() => downloadText(`employment-employees-${Date.now()}.csv`, toCsv(filteredEmployees), 'text/csv')} style={{ border: '1px solid #0ea5e9', borderRadius: 8, background: '#fff', color: '#0369a1', fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={() => downloadText(`employment-employees-${Date.now()}.csv`, toCsv(filteredEmployees), 'text/csv')} style={{ border: '1px solid var(--action-primary)', borderRadius: 8, background: 'var(--bg-elevated)', color: 'var(--action-primary)', fontWeight: 700, cursor: 'pointer' }}>
                 Export Filtered CSV
               </button>
             </div>
@@ -666,39 +666,39 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
-                  <tr style={{ background: '#f8fafc' }}>
-                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Employee</th>
-                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Role / Department</th>
-                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Type</th>
-                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Status</th>
-                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Contact</th>
-                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Actions</th>
+                  <tr style={{ background: 'var(--bg-secondary)' }}>
+                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid var(--border-primary)' }}>Employee</th>
+                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid var(--border-primary)' }}>Role / Department</th>
+                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid var(--border-primary)' }}>Type</th>
+                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid var(--border-primary)' }}>Status</th>
+                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid var(--border-primary)' }}>Contact</th>
+                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid var(--border-primary)' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredEmployees.map((emp) => (
                     <tr key={emp.id}>
-                      <td style={{ padding: 8, borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: 8, borderBottom: '1px solid var(--border-primary)' }}>
                         <div style={{ fontWeight: 700 }}>{emp.fullName}</div>
-                        <div style={{ color: '#64748b' }}>{emp.employeeId}</div>
+                        <div style={{ color: 'var(--text-secondary)' }}>{emp.employeeId}</div>
                       </td>
-                      <td style={{ padding: 8, borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: 8, borderBottom: '1px solid var(--border-primary)' }}>
                         <div>{emp.role || '-'}</div>
-                        <div style={{ color: '#64748b' }}>{emp.department || '-'}</div>
+                        <div style={{ color: 'var(--text-secondary)' }}>{emp.department || '-'}</div>
                       </td>
-                      <td style={{ padding: 8, borderBottom: '1px solid #f1f5f9' }}>{emp.employmentType}</td>
-                      <td style={{ padding: 8, borderBottom: '1px solid #f1f5f9' }}>
-                        <span style={{ borderRadius: 999, padding: '3px 8px', background: emp.status === 'active' ? '#dcfce7' : '#e2e8f0', color: emp.status === 'active' ? '#166534' : '#334155', fontWeight: 700 }}>
+                      <td style={{ padding: 8, borderBottom: '1px solid var(--border-primary)' }}>{emp.employmentType}</td>
+                      <td style={{ padding: 8, borderBottom: '1px solid var(--border-primary)' }}>
+                        <span style={{ borderRadius: 999, padding: '3px 8px', background: emp.status === 'active' ? 'color-mix(in srgb, var(--green) 18%, transparent)' : 'var(--bg-tertiary)', color: emp.status === 'active' ? 'var(--green)' : 'var(--text-secondary)', fontWeight: 700 }}>
                           {emp.status}
                         </span>
                       </td>
-                      <td style={{ padding: 8, borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: 8, borderBottom: '1px solid var(--border-primary)' }}>
                         <div>{emp.phone || '-'}</div>
-                        <div style={{ color: '#64748b' }}>{emp.email || '-'}</div>
+                        <div style={{ color: 'var(--text-secondary)' }}>{emp.email || '-'}</div>
                       </td>
-                      <td style={{ padding: 8, borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: 8, borderBottom: '1px solid var(--border-primary)' }}>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                          <button onClick={() => editEmployee(emp)} style={{ border: '1px solid #cbd5e1', borderRadius: 6, background: '#fff', cursor: 'pointer' }}>Edit</button>
+                          <button onClick={() => editEmployee(emp)} style={{ border: '1px solid var(--border-primary)', borderRadius: 6, background: 'var(--bg-elevated)', color: 'var(--text-primary)', cursor: 'pointer' }}>Edit</button>
                           <button onClick={() => deleteEmployee(emp.id)} style={{ border: '1px solid #fecaca', borderRadius: 6, background: '#fff1f2', color: '#9f1239', cursor: 'pointer' }}>Delete</button>
                         </div>
                       </td>
@@ -706,7 +706,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
                   ))}
                   {!filteredEmployees.length && (
                     <tr>
-                      <td colSpan={6} style={{ padding: 14, textAlign: 'center', color: '#64748b' }}>No employees found for current filters.</td>
+                      <td colSpan={6} style={{ padding: 14, textAlign: 'center', color: 'var(--text-secondary)' }}>No employees found for current filters.</td>
                     </tr>
                   )}
                 </tbody>
@@ -718,7 +718,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
 
       {activeTab === TABS.off && (
         <section style={{ display: 'grid', gap: 14 }}>
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14 }}>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14, color: 'var(--text-primary)' }}>
             <h3 style={{ marginTop: 0 }}>{editingOffId ? 'Edit Off Entry' : 'Plan Off Day'}</h3>
             <form onSubmit={submitOff} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10 }}>
               <label style={{ display: 'grid', gap: 4 }}>
@@ -764,18 +764,18 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
                   {editingOffId ? 'Update Off Entry' : 'Add Off Entry'}
                 </button>
                 {editingOffId && (
-                  <button type="button" onClick={resetOffForm} style={{ border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', color: '#0f172a', fontWeight: 700, padding: '9px 14px', cursor: 'pointer' }}>
+                  <button type="button" onClick={resetOffForm} style={{ border: '1px solid var(--border-primary)', borderRadius: 8, background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontWeight: 700, padding: '9px 14px', cursor: 'pointer' }}>
                     Cancel Edit
                   </button>
                 )}
-                <button type="button" onClick={() => downloadText(`employment-off-${Date.now()}.csv`, toCsv(offEntries), 'text/csv')} style={{ border: '1px solid #0ea5e9', borderRadius: 8, background: '#fff', color: '#0369a1', fontWeight: 700, padding: '9px 14px', cursor: 'pointer' }}>
+                <button type="button" onClick={() => downloadText(`employment-off-${Date.now()}.csv`, toCsv(offEntries), 'text/csv')} style={{ border: '1px solid var(--action-primary)', borderRadius: 8, background: 'var(--bg-elevated)', color: 'var(--action-primary)', fontWeight: 700, padding: '9px 14px', cursor: 'pointer' }}>
                   Export Off CSV
                 </button>
               </div>
             </form>
           </div>
 
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14, overflowX: 'auto' }}>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14, overflowX: 'auto', color: 'var(--text-primary)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: '#f8fafc' }}>
@@ -805,7 +805,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
                 ))}
                 {!offEntries.length && (
                   <tr>
-                    <td colSpan={6} style={{ padding: 14, textAlign: 'center', color: '#64748b' }}>No off plans recorded yet.</td>
+                    <td colSpan={6} style={{ padding: 14, textAlign: 'center', color: 'var(--text-secondary)' }}>No off plans recorded yet.</td>
                   </tr>
                 )}
               </tbody>
@@ -816,7 +816,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
 
       {activeTab === TABS.leaves && (
         <section style={{ display: 'grid', gap: 14 }}>
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14 }}>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14, color: 'var(--text-primary)' }}>
             <h3 style={{ marginTop: 0 }}>{editingLeaveId ? 'Edit Leave Request' : 'Create Leave Request'}</h3>
             <form onSubmit={submitLeave} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10 }}>
               <label style={{ display: 'grid', gap: 4 }}>
@@ -865,18 +865,18 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
                   {editingLeaveId ? 'Update Leave' : 'Add Leave'}
                 </button>
                 {editingLeaveId && (
-                  <button type="button" onClick={resetLeaveForm} style={{ border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', color: '#0f172a', fontWeight: 700, padding: '9px 14px', cursor: 'pointer' }}>
+                  <button type="button" onClick={resetLeaveForm} style={{ border: '1px solid var(--border-primary)', borderRadius: 8, background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontWeight: 700, padding: '9px 14px', cursor: 'pointer' }}>
                     Cancel Edit
                   </button>
                 )}
-                <button type="button" onClick={() => downloadText(`employment-leaves-${Date.now()}.csv`, toCsv(leaveEntries), 'text/csv')} style={{ border: '1px solid #0ea5e9', borderRadius: 8, background: '#fff', color: '#0369a1', fontWeight: 700, padding: '9px 14px', cursor: 'pointer' }}>
+                <button type="button" onClick={() => downloadText(`employment-leaves-${Date.now()}.csv`, toCsv(leaveEntries), 'text/csv')} style={{ border: '1px solid var(--action-primary)', borderRadius: 8, background: 'var(--bg-elevated)', color: 'var(--action-primary)', fontWeight: 700, padding: '9px 14px', cursor: 'pointer' }}>
                   Export Leave CSV
                 </button>
               </div>
             </form>
           </div>
 
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14, overflowX: 'auto' }}>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14, overflowX: 'auto', color: 'var(--text-primary)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: '#f8fafc' }}>
@@ -896,7 +896,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
                     <td style={{ padding: 8, borderBottom: '1px solid #f1f5f9' }}>{formatDate(entry.startDate)} - {formatDate(entry.endDate)}</td>
                     <td style={{ padding: 8, borderBottom: '1px solid #f1f5f9' }}>{entry.days}</td>
                     <td style={{ padding: 8, borderBottom: '1px solid #f1f5f9' }}>
-                      <span style={{ borderRadius: 999, padding: '3px 8px', background: entry.status === 'approved' ? '#dcfce7' : entry.status === 'pending' ? '#fef3c7' : '#e2e8f0', color: '#334155', fontWeight: 700 }}>
+                      <span style={{ borderRadius: 999, padding: '3px 8px', background: entry.status === 'approved' ? 'color-mix(in srgb, var(--green) 18%, transparent)' : entry.status === 'pending' ? 'color-mix(in srgb, var(--action-warning) 18%, transparent)' : 'var(--bg-tertiary)', color: entry.status === 'approved' ? 'var(--green)' : entry.status === 'pending' ? 'var(--action-warning)' : 'var(--text-secondary)', fontWeight: 700 }}>
                         {entry.status}
                       </span>
                     </td>
@@ -912,7 +912,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
                 ))}
                 {!leaveEntries.length && (
                   <tr>
-                    <td colSpan={6} style={{ padding: 14, textAlign: 'center', color: '#64748b' }}>No leave records found.</td>
+                    <td colSpan={6} style={{ padding: 14, textAlign: 'center', color: 'var(--text-secondary)' }}>No leave records found.</td>
                   </tr>
                 )}
               </tbody>
@@ -923,7 +923,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
 
       {activeTab === TABS.attendance && (
         <section style={{ display: 'grid', gap: 14 }}>
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14 }}>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14, color: 'var(--text-primary)' }}>
             <h3 style={{ marginTop: 0 }}>{editingAttendanceId ? 'Edit Attendance' : 'Log Attendance'}</h3>
             <form onSubmit={submitAttendance} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10 }}>
               <label style={{ display: 'grid', gap: 4 }}>
@@ -970,18 +970,18 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
                   {editingAttendanceId ? 'Update Attendance' : 'Add Attendance'}
                 </button>
                 {editingAttendanceId && (
-                  <button type="button" onClick={resetAttendanceForm} style={{ border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', color: '#0f172a', fontWeight: 700, padding: '9px 14px', cursor: 'pointer' }}>
+                  <button type="button" onClick={resetAttendanceForm} style={{ border: '1px solid var(--border-primary)', borderRadius: 8, background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontWeight: 700, padding: '9px 14px', cursor: 'pointer' }}>
                     Cancel Edit
                   </button>
                 )}
-                <button type="button" onClick={() => downloadText(`employment-attendance-${Date.now()}.csv`, toCsv(attendanceEntries), 'text/csv')} style={{ border: '1px solid #0ea5e9', borderRadius: 8, background: '#fff', color: '#0369a1', fontWeight: 700, padding: '9px 14px', cursor: 'pointer' }}>
+                <button type="button" onClick={() => downloadText(`employment-attendance-${Date.now()}.csv`, toCsv(attendanceEntries), 'text/csv')} style={{ border: '1px solid var(--action-primary)', borderRadius: 8, background: 'var(--bg-elevated)', color: 'var(--action-primary)', fontWeight: 700, padding: '9px 14px', cursor: 'pointer' }}>
                   Export Attendance CSV
                 </button>
               </div>
             </form>
           </div>
 
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14, overflowX: 'auto' }}>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14, overflowX: 'auto', color: 'var(--text-primary)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: '#f8fafc' }}>
@@ -1011,7 +1011,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
                 ))}
                 {!attendanceEntries.length && (
                   <tr>
-                    <td colSpan={6} style={{ padding: 14, textAlign: 'center', color: '#64748b' }}>No attendance records found.</td>
+                    <td colSpan={6} style={{ padding: 14, textAlign: 'center', color: 'var(--text-secondary)' }}>No attendance records found.</td>
                   </tr>
                 )}
               </tbody>
@@ -1022,53 +1022,53 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
 
       {activeTab === TABS.analytics && (
         <section style={{ display: 'grid', gap: 14 }}>
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14 }}>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14, color: 'var(--text-primary)' }}>
             <h3 style={{ marginTop: 0 }}>Employment Analytics</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-              <div style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
-                <div style={{ fontSize: 12, color: '#64748b' }}>Present Records (30d)</div>
+              <div style={{ border: '1px solid var(--border-primary)', borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Present Records (30d)</div>
                 <div style={{ fontSize: 28, fontWeight: 800 }}>{presentCount}</div>
               </div>
-              <div style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
-                <div style={{ fontSize: 12, color: '#64748b' }}>Absent Records (30d)</div>
+              <div style={{ border: '1px solid var(--border-primary)', borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Absent Records (30d)</div>
                 <div style={{ fontSize: 28, fontWeight: 800 }}>{absentCount}</div>
               </div>
-              <div style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
-                <div style={{ fontSize: 12, color: '#64748b' }}>Off Records (30d)</div>
+              <div style={{ border: '1px solid var(--border-primary)', borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Off Records (30d)</div>
                 <div style={{ fontSize: 28, fontWeight: 800 }}>{offCount}</div>
               </div>
-              <div style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
-                <div style={{ fontSize: 12, color: '#64748b' }}>Overtime Hours (30d)</div>
+              <div style={{ border: '1px solid var(--border-primary)', borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Overtime Hours (30d)</div>
                 <div style={{ fontSize: 28, fontWeight: 800 }}>{overtimeHours}</div>
               </div>
             </div>
           </div>
 
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14 }}>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14, color: 'var(--text-primary)' }}>
             <h4 style={{ marginTop: 0 }}>Approved Leave Days by Type</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
               {Object.keys(leaveDaysByType).map((type) => (
-                <div key={type} style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 10 }}>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>{type}</div>
+                <div key={type} style={{ border: '1px solid var(--border-primary)', borderRadius: 10, padding: 10 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{type}</div>
                   <div style={{ fontSize: 24, fontWeight: 800 }}>{leaveDaysByType[type]}</div>
                 </div>
               ))}
               {!Object.keys(leaveDaysByType).length && (
-                <div style={{ color: '#64748b' }}>No approved leave data yet.</div>
+                <div style={{ color: 'var(--text-secondary)' }}>No approved leave data yet.</div>
               )}
             </div>
           </div>
 
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14 }}>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14, color: 'var(--text-primary)' }}>
             <h4 style={{ marginTop: 0 }}>Quick Export</h4>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button onClick={() => downloadText(`employment-off-${Date.now()}.csv`, toCsv(offEntries), 'text/csv')} style={{ border: '1px solid #0ea5e9', borderRadius: 8, background: '#fff', color: '#0369a1', fontWeight: 700, padding: '8px 12px', cursor: 'pointer' }}>
+              <button onClick={() => downloadText(`employment-off-${Date.now()}.csv`, toCsv(offEntries), 'text/csv')} style={{ border: '1px solid var(--action-primary)', borderRadius: 8, background: 'var(--bg-elevated)', color: 'var(--action-primary)', fontWeight: 700, padding: '8px 12px', cursor: 'pointer' }}>
                 Off Planner CSV
               </button>
-              <button onClick={() => downloadText(`employment-leaves-${Date.now()}.csv`, toCsv(leaveEntries), 'text/csv')} style={{ border: '1px solid #0ea5e9', borderRadius: 8, background: '#fff', color: '#0369a1', fontWeight: 700, padding: '8px 12px', cursor: 'pointer' }}>
+              <button onClick={() => downloadText(`employment-leaves-${Date.now()}.csv`, toCsv(leaveEntries), 'text/csv')} style={{ border: '1px solid var(--action-primary)', borderRadius: 8, background: 'var(--bg-elevated)', color: 'var(--action-primary)', fontWeight: 700, padding: '8px 12px', cursor: 'pointer' }}>
                 Leave CSV
               </button>
-              <button onClick={() => downloadText(`employment-attendance-${Date.now()}.csv`, toCsv(attendanceEntries), 'text/csv')} style={{ border: '1px solid #0ea5e9', borderRadius: 8, background: '#fff', color: '#0369a1', fontWeight: 700, padding: '8px 12px', cursor: 'pointer' }}>
+              <button onClick={() => downloadText(`employment-attendance-${Date.now()}.csv`, toCsv(attendanceEntries), 'text/csv')} style={{ border: '1px solid var(--action-primary)', borderRadius: 8, background: 'var(--bg-elevated)', color: 'var(--action-primary)', fontWeight: 700, padding: '8px 12px', cursor: 'pointer' }}>
                 Attendance CSV
               </button>
               <button onClick={exportAllData} style={{ border: 'none', borderRadius: 8, background: '#0f766e', color: '#fff', fontWeight: 700, padding: '8px 12px', cursor: 'pointer' }}>

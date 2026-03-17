@@ -720,71 +720,71 @@ export default function AnimalMilkYield({ animals }){
                   <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>Avg/day: {avgDailySpoiledMilk.toFixed(1)} L</div>
                 </div>
         <div className="card" style={{ padding: 16, background: '#f0fdf4' }}>
-          <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Total Milk Produced</div>
+          <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Total Milk Produced</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{totalMilk.toFixed(1)} L</div>
           <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>{filteredItems.length} records</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#e0f2fe' }}>
-          <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Milk Given to Calf</div>
+          <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Milk Given to Calf</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#0284c7' }}>{totalMilkToCalf.toFixed(1)} L</div>
           <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>Avg/day: {avgDailyMilkToCalf.toFixed(1)} L</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#dbeafe' }}>
-          <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Milk Consumed</div>
+          <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Milk Consumed</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>{totalMilkConsumed.toFixed(1)} L</div>
           <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>Avg/day: {avgDailyMilkConsumed.toFixed(1)} L</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#e0f2fe' }}>
-          <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Milk Sold</div>
+          <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Milk Sold</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#0284c7' }}>{totalMilkSold.toFixed(1)} L</div>
           <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>Avg/day: {avgDailyMilkSold.toFixed(1)} L</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#d1fae5' }}>
-          <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Total Revenue (Sold Milk)</div>
+          <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Total Revenue (Sold Milk)</div>
           <div style={{ fontSize: 22, fontWeight: 'bold', color: '#059669' }}>KES {totalRevenue.toFixed(0)}</div>
           <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>Avg/day: KES {avgDailyRevenue.toFixed(0)}</div>
         </div>
         <div className="card" style={{ padding: 16, background: unsoldMilk > 0 ? '#fef3c7' : '#eff6ff' }}>
-          <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Unsold Milk</div>
+          <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Unsold Milk</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: unsoldMilk > 0 ? '#f59e0b' : '#2563eb' }}>{unsoldMilk.toFixed(1)} L</div>
           <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>{((unsoldMilk/totalMilk)*100 || 0).toFixed(0)}% unsold</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#eff6ff' }}>
-          <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Avg Daily Total Milk</div>
+          <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Avg Daily Total Milk</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>{avgDailyMilk.toFixed(1)} L</div>
           <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>per day</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#fef3c7' }}>
-          <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Avg Fat %</div>
+          <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Avg Fat %</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f59e0b' }}>{avgFat > 0 ? avgFat.toFixed(2) : 'N/A'}</div>
           {avgFat > 0 && <div style={{ fontSize: 11, color: avgFat >= 3.5 ? '#059669' : '#f59e0b', marginTop: 4 }}>{avgFat >= 3.5 ? 'Good' : 'Below Std'}</div>}
         </div>
         <div className="card" style={{ padding: 16, background: '#dbeafe' }}>
-          <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Avg Protein %</div>
+          <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Avg Protein %</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#0284c7' }}>{avgProtein > 0 ? avgProtein.toFixed(2) : 'N/A'}</div>
           {avgProtein > 0 && <div style={{ fontSize: 11, color: avgProtein >= 3.0 ? '#059669' : '#f59e0b', marginTop: 4 }}>{avgProtein >= 3.0 ? 'Good' : 'Below Std'}</div>}
         </div>
         {avgLactose > 0 && (
           <div className="card" style={{ padding: 16, background: '#f3e8ff' }}>
-            <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Avg Lactose %</div>
+            <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Avg Lactose %</div>
             <div style={{ fontSize: 24, fontWeight: 'bold', color: '#9333ea' }}>{avgLactose.toFixed(2)}</div>
           </div>
         )}
         {avgSNF > 0 && (
           <div className="card" style={{ padding: 16, background: '#e0e7ff' }}>
-            <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Avg SNF %</div>
+            <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Avg SNF %</div>
             <div style={{ fontSize: 24, fontWeight: 'bold', color: '#4f46e5' }}>{avgSNF.toFixed(2)}</div>
           </div>
         )}
         {avgTS > 0 && (
           <div className="card" style={{ padding: 16, background: '#fce7f3' }}>
-            <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Avg Total Solids %</div>
+            <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Avg Total Solids %</div>
             <div style={{ fontSize: 24, fontWeight: 'bold', color: '#db2777' }}>{avgTS.toFixed(2)}</div>
           </div>
         )}
         {avgSCC > 0 && (
           <div className="card" style={{ padding: 16, background: avgSCC < 200000 ? '#d1fae5' : avgSCC < 400000 ? '#fef3c7' : '#fee2e2' }}>
-            <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Avg SCC</div>
+            <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Avg SCC</div>
             <div style={{ fontSize: 20, fontWeight: 'bold', color: avgSCC < 200000 ? '#059669' : avgSCC < 400000 ? '#f59e0b' : '#dc2626' }}>
               {(avgSCC / 1000).toFixed(0)}k
             </div>
@@ -795,7 +795,7 @@ export default function AnimalMilkYield({ animals }){
         )}
         {avgTemp > 0 && (
           <div className="card" style={{ padding: 16, background: '#fef3c7' }}>
-            <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Avg Temp °C</div>
+            <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Avg Temp °C</div>
             <div style={{ fontSize: 24, fontWeight: 'bold', color: avgTemp >= 36 && avgTemp <= 38 ? '#059669' : '#f59e0b' }}>{avgTemp.toFixed(1)}</div>
             <div style={{ fontSize: 11, color: avgTemp >= 36 && avgTemp <= 38 ? '#059669' : '#f59e0b', marginTop: 4 }}>
               {avgTemp >= 36 && avgTemp <= 38 ? 'Normal' : 'Check'}
@@ -804,7 +804,7 @@ export default function AnimalMilkYield({ animals }){
         )}
         {avgPh > 0 && (
           <div className="card" style={{ padding: 16, background: '#e0f2fe' }}>
-            <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Avg pH</div>
+            <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Avg pH</div>
             <div style={{ fontSize: 24, fontWeight: 'bold', color: avgPh >= 6.5 && avgPh <= 6.8 ? '#059669' : '#f59e0b' }}>{avgPh.toFixed(2)}</div>
             <div style={{ fontSize: 11, color: avgPh >= 6.5 && avgPh <= 6.8 ? '#059669' : '#f59e0b', marginTop: 4 }}>
               {avgPh >= 6.5 && avgPh <= 6.8 ? 'Normal' : 'Abnormal'}
@@ -813,17 +813,17 @@ export default function AnimalMilkYield({ animals }){
         )}
         {avgDuration > 0 && (
           <div className="card" style={{ padding: 16, background: '#f0fdf4' }}>
-            <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Avg Duration</div>
+            <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Avg Duration</div>
             <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{avgDuration.toFixed(0)} min</div>
             <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>per session</div>
           </div>
         )}
         <div className="card" style={{ padding: 16, background: '#f8fafc' }}>
-          <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>14-Day Yield Trend</div>
+          <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>14-Day Yield Trend</div>
           <div style={{ fontSize: 20, fontWeight: 'bold', color: phase2MilkInsights.trend.direction === 'up' ? '#059669' : phase2MilkInsights.trend.direction === 'down' ? '#dc2626' : '#334155' }}>
             {phase2MilkInsights.trend.direction === 'up' ? 'Rising' : phase2MilkInsights.trend.direction === 'down' ? 'Falling' : 'Stable'}
           </div>
-          <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>
             Recent avg {phase2MilkInsights.trend.avgRecent.toFixed(1)} L/day vs previous {phase2MilkInsights.trend.avgPrevious.toFixed(1)} L/day
           </div>
         </div>
@@ -885,7 +885,7 @@ export default function AnimalMilkYield({ animals }){
                   ))}
                   {Object.keys(phase2MilkInsights.yearTotals).length === 0 && (
                     <tr>
-                      <td colSpan={5} style={{ padding: '8px', border: '1px solid #eee', color: '#64748b' }}>No yearly totals available yet.</td>
+                      <td colSpan={5} style={{ padding: '8px', border: '1px solid #eee', color: '#475569' }}>No yearly totals available yet.</td>
                     </tr>
                   )}
                 </tbody>
@@ -898,7 +898,7 @@ export default function AnimalMilkYield({ animals }){
           </h4>
           
           {/* Basic Information */}
-          <h5 style={{ marginTop: 16, marginBottom: 12, color: '#666' }}>📋 Basic Information</h5>
+          <h5 style={{ marginTop: 16, marginBottom: 12, color: '#4b5563' }}>📋 Basic Information</h5>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
             <div>
               <label>Animal *</label>
@@ -925,7 +925,7 @@ export default function AnimalMilkYield({ animals }){
             </div>
           </div>
 
-          <h5 style={{ marginTop: 16, marginBottom: 12, color: '#666' }}>🧮 Milk Allocation & Loss</h5>
+          <h5 style={{ marginTop: 16, marginBottom: 12, color: '#4b5563' }}>🧮 Milk Allocation & Loss</h5>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 }}>
             <div>
               <label>Milk Fed to Calf (L)</label>
@@ -966,7 +966,7 @@ export default function AnimalMilkYield({ animals }){
           </div>
 
           {/* Milk Quality Parameters */}
-          <h5 style={{ marginTop: 16, marginBottom: 12, color: '#666' }}>🧪 Milk Quality Parameters</h5>
+          <h5 style={{ marginTop: 16, marginBottom: 12, color: '#4b5563' }}>🧪 Milk Quality Parameters</h5>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
             <div>
               <label>Fat Content (%)</label>
@@ -1017,7 +1017,7 @@ export default function AnimalMilkYield({ animals }){
           </div>
 
           {/* Sales Information */}
-          <h5 style={{ marginTop: 16, marginBottom: 12, color: '#666' }}>💰 Sales Information</h5>
+          <h5 style={{ marginTop: 16, marginBottom: 12, color: '#4b5563' }}>💰 Sales Information</h5>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
             <div>
               <label>Price per Liter (KES)</label>
@@ -1035,7 +1035,7 @@ export default function AnimalMilkYield({ animals }){
             </div>
             {sold && pricePerLiter && liters && (
               <div style={{ padding: 12, background: '#d1fae5', borderRadius: 6, border: '2px solid #059669' }}>
-                <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Revenue</div>
+                <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Total Revenue</div>
                 <div style={{ fontSize: 22, fontWeight: 'bold', color: '#059669' }}>
                   KES {(milkSoldValue * (parseFloat(pricePerLiter) || 0)).toFixed(2)}
                 </div>
@@ -1046,7 +1046,7 @@ export default function AnimalMilkYield({ animals }){
 
           {/* Milking Details */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, marginBottom: 12 }}>
-            <h5 style={{ margin: 0, color: '#666' }}>🐄 Milking Details</h5>
+            <h5 style={{ margin: 0, color: '#4b5563' }}>🐄 Milking Details</h5>
             <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} style={{ fontSize: 12, padding: '4px 12px' }}>
               {showAdvanced ? '▲ Hide Advanced' : '▼ Show Advanced'}
             </button>
@@ -1079,7 +1079,7 @@ export default function AnimalMilkYield({ animals }){
           {/* Advanced Parameters */}
           {showAdvanced && (
             <>
-              <h5 style={{ marginTop: 16, marginBottom: 12, color: '#666' }}>🌤️ Environmental & Health Factors</h5>
+              <h5 style={{ marginTop: 16, marginBottom: 12, color: '#4b5563' }}>🌤️ Environmental & Health Factors</h5>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
                 <div>
                   <label>Weather Condition</label>
@@ -1101,7 +1101,7 @@ export default function AnimalMilkYield({ animals }){
                 </div>
               </div>
 
-              <h5 style={{ marginTop: 16, marginBottom: 12, color: '#666' }}>⚠️ Special Conditions</h5>
+              <h5 style={{ marginTop: 16, marginBottom: 12, color: '#4b5563' }}>⚠️ Special Conditions</h5>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: 8, background: peakMilk ? '#e0f2fe' : '#f9fafb', borderRadius: 6 }}>
                   <input type="checkbox" checked={peakMilk} onChange={e => setPeakMilk(e.target.checked)} />
@@ -1179,7 +1179,7 @@ export default function AnimalMilkYield({ animals }){
             )}
           </div>
         </div>
-        <div style={{ fontSize: 12, color: '#666', marginTop: 8 }}>
+        <div style={{ fontSize: 12, color: '#4b5563', marginTop: 8 }}>
           Showing {filteredItems.length} of {items.length} records
         </div>
       </div>
@@ -1193,7 +1193,7 @@ export default function AnimalMilkYield({ animals }){
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
               {Object.entries(qualityDist).map(([grade, count]) => (
                 <div key={grade} style={{ padding: 12, background: '#f9fafb', borderRadius: 6, border: '1px solid #e5e7eb' }}>
-                  <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>{grade}</div>
+                  <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>{grade}</div>
                   <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{count}</div>
                   <div style={{ fontSize: 11, color: '#888' }}>{((count/filteredItems.length)*100).toFixed(1)}%</div>
                 </div>
@@ -1207,7 +1207,7 @@ export default function AnimalMilkYield({ animals }){
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
               {Object.entries(sessionDist).map(([sess, liters]) => (
                 <div key={sess} style={{ padding: 16, background: '#e0f2fe', borderRadius: 8 }}>
-                  <div style={{ fontSize: 13, color: '#666', marginBottom: 6 }}>{sess}</div>
+                  <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 6 }}>{sess}</div>
                   <div style={{ fontSize: 26, fontWeight: 'bold', color: '#0284c7' }}>{liters.toFixed(1)} L</div>
                   <div style={{ fontSize: 12, color: '#0369a1', marginTop: 4 }}>{((liters/totalMilk)*100).toFixed(1)}% of total</div>
                 </div>
@@ -1233,12 +1233,12 @@ export default function AnimalMilkYield({ animals }){
                         </div>
                         <div>
                           <div style={{ fontWeight: 'bold', fontSize: 16 }}>{animal?.name || animal?.tag || aId}</div>
-                          <div style={{ fontSize: 13, color: '#666' }}>{animal?.breed}</div>
+                          <div style={{ fontSize: 13, color: '#4b5563' }}>{animal?.breed}</div>
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: 22, fontWeight: 'bold', color: '#059669' }}>{data.total.toFixed(1)} L</div>
-                        <div style={{ fontSize: 12, color: '#666' }}>{avgPerSession.toFixed(1)} L avg/session</div>
+                        <div style={{ fontSize: 12, color: '#4b5563' }}>{avgPerSession.toFixed(1)} L avg/session</div>
                       </div>
                     </div>
                   )
@@ -1258,7 +1258,7 @@ export default function AnimalMilkYield({ animals }){
                 const dayTotal = dayItems.reduce((sum, item) => sum + (item.liters || 0), 0)
                 return (
                   <div key={dateStr} style={{ padding: 12, background: dayTotal > 0 ? '#d1fae5' : '#f3f4f6', borderRadius: 6 }}>
-                    <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>
+                    <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>
                       {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                     </div>
                     <div style={{ fontSize: 20, fontWeight: 'bold', color: dayTotal > 0 ? '#059669' : '#9ca3af' }}>
@@ -1277,7 +1277,7 @@ export default function AnimalMilkYield({ animals }){
               <h4 style={{ marginTop: 0 }}>🩺 Health Indicators</h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
                 <div style={{ padding: 16, background: avgSCC < 200000 ? '#d1fae5' : avgSCC < 400000 ? '#fef3c7' : '#fee2e2', borderRadius: 8 }}>
-                  <div style={{ fontSize: 13, color: '#666', marginBottom: 6 }}>Overall Herd SCC</div>
+                  <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 6 }}>Overall Herd SCC</div>
                   <div style={{ fontSize: 28, fontWeight: 'bold', color: avgSCC < 200000 ? '#059669' : avgSCC < 400000 ? '#f59e0b' : '#dc2626' }}>
                     {(avgSCC / 1000).toFixed(0)}k
                   </div>
@@ -1286,7 +1286,7 @@ export default function AnimalMilkYield({ animals }){
                   </div>
                 </div>
                 <div style={{ padding: 16, background: avgFat >= 3.5 ? '#d1fae5' : '#fef3c7', borderRadius: 8 }}>
-                  <div style={{ fontSize: 13, color: '#666', marginBottom: 6 }}>Fat Content</div>
+                  <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 6 }}>Fat Content</div>
                   <div style={{ fontSize: 28, fontWeight: 'bold', color: avgFat >= 3.5 ? '#059669' : '#f59e0b' }}>
                     {avgFat.toFixed(2)}%
                   </div>
@@ -1295,7 +1295,7 @@ export default function AnimalMilkYield({ animals }){
                   </div>
                 </div>
                 <div style={{ padding: 16, background: avgProtein >= 3.0 ? '#d1fae5' : '#fef3c7', borderRadius: 8 }}>
-                  <div style={{ fontSize: 13, color: '#666', marginBottom: 6 }}>Protein Content</div>
+                  <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 6 }}>Protein Content</div>
                   <div style={{ fontSize: 28, fontWeight: 'bold', color: avgProtein >= 3.0 ? '#059669' : '#f59e0b' }}>
                     {avgProtein.toFixed(2)}%
                   </div>
@@ -1322,21 +1322,21 @@ export default function AnimalMilkYield({ animals }){
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                     <div>
                       <h4 style={{ margin: 0, marginBottom: 4 }}>{animal?.name || animal?.tag || aId}</h4>
-                      <div style={{ fontSize: 13, color: '#666' }}>{animal?.breed}</div>
+                      <div style={{ fontSize: 13, color: '#4b5563' }}>{animal?.breed}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{data.total.toFixed(1)} L</div>
-                      <div style={{ fontSize: 12, color: '#666' }}>{data.count} sessions</div>
+                      <div style={{ fontSize: 12, color: '#4b5563' }}>{data.count} sessions</div>
                     </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8 }}>
                     <div style={{ padding: 8, background: 'white', borderRadius: 4 }}>
-                      <div style={{ fontSize: 11, color: '#666' }}>Avg/Session</div>
+                      <div style={{ fontSize: 11, color: '#4b5563' }}>Avg/Session</div>
                       <div style={{ fontSize: 16, fontWeight: 600 }}>{avgPerSession.toFixed(1)} L</div>
                     </div>
                     {Object.entries(data.sessions).map(([sess, amt]) => (
                       <div key={sess} style={{ padding: 8, background: 'white', borderRadius: 4 }}>
-                        <div style={{ fontSize: 11, color: '#666' }}>{sess}</div>
+                        <div style={{ fontSize: 11, color: '#4b5563' }}>{sess}</div>
                         <div style={{ fontSize: 16, fontWeight: 600 }}>{amt.toFixed(1)} L</div>
                       </div>
                     ))}
@@ -1355,7 +1355,7 @@ export default function AnimalMilkYield({ animals }){
             <div style={{ padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>🥛</div>
               <h4>No milk production records yet</h4>
-              <p style={{ color: '#666' }}>Add your first milk record to start tracking</p>
+              <p style={{ color: '#4b5563' }}>Add your first milk record to start tracking</p>
             </div>
           ) : (
             <div style={{ maxHeight: 600, overflowY: 'auto' }}>
@@ -1418,24 +1418,24 @@ export default function AnimalMilkYield({ animals }){
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
+                      <div style={{ fontSize: 14, color: '#4b5563', marginBottom: 4 }}>
                         <strong>{animal?.name || animal?.tag || item.animalId}</strong> • {new Date(item.timestamp || item.date).toLocaleString()}
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 8, marginBottom: 6 }}>
                         <div style={{ background: '#eff6ff', borderRadius: 8, padding: 8 }}>
-                          <div style={{ fontSize: 11, color: '#64748b' }}>Fed to calf</div>
+                          <div style={{ fontSize: 11, color: '#475569' }}>Fed to calf</div>
                           <div style={{ fontSize: 15, fontWeight: 700, color: '#0369a1' }}>{(item.milkToCalf || 0).toFixed(1)} L</div>
                         </div>
                         <div style={{ background: '#eef2ff', borderRadius: 8, padding: 8 }}>
-                          <div style={{ fontSize: 11, color: '#64748b' }}>Consumed</div>
+                          <div style={{ fontSize: 11, color: '#475569' }}>Consumed</div>
                           <div style={{ fontSize: 15, fontWeight: 700, color: '#4338ca' }}>{(item.milkConsumed || 0).toFixed(1)} L</div>
                         </div>
                         <div style={{ background: '#ecfdf5', borderRadius: 8, padding: 8 }}>
-                          <div style={{ fontSize: 11, color: '#64748b' }}>Sold</div>
+                          <div style={{ fontSize: 11, color: '#475569' }}>Sold</div>
                           <div style={{ fontSize: 15, fontWeight: 700, color: '#047857' }}>{(item.milkSold || 0).toFixed(1)} L</div>
                         </div>
                         <div style={{ background: '#fef2f2', borderRadius: 8, padding: 8 }}>
-                          <div style={{ fontSize: 11, color: '#64748b' }}>Spoiled</div>
+                          <div style={{ fontSize: 11, color: '#475569' }}>Spoiled</div>
                           <div style={{ fontSize: 15, fontWeight: 700, color: '#b91c1c' }}>{(item.spoiledMilk || 0).toFixed(1)} L</div>
                         </div>
                       </div>

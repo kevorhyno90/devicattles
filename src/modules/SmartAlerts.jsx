@@ -74,10 +74,24 @@ export default function SmartAlerts({ onNavigate }) {
     return icons[category] || '📋'
   }
 
+  const getCategoryLabel = (category) => {
+    const labels = {
+      [CATEGORY.HEALTH]: 'Health',
+      [CATEGORY.BREEDING]: 'Breeding',
+      [CATEGORY.FEEDING]: 'Feeding',
+      [CATEGORY.HARVEST]: 'Harvest',
+      [CATEGORY.INVENTORY]: 'Inventory',
+      [CATEGORY.FINANCIAL]: 'Financial',
+      [CATEGORY.MAINTENANCE]: 'Maintenance',
+      [CATEGORY.WEATHER]: 'Weather'
+    }
+    return labels[category] || 'General'
+  }
+
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', color: 'var(--text-primary)' }}>
       <h1 style={{ marginBottom: '8px' }}>🔔 Smart Alerts & Recommendations</h1>
-      <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
         Proactive insights to help you manage your farm efficiently
       </p>
 
@@ -181,8 +195,9 @@ export default function SmartAlerts({ onNavigate }) {
             style={{
               padding: '8px 12px',
               borderRadius: '6px',
-              border: '1px solid #d1d5db',
-              background: '#fff',
+              border: '1px solid var(--border-primary)',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-primary)',
               cursor: 'pointer'
             }}
           >
@@ -225,7 +240,7 @@ export default function SmartAlerts({ onNavigate }) {
             <div style={{ fontSize: '18px', fontWeight: '600', color: '#059669', marginBottom: '8px' }}>
               All Clear!
             </div>
-            <div style={{ color: '#6b7280' }}>
+            <div style={{ color: 'var(--text-secondary)' }}>
               No alerts match your filter criteria. Your farm is running smoothly!
             </div>
           </div>
@@ -252,6 +267,20 @@ export default function SmartAlerts({ onNavigate }) {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                         <span style={{ fontSize: '18px' }}>{style.icon}</span>
                         <h4 style={{ margin: 0, color: style.color }}>{alert.title}</h4>
+                        <span
+                          style={{
+                            marginLeft: 'auto',
+                            borderRadius: 999,
+                            padding: '3px 8px',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            border: `1px solid ${style.border}`,
+                            background: 'rgba(255, 255, 255, 0.55)',
+                            color: style.color
+                          }}
+                        >
+                          {getCategoryLabel(alert.category)}
+                        </span>
                       </div>
                       
                       <p style={{ margin: '8px 0', color: style.color }}>
@@ -307,7 +336,7 @@ export default function SmartAlerts({ onNavigate }) {
               >
                 <h4 style={{ margin: '0 0 8px 0', color: '#1e40af' }}>{rec.title}</h4>
                 <p style={{ margin: '0 0 8px 0', color: '#1e3a8a' }}>{rec.message}</p>
-                <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
                   <strong>Benefit:</strong> {rec.benefit}
                 </div>
               </div>

@@ -227,7 +227,7 @@ export default function KnowledgeBase() {
           <span>📚</span> Knowledge Base
         </h1>
       </div>
-      <p style={{ color: '#666', marginBottom: '24px' }}>
+      <p style={{ color: '#4b5563', marginBottom: '24px' }}>
         Learn farming best practices, get answers, and chat with our AI assistant
       </p>
 
@@ -430,10 +430,10 @@ export default function KnowledgeBase() {
                     {guide.category}
                   </span>
                   <h3 style={{ margin: '8px 0', fontSize: '18px' }}>{guide.title}</h3>
-                  <p style={{ margin: '0 0 12px 0', color: '#666', fontSize: '14px', lineHeight: '1.5' }}>
+                  <p style={{ margin: '0 0 12px 0', color: '#4b5563', fontSize: '14px', lineHeight: '1.5' }}>
                     {guide.description}
                   </p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#666' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#4b5563' }}>
                     <span>📖 {guide.readTime}</span>
                     <span>⭐ {guide.rating}/5</span>
                   </div>
@@ -499,7 +499,7 @@ export default function KnowledgeBase() {
                   </span>
                 </div>
                 {expandedFaq === faq.id && (
-                  <p style={{ margin: '12px 0 0 0', color: '#666', lineHeight: '1.6' }}>
+                  <p style={{ margin: '12px 0 0 0', color: '#4b5563', lineHeight: '1.6' }}>
                     {faq.answer}
                   </p>
                 )}
@@ -641,11 +641,11 @@ export default function KnowledgeBase() {
             >
               <div style={{ fontSize: '48px', marginBottom: '12px' }}>{tip.icon}</div>
               <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>{tip.title}</h3>
-              <p style={{ margin: '0 0 16px 0', color: '#666', fontSize: '14px', lineHeight: '1.5' }}>
+              <p style={{ margin: '0 0 16px 0', color: '#4b5563', fontSize: '14px', lineHeight: '1.5' }}>
                 {tip.description}
               </p>
               <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '12px' }}>
-                <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>Was this helpful?</div>
+                <div style={{ fontSize: '13px', color: '#4b5563', marginBottom: '8px' }}>Was this helpful?</div>
                 <div style={{ display: 'flex', gap: '4px' }}>
                   {[1, 2, 3, 4, 5].map(star => (
                     <button
@@ -663,7 +663,7 @@ export default function KnowledgeBase() {
                     </button>
                   ))}
                   {ratedTips[tip.id] && (
-                    <span style={{ marginLeft: '8px', fontSize: '13px', color: '#666' }}>
+                    <span style={{ marginLeft: '8px', fontSize: '13px', color: '#4b5563' }}>
                       ({ratedTips[tip.id]} stars)
                     </span>
                   )}
@@ -723,10 +723,10 @@ export default function KnowledgeBase() {
               {selectedGuide.category}
             </span>
             <h2 style={{ margin: '12px 0', fontSize: '28px' }}>{selectedGuide.title}</h2>
-            <p style={{ margin: '0 0 24px 0', color: '#666', fontSize: '16px', lineHeight: '1.6' }}>
+            <p style={{ margin: '0 0 24px 0', color: '#4b5563', fontSize: '16px', lineHeight: '1.6' }}>
               {selectedGuide.description}
             </p>
-            <div style={{ marginBottom: '24px', display: 'flex', gap: '24px', fontSize: '14px', color: '#666' }}>
+            <div style={{ marginBottom: '24px', display: 'flex', gap: '24px', fontSize: '14px', color: '#4b5563' }}>
               <span>📖 {selectedGuide.readTime}</span>
               <span>⭐ {selectedGuide.rating}/5</span>
             </div>

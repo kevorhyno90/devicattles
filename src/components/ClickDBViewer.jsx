@@ -32,9 +32,9 @@ export default function ClickDBViewer(){
 
       <div style={{ maxHeight: 360, overflow: 'auto', border: '1px solid #eee', borderRadius: 6 }}>
         {loading ? (
-          <div style={{ padding: 16, color: '#666' }}>Loading...</div>
+          <div style={{ padding: 16, color: '#4b5563' }}>Loading...</div>
         ) : clicks.length === 0 ? (
-          <div style={{ padding: 16, color: '#666' }}>No click events recorded.</div>
+          <div style={{ padding: 16, color: '#4b5563' }}>No click events recorded.</div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ position: 'sticky', top: 0, background: '#fafafa' }}>

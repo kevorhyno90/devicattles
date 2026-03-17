@@ -255,7 +255,7 @@ export default function CalendarView() {
                       </div>
                     ))}
                     {dayEvents.length > 3 && (
-                      <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>
+                      <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '2px' }}>
                         +{dayEvents.length - 3} more
                       </div>
                     )}
@@ -541,7 +541,7 @@ export default function CalendarView() {
               <h3 style={{ fontSize: '20px', fontWeight: '700', margin: 0 }}>{selectedEvent.title}</h3>
               <button
                 onClick={() => setShowEventModal(false)}
-                style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#6b7280' }}
+                style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#4b5563' }}
               >
                 ×
               </button>

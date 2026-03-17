@@ -422,7 +422,7 @@ export default function Tasks(){
             style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
           />
           {searchTerm && (
-            <div style={{ marginTop: '4px', fontSize: '14px', color: '#6b7280' }}>
+            <div style={{ marginTop: '4px', fontSize: '14px', color: '#4b5563' }}>
               Found {filteredItems.length} task{filteredItems.length !== 1 ? 's' : ''}
             </div>
           )}

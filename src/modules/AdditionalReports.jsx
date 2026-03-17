@@ -232,11 +232,11 @@ export default function AdditionalReports() {
       </div>
 
       {loading ? (
-        <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+        <div style={{ padding: '40px', textAlign: 'center', color: '#4b5563' }}>
           <div style={{ fontSize: '18px' }}>⏳ Loading {activeReport} report...</div>
         </div>
       ) : !reportData ? (
-        <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+        <div style={{ padding: '40px', textAlign: 'center', color: '#4b5563' }}>
           <div style={{ fontSize: '18px' }}>No data available</div>
         </div>
       ) : (
@@ -322,7 +322,7 @@ export default function AdditionalReports() {
             >
               ⏰ Schedule Email
             </button>
-            <span style={{ fontSize: '13px', color: '#666' }}>
+            <span style={{ fontSize: '13px', color: '#4b5563' }}>
               (This is a UI placeholder. Backend integration needed for real scheduling.)
             </span>
           </div>
@@ -330,7 +330,7 @@ export default function AdditionalReports() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '30px' }}>
             {Object.entries(reportData.summary || {}).map(([key, value]) => (
               <div key={key} style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                <div style={{ fontSize: '12px', color: '#666', fontWeight: '600', marginBottom: '8px', textTransform: 'capitalize' }}>
+                <div style={{ fontSize: '12px', color: '#4b5563', fontWeight: '600', marginBottom: '8px', textTransform: 'capitalize' }}>
                   {key.replace(/([A-Z])/g, ' $1')}
                 </div>
                 <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#059669' }}>

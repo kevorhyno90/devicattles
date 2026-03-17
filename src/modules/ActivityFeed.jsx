@@ -186,10 +186,10 @@ export default function ActivityFeed() {
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#111', marginBottom: '8px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#111827', marginBottom: '8px' }}>
           📊 Activity Feed
         </h1>
-        <p style={{ color: '#666', fontSize: '14px' }}>
+        <p style={{ color: '#4b5563', fontSize: '14px' }}>
           Real-time updates and activity history across your farm
         </p>
       </div>
@@ -263,7 +263,7 @@ export default function ActivityFeed() {
                   ⬇️ Export JSON
                 </button>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>Type:</span>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Type:</span>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
@@ -287,7 +287,7 @@ export default function ActivityFeed() {
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>Time:</span>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Time:</span>
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
@@ -338,10 +338,10 @@ export default function ActivityFeed() {
           padding: '16px',
           textAlign: 'center'
         }}>
-          <div style={{ fontSize: '24px', fontWeight: '700', color: '#111' }}>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#111827' }}>
             {filteredActivities.length}
           </div>
-          <div style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '12px', color: '#4b5563', textTransform: 'uppercase' }}>
             Total Activities
           </div>
         </div>
@@ -355,7 +355,7 @@ export default function ActivityFeed() {
           <div style={{ fontSize: '24px', fontWeight: '700', color: '#10b981' }}>
             {filteredActivities.filter(a => a.icon === '➕').length}
           </div>
-          <div style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '12px', color: '#4b5563', textTransform: 'uppercase' }}>
             Added
           </div>
         </div>
@@ -369,7 +369,7 @@ export default function ActivityFeed() {
           <div style={{ fontSize: '24px', fontWeight: '700', color: '#3b82f6' }}>
             {filteredActivities.filter(a => a.icon === '✏️').length}
           </div>
-          <div style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '12px', color: '#4b5563', textTransform: 'uppercase' }}>
             Updated
           </div>
         </div>
@@ -383,7 +383,7 @@ export default function ActivityFeed() {
           <div style={{ fontSize: '24px', fontWeight: '700', color: '#ef4444' }}>
             {filteredActivities.filter(a => a.icon === '🗑️').length}
           </div>
-          <div style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '12px', color: '#4b5563', textTransform: 'uppercase' }}>
             Deleted
           </div>
         </div>
@@ -402,7 +402,7 @@ export default function ActivityFeed() {
           <h3 style={{ margin: '0 0 8px 0', fontSize: '20px', fontWeight: '600' }}>
             No Activities Found
           </h3>
-          <p style={{ color: '#666', margin: 0 }}>
+          <p style={{ color: '#4b5563', margin: 0 }}>
             Try adjusting your filters or start using the system
           </p>
         </div>
@@ -467,7 +467,7 @@ export default function ActivityFeed() {
                     {/* Content */}
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                        <span style={{ fontWeight: '600', fontSize: '14px', color: '#111' }}>
+                        <span style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>
                           {activity.description || activity.action}
                         </span>
                         <span style={{
@@ -483,7 +483,7 @@ export default function ActivityFeed() {
                         </span>
                       </div>
                       {activity.metadata && Object.keys(activity.metadata).length > 0 && !activity.metadata.legacy && (
-                        <div style={{ fontSize: '13px', color: '#666', marginBottom: '4px' }}>
+                        <div style={{ fontSize: '13px', color: '#4b5563', marginBottom: '4px' }}>
                           {Object.entries(activity.metadata).slice(0, 3).map(([key, val]) => (
                             <span key={key} style={{ marginRight: '12px' }}>
                               <strong>{key}:</strong> {String(val).substring(0, 30)}
@@ -491,7 +491,7 @@ export default function ActivityFeed() {
                           ))}
                         </div>
                       )}
-                      <div style={{ fontSize: '12px', color: '#999' }}>
+                      <div style={{ fontSize: '12px', color: '#4b5563' }}>
                         👤 {activity.userName || activity.user} • {formatTime(activity.timestamp)}
                       </div>
                     </div>

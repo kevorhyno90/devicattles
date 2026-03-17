@@ -226,18 +226,28 @@ const EQUIPMENT_SAMPLE = [
 const EQUIPMENT_TYPES = ['Tractor', 'Harvester', 'Planter', 'Sprayer', 'Hay Equipment', 'Mower', 'Loader', 'Cultivator', 'Trailer', 'Utility Vehicle', 'Generator', 'Pump', 'Other']
 const EQUIPMENT_STATUS = ['Operational', 'In Service', 'Down for Repair', 'Retired', 'Sold']
 const EQUIPMENT_CONDITION = ['Excellent', 'Good', 'Fair', 'Poor']
+const ORDER_TRACKING_TEMPLATE = [
+  { step: 'Order Placed', date: null, completed: true },
+  { step: 'Payment Confirmed', date: null, completed: false },
+  { step: 'Seller Confirmed', date: null, completed: false },
+  { step: 'In Transit', date: null, completed: false },
+  { step: 'Delivered', date: null, completed: false }
+]
 
-export default function Inventory(){
+export default function Inventory({ initialView = 'supplies' }){
   const KEY = 'cattalytics:inventory'
   const EQUIPMENT_KEY = 'cattalytics:equipment'
+  const ORDERS_KEY = 'cattalytics:marketplace:orders'
   const [items, setItems] = useState([])
   const [equipment, setEquipment] = useState([])
-  const [view, setView] = useState('supplies') // 'supplies' or 'equipment'
+  const [orders, setOrders] = useState([])
+  const [view, setView] = useState('supplies') // 'supplies' or 'equipment' or 'orders'
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [modalOpenId, setModalOpenId] = useState(null)
   const [showRecordCV, setShowRecordCV] = useState(null)
   const [filterCategory, setFilterCategory] = useState('all')
+  const [orderFilterStatus, setOrderFilterStatus] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   
   // Debounce search for better performance
@@ -264,6 +274,19 @@ export default function Inventory(){
     reorderQuantity: '', expiryDate: '', batchNumber: '', quality: 'Standard', notes: '', personInCare: '', serviceReminder: '', usagePerDay: '', usagePerMonth: ''
   })
 
+  const [orderForm, setOrderForm] = useState({
+    listingTitle: '',
+    seller: '',
+    quantity: '',
+    unit: 'units',
+    price: '',
+    currency: 'KES',
+    paymentMethod: '',
+    expectedDelivery: '',
+    notes: '',
+    orderType: 'Manual'
+  })
+
   useEffect(()=>{
     const raw = localStorage.getItem(KEY)
     if(raw) setItems(JSON.parse(raw))
@@ -272,10 +295,20 @@ export default function Inventory(){
     const eqRaw = localStorage.getItem(EQUIPMENT_KEY)
     if(eqRaw) setEquipment(JSON.parse(eqRaw))
     else setEquipment(EQUIPMENT_SAMPLE)
+
+    const ordRaw = localStorage.getItem(ORDERS_KEY)
+    if(ordRaw) setOrders(JSON.parse(ordRaw))
   }, [])
+
+  useEffect(() => {
+    const allowedViews = ['supplies', 'equipment', 'orders']
+    const nextView = allowedViews.includes(initialView) ? initialView : 'supplies'
+    setView(nextView)
+  }, [initialView])
 
   useEffect(()=> localStorage.setItem(KEY, JSON.stringify(items)), [items])
   useEffect(()=> localStorage.setItem(EQUIPMENT_KEY, JSON.stringify(equipment)), [equipment])
+  useEffect(()=> localStorage.setItem(ORDERS_KEY, JSON.stringify(orders)), [orders])
 
   function resetForm(){
     setFormData({
@@ -290,7 +323,148 @@ export default function Inventory(){
       fuelType: '', lastServiceDate: '', nextServiceDate: '', servicePerson: '',
       serviceContact: '', warrantyExpiry: '', insurancePolicy: '', insuranceExpiry: '', notes: ''
     })
+    setOrderForm({
+      listingTitle: '',
+      seller: '',
+      quantity: '',
+      unit: 'units',
+      price: '',
+      currency: 'KES',
+      paymentMethod: '',
+      expectedDelivery: '',
+      notes: '',
+      orderType: 'Manual'
+    })
     setEditingId(null)
+  }
+
+  function createTrackingSteps(){
+    const now = new Date().toISOString()
+    return ORDER_TRACKING_TEMPLATE.map((step, idx) => (
+      idx === 0 ? { ...step, date: now, completed: true } : { ...step }
+    ))
+  }
+
+  function addOrUpdateOrder(){
+    if(!orderForm.listingTitle.trim()) {
+      alert('Please enter order title/item name')
+      return
+    }
+
+    const quantity = parseFloat(orderForm.quantity) || 1
+    const price = parseFloat(orderForm.price) || 0
+
+    if(editingId){
+      setOrders(orders.map(o => o.id === editingId ? {
+        ...o,
+        ...orderForm,
+        quantity,
+        price,
+        expectedDelivery: orderForm.expectedDelivery || o.expectedDelivery || ''
+      } : o))
+      setToast({ type: 'success', message: 'Order updated successfully' })
+      setTimeout(() => setToast(null), 3000)
+      setEditingId(null)
+    } else {
+      const now = new Date().toISOString().split('T')[0]
+      const newOrder = {
+        id: 'ORD-' + Date.now(),
+        listingId: null,
+        listingTitle: orderForm.listingTitle,
+        price,
+        quantity,
+        unit: orderForm.unit || 'units',
+        currency: orderForm.currency || 'KES',
+        buyer: 'Current User',
+        seller: orderForm.seller || 'Unassigned Supplier',
+        status: 'Pending Payment',
+        orderDate: now,
+        paymentMethod: orderForm.paymentMethod || '',
+        expectedDelivery: orderForm.expectedDelivery || '',
+        notes: orderForm.notes || '',
+        orderType: orderForm.orderType || 'Manual',
+        source: 'inventory',
+        trackingSteps: createTrackingSteps()
+      }
+      setOrders([newOrder, ...orders])
+      setToast({ type: 'success', message: 'Order created successfully' })
+      setTimeout(() => setToast(null), 3000)
+    }
+
+    resetForm()
+    setShowAddForm(false)
+    setView('orders')
+  }
+
+  function startEditOrder(order){
+    setOrderForm({
+      listingTitle: order.listingTitle || '',
+      seller: order.seller || '',
+      quantity: order.quantity || 1,
+      unit: order.unit || 'units',
+      price: order.price || 0,
+      currency: order.currency || 'KES',
+      paymentMethod: order.paymentMethod || '',
+      expectedDelivery: order.expectedDelivery || '',
+      notes: order.notes || '',
+      orderType: order.orderType || 'Manual'
+    })
+    setEditingId(order.id)
+    setShowAddForm(true)
+  }
+
+  function createReorderFromItem(item){
+    const reorderQty = parseFloat(item.reorderQuantity) || Math.max(1, parseFloat(item.reorderPoint) || 1)
+    const nowIso = new Date().toISOString().split('T')[0]
+    const newOrder = {
+      id: 'ORD-' + Date.now(),
+      listingId: item.id,
+      listingTitle: `${item.name} Reorder`,
+      price: (item.unitCost || 0) * reorderQty,
+      quantity: reorderQty,
+      unit: item.unit || 'units',
+      currency: 'KES',
+      buyer: 'Current User',
+      seller: item.supplier || 'Preferred Supplier',
+      status: 'Pending Payment',
+      orderDate: nowIso,
+      paymentMethod: '',
+      expectedDelivery: '',
+      notes: `Auto-generated from low stock inventory. Item: ${item.name}.`,
+      orderType: 'Inventory Reorder',
+      source: 'inventory',
+      trackingSteps: createTrackingSteps()
+    }
+    setOrders([newOrder, ...orders])
+    setToast({ type: 'success', message: `Reorder created for ${item.name}` })
+    setTimeout(() => setToast(null), 3000)
+  }
+
+  function updateOrderStatus(orderId, stepIndex){
+    setOrders(orders.map(order => {
+      if(order.id !== orderId) return order
+      if(!Array.isArray(order.trackingSteps)) return order
+
+      const canAdvance = stepIndex > 0 && order.trackingSteps[stepIndex - 1]?.completed
+      if(!canAdvance || order.trackingSteps[stepIndex]?.completed) return order
+
+      const now = new Date().toISOString()
+      const trackingSteps = order.trackingSteps.map((step, idx) => (
+        idx === stepIndex ? { ...step, completed: true, date: now } : step
+      ))
+      const allDone = trackingSteps.every(step => step.completed)
+
+      return {
+        ...order,
+        trackingSteps,
+        status: allDone ? 'Delivered' : trackingSteps[stepIndex].step
+      }
+    }))
+  }
+
+  function cancelOrder(orderId){
+    if(!confirm('Cancel this order?')) return
+    setOrders(orders.map(order => order.id === orderId ? { ...order, status: 'Cancelled' } : order))
   }
 
   function add(){
@@ -555,6 +729,22 @@ export default function Inventory(){
     })
   }, [equipment, debouncedSearch, filterCategory])
 
+  const filteredOrders = useMemo(() => {
+    const q = debouncedSearch.trim().toLowerCase()
+
+    return [...orders]
+      .filter(order => {
+        const matchesStatus = orderFilterStatus === 'all' || order.status === orderFilterStatus
+        const matchesSearch = !q ||
+          (order.listingTitle || '').toLowerCase().includes(q) ||
+          (order.seller || '').toLowerCase().includes(q) ||
+          (order.id || '').toLowerCase().includes(q) ||
+          (order.orderType || '').toLowerCase().includes(q)
+        return matchesStatus && matchesSearch
+      })
+      .sort((a, b) => new Date(b.orderDate || 0) - new Date(a.orderDate || 0))
+  }, [orders, debouncedSearch, orderFilterStatus])
+
   const lowStockItems = items.filter(i => i.quantity <= (i.reorderPoint || 0))
   const totalValue = items.reduce((sum, i) => sum + (i.totalValue || 0), 0)
   const expiringSoon = items.filter(i => {
@@ -571,29 +761,41 @@ export default function Inventory(){
   })
   const operationalEquipment = equipment.filter(e => e.status === 'Operational').length
 
+  const pendingOrders = orders.filter(o => (o.status || '').includes('Pending') || (o.status || '').includes('Payment')).length
+  const inTransitOrders = orders.filter(o => o.status === 'In Transit').length
+  const deliveredOrders = orders.filter(o => o.status === 'Delivered').length
+  const cancelledOrders = orders.filter(o => o.status === 'Cancelled').length
+  const totalOrderValue = orders.reduce((sum, o) => sum + (o.price || 0), 0)
+
   const fileInputRef = useRef(null)
 
   function handleExportCSV() {
     if (view === 'supplies') {
       exportToCSV(items, 'inventory_items.csv')
-    } else {
+    } else if (view === 'equipment') {
       exportToCSV(equipment, 'equipment.csv')
+    } else {
+      exportToCSV(orders, 'inventory_orders.csv')
     }
   }
 
   function handleExportExcel() {
     if (view === 'supplies') {
       exportToExcel(items, 'inventory_items_export.csv')
-    } else {
+    } else if (view === 'equipment') {
       exportToExcel(equipment, 'equipment_export.csv')
+    } else {
+      exportToExcel(orders, 'inventory_orders_export.csv')
     }
   }
 
   function handleExportJSON() {
     if (view === 'supplies') {
       exportToJSON(items, 'inventory_items.json')
-    } else {
+    } else if (view === 'equipment') {
       exportToJSON(equipment, 'equipment.json')
+    } else {
+      exportToJSON(orders, 'inventory_orders.json')
     }
   }
 
@@ -618,10 +820,15 @@ export default function Inventory(){
             setItems([...items, ...data])
             alert(`Imported ${data.length} items`)
           }
-        } else {
+        } else if (view === 'equipment') {
           if (confirm(`Import ${data.length} equipment records? This will merge with existing data.`)) {
             setEquipment([...equipment, ...data])
             alert(`Imported ${data.length} equipment records`)
+          }
+        } else {
+          if (confirm(`Import ${data.length} orders? This will merge with existing data.`)) {
+            setOrders([...orders, ...data])
+            alert(`Imported ${data.length} orders`)
           }
         }
       })
@@ -636,10 +843,15 @@ export default function Inventory(){
             setItems([...items, ...data])
             alert(`Imported ${data.length} items`)
           }
-        } else {
+        } else if (view === 'equipment') {
           if (confirm(`Import ${data.length} equipment records? This will merge with existing data.`)) {
             setEquipment([...equipment, ...data])
             alert(`Imported ${data.length} equipment records`)
+          }
+        } else {
+          if (confirm(`Import ${data.length} orders? This will merge with existing data.`)) {
+            setOrders([...orders, ...data])
+            alert(`Imported ${data.length} orders`)
           }
         }
       })
@@ -654,8 +866,8 @@ export default function Inventory(){
     <div>
       <div className="health-header">
         <div>
-          <h2>{view === 'supplies' ? '📦' : '🚜'} {view === 'supplies' ? 'Inventory' : 'Equipment'} Management</h2>
-          <p className="muted">{view === 'supplies' ? 'Track supplies, monitor stock levels, and manage reordering' : 'Track machinery, equipment, maintenance, and service records'}</p>
+          <h2>{view === 'supplies' ? '📦' : view === 'equipment' ? '🚜' : '🧾'} {view === 'supplies' ? 'Inventory' : view === 'equipment' ? 'Equipment' : 'Orders'} Management</h2>
+          <p className="muted">{view === 'supplies' ? 'Track supplies, monitor stock levels, and manage reordering' : view === 'equipment' ? 'Track machinery, equipment, maintenance, and service records' : 'Create, track, and manage purchase orders tied to inventory and suppliers'}</p>
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button className={view === 'supplies' ? 'tab-btn active' : 'tab-btn'} onClick={() => { setView('supplies'); setShowAddForm(false); resetForm() }}>
@@ -664,8 +876,11 @@ export default function Inventory(){
           <button className={view === 'equipment' ? 'tab-btn active' : 'tab-btn'} onClick={() => { setView('equipment'); setShowAddForm(false); resetForm() }}>
             🚜 Equipment
           </button>
+          <button className={view === 'orders' ? 'tab-btn active' : 'tab-btn'} onClick={() => { setView('orders'); setShowAddForm(false); resetForm() }}>
+            🧾 Orders ({orders.length})
+          </button>
           <button className="tab-btn" onClick={()=> setShowAddForm(!showAddForm)}>
-            {showAddForm ? '✕ Cancel' : `+ Add ${view === 'supplies' ? 'Item' : 'Equipment'}`}
+            {showAddForm ? '✕ Cancel' : `+ Add ${view === 'supplies' ? 'Item' : view === 'equipment' ? 'Equipment' : 'Order'}`}
           </button>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
             <button onClick={handleExportCSV} title="Export to CSV" style={{ fontSize: 12 }}>📊 CSV</button>
@@ -687,19 +902,19 @@ export default function Inventory(){
       {view === 'supplies' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
           <div className="card" style={{ padding: '16px', background: '#f0fdf4' }}>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Total Inventory Value</div>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Total Inventory Value</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>KES {totalValue.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#fef3c7' }}>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Low Stock Alerts</div>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Low Stock Alerts</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{lowStockItems.length}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#fee2e2' }}>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Expiring Soon (90 days)</div>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Expiring Soon (90 days)</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#dc2626' }}>{expiringSoon.length}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#eff6ff' }}>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Total Items</div>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Total Items</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#2563eb' }}>{items.length}</div>
           </div>
         </div>
@@ -709,20 +924,50 @@ export default function Inventory(){
       {view === 'equipment' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
           <div className="card" style={{ padding: '16px', background: '#f0fdf4' }}>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Total Equipment Value</div>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Total Equipment Value</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>KES {totalEquipmentValue.toLocaleString('en-KE')}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#fef3c7' }}>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Service Due (30 days)</div>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Service Due (30 days)</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{equipmentNeedingService.length}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#e0f2fe' }}>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Operational</div>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Operational</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#0284c7' }}>{operationalEquipment}/{equipment.length}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#eff6ff' }}>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Total Equipment</div>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Total Equipment</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#2563eb' }}>{equipment.length}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Summary Stats for Orders */}
+      {view === 'orders' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+          <div className="card" style={{ padding: '16px', background: '#f0f9ff' }}>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Total Orders</div>
+            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#0369a1' }}>{orders.length}</div>
+          </div>
+          <div className="card" style={{ padding: '16px', background: '#fef3c7' }}>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Pending / Payment</div>
+            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#b45309' }}>{pendingOrders}</div>
+          </div>
+          <div className="card" style={{ padding: '16px', background: '#e0f2fe' }}>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>In Transit</div>
+            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#0284c7' }}>{inTransitOrders}</div>
+          </div>
+          <div className="card" style={{ padding: '16px', background: '#ecfdf5' }}>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Delivered</div>
+            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>{deliveredOrders}</div>
+          </div>
+          <div className="card" style={{ padding: '16px', background: '#fee2e2' }}>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Cancelled</div>
+            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#dc2626' }}>{cancelledOrders}</div>
+          </div>
+          <div className="card" style={{ padding: '16px', background: '#f5f3ff' }}>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Total Order Value</div>
+            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#7c3aed' }}>KES {totalOrderValue.toLocaleString('en-KE')}</div>
           </div>
         </div>
       )}
@@ -930,19 +1175,111 @@ export default function Inventory(){
         </div>
       )}
 
+      {/* Orders Add/Edit Form */}
+      {showAddForm && view === 'orders' && (
+        <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
+          <h3 style={{ marginTop: 0 }}>{editingId ? 'Edit Order' : 'Create New Order'}</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            <div>
+              <label>Order Title / Item *</label>
+              <input value={orderForm.listingTitle} onChange={e => setOrderForm({ ...orderForm, listingTitle: e.target.value })} placeholder="e.g., Grain Mix Reorder" />
+            </div>
+            <div>
+              <label>Supplier / Seller</label>
+              <input value={orderForm.seller} onChange={e => setOrderForm({ ...orderForm, seller: e.target.value })} placeholder="e.g., Farm Supply Co" />
+            </div>
+            <div>
+              <label>Order Type</label>
+              <select value={orderForm.orderType} onChange={e => setOrderForm({ ...orderForm, orderType: e.target.value })}>
+                <option value="Manual">Manual</option>
+                <option value="Inventory Reorder">Inventory Reorder</option>
+                <option value="Emergency Purchase">Emergency Purchase</option>
+                <option value="Service Contract">Service Contract</option>
+              </select>
+            </div>
+            <div>
+              <label>Quantity</label>
+              <input type="number" step="0.01" value={orderForm.quantity} onChange={e => setOrderForm({ ...orderForm, quantity: e.target.value })} />
+            </div>
+            <div>
+              <label>Unit</label>
+              <select value={orderForm.unit} onChange={e => setOrderForm({ ...orderForm, unit: e.target.value })}>
+                {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+            <div>
+              <label>Total Price</label>
+              <input type="number" step="0.01" value={orderForm.price} onChange={e => setOrderForm({ ...orderForm, price: e.target.value })} />
+            </div>
+            <div>
+              <label>Currency</label>
+              <select value={orderForm.currency} onChange={e => setOrderForm({ ...orderForm, currency: e.target.value })}>
+                <option value="KES">KES</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+            <div>
+              <label>Payment Method</label>
+              <select value={orderForm.paymentMethod} onChange={e => setOrderForm({ ...orderForm, paymentMethod: e.target.value })}>
+                <option value="">Not selected</option>
+                <option value="M-Pesa">M-Pesa</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Card Payment">Card Payment</option>
+                <option value="Cash on Delivery">Cash on Delivery</option>
+              </select>
+            </div>
+            <div>
+              <label>Expected Delivery</label>
+              <input type="date" value={orderForm.expectedDelivery} onChange={e => setOrderForm({ ...orderForm, expectedDelivery: e.target.value })} />
+            </div>
+            <div style={{ gridColumn: 'span 3' }}>
+              <label>Order Notes</label>
+              <textarea value={orderForm.notes} onChange={e => setOrderForm({ ...orderForm, notes: e.target.value })} rows={3} placeholder="Optional notes, terms, or special instructions..." />
+            </div>
+          </div>
+          <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+            <button onClick={addOrUpdateOrder}>{editingId ? 'Save Order' : 'Create Order'}</button>
+            <button onClick={() => { resetForm(); setShowAddForm(false) }}>Cancel</button>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
-          <option value="all">{view === 'supplies' ? 'All Categories' : 'All Types'}</option>
-          {view === 'supplies' ? CATEGORIES.map(c => <option key={c} value={c}>{c}</option>) : EQUIPMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
-        <input 
-          placeholder={view === 'supplies' ? 'Search items or suppliers...' : 'Search equipment, manufacturer, or model...'}
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          style={{ flexGrow: 1, maxWidth: '400px' }}
-        />
-      </div>
+      {view !== 'orders' && (
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
+            <option value="all">{view === 'supplies' ? 'All Categories' : 'All Types'}</option>
+            {view === 'supplies' ? CATEGORIES.map(c => <option key={c} value={c}>{c}</option>) : EQUIPMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <input 
+            placeholder={view === 'supplies' ? 'Search items or suppliers...' : 'Search equipment, manufacturer, or model...'}
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            style={{ flexGrow: 1, maxWidth: '400px' }}
+          />
+        </div>
+      )}
+
+      {view === 'orders' && (
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <select value={orderFilterStatus} onChange={e => setOrderFilterStatus(e.target.value)}>
+            <option value="all">All Statuses</option>
+            <option value="Pending Payment">Pending Payment</option>
+            <option value="Payment Confirmed">Payment Confirmed</option>
+            <option value="Seller Confirmed">Seller Confirmed</option>
+            <option value="In Transit">In Transit</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+          <input
+            placeholder="Search order ID, title, supplier, or type..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            style={{ flexGrow: 1, maxWidth: '520px' }}
+          />
+        </div>
+      )}
 
       {/* Low Stock Alerts */}
       {view === 'supplies' && lowStockItems.length > 0 && (
@@ -969,6 +1306,9 @@ export default function Inventory(){
                    ⚠️ Predicted to run out in less than a week!
                  </span>
                )}
+               <button className="tab-btn" style={{ marginLeft: 12 }} onClick={() => createReorderFromItem(item)}>
+                 🛒 Create Reorder
+               </button>
             </div>
           ))}
         </div>
@@ -1105,6 +1445,71 @@ export default function Inventory(){
         </div>
       )}
 
+      {/* Orders Grid */}
+      {view === 'orders' && (
+        <div style={{ display: 'grid', gap: '16px' }}>
+          {filteredOrders.map(order => {
+            const tracking = Array.isArray(order.trackingSteps) ? order.trackingSteps : createTrackingSteps()
+            const nextStepIndex = tracking.findIndex((step, idx) => idx > 0 && !step.completed)
+            const canAdvance = nextStepIndex > 0 && tracking[nextStepIndex - 1]?.completed && order.status !== 'Cancelled' && order.status !== 'Delivered'
+
+            return (
+              <div key={order.id} className="card" style={{ padding: '16px', borderLeft: order.status === 'Delivered' ? '4px solid #059669' : order.status === 'Cancelled' ? '4px solid #dc2626' : '4px solid #3b82f6' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                      <h3 style={{ margin: 0 }}>{order.listingTitle}</h3>
+                      <span className="badge" style={{ background: '#1d4ed8' }}>{order.orderType || 'Order'}</span>
+                      <span className="badge" style={{ background: order.status === 'Delivered' ? '#059669' : order.status === 'Cancelled' ? '#dc2626' : '#f59e0b' }}>{order.status}</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', fontSize: '14px' }}>
+                      <div><div className="muted">Order ID</div><strong>{order.id}</strong></div>
+                      <div><div className="muted">Supplier</div><strong>{order.seller || 'N/A'}</strong></div>
+                      <div><div className="muted">Order Date</div><strong>{order.orderDate || 'N/A'}</strong></div>
+                      <div><div className="muted">Expected Delivery</div><strong>{order.expectedDelivery || 'N/A'}</strong></div>
+                      <div><div className="muted">Quantity</div><strong>{order.quantity || 1} {order.unit || ''}</strong></div>
+                      <div><div className="muted">Value</div><strong style={{ color: '#059669' }}>{order.currency || 'KES'} {(order.price || 0).toLocaleString('en-KE')}</strong></div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    <button className="tab-btn" onClick={() => setModalOpenId(order.id)}>👁️ View</button>
+                    <button className="tab-btn" onClick={() => startEditOrder(order)}>✏️ Edit</button>
+                    <button className="tab-btn" disabled={!canAdvance} onClick={() => canAdvance && updateOrderStatus(order.id, nextStepIndex)}>➡️ Advance</button>
+                    <button className="tab-btn" style={{ color: '#dc2626' }} disabled={order.status === 'Cancelled' || order.status === 'Delivered'} onClick={() => cancelOrder(order.id)}>✕ Cancel</button>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid #e5e7eb' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>Tracking Progress</div>
+                  <div style={{ display: 'grid', gap: '8px' }}>
+                    {tracking.map((step, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: 22, height: 22, borderRadius: '50%', background: step.completed ? '#10b981' : '#e5e7eb', color: step.completed ? '#fff' : '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>
+                          {step.completed ? '✓' : idx + 1}
+                        </div>
+                        <div style={{ fontSize: '13px' }}>
+                          <div style={{ fontWeight: step.completed ? 700 : 500 }}>{step.step}</div>
+                          {step.date && <div className="muted">{new Date(step.date).toLocaleString()}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {view === 'orders' && filteredOrders.length === 0 && (
+        <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🧾</div>
+          <h3>No orders found</h3>
+          <p className="muted">Create an order or adjust your filters</p>
+        </div>
+      )}
+
       {/* Supplies Items Grid */}
       {view === 'supplies' && lowStockItems.length > 0 && (
         <div className="card" style={{ padding: '16px', marginBottom: '16px', background: '#fef3c7', borderLeft: '4px solid #f59e0b' }}>
@@ -1193,7 +1598,7 @@ export default function Inventory(){
                     </div>
                   </div>
                   
-                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: 4 }}>
+                  <div style={{ fontSize: '0.75rem', color: '#4b5563', marginTop: 4 }}>
                     💡 Press Enter to save, Escape to cancel
                   </div>
                 </div>
@@ -1249,6 +1654,7 @@ export default function Inventory(){
 
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   <button className="tab-btn" onClick={() => startInlineEdit(item)} title="Quick Edit">⚡ Quick</button>
+                  <button className="tab-btn" onClick={() => createReorderFromItem(item)} title="Create Reorder">🛒 Order</button>
                   <button className="tab-btn" onClick={() => {
                     const amount = parseFloat(prompt('Enter quantity to add:', '0'))
                     if(amount && amount > 0) adjustQuantity(item.id, amount, 'Stock added')
@@ -1281,16 +1687,17 @@ export default function Inventory(){
       {modalOpenId && (() => {
         const item = items.find(i => i.id === modalOpenId)
         const eq = equipment.find(e => e.id === modalOpenId)
-        const record = item || eq
+        const order = orders.find(o => o.id === modalOpenId)
+        const record = item || eq || order
         if(!record) return null
         
         return (
             <div className="drawer-overlay" onClick={() => setModalOpenId(null)}>
               <div className="drawer" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h3 style={{ margin: 0 }}>{record.name} — {record.id}</h3>
+                  <h3 style={{ margin: 0 }}>{record.name || record.listingTitle} — {record.id}</h3>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => setShowRecordCV(record)} style={{ padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>👁️ View CV</button>
+                    {!order && <button onClick={() => setShowRecordCV(record)} style={{ padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>👁️ View CV</button>}
                     <button onClick={() => setModalOpenId(null)}>✕ Close</button>
                   </div>
               </div>
@@ -1408,15 +1815,15 @@ export default function Inventory(){
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                               <div>
                                 <strong style={{ fontSize: '14px' }}>{m.type}</strong>
-                                <div style={{ fontSize: '12px', color: '#6b7280' }}>{new Date(m.date).toLocaleDateString()}</div>
+                                <div style={{ fontSize: '12px', color: '#4b5563' }}>{new Date(m.date).toLocaleDateString()}</div>
                               </div>
                               <div style={{ textAlign: 'right' }}>
                                 <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--green)' }}>${(m.cost || 0).toLocaleString()}</div>
-                                {m.hours && <div style={{ fontSize: '12px', color: '#6b7280' }}>{m.hours} hours</div>}
+                                {m.hours && <div style={{ fontSize: '12px', color: '#4b5563' }}>{m.hours} hours</div>}
                               </div>
                             </div>
                             <div style={{ fontSize: '13px', color: '#374151', marginBottom: '4px' }}>{m.description}</div>
-                            {m.provider && <div style={{ fontSize: '12px', color: '#6b7280' }}>Provider: {m.provider}</div>}
+                            {m.provider && <div style={{ fontSize: '12px', color: '#4b5563' }}>Provider: {m.provider}</div>}
                           </div>
                         ))}
                       </div>
@@ -1424,6 +1831,54 @@ export default function Inventory(){
                         <strong>Total Maintenance Cost:</strong> <span style={{ fontSize: '18px', color: 'var(--green)', fontWeight: 'bold' }}>
                           ${eq.maintenanceHistory.reduce((sum, m) => sum + (m.cost || 0), 0).toLocaleString()}
                         </span>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Orders Details */}
+              {order && (
+                <>
+                  <div className="card" style={{ padding: '16px', marginBottom: '16px' }}>
+                    <h4>Order Details</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', fontSize: '14px' }}>
+                      <div><strong>Status:</strong> {order.status}</div>
+                      <div><strong>Order Type:</strong> {order.orderType || 'Order'}</div>
+                      <div><strong>Supplier:</strong> {order.seller || 'N/A'}</div>
+                      <div><strong>Buyer:</strong> {order.buyer || 'N/A'}</div>
+                      <div><strong>Order Date:</strong> {order.orderDate || 'N/A'}</div>
+                      <div><strong>Expected Delivery:</strong> {order.expectedDelivery || 'N/A'}</div>
+                      <div><strong>Payment Method:</strong> {order.paymentMethod || 'N/A'}</div>
+                      <div><strong>Quantity:</strong> {order.quantity || 1} {order.unit || ''}</div>
+                      <div><strong>Total Value:</strong> {order.currency || 'KES'} {(order.price || 0).toLocaleString('en-KE')}</div>
+                    </div>
+                    {order.notes && (
+                      <div style={{ marginTop: '12px' }}>
+                        <strong>Notes:</strong>
+                        <p style={{ margin: '4px 0 0 0' }}>{order.notes}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {Array.isArray(order.trackingSteps) && order.trackingSteps.length > 0 && (
+                    <div className="card" style={{ padding: '16px' }}>
+                      <h4>Tracking Steps</h4>
+                      <div style={{ display: 'grid', gap: '10px' }}>
+                        {order.trackingSteps.map((step, idx) => {
+                          const canComplete = idx > 0 && order.trackingSteps[idx - 1]?.completed && !step.completed && order.status !== 'Cancelled' && order.status !== 'Delivered'
+                          return (
+                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                              <div>
+                                <strong>{step.step}</strong>
+                                <div className="muted" style={{ fontSize: '12px' }}>{step.date ? new Date(step.date).toLocaleString() : 'Pending'}</div>
+                              </div>
+                              <button className="tab-btn" disabled={!canComplete} onClick={() => updateOrderStatus(order.id, idx)}>
+                                {step.completed ? '✓ Completed' : canComplete ? 'Mark Complete' : 'Locked'}
+                              </button>
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
                   )}

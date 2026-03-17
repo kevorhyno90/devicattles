@@ -123,10 +123,10 @@ export default defineConfig(({ command }) => {
             }
           }
         ],
-        // Provide an explicit offline fallback for navigations but ensure
-        // module/css requests are not redirected to HTML (fixes MIME errors
-        // where the SW returned index.html for JS modules).
-        navigateFallback: '/offline.html',
+        // Serve the cached app shell for SPA navigations while offline.
+        // This allows the installed/web app to open without internet after
+        // it has been loaded once online.
+        navigateFallback: '/index.html',
         navigateFallbackDenylist: [
           /\/.+\.(js|css|json|map)$/i,
           /\/api\//i,

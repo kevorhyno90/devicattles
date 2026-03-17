@@ -44,6 +44,7 @@ const FRIENDLY_KEY_MAP = {
   'cattalytics:bsf:harvest': { module: 'Livestock - BSF', subsection: 'Harvest Log' },
 
   'cattalytics:crops': { module: 'Crops', subsection: 'Crop Registry' },
+  'cattalytics:crops:subsections': { module: 'Crops', subsection: 'Crop Subsection Records' },
   'cattalytics:crops:yields': { module: 'Crops', subsection: 'Yield Ledger' },
   'cattalytics:crops:sales': { module: 'Crops', subsection: 'Sales Ledger' },
   'cattalytics:crops:treatments': { module: 'Crops', subsection: 'Treatment Ledger' },
@@ -92,13 +93,13 @@ const REPORT_SECTION_TEMPLATES = [
   { module: 'Livestock - BSF', subsection: 'Harvest Log', storageKey: 'cattalytics:bsf:harvest' },
 
   { module: 'Crops', subsection: 'Crop Registry', storageKey: 'cattalytics:crops' },
-  { module: 'Crops', subsection: 'Bananas', storageKey: 'cattalytics:crops' },
-  { module: 'Crops', subsection: 'Sweet Banana', storageKey: 'cattalytics:crops' },
-  { module: 'Crops', subsection: 'Vegetables', storageKey: 'cattalytics:crops' },
-  { module: 'Crops', subsection: 'Herbs', storageKey: 'cattalytics:crops' },
-  { module: 'Crops', subsection: 'Tea Plantation', storageKey: 'cattalytics:crops' },
-  { module: 'Crops', subsection: 'Export Avocado', storageKey: 'cattalytics:crops' },
-  { module: 'Crops', subsection: 'Fruits', storageKey: 'cattalytics:crops' },
+  { module: 'Crops', subsection: 'Bananas', storageKey: 'cattalytics:crops:subsections' },
+  { module: 'Crops', subsection: 'Sweet Banana', storageKey: 'cattalytics:crops:subsections' },
+  { module: 'Crops', subsection: 'Vegetables', storageKey: 'cattalytics:crops:subsections' },
+  { module: 'Crops', subsection: 'Herbs', storageKey: 'cattalytics:crops:subsections' },
+  { module: 'Crops', subsection: 'Tea Plantation', storageKey: 'cattalytics:crops:subsections' },
+  { module: 'Crops', subsection: 'Export Avocado', storageKey: 'cattalytics:crops:subsections' },
+  { module: 'Crops', subsection: 'Fruits', storageKey: 'cattalytics:crops:subsections' },
   { module: 'Crops', subsection: 'Yield Ledger', storageKey: 'cattalytics:crops:yields' },
   { module: 'Crops', subsection: 'Sales Ledger', storageKey: 'cattalytics:crops:sales' },
   { module: 'Crops', subsection: 'Treatment Ledger', storageKey: 'cattalytics:crops:treatments' },
@@ -175,6 +176,16 @@ const SUBSECTION_ORDER = {
     'Leave Management',
     'Attendance Log'
   ]
+}
+
+const CROP_SUBMODULE_LABELS = {
+  banana: 'Bananas',
+  sweetBanana: 'Sweet Banana',
+  vegetables: 'Vegetables',
+  herbs: 'Herbs',
+  tea: 'Tea Plantation',
+  avocadoExport: 'Export Avocado',
+  fruits: 'Fruits'
 }
 
 function safeParseJSON(raw) {
@@ -344,6 +355,43 @@ function deriveCanineDatasetsFromAnimals(animals = []) {
   ]
 }
 
+function deriveCropSubsectionDatasets(records = [], crops = []) {
+  const cropById = new Map(normalizeRowsForReport(crops).map((crop) => [crop.id, crop]))
+
+  return Object.entries(CROP_SUBMODULE_LABELS).map(([moduleKey, subsectionLabel]) => {
+    const rows = normalizeRowsForReport(records)
+      .filter((record) => String(record?.plantSubmodule || '') === moduleKey)
+      .map((record) => {
+        const crop = cropById.get(record.cropId) || {}
+        return {
+          cropId: record.cropId || '',
+          cropName: record.cropName || crop.name || '',
+          variety: crop.variety || '',
+          field: crop.field || '',
+          status: record.status || crop.status || '',
+          domain: record.domain || '',
+          subsection: record.subsection || '',
+          date: record.date || '',
+          quantity: record.quantity || '',
+          unit: record.unit || '',
+          value: record.value || '',
+          notes: record.notes || '',
+          updatedAt: record.updatedAt || record.createdAt || ''
+        }
+      })
+
+    return {
+      id: `derived:crops:${moduleKey}:subsections`,
+      storageKey: 'cattalytics:crops:subsections',
+      module: 'Crops',
+      subsection: subsectionLabel,
+      sourceType: 'derived',
+      rawRows: rows,
+      updatedAt: new Date().toISOString()
+    }
+  })
+}
+
 function isObjectLike(value) {
   return value && typeof value === 'object' && !Array.isArray(value)
 }
@@ -459,6 +507,7 @@ function buildExpectedReportKeys() {
   // Extra operational domains that are managed directly in modules.
   ;[
     'cattalytics:crops',
+    'cattalytics:crops:subsections',
     'cattalytics:crops:yields',
     'cattalytics:crops:sales',
     'cattalytics:crops:treatments',
@@ -521,6 +570,10 @@ export function buildProfessionalReportCatalog() {
 
   const animalsData = safeParseJSON(localStorage.getItem('cattalytics:animals'))
   deriveCanineDatasetsFromAnimals(animalsData).forEach((dataset) => datasets.push(dataset))
+
+  const cropSubsectionData = safeParseJSON(localStorage.getItem('cattalytics:crops:subsections'))
+  const cropRegistryData = safeParseJSON(localStorage.getItem('cattalytics:crops'))
+  deriveCropSubsectionDatasets(cropSubsectionData, cropRegistryData).forEach((dataset) => datasets.push(dataset))
 
   REPORT_SECTION_TEMPLATES.forEach((template) => {
     datasets.push({

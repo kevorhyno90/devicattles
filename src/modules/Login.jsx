@@ -57,7 +57,7 @@ export default function Login({ onLoginSuccess }) {
           }}>
             🌾 Devins Farm
           </h1>
-          <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
+          <p style={{ margin: 0, color: '#4b5563', fontSize: '14px' }}>
             Farm Management System
           </p>
         </div>
@@ -152,15 +152,15 @@ export default function Login({ onLoginSuccess }) {
           borderRadius: '8px',
           fontSize: '13px'
         }}>
-          <div style={{ fontWeight: 600, marginBottom: '12px', color: '#374151' }}>Demo Accounts:</div>
+          <div style={{ fontWeight: 600, marginBottom: '12px', color: '#1f2937' }}>Demo Accounts:</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ color: '#6b7280' }}>
+            <div style={{ color: '#4b5563' }}>
               <strong>Manager:</strong> admin / admin123
             </div>
-            <div style={{ color: '#6b7280' }}>
+            <div style={{ color: '#4b5563' }}>
               <strong>Worker:</strong> worker / worker123
             </div>
-            <div style={{ color: '#6b7280' }}>
+            <div style={{ color: '#4b5563' }}>
               <strong>Vet:</strong> vet / vet123
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function Login({ onLoginSuccess }) {
           marginTop: '24px',
           textAlign: 'center',
           fontSize: '12px',
-          color: '#9ca3af'
+          color: '#4b5563'
         }}>
           <p style={{ margin: 0 }}>
             By logging in, you agree to our terms and conditions

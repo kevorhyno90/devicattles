@@ -306,21 +306,21 @@ export default function AnimalMeasurement({ animals }){
       {/* Summary Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
         <div className="card" style={{ padding: 16, background: '#f0fdf4' }}>
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Measurements</div>
+          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Total Measurements</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{filteredItems.length}</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#eff6ff' }}>
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Animals Tracked</div>
+          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Animals Tracked</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>{Object.keys(animalStats).length}</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#fef3c7' }}>
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Weight Records</div>
+          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Weight Records</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f59e0b' }}>
             {filteredItems.filter(i => i.type === 'Weight' && i.value).length}
           </div>
         </div>
         <div className="card" style={{ padding: 16, background: '#e0f2fe' }}>
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>BCS Records</div>
+          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>BCS Records</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#0284c7' }}>
             {filteredItems.filter(i => i.bcs).length}
           </div>
@@ -440,12 +440,12 @@ export default function AnimalMeasurement({ animals }){
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
                   <div>
                     <h4 style={{ margin: 0, marginBottom: 4 }}>{animal?.name || animal?.tag || aId}</h4>
-                    <div style={{ fontSize: 13, color: '#666' }}>{animal?.breed} • {animal?.sex === 'F' ? 'Female' : 'Male'}</div>
+                    <div style={{ fontSize: 13, color: '#4b5563' }}>{animal?.breed} • {animal?.sex === 'F' ? 'Female' : 'Male'}</div>
                   </div>
                   {stats.latestWeight && (
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{stats.latestWeight.toFixed(1)} kg</div>
-                      <div style={{ fontSize: 12, color: '#666' }}>Current Weight</div>
+                      <div style={{ fontSize: 12, color: '#4b5563' }}>Current Weight</div>
                     </div>
                   )}
                 </div>
@@ -453,19 +453,19 @@ export default function AnimalMeasurement({ animals }){
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 16 }}>
                   {stats.firstWeight && (
                     <div className="card" style={{ padding: 12, background: '#f9fafb' }}>
-                      <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Starting Weight</div>
+                      <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Starting Weight</div>
                       <div style={{ fontSize: 18, fontWeight: 600 }}>{stats.firstWeight.toFixed(1)} kg</div>
                     </div>
                   )}
                   {stats.avgWeight > 0 && (
                     <div className="card" style={{ padding: 12, background: '#f9fafb' }}>
-                      <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Average Weight</div>
+                      <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Average Weight</div>
                       <div style={{ fontSize: 18, fontWeight: 600 }}>{stats.avgWeight.toFixed(1)} kg</div>
                     </div>
                   )}
                   {stats.weightGain !== 0 && (
                     <div className="card" style={{ padding: 12, background: stats.weightGain > 0 ? '#d1fae5' : '#fee2e2' }}>
-                      <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Weight Gain/Loss</div>
+                      <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Weight Gain/Loss</div>
                       <div style={{ fontSize: 18, fontWeight: 600, color: stats.weightGain > 0 ? '#059669' : '#dc2626' }}>
                         {stats.weightGain > 0 ? '+' : ''}{stats.weightGain.toFixed(1)} kg
                       </div>
@@ -473,12 +473,12 @@ export default function AnimalMeasurement({ animals }){
                   )}
                   {stats.latestBCS && (
                     <div className="card" style={{ padding: 12, background: '#fef3c7' }}>
-                      <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Latest BCS</div>
+                      <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Latest BCS</div>
                       <div style={{ fontSize: 18, fontWeight: 600 }}>{stats.latestBCS.toFixed(1)}</div>
                     </div>
                   )}
                   <div className="card" style={{ padding: 12, background: '#e0f2fe' }}>
-                    <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Total Measurements</div>
+                    <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>Total Measurements</div>
                     <div style={{ fontSize: 18, fontWeight: 600 }}>{stats.measurements.length}</div>
                   </div>
                 </div>
@@ -525,7 +525,7 @@ export default function AnimalMeasurement({ animals }){
                         const percent = ((w.value - stats.firstWeight) / stats.firstWeight * 100)
                         return (
                           <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12 }}>
-                            <div style={{ width: 100, color: '#666' }}>{new Date(w.date).toLocaleDateString()}</div>
+                            <div style={{ width: 100, color: '#4b5563' }}>{new Date(w.date).toLocaleDateString()}</div>
                             <div style={{ flex: 1, background: '#f3f4f6', borderRadius: 4, height: 20, position: 'relative', overflow: 'hidden' }}>
                               <div style={{ 
                                 position: 'absolute', 
@@ -562,7 +562,7 @@ export default function AnimalMeasurement({ animals }){
             <div style={{ padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>📏</div>
               <h4>No measurement records yet</h4>
-              <p style={{ color: '#666' }}>Add your first measurement to start tracking growth</p>
+              <p style={{ color: '#4b5563' }}>Add your first measurement to start tracking growth</p>
             </div>
           ) : (
             <div style={{ maxHeight: 600, overflowY: 'auto' }}>
@@ -599,12 +599,12 @@ export default function AnimalMeasurement({ animals }){
                             </span>
                             {item.bcs && <span className="badge" style={{ background: '#fef3c7' }}>BCS: {item.bcs}</span>}
                           </div>
-                          <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
+                          <div style={{ fontSize: 14, color: '#4b5563', marginBottom: 4 }}>
                             <strong>{animal?.name || animal?.tag || item.animalId}</strong> • {new Date(item.timestamp || item.date).toLocaleDateString()}
                             {item.measuredBy && ` • ${item.measuredBy}`}
                           </div>
                           {(item.height || item.length || item.girth) && (
-                            <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+                            <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 4 }}>
                               {item.height && `Height: ${item.height}cm • `}
                               {item.length && `Length: ${item.length}cm • `}
                               {item.girth && `Girth: ${item.girth}cm`}

@@ -9,7 +9,51 @@ import App from './App';
 // import { initializeAudio } from './lib/notifications.js';
 import './styles.css'
 
+const SAFE_MODE_WINDOW_MS = 20000
+const SAFE_MODE_THRESHOLD = 3
+
+const detectBootLoop = () => {
+  if (typeof window === 'undefined') return false
+  try {
+    const now = Date.now()
+    const key = 'devinsfarm:boot-attempts'
+    const previous = JSON.parse(sessionStorage.getItem(key) || '[]')
+    const recent = previous.filter((time) => now - Number(time || 0) < SAFE_MODE_WINDOW_MS)
+    recent.push(now)
+    sessionStorage.setItem(key, JSON.stringify(recent))
+    return recent.length >= SAFE_MODE_THRESHOLD
+  } catch (error) {
+    return false
+  }
+}
+
+const APP_SAFE_MODE = detectBootLoop()
+
+if (typeof window !== 'undefined') {
+  try {
+    window.__APP_SAFE_MODE__ = APP_SAFE_MODE
+  } catch (error) {
+    // ignore assignment failures
+  }
+}
+
 const FIRESTORE_DIAGNOSTICS = import.meta.env.VITE_FIRESTORE_DIAGNOSTICS === 'true';
+
+const isAppOwnedError = (value) => {
+  const text = String(value || '').toLowerCase();
+  return (
+    text.includes('/src/') ||
+    text.includes('main.jsx') ||
+    text.includes('app.jsx') ||
+    text.includes('vite') ||
+    text.includes('chunk')
+  );
+};
+
+const isHostInjectedError = (value) => {
+  const text = String(value || '').toLowerCase();
+  return text.includes('host-additional-hooks-document-start.js');
+};
 
 // Suppress Zustand and other deprecation warnings before any modules load
 ;(function() {
@@ -41,6 +85,57 @@ const FIRESTORE_DIAGNOSTICS = import.meta.env.VITE_FIRESTORE_DIAGNOSTICS === 'tr
   };
 })();
 
+// Boot diagnostics to separate host-injected console noise from app issues.
+if (typeof window !== 'undefined') {
+  const seenBootWarnings = new Set();
+  const printOnce = (key, logger, ...args) => {
+    if (seenBootWarnings.has(key)) return;
+    seenBootWarnings.add(key);
+    logger(...args);
+  };
+
+  window.addEventListener('error', (event) => {
+    const message = event?.message || event?.error?.message || 'Unknown error';
+    const source = event?.filename || event?.error?.stack || '';
+    const joined = `${message} ${source}`;
+
+    if (isHostInjectedError(joined)) {
+      printOnce(
+        'host-hook-error',
+        console.warn,
+        'Host-injected script warning detected. This is external to the app bundle:',
+        message
+      );
+      return;
+    }
+
+    if (isAppOwnedError(joined)) {
+      console.error('App runtime error:', message, source);
+    }
+  });
+
+  window.addEventListener('unhandledrejection', (event) => {
+    const reason = event?.reason;
+    const message = typeof reason === 'string' ? reason : reason?.message || 'Unhandled rejection';
+    const stack = reason?.stack || '';
+    const joined = `${message} ${stack}`;
+
+    if (isHostInjectedError(joined)) {
+      printOnce(
+        'host-hook-rejection',
+        console.warn,
+        'Host-injected unhandled rejection detected. This is external to the app bundle:',
+        message
+      );
+      return;
+    }
+
+    if (isAppOwnedError(joined)) {
+      console.error('App unhandled rejection:', message, stack);
+    }
+  });
+}
+
 // Verify React is available
 if (!React || !React.version) {
   console.error('❌ Critical Error: React is not properly loaded')
@@ -49,15 +144,17 @@ if (!React || !React.version) {
 }
 
 // Defer audio initialization to after app loads
-setTimeout(() => {
-  import('./lib/notifications.js').then(({ initializeAudio }) => {
-    try {
-      initializeAudio();
-    } catch (e) {
-      console.warn('⚠️ Audio initialization failed (optional):', e)
-    }
-  }).catch(() => {});
-}, 100);
+if (!APP_SAFE_MODE) {
+  setTimeout(() => {
+    import('./lib/notifications.js').then(({ initializeAudio }) => {
+      try {
+        initializeAudio();
+      } catch (e) {
+        console.warn('⚠️ Audio initialization failed (optional):', e)
+      }
+    }).catch(() => {});
+  }, 100);
+}
 
 // Provide safe global fallbacks for UI helpers used by many modules.
 // These are lightweight no-ops in dev/preview to avoid ReferenceError when
@@ -128,7 +225,7 @@ try {
   // Use timeouts and per-module fallbacks so a slow network or a large module
   // does not block rendering indefinitely.
   (async function loadProviders() {
-    const importWithTimeout = (p, ms = 3000) => Promise.race([
+    const importWithTimeout = (p, ms = APP_SAFE_MODE ? 6000 : 3000) => Promise.race([
       p,
       new Promise((_, reject) => setTimeout(() => reject(new Error('import timeout')), ms))
     ]);
@@ -160,7 +257,7 @@ try {
       clearTimeout(loadingTimeout);
 
       // Start Firestore sync with diagnostic probes, but tolerate failures/timeouts.
-      if (typeof startFirestoreSync === 'function') {
+      if (!APP_SAFE_MODE && typeof startFirestoreSync === 'function') {
         try {
           try {
             const firebaseMod = await importWithTimeout(import('./lib/firebase'), 2000);
@@ -231,6 +328,14 @@ try {
           )}
         </BrowserRouter>
       );
+
+        if (APP_SAFE_MODE && typeof window !== 'undefined') {
+          setTimeout(() => {
+            if (window.showToast) {
+              window.showToast('Stability mode enabled after repeated restarts. Background services were reduced.', 'info')
+            }
+          }, 500)
+        }
     } catch (err) {
       clearTimeout(loadingTimeout);
       console.error('❌ Failed to load app providers:', err)
@@ -244,11 +349,13 @@ try {
 }
 
 // Register service worker for PWA support
-// Only in production or when explicitly enabled
+// Stability-first: disabled by default unless explicitly enabled.
 const isDev = import.meta.env.DEV
 const isCodespaces = window.location.hostname.includes('github.dev') || window.location.hostname.includes('githubpreview.dev')
+const enableServiceWorker = import.meta.env.VITE_ENABLE_SW === 'true'
+const shouldRegisterServiceWorker = !isDev && !isCodespaces && enableServiceWorker
 
-if ('serviceWorker' in navigator && !isDev && !isCodespaces) {
+if ('serviceWorker' in navigator && shouldRegisterServiceWorker) {
   // Defer SW registration even more to not interfere with hard reloads
   window.addEventListener('load', () => {
     // Skip SW registration completely on hard reload to speed up
@@ -261,7 +368,7 @@ if ('serviceWorker' in navigator && !isDev && !isCodespaces) {
     setTimeout(async () => {
       try {
         // Check if we need to clear old caches (only on first install or major update)
-        const SW_VERSION = '1.0.0';
+        const SW_VERSION = '1.2.0';
         let storedVersion = null
         try {
           storedVersion = localStorage.getItem('sw-version')
@@ -319,12 +426,10 @@ if ('serviceWorker' in navigator && !isDev && !isCodespaces) {
         })
       })
 
-      // Only reload on controller change if user initiated it
-      let userInitiatedReload = false;
+      // Do not auto-reload on controller changes.
+      // Automatic reloads can look like app restarts when chunks/modules load.
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (userInitiatedReload) {
-          window.location.reload()
-        }
+        console.info('Service worker controller changed; manual refresh can apply updates.')
       })
       
       // Check for updates periodically
@@ -338,38 +443,43 @@ if ('serviceWorker' in navigator && !isDev && !isCodespaces) {
     }, 1000); // Delay SW registration by 1 second
   })
 } else {
-  // In dev/Codespaces, proactively remove any previously registered SW/caches.
-  // This prevents stale production SW logic from forcing unexpected reload behavior.
+  // Proactively remove previously registered SW/caches whenever SW is disabled.
+  // This prevents stale SW update cycles that can look like frequent app restarts.
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      setTimeout(async () => {
-        try {
-          const regs = await navigator.serviceWorker.getRegistrations()
-          for (const reg of regs) {
+    const cleanupServiceWorkers = async () => {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations()
+        for (const reg of regs) {
+          try {
+            await reg.unregister()
+          } catch (e) {
+            // ignore
+          }
+        }
+        if ('caches' in window) {
+          const cacheNames = await caches.keys()
+          for (const cacheName of cacheNames) {
             try {
-              await reg.unregister()
+              await caches.delete(cacheName)
             } catch (e) {
               // ignore
             }
           }
-          if ('caches' in window) {
-            const cacheNames = await caches.keys()
-            for (const cacheName of cacheNames) {
-              try {
-                await caches.delete(cacheName)
-              } catch (e) {
-                // ignore
-              }
-            }
-          }
-        } catch (e) {
-          // ignore
         }
-      }, 0)
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // Run immediately so stale SW does not interfere with lazy module loading.
+    cleanupServiceWorkers()
+    // Run once again after load as a safety pass.
+    window.addEventListener('load', () => {
+      setTimeout(cleanupServiceWorkers, 0)
     })
   }
-  if (import.meta.env.PROD) {
-    console.info('ℹ️ Service Worker skipped - non-supported environment')
+  if (import.meta.env.PROD && !shouldRegisterServiceWorker) {
+    console.info('ℹ️ Service Worker disabled for runtime stability (set VITE_ENABLE_SW=true to enable)')
   }
 }
 

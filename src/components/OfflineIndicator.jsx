@@ -132,36 +132,36 @@ export default function OfflineIndicator() {
           <div style={{ fontWeight: '600', marginBottom: '8px', color: '#374151' }}>
             Status Info
           </div>
-          <div style={{ marginBottom: '6px', color: '#666' }}>
+          <div style={{ marginBottom: '6px', color: '#4b5563' }}>
             {isOffline ? '🔴 Offline Mode' : '🟢 Online'}
           </div>
           {isOffline && (
-            <div style={{ marginBottom: '6px', color: '#666' }}>
+            <div style={{ marginBottom: '6px', color: '#4b5563' }}>
               ✓ All data stored locally in browser
             </div>
           )}
           {queueStats.total > 0 && (
             <>
-              <div style={{ marginBottom: '6px', color: '#666' }}>
+              <div style={{ marginBottom: '6px', color: '#4b5563' }}>
                 ⏳ Pending: {queueStats.total} operation{queueStats.total !== 1 ? 's' : ''}
               </div>
               {queueStats.grouped.animals > 0 && (
-                <div style={{ marginBottom: '3px', color: '#999', fontSize: '11px' }}>
+                <div style={{ marginBottom: '3px', color: '#4b5563', fontSize: '11px' }}>
                   • {queueStats.grouped.animals} animal{queueStats.grouped.animals !== 1 ? 's' : ''}
                 </div>
               )}
               {queueStats.grouped.tasks > 0 && (
-                <div style={{ marginBottom: '3px', color: '#999', fontSize: '11px' }}>
+                <div style={{ marginBottom: '3px', color: '#4b5563', fontSize: '11px' }}>
                   • {queueStats.grouped.tasks} task{queueStats.grouped.tasks !== 1 ? 's' : ''}
                 </div>
               )}
               {queueStats.grouped.finance > 0 && (
-                <div style={{ marginBottom: '3px', color: '#999', fontSize: '11px' }}>
+                <div style={{ marginBottom: '3px', color: '#4b5563', fontSize: '11px' }}>
                   • {queueStats.grouped.finance} finance transaction{queueStats.grouped.finance !== 1 ? 's' : ''}
                 </div>
               )}
               {queueStats.oldest && (
-                <div style={{ marginTop: '6px', color: '#999', fontSize: '11px', borderTop: '1px solid #ddd', paddingTop: '6px' }}>
+                <div style={{ marginTop: '6px', color: '#4b5563', fontSize: '11px', borderTop: '1px solid #ddd', paddingTop: '6px' }}>
                   Since: {new Date(queueStats.oldest).toLocaleTimeString()}
                 </div>
               )}

@@ -133,7 +133,7 @@ export default function PhotoGallery({ entityType, entityId, entityName }) {
   }
 
   return (
-    <div style={{ marginTop: '20px' }}>
+    <div style={{ marginTop: '20px', color: 'var(--text-primary)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
           📸 Photos ({photos.length})
@@ -159,13 +159,13 @@ export default function PhotoGallery({ entityType, entityId, entityName }) {
       {showUpload && (
         <div style={{ 
           padding: '16px', 
-          background: '#f9fafb', 
+          background: 'var(--bg-secondary)', 
           borderRadius: '8px', 
           marginBottom: '16px',
-          border: '2px dashed #d1d5db'
+          border: '2px dashed var(--border-primary)'
         }}>
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500' }}>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: 'var(--text-primary)' }}>
               Caption (optional):
             </label>
             <input
@@ -178,9 +178,11 @@ export default function PhotoGallery({ entityType, entityId, entityName }) {
               style={{
                 width: '100%',
                 padding: '8px',
-                border: '1px solid #d1d5db',
+                border: '1px solid var(--border-primary)',
                 borderRadius: '6px',
-                fontSize: '14px'
+                fontSize: '14px',
+                background: 'var(--bg-elevated)',
+                color: 'var(--text-primary)'
               }}
             />
           </div>
@@ -243,7 +245,7 @@ export default function PhotoGallery({ entityType, entityId, entityName }) {
 
       {/* Loading State */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+        <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)' }}>
           Loading...
         </div>
       )}
@@ -253,9 +255,9 @@ export default function PhotoGallery({ entityType, entityId, entityName }) {
         <div style={{ 
           textAlign: 'center', 
           padding: '40px', 
-          background: '#f9fafb', 
+          background: 'var(--bg-secondary)', 
           borderRadius: '8px',
-          color: '#6b7280'
+          color: 'var(--text-secondary)'
         }}>
           <div style={{ fontSize: '48px', marginBottom: '12px' }}>📷</div>
           <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '4px' }}>No photos yet</div>
@@ -339,7 +341,7 @@ export default function PhotoGallery({ entityType, entityId, entityName }) {
             style={{
               maxWidth: '90vw',
               maxHeight: '90vh',
-              background: 'white',
+              background: 'var(--bg-elevated)',
               borderRadius: '12px',
               overflow: 'hidden',
               display: 'flex',
@@ -355,10 +357,10 @@ export default function PhotoGallery({ entityType, entityId, entityName }) {
                 objectFit: 'contain'
               }}
             />
-            <div style={{ padding: '16px', borderTop: '1px solid #e5e7eb' }}>
+            <div style={{ padding: '16px', borderTop: '1px solid var(--border-primary)', color: 'var(--text-primary)' }}>
               <div style={{ marginBottom: '12px' }}>
                 <strong>{selectedPhoto.caption}</strong>
-                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                   {new Date(selectedPhoto.timestamp).toLocaleString()}
                 </div>
               </div>

@@ -206,7 +206,7 @@ export default function KeyboardShortcutsHelp() {
                               {key}
                             </kbd>
                             {keyIdx < item.keys.length - 1 && (
-                              <span style={{ color: '#9ca3af', fontSize: '12px', alignSelf: 'center' }}>
+                              <span style={{ color: '#4b5563', fontSize: '12px', alignSelf: 'center' }}>
                                 +
                               </span>
                             )}

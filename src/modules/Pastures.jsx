@@ -187,12 +187,38 @@ export default function Pastures() {
     setLastChange(null)
   }
 
+  const surfaceCard = {
+    background: 'var(--bg-elevated, #ffffff)',
+    border: '1px solid var(--border-primary, #e5e7eb)',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+    color: 'var(--text-primary, #111827)'
+  }
+
+  const inputStyle = {
+    width: '100%',
+    padding: '10px 12px',
+    border: '1px solid var(--border-secondary, #d1d5db)',
+    borderRadius: 8,
+    fontSize: '14px',
+    color: 'var(--text-primary, #111827)',
+    background: 'var(--bg-elevated, #ffffff)',
+    boxSizing: 'border-box'
+  }
+
+  const labelStyle = {
+    display: 'block',
+    marginBottom: 6,
+    fontSize: '12px',
+    fontWeight: 600,
+    color: 'var(--text-secondary, #4b5563)'
+  }
+
 
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px', color: 'var(--text-primary, #111827)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: '900', margin: 0 }}>🌱 Pastures</h1>
+        <h1 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'var(--text-primary, #111827)' }}>🌱 Pastures</h1>
         <div style={{ display: 'flex', gap: 8 }}>
           {lastChange && (
             <button onClick={undoLastChange} style={{ padding: '8px 16px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
@@ -206,56 +232,63 @@ export default function Pastures() {
       </div>
       
       {toast && (
-        <div style={{ padding: 12, marginBottom: 16, background: toast.type === 'error' ? '#fee' : '#efe', border: `1px solid ${toast.type === 'error' ? '#fcc' : '#cfc'}`, borderRadius: 6, color: toast.type === 'error' ? '#c00' : '#060' }}>
+        <div style={{
+          padding: 12,
+          marginBottom: 16,
+          background: toast.type === 'error' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(16, 185, 129, 0.12)',
+          border: `1px solid ${toast.type === 'error' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(16, 185, 129, 0.4)'}`,
+          borderRadius: 6,
+          color: toast.type === 'error' ? '#ef4444' : '#10b981'
+        }}>
           {toast.message}
         </div>
       )}
       
       {showAddForm && (
-        <form className="card" style={{ padding: '32px', borderRadius: 16, boxShadow: '0 2px 8px #e5e7eb', background: '#fff', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: 24 }} onSubmit={e => { e.preventDefault(); add(); }}>
+        <form className="card" style={{ ...surfaceCard, padding: '32px', borderRadius: 16, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: 24 }} onSubmit={e => { e.preventDefault(); add(); }}>
           <div>
-            <label>Pasture Name *</label>
-            <input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+            <label style={labelStyle}>Pasture Name *</label>
+            <input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required style={inputStyle} />
           </div>
           <div>
-            <label>Acreage *</label>
-            <input type="number" step="0.1" value={formData.acreage} onChange={e => setFormData({ ...formData, acreage: e.target.value })} required />
+            <label style={labelStyle}>Acreage *</label>
+            <input type="number" step="0.1" value={formData.acreage} onChange={e => setFormData({ ...formData, acreage: e.target.value })} required style={inputStyle} />
           </div>
           <div>
-            <label>Status</label>
-            <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
+            <label style={labelStyle}>Status</label>
+            <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} style={inputStyle}>
               {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
           <div>
-            <label>Primary Forage</label>
-            <select value={formData.forage} onChange={e => setFormData({ ...formData, forage: e.target.value })}>
+            <label style={labelStyle}>Primary Forage</label>
+            <select value={formData.forage} onChange={e => setFormData({ ...formData, forage: e.target.value })} style={inputStyle}>
               {FORAGE_TYPES.map(f => <option key={f} value={f}>{f}</option>)}
             </select>
           </div>
           <div>
-            <label>Soil Type</label>
-            <select value={formData.soilType} onChange={e => setFormData({ ...formData, soilType: e.target.value })}>
+            <label style={labelStyle}>Soil Type</label>
+            <select value={formData.soilType} onChange={e => setFormData({ ...formData, soilType: e.target.value })} style={inputStyle}>
               {SOIL_TYPES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
           <div>
-            <label>Soil pH</label>
-            <input type="number" step="0.1" value={formData.soilPH} onChange={e => setFormData({ ...formData, soilPH: e.target.value })} />
+            <label style={labelStyle}>Soil pH</label>
+            <input type="number" step="0.1" value={formData.soilPH} onChange={e => setFormData({ ...formData, soilPH: e.target.value })} style={inputStyle} />
           </div>
           <div>
-            <label>Carrying Capacity (head)</label>
-            <input type="number" value={formData.carryingCapacity} onChange={e => setFormData({ ...formData, carryingCapacity: e.target.value })} />
+            <label style={labelStyle}>Carrying Capacity (head)</label>
+            <input type="number" value={formData.carryingCapacity} onChange={e => setFormData({ ...formData, carryingCapacity: e.target.value })} style={inputStyle} />
           </div>
           <div>
-            <label>Fencing Type</label>
-            <select value={formData.fencing} onChange={e => setFormData({ ...formData, fencing: e.target.value })}>
+            <label style={labelStyle}>Fencing Type</label>
+            <select value={formData.fencing} onChange={e => setFormData({ ...formData, fencing: e.target.value })} style={inputStyle}>
               {FENCE_TYPES.map(f => <option key={f} value={f}>{f}</option>)}
             </select>
           </div>
           <div>
-            <label>Fence Condition</label>
-            <select value={formData.fenceCondition} onChange={e => setFormData({ ...formData, fenceCondition: e.target.value })}>
+            <label style={labelStyle}>Fence Condition</label>
+            <select value={formData.fenceCondition} onChange={e => setFormData({ ...formData, fenceCondition: e.target.value })} style={inputStyle}>
               <option>Excellent</option>
               <option>Good</option>
               <option>Fair</option>
@@ -264,12 +297,12 @@ export default function Pastures() {
             </select>
           </div>
           <div>
-            <label>Water Source</label>
-            <select value={formData.waterSource} onChange={e => setFormData({ ...formData, waterSource: e.target.value })}>
+            <label style={labelStyle}>Water Source</label>
+            <select value={formData.waterSource} onChange={e => setFormData({ ...formData, waterSource: e.target.value })} style={inputStyle}>
               {WATER_SOURCES.map(w => <option key={w} value={w}>{w}</option>)}
             </select>
           </div>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', color: 'var(--text-secondary, #4b5563)' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <input type="checkbox" checked={formData.shade} onChange={e => setFormData({ ...formData, shade: e.target.checked })} />
               Shade Available
@@ -280,37 +313,37 @@ export default function Pastures() {
             </label>
           </div>
           <div style={{ gridColumn: 'span 2' }}>
-            <label>Notes</label>
-            <textarea value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} rows={2} />
+            <label style={labelStyle}>Notes</label>
+            <textarea value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} rows={2} style={{ ...inputStyle, minHeight: 76, resize: 'vertical' }} />
           </div>
           {/* Harvest Record Fields - merged inline */}
           <div>
-            <label>Harvest Type</label>
-            <input value={formData.harvestType} onChange={e => setFormData({ ...formData, harvestType: e.target.value })} placeholder="e.g. Hay - First Cut" />
+            <label style={labelStyle}>Harvest Type</label>
+            <input value={formData.harvestType} onChange={e => setFormData({ ...formData, harvestType: e.target.value })} placeholder="e.g. Hay - First Cut" style={inputStyle} />
           </div>
           <div>
-            <label>Technique</label>
-            <input value={formData.harvestTechnique} onChange={e => setFormData({ ...formData, harvestTechnique: e.target.value })} placeholder="Tractor/Mower/Manual" />
+            <label style={labelStyle}>Technique</label>
+            <input value={formData.harvestTechnique} onChange={e => setFormData({ ...formData, harvestTechnique: e.target.value })} placeholder="Tractor/Mower/Manual" style={inputStyle} />
           </div>
           <div>
-            <label>Quantity</label>
-            <input type="number" value={formData.harvestQuantity} onChange={e => setFormData({ ...formData, harvestQuantity: e.target.value })} placeholder="e.g. 100" />
+            <label style={labelStyle}>Quantity</label>
+            <input type="number" value={formData.harvestQuantity} onChange={e => setFormData({ ...formData, harvestQuantity: e.target.value })} placeholder="e.g. 100" style={inputStyle} />
           </div>
           <div>
-            <label>Unit</label>
-            <input value={formData.harvestUnit} onChange={e => setFormData({ ...formData, harvestUnit: e.target.value })} placeholder="bales/tons" />
+            <label style={labelStyle}>Unit</label>
+            <input value={formData.harvestUnit} onChange={e => setFormData({ ...formData, harvestUnit: e.target.value })} placeholder="bales/tons" style={inputStyle} />
           </div>
           <div>
-            <label>Quality</label>
-            <input value={formData.harvestQuality} onChange={e => setFormData({ ...formData, harvestQuality: e.target.value })} placeholder="Premium/Good/Fair" />
+            <label style={labelStyle}>Quality</label>
+            <input value={formData.harvestQuality} onChange={e => setFormData({ ...formData, harvestQuality: e.target.value })} placeholder="Premium/Good/Fair" style={inputStyle} />
           </div>
           <div>
-            <label>Storage</label>
-            <input value={formData.harvestStorage} onChange={e => setFormData({ ...formData, harvestStorage: e.target.value })} placeholder="Barn A" />
+            <label style={labelStyle}>Storage</label>
+            <input value={formData.harvestStorage} onChange={e => setFormData({ ...formData, harvestStorage: e.target.value })} placeholder="Barn A" style={inputStyle} />
           </div>
           <div>
-            <label>Cost (KSH)</label>
-            <input type="number" value={formData.harvestCost} onChange={e => setFormData({ ...formData, harvestCost: e.target.value })} placeholder="e.g. 1200" />
+            <label style={labelStyle}>Cost (KSH)</label>
+            <input type="number" value={formData.harvestCost} onChange={e => setFormData({ ...formData, harvestCost: e.target.value })} placeholder="e.g. 1200" style={inputStyle} />
           </div>
           <div style={{ gridColumn: 'span 3', marginTop: '16px', textAlign: 'right' }}>
             <button type="submit" style={{ background: '#059669', color: '#fff', fontWeight: '700', padding: '14px 32px', borderRadius: 8, fontSize: '1.1rem', border: 'none', cursor: 'pointer' }}>
@@ -323,12 +356,12 @@ export default function Pastures() {
       {/* Pastures List */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 16 }}>
         {items.length === 0 ? (
-          <div style={{ padding: 48, textAlign: 'center', color: '#999', gridColumn: '1 / -1' }}>
+          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-secondary, #4b5563)', gridColumn: '1 / -1' }}>
             No pastures yet. Click "Add Pasture" to create one.
           </div>
         ) : (
           items.map(item => (
-            <div key={item.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <div key={item.id} style={{ ...surfaceCard, borderRadius: 12, padding: 16 }}>
               {inlineEditId === item.id ? (
                 <div style={{ marginBottom: 12 }}>
                   <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: '600', color: '#059669' }}>⚡ Quick Edit</h4>
@@ -337,7 +370,7 @@ export default function Pastures() {
                       value={inlineData.name} 
                       onChange={e => setInlineData({ ...inlineData, name: e.target.value })} 
                       placeholder="Pasture Name"
-                      style={{ padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }}
+                      style={{ ...inputStyle, padding: 8, borderRadius: 4 }}
                     />
                     <input 
                       type="number"
@@ -345,25 +378,25 @@ export default function Pastures() {
                       value={inlineData.acreage} 
                       onChange={e => setInlineData({ ...inlineData, acreage: e.target.value })} 
                       placeholder="Acreage"
-                      style={{ padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }}
+                      style={{ ...inputStyle, padding: 8, borderRadius: 4 }}
                     />
                     <select 
                       value={inlineData.status} 
                       onChange={e => setInlineData({ ...inlineData, status: e.target.value })}
-                      style={{ padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }}
+                      style={{ ...inputStyle, padding: 8, borderRadius: 4 }}
                     >
                       {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                     <select 
                       value={inlineData.forage} 
                       onChange={e => setInlineData({ ...inlineData, forage: e.target.value })}
-                      style={{ padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }}
+                      style={{ ...inputStyle, padding: 8, borderRadius: 4 }}
                     >
                       {FORAGE_TYPES.map(f => <option key={f} value={f}>{f}</option>)}
                     </select>
                     <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                       <button onClick={saveInlineEdit} style={{ flex: 1, padding: 8, background: '#059669', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: '600' }}>Save</button>
-                      <button onClick={cancelInlineEdit} style={{ flex: 1, padding: 8, background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer' }}>Cancel</button>
+                      <button onClick={cancelInlineEdit} style={{ flex: 1, padding: 8, background: 'var(--bg-secondary, #f3f4f6)', color: 'var(--text-primary, #111827)', border: '1px solid var(--border-secondary, #d1d5db)', borderRadius: 4, cursor: 'pointer' }}>Cancel</button>
                     </div>
                   </div>
                 </div>
@@ -371,22 +404,23 @@ export default function Pastures() {
                 <>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700', color: '#111' }}>{item.name}</h3>
-                      <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem', color: '#666' }}>{item.id}</p>
+                      <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary, #111827)' }}>{item.name}</h3>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem', color: 'var(--text-secondary, #4b5563)' }}>{item.id}</p>
                     </div>
                     <span style={{ 
                       padding: '4px 12px', 
-                      background: item.status === 'Active Grazing' ? '#dcfce7' : item.status === 'Resting' ? '#fef3c7' : '#e5e7eb',
-                      color: item.status === 'Active Grazing' ? '#166534' : item.status === 'Resting' ? '#92400e' : '#374151',
+                      background: item.status === 'Active Grazing' ? 'rgba(34, 197, 94, 0.16)' : item.status === 'Resting' ? 'rgba(245, 158, 11, 0.16)' : 'var(--bg-secondary, #e5e7eb)',
+                      color: item.status === 'Active Grazing' ? '#22c55e' : item.status === 'Resting' ? '#f59e0b' : 'var(--text-secondary, #374151)',
                       borderRadius: 12, 
                       fontSize: '0.75rem', 
-                      fontWeight: '600' 
+                      fontWeight: '600',
+                      border: item.status === 'Active Grazing' ? '1px solid rgba(34, 197, 94, 0.35)' : item.status === 'Resting' ? '1px solid rgba(245, 158, 11, 0.35)' : '1px solid var(--border-primary, #d1d5db)'
                     }}>
                       {item.status}
                     </span>
                   </div>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: '0.875rem', marginBottom: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: '0.875rem', marginBottom: 12, color: 'var(--text-primary, #111827)' }}>
                     <div><strong>Acreage:</strong> {item.acreage} acres</div>
                     <div><strong>Forage:</strong> {item.forage}</div>
                     <div><strong>Capacity:</strong> {item.carryingCapacity || 0} head</div>
@@ -396,7 +430,7 @@ export default function Pastures() {
                   </div>
                   
                   {item.notes && (
-                    <p style={{ margin: '8px 0', padding: 8, background: '#f9fafb', borderRadius: 4, fontSize: '0.875rem', color: '#555' }}>
+                    <p style={{ margin: '8px 0', padding: 8, background: 'var(--bg-secondary, #f9fafb)', border: '1px solid var(--border-primary, #e5e7eb)', borderRadius: 4, fontSize: '0.875rem', color: 'var(--text-secondary, #374151)' }}>
                       {item.notes}
                     </p>
                   )}

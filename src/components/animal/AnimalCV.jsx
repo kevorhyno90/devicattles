@@ -70,7 +70,7 @@ function downloadPDF(data, filenameNoExt, title) {
 function SectionActions({ name, onJSON, onCSV, onPDF }) {
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
-      <span style={{ color: '#6b7280', fontSize: '0.85rem' }}>Download {name}:</span>
+      <span style={{ color: '#4b5563', fontSize: '0.85rem' }}>Download {name}:</span>
       <button onClick={onJSON} style={{ padding: '5px 10px', border: 'none', borderRadius: 6, background: '#111827', color: '#fff', cursor: 'pointer' }}>JSON</button>
       <button onClick={onCSV} style={{ padding: '5px 10px', border: 'none', borderRadius: 6, background: '#059669', color: '#fff', cursor: 'pointer' }}>CSV</button>
       <button onClick={onPDF} style={{ padding: '5px 10px', border: 'none', borderRadius: 6, background: '#0ea5e9', color: '#fff', cursor: 'pointer' }}>PDF</button>
@@ -83,7 +83,7 @@ function InfoGrid({ items }) {
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
       {items.map(([label, value]) => (
         <div key={label} style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: 10 }}>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>{label}</div>
+          <div style={{ fontSize: '0.75rem', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>{label}</div>
           <div style={{ marginTop: 5, color: '#111827', wordBreak: 'break-word' }}>{fmt(value)}</div>
         </div>
       ))}
@@ -92,7 +92,7 @@ function InfoGrid({ items }) {
 }
 
 function DataTable({ columns, rows, empty = 'No records found.' }) {
-  if (!rows || rows.length === 0) return <div style={{ color: '#9ca3af' }}>{empty}</div>
+  if (!rows || rows.length === 0) return <div style={{ color: '#4b5563' }}>{empty}</div>
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
@@ -407,11 +407,11 @@ function SectionMilkYieldRecords({ animalId, tag }) {
       {records.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(140px, 1fr))', gap: 10, marginBottom: 12 }}>
           <div style={{ background: '#f0f9ff', border: '1px solid #dbeafe', borderRadius: 8, padding: 10 }}>
-            <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 700 }}>TOTAL RECORDS</div>
+            <div style={{ fontSize: '0.75rem', color: '#4b5563', fontWeight: 700 }}>TOTAL RECORDS</div>
             <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0ea5e9' }}>{records.length}</div>
           </div>
           <div style={{ background: '#ecfdf5', border: '1px solid #d1fae5', borderRadius: 8, padding: 10 }}>
-            <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 700 }}>TOTAL YIELD</div>
+            <div style={{ fontSize: '0.75rem', color: '#4b5563', fontWeight: 700 }}>TOTAL YIELD</div>
             <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#059669' }}>{totalYield.toFixed(1)} L</div>
           </div>
         </div>
@@ -584,7 +584,7 @@ export default function AnimalCV({ animal = {}, groups = [], onClose = () => {},
         <div style={{ padding: '14px 16px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div>
             <h2 style={{ margin: 0 }}>{animal.name || tag}</h2>
-            <div style={{ color: '#6b7280', marginTop: 2 }}>{animal.tag} • {animal.breed} • {animal.sex === 'F' ? 'Female' : 'Male'}</div>
+            <div style={{ color: '#4b5563', marginTop: 2 }}>{animal.tag} • {animal.breed} • {animal.sex === 'F' ? 'Female' : 'Male'}</div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button onClick={() => onDownloadJSON()} style={{ padding: '8px 12px', background: '#111827', color: 'white', border: 'none', borderRadius: 6 }}>JSON</button>

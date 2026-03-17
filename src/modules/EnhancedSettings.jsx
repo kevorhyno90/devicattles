@@ -2,18 +2,16 @@ import React, { useState, useEffect } from 'react'
 import { useTheme } from '../lib/theme'
 import {
   getEnhancedSettings,
-  saveEnhancedSettings,
   saveEnhancedSettingsWithHistory,
   getSettingsHistory,
   restoreSettingsFromHistory,
   clearSettingsHistory,
-  updateSettingsSection,
-  addCustomField,
-  updateCustomField,
-  deleteCustomField,
-  getCustomFields,
   getUserSettings,
   saveUserSettings,
+  saveUserSettingsWithHistory,
+  getUserSettingsHistory,
+  restoreUserSettingsFromHistory,
+  clearUserSettingsHistory,
   getEffectiveSettings,
   clearUserSettings,
   CURRENCIES,
@@ -36,9 +34,19 @@ export default function EnhancedSettings() {
   const [showPreview, setShowPreview] = useState(false)
   const [validationErrors, setValidationErrors] = useState({})
 
+  const getHistoryForMode = (isPersonal, userId) => {
+    if (isPersonal && userId) {
+      return getUserSettingsHistory(userId)
+    }
+    return getSettingsHistory()
+  }
+
   useEffect(() => {
     // Get current user and load their settings
-    import('../lib/auth').then(({ getCurrentSession }) => {
+    Promise.all([
+      import('../lib/auth'),
+      import('../lib/appSettings')
+    ]).then(([{ getCurrentSession }, { isAuthRequired, getDefaultUser }]) => {
       const session = getCurrentSession()
       if (session) {
         setCurrentUser(session)
@@ -46,29 +54,66 @@ export default function EnhancedSettings() {
         if (userSettings) {
           setUseUserSettings(true)
           setSettings(getEffectiveSettings(session.userId))
+          setSettingsHistory(getHistoryForMode(true, session.userId))
         } else {
           setSettings(getEnhancedSettings())
+          setSettingsHistory(getHistoryForMode(false, session.userId))
         }
-      } else {
-        setSettings(getEnhancedSettings())
+        return
       }
+
+      // If auth is disabled, use configured default user context.
+      if (!isAuthRequired()) {
+        const defaultUser = getDefaultUser()
+        if (defaultUser) {
+          setCurrentUser(defaultUser)
+        }
+      }
+
+      setSettings(getEnhancedSettings())
+      setSettingsHistory(getHistoryForMode(false, null))
     })
-    setSettingsHistory(getSettingsHistory())
   }, [])
 
   const handleSave = () => {
+    const syncNotificationPreferences = () => {
+      try {
+        import('../lib/notifications').then(({ saveNotificationSettings }) => {
+          const notificationPrefs = settings.notifications || {}
+          saveNotificationSettings({
+            enabled: Boolean(notificationPrefs.enableNotifications),
+            soundEnabled: Boolean(notificationPrefs.soundAlerts),
+            taskReminders: Boolean(notificationPrefs.taskReminders),
+            breedingReminders: Boolean(notificationPrefs.breedingReminders),
+            inventoryAlerts: Boolean(notificationPrefs.inventoryAlerts),
+            healthAlerts: Boolean(notificationPrefs.healthReminders),
+            reminderLeadTime: Number(notificationPrefs.reminderAdvance) || 24,
+            lowInventoryThreshold: Number(notificationPrefs.lowStockThreshold) || 10,
+            autoNotificationFrequency: Number(notificationPrefs.autoNotificationFrequency) || 60
+          })
+        }).catch(() => {})
+      } catch (err) {
+        // Ignore sync failures so settings save still succeeds.
+      }
+    }
+
     // Save to user-specific or global settings based on preference
     if (currentUser && useUserSettings) {
-      if (saveUserSettings(currentUser.userId, settings)) {
+      if (saveUserSettingsWithHistory(currentUser.userId, settings, 'Manual save', currentUser.name || currentUser.username || 'Current User')) {
+        syncNotificationPreferences()
         setSaved(true)
         setTimeout(() => setSaved(false), 3000)
+        setSettingsHistory(getHistoryForMode(true, currentUser.userId))
+        alert('Settings saved successfully!')
         window.dispatchEvent(new Event('settingsUpdated'))
       }
     } else {
       if (saveEnhancedSettingsWithHistory(settings, 'Manual save')) {
+        syncNotificationPreferences()
         setSaved(true)
         setTimeout(() => setSaved(false), 3000)
         setSettingsHistory(getSettingsHistory())
+        alert('Settings saved successfully!')
         window.dispatchEvent(new Event('settingsUpdated'))
       }
     }
@@ -82,6 +127,7 @@ export default function EnhancedSettings() {
       if (confirm('Switch to global settings? Your personal preferences will be kept but not used.')) {
         setUseUserSettings(false)
         setSettings(getEnhancedSettings())
+        setSettingsHistory(getHistoryForMode(false, currentUser.userId))
       }
     } else {
       // Switch to user-specific settings
@@ -90,6 +136,7 @@ export default function EnhancedSettings() {
         const effectiveSettings = getEffectiveSettings(currentUser.userId)
         saveUserSettings(currentUser.userId, effectiveSettings)
         setSettings(effectiveSettings)
+        setSettingsHistory(getHistoryForMode(true, currentUser.userId))
       }
     }
   }
@@ -100,6 +147,7 @@ export default function EnhancedSettings() {
       if (clearUserSettings(currentUser.userId)) {
         setUseUserSettings(false)
         setSettings(getEnhancedSettings())
+        setSettingsHistory(getHistoryForMode(false, currentUser.userId))
         alert('✅ Personal settings cleared!')
       }
     }
@@ -150,10 +198,13 @@ export default function EnhancedSettings() {
 
   const handleRestoreHistory = (historyId) => {
     if (confirm('Are you sure you want to restore settings from this point in history?')) {
-      const result = restoreSettingsFromHistory(historyId)
+      const result = (useUserSettings && currentUser?.userId)
+        ? restoreUserSettingsFromHistory(currentUser.userId, historyId)
+        : restoreSettingsFromHistory(historyId)
+
       if (result.success) {
         setSettings(result.settings)
-        setSettingsHistory(getSettingsHistory())
+        setSettingsHistory(getHistoryForMode(Boolean(useUserSettings && currentUser?.userId), currentUser?.userId || null))
         window.location.reload()
       } else {
         alert('❌ Failed to restore settings: ' + result.error)
@@ -163,7 +214,11 @@ export default function EnhancedSettings() {
 
   const handleClearHistory = () => {
     if (confirm('Are you sure you want to clear all settings history? This cannot be undone.')) {
-      if (clearSettingsHistory()) {
+      const cleared = (useUserSettings && currentUser?.userId)
+        ? clearUserSettingsHistory(currentUser.userId)
+        : clearSettingsHistory()
+
+      if (cleared) {
         setSettingsHistory([])
         alert('✅ History cleared successfully!')
       }
@@ -183,6 +238,8 @@ export default function EnhancedSettings() {
   }
 
   const handleImport = async (e) => {
+    if (!canEdit) return
+
     const file = e.target.files?.[0]
     if (!file) return
     
@@ -215,10 +272,8 @@ export default function EnhancedSettings() {
           [field]: value
         }
       }
-      // Advanced audit logging for every settings change
-      // ...existing code...
+      // Log settings changes without blocking the UI if audit is unavailable.
       try {
-        // Dynamically import logAction from audit.js
         import('../lib/audit').then(({ logAction, ACTIONS, ENTITIES }) => {
           logAction(
             ACTIONS.UPDATE,
@@ -234,7 +289,6 @@ export default function EnhancedSettings() {
       } catch (err) {
         // Fail silently for audit logging
       }
-      // ...existing code...
       return updated
     })
   }
@@ -247,7 +301,6 @@ export default function EnhancedSettings() {
     { id: 'data', icon: '💾', label: 'Data' },
     { id: 'security', icon: '🔐', label: 'Security' },
     { id: 'system', icon: '⚙️', label: 'System' },
-    { id: 'custom', icon: '🎨', label: 'Custom Fields' },
     { id: 'history', icon: '📜', label: 'History' }
   ]
 
@@ -256,18 +309,32 @@ export default function EnhancedSettings() {
   // User access control: Only MANAGER can edit settings, others view-only
   const [canEdit, setCanEdit] = useState(false);
   useEffect(() => {
-    import('../lib/auth').then(({ getCurrentSession }) => {
+    Promise.all([
+      import('../lib/auth'),
+      import('../lib/appSettings')
+    ]).then(([{ getCurrentSession }, { isAuthRequired, getDefaultUser }]) => {
       const session = getCurrentSession();
-      setCanEdit(session && session.role === 'MANAGER');
+      if (session) {
+        setCanEdit(session.role === 'MANAGER');
+        return;
+      }
+
+      if (!isAuthRequired()) {
+        const defaultUser = getDefaultUser();
+        setCanEdit(defaultUser?.role === 'MANAGER');
+        return;
+      }
+
+      setCanEdit(false);
     });
   }, []);
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', color: 'var(--text-primary, #1f2937)' }}>
       <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '8px' }}>Enhanced Settings</h2>
-          <p style={{ color: '#6b7280', margin: 0 }}>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '8px', color: 'var(--text-primary, #1f2937)' }}>Enhanced Settings</h2>
+          <p style={{ color: 'var(--text-secondary, #4b5563)', margin: 0 }}>
             Customize your farm management experience
             {currentUser && (
               <span style={{ marginLeft: '8px' }}>
@@ -275,8 +342,9 @@ export default function EnhancedSettings() {
                 {useUserSettings && (
                   <span style={{
                     marginLeft: '8px',
-                    background: '#dbeafe',
-                    color: '#1e40af',
+                    background: 'rgba(59, 130, 246, 0.16)',
+                    color: 'var(--text-primary, #1f2937)',
+                    border: '1px solid rgba(59, 130, 246, 0.35)',
                     padding: '2px 8px',
                     borderRadius: '4px',
                     fontSize: '12px',
@@ -346,9 +414,9 @@ export default function EnhancedSettings() {
                       style={{
                         padding: '8px 16px',
                         fontSize: '14px',
-                        background: theme === 'dark' ? '#374151' : '#f3f4f6',
-                        color: theme === 'dark' ? '#f9fafb' : '#1f2937',
-                        border: '1px solid #d1d5db',
+                        background: theme === 'dark' ? 'var(--bg-tertiary, #374151)' : 'var(--bg-secondary, #f3f4f6)',
+                        color: 'var(--text-primary, #1f2937)',
+                        border: '1px solid var(--border-secondary, #d1d5db)',
                         borderRadius: '8px',
                         fontWeight: '600'
                       }}
@@ -361,27 +429,28 @@ export default function EnhancedSettings() {
           <label style={{ 
             padding: '8px 16px', 
             fontSize: '14px',
-            cursor: 'pointer',
+            cursor: canEdit ? 'pointer' : 'not-allowed',
             background: '#10b981',
             color: 'white',
             border: 'none',
             borderRadius: '8px',
-            fontWeight: '600'
+            fontWeight: '600',
+            opacity: canEdit ? 1 : 0.5
           }}>
             📤 Import
-            <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
+            <input type="file" accept=".json" onChange={handleImport} disabled={!canEdit} style={{ display: 'none' }} />
           </label>
         </div>
       </div>
 
       {saved && (
         <div style={{
-          background: '#d1fae5',
-          border: '1px solid #10b981',
+          background: 'rgba(16, 185, 129, 0.16)',
+          border: '1px solid rgba(16, 185, 129, 0.45)',
           padding: '12px 16px',
           borderRadius: '8px',
           marginBottom: '20px',
-          color: '#065f46',
+          color: 'var(--text-primary, #1f2937)',
           fontWeight: '600'
         }}>
           ✅ Settings saved successfully!
@@ -390,12 +459,12 @@ export default function EnhancedSettings() {
 
       {Object.keys(validationErrors).length > 0 && (
         <div style={{
-          background: '#fee2e2',
-          border: '1px solid #ef4444',
+          background: 'rgba(239, 68, 68, 0.14)',
+          border: '1px solid rgba(239, 68, 68, 0.45)',
           padding: '12px 16px',
           borderRadius: '8px',
           marginBottom: '20px',
-          color: '#991b1b'
+          color: 'var(--text-primary, #1f2937)'
         }}>
           <div style={{ fontWeight: '600', marginBottom: '8px' }}>
             ⚠️ {Object.keys(validationErrors).length} Validation Error(s):
@@ -410,7 +479,7 @@ export default function EnhancedSettings() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '2px solid #e5e7eb', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '2px solid var(--border-primary, #e5e7eb)', overflowX: 'auto' }}>
         {tabs.map(tab => (
           <button
             key={tab.id}
@@ -422,7 +491,7 @@ export default function EnhancedSettings() {
               cursor: 'pointer',
               fontWeight: '600',
               fontSize: '14px',
-              color: activeTab === tab.id ? '#059669' : '#6b7280',
+              color: activeTab === tab.id ? '#059669' : 'var(--text-secondary, #6b7280)',
               borderBottom: activeTab === tab.id ? '2px solid #059669' : '2px solid transparent',
               marginBottom: '-2px',
               whiteSpace: 'nowrap'
@@ -459,9 +528,9 @@ export default function EnhancedSettings() {
               </div>
             </div>
             <div>
-              <div style={{ opacity: 0.9, marginBottom: '4px' }}>Theme:</div>
-              <div style={{ fontWeight: '600', fontSize: '18px' }}>
-                {settings.system?.theme || 'catalytics'}
+              <div style={{ opacity: 0.9, marginBottom: '4px' }}>Startup View:</div>
+              <div style={{ fontWeight: '600', fontSize: '18px', textTransform: 'capitalize' }}>
+                {settings.system?.defaultView || 'dashboard'}
               </div>
             </div>
             <div>
@@ -486,7 +555,30 @@ export default function EnhancedSettings() {
         </div>
       )}
 
-      <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+      {!canEdit && activeTab !== 'history' && (
+        <div style={{
+          marginBottom: '16px',
+          padding: '10px 12px',
+          borderRadius: '8px',
+          background: 'rgba(251, 146, 60, 0.14)',
+          border: '1px solid rgba(251, 146, 60, 0.45)',
+          color: 'var(--text-primary, #1f2937)',
+          fontSize: '14px',
+          fontWeight: '600'
+        }}>
+          View-only mode: only managers can change these settings.
+        </div>
+      )}
+
+      <div style={{
+        background: 'var(--bg-elevated, #ffffff)',
+        color: 'var(--text-primary, #1f2937)',
+        border: '1px solid var(--border-primary, #e5e7eb)',
+        padding: '24px',
+        borderRadius: '12px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        <fieldset disabled={!canEdit && activeTab !== 'history'} style={{ border: 'none', padding: 0, margin: 0, minInlineSize: 0 }}>
         {activeTab === 'farm' && <FarmInfoTab settings={settings.farmInfo} updateSection={updateSection} canEdit={canEdit} />}
         {activeTab === 'regional' && <RegionalTab settings={settings.regional} updateSection={updateSection} canEdit={canEdit} />}
         {activeTab === 'notifications' && <NotificationsTab settings={settings.notifications} updateSection={updateSection} canEdit={canEdit} />}
@@ -494,8 +586,8 @@ export default function EnhancedSettings() {
         {activeTab === 'data' && <DataManagementTab settings={settings.dataManagement} updateSection={updateSection} canEdit={canEdit} />}
         {activeTab === 'security' && <SecurityTab settings={settings.security} updateSection={updateSection} canEdit={canEdit} />}
         {activeTab === 'system' && <SystemTab settings={settings.system} updateSection={updateSection} canEdit={canEdit} />}
-        {activeTab === 'custom' && <CustomFieldsTab customFields={settings.customFields} onRefresh={() => setSettings(getEnhancedSettings())} canEdit={canEdit} />}
         {activeTab === 'history' && <HistoryTab history={settingsHistory} onRestore={handleRestoreHistory} onClear={handleClearHistory} canEdit={canEdit} />}
+        </fieldset>
       </div>
 
       <div style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
@@ -652,6 +744,28 @@ function RegionalTab({ settings, updateSection }) {
         />
 
         <SelectField
+          label="Decimal Separator"
+          value={settings.decimalSeparator}
+          onChange={(v) => updateSection('regional', 'decimalSeparator', v)}
+          options={[
+            { value: '.', label: 'Period (12,345.67)' },
+            { value: ',', label: 'Comma (12.345,67)' }
+          ]}
+        />
+
+        <SelectField
+          label="Thousand Separator"
+          value={settings.thousandSeparator}
+          onChange={(v) => updateSection('regional', 'thousandSeparator', v)}
+          options={[
+            { value: ',', label: 'Comma (12,345)' },
+            { value: '.', label: 'Period (12.345)' },
+            { value: ' ', label: 'Space (12 345)' },
+            { value: "'", label: "Apostrophe (12'345)" }
+          ]}
+        />
+
+        <SelectField
           label="Date Format"
           value={settings.dateFormat}
           onChange={(v) => updateSection('regional', 'dateFormat', v)}
@@ -697,7 +811,7 @@ function RegionalTab({ settings, updateSection }) {
         />
       </div>
       
-      <div style={{ background: '#f3f4f6', padding: '16px', borderRadius: '8px', marginTop: '12px' }}>
+      <div style={{ background: 'var(--bg-secondary, #f3f4f6)', border: '1px solid var(--border-primary, #e5e7eb)', padding: '16px', borderRadius: '8px', marginTop: '12px', color: 'var(--text-primary, #1f2937)' }}>
         <strong>Preview:</strong>
         <div style={{ marginTop: '8px', fontSize: '14px' }}>
           <div>Currency: {formatCurrency(12345.67)}</div>
@@ -796,117 +910,361 @@ function NotificationsTab({ settings, updateSection }) {
   )
 }
 
-function IntegrationsTab({ settings, updateSection, canEdit }) {
-  const [weatherApiKey, setWeatherApiKey] = React.useState(localStorage.getItem('cattalytics:weather:apikey') || '');
-  const [saved, setSaved] = React.useState(false);
+function IntegrationsTab({ settings = {}, updateSection, canEdit }) {
+  const weather = settings.weather || {}
+  const sms = settings.sms || {}
+  const email = settings.email || {}
+  const analytics = settings.analytics || {}
 
-  const handleSaveWeatherKey = () => {
-    if (weatherApiKey.trim()) {
-      localStorage.setItem('cattalytics:weather:apikey', weatherApiKey);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+  const sectionCardStyle = {
+    background: 'var(--bg-secondary, #f3f4f6)',
+    color: 'var(--text-primary, #1f2937)',
+    padding: '16px',
+    borderRadius: '8px',
+    border: '1px solid var(--border-primary, #e5e7eb)'
+  }
+
+  const noteStyle = {
+    color: 'var(--text-secondary, #4b5563)',
+    margin: '0 0 12px',
+    fontSize: '0.9rem'
+  }
+
+  const statusBadgeStyle = (ready) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '4px 10px',
+    borderRadius: '999px',
+    fontSize: '12px',
+    fontWeight: '700',
+    background: ready ? '#dcfce7' : '#fef3c7',
+    color: ready ? '#166534' : '#92400e'
+  })
+
+  const updateIntegration = (group, field, value) => {
+    updateSection('integrations', group, {
+      ...(settings[group] || {}),
+      [field]: value
+    })
+  }
+
+  const handleWeatherKeyChange = (value) => {
+    updateIntegration('weather', 'apiKey', value)
+    if (value.trim()) {
+      localStorage.setItem('cattalytics:weather:apikey', value)
     } else {
-      localStorage.removeItem('cattalytics:weather:apikey');
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      localStorage.removeItem('cattalytics:weather:apikey')
     }
-  };
+  }
+
+  const weatherReady = Boolean(weather.apiKey?.trim())
+  const smsReady = sms.provider === 'webhook'
+    ? Boolean(sms.webhookUrl?.trim())
+    : Boolean(sms.senderId?.trim() && (sms.provider !== 'twilio' || (sms.accountSid?.trim() && sms.authToken?.trim())))
+  const emailReady = email.provider === 'smtp'
+    ? Boolean(email.fromAddress?.trim() && email.smtpHost?.trim() && email.username?.trim())
+    : email.provider === 'webhook'
+      ? Boolean(email.webhookUrl?.trim())
+      : Boolean(email.fromAddress?.trim() && email.username?.trim())
+
+  const applyFreeSetup = () => {
+    updateSection('integrations', 'weather', {
+      ...(settings.weather || {}),
+      enabled: true,
+      provider: 'openweathermap'
+    })
+    updateSection('integrations', 'sms', {
+      ...(settings.sms || {}),
+      enabled: false,
+      provider: 'webhook'
+    })
+    updateSection('integrations', 'email', {
+      ...(settings.email || {}),
+      enabled: false,
+      provider: 'webhook'
+    })
+    updateSection('integrations', 'analytics', {
+      ...(settings.analytics || {}),
+      enabled: true,
+      provider: 'local'
+    })
+  }
 
   return (
-    <div style={{ display: 'grid', gap: '20px' }}>
+    <div style={{ display: 'grid', gap: '20px', color: 'var(--text-primary, #1f2937)' }}>
       <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700' }}>🔗 Third-Party Integrations</h3>
-      
-      {saved && (
-        <div style={{ background: '#dcfce7', border: '1px solid #86efac', color: '#166534', padding: '12px', borderRadius: '6px' }}>
-          ✓ Integration settings saved successfully!
-        </div>
-      )}
 
-      <div style={{ background: '#f3f4f6', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-        <h4 style={{ margin: '0 0 12px', fontSize: '1rem', fontWeight: '600' }}>🌤️ Weather Service</h4>
-        <p style={{ color: '#6b7280', margin: '0 0 12px', fontSize: '0.9rem' }}>
+      <div style={{ ...sectionCardStyle, background: 'rgba(59, 130, 246, 0.10)', border: '1px solid rgba(59, 130, 246, 0.35)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div>
+            <h4 style={{ margin: '0 0 8px', fontSize: '1rem', fontWeight: '600' }}>Free-First Setup</h4>
+            <p style={{ ...noteStyle, marginBottom: 0 }}>
+              Weather can run on free tiers, analytics can stay local, and SMS/email are cheapest when routed through your own webhook or automation.
+              Fully free outbound SMS/email is not guaranteed by third-party providers, so this setup avoids paid defaults.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={applyFreeSetup}
+            disabled={!canEdit}
+            style={{
+              padding: '10px 16px',
+              border: 'none',
+              borderRadius: '8px',
+              background: '#2563eb',
+              color: '#ffffff',
+              fontWeight: '700',
+              cursor: canEdit ? 'pointer' : 'not-allowed',
+              opacity: canEdit ? 1 : 0.55
+            }}
+          >
+            Apply Free Setup
+          </button>
+        </div>
+      </div>
+
+      <div style={sectionCardStyle}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap' }}>
+          <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '600' }}>🌤️ Weather Service</h4>
+          <span style={statusBadgeStyle(weatherReady)}>{weatherReady ? 'Configured' : 'Needs API key'}</span>
+        </div>
+        <p style={noteStyle}>
           Get real-time weather data for your farm. Get a free API key from{' '}
-          <a href="https://openweathermap.org/api" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+          <a href="https://openweathermap.org/api" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--action-primary, #3b82f6)', textDecoration: 'underline' }}>
             OpenWeatherMap
           </a>
         </p>
-        
-        <div style={{ marginBottom: '12px' }}>
-          <label style={{ display: 'block', fontWeight: '600', marginBottom: '6px', fontSize: '0.9rem' }}>
-            OpenWeatherMap API Key
-          </label>
-          <input
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <CheckboxField
+            label="Enable Weather Data"
+            checked={Boolean(weather.enabled)}
+            onChange={(value) => updateIntegration('weather', 'enabled', value)}
+          />
+          <SelectField
+            label="Provider"
+            value={weather.provider || 'openweathermap'}
+            onChange={(value) => updateIntegration('weather', 'provider', value)}
+            options={[
+              { value: 'openweathermap', label: 'OpenWeatherMap' },
+              { value: 'visualcrossing', label: 'Visual Crossing' },
+              { value: 'custom', label: 'Custom Provider' }
+            ]}
+          />
+          <InputField
+            label="API Key"
             type="password"
-            value={weatherApiKey}
-            onChange={(e) => setWeatherApiKey(e.target.value)}
-            placeholder="Enter your API key (leave empty for demo mode)"
-            disabled={!canEdit}
-            style={{
-              width: '100%',
-              padding: '10px',
-              borderRadius: '6px',
-              border: '1px solid #d1d5db',
-              fontFamily: 'monospace',
-              fontSize: '0.9rem',
-              opacity: canEdit ? 1 : 0.6,
-              cursor: canEdit ? 'text' : 'not-allowed'
-            }}
+            value={weather.apiKey || ''}
+            onChange={handleWeatherKeyChange}
+          />
+          <InputField
+            label="Location Override"
+            value={weather.locationOverride || ''}
+            onChange={(value) => updateIntegration('weather', 'locationOverride', value)}
+          />
+          <SelectField
+            label="Units"
+            value={weather.units || 'metric'}
+            onChange={(value) => updateIntegration('weather', 'units', value)}
+            options={[
+              { value: 'metric', label: 'Metric' },
+              { value: 'imperial', label: 'Imperial' }
+            ]}
+          />
+          <NumberField
+            label="Refresh Interval (minutes)"
+            value={weather.refreshMinutes || 30}
+            onChange={(value) => updateIntegration('weather', 'refreshMinutes', value)}
           />
         </div>
+        <div style={{ marginTop: '12px', padding: '8px 10px', background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.35)', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--text-primary, #1f2937)' }}>
+          Weather-aware modules read this same API key from shared local settings, so updates here apply consistently across dashboards and voice commands.
+        </div>
+      </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            onClick={handleSaveWeatherKey}
-            disabled={!canEdit}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '6px',
-              background: canEdit ? '#3b82f6' : '#d1d5db',
-              color: '#fff',
-              border: 'none',
-              cursor: canEdit ? 'pointer' : 'not-allowed',
-              fontWeight: '500',
-              fontSize: '0.9rem'
-            }}
-          >
-            💾 Save API Key
-          </button>
-          {weatherApiKey && (
-            <button
-              onClick={() => {
-                setWeatherApiKey('');
-                localStorage.removeItem('cattalytics:weather:apikey');
-              }}
-              disabled={!canEdit}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                background: canEdit ? '#ef4444' : '#d1d5db',
-                color: '#fff',
-                border: 'none',
-                cursor: canEdit ? 'pointer' : 'not-allowed',
-                fontWeight: '500',
-                fontSize: '0.9rem'
-              }}
-            >
-              🗑️ Clear
-            </button>
+      <div style={sectionCardStyle}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap' }}>
+          <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '600' }}>📨 SMS Alerts</h4>
+          <span style={statusBadgeStyle(smsReady)}>{smsReady ? 'Configured' : 'Needs credentials'}</span>
+        </div>
+        <p style={noteStyle}>Set the gateway used for farm alerts that escalate beyond in-app notifications. Webhook is the lowest-cost option if you already have your own automation endpoint.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <CheckboxField
+            label="Enable SMS Delivery"
+            checked={Boolean(sms.enabled)}
+            onChange={(value) => updateIntegration('sms', 'enabled', value)}
+          />
+          <SelectField
+            label="Provider"
+            value={sms.provider || 'webhook'}
+            onChange={(value) => updateIntegration('sms', 'provider', value)}
+            options={[
+              { value: 'webhook', label: 'Custom Webhook (free-first)' },
+              { value: 'twilio', label: 'Twilio' },
+              { value: 'africastalking', label: "Africa's Talking" },
+            ]}
+          />
+          {sms.provider !== 'webhook' && (
+            <InputField
+              label={sms.provider === 'twilio' ? 'Account SID' : 'API Username'}
+              value={sms.accountSid || ''}
+              onChange={(value) => updateIntegration('sms', 'accountSid', value)}
+            />
+          )}
+          {sms.provider !== 'webhook' && (
+            <InputField
+              label={sms.provider === 'twilio' ? 'Auth Token' : 'API Key'}
+              type="password"
+              value={sms.authToken || ''}
+              onChange={(value) => updateIntegration('sms', 'authToken', value)}
+            />
+          )}
+          <InputField
+            label="Sender ID / From Number"
+            value={sms.senderId || ''}
+            onChange={(value) => updateIntegration('sms', 'senderId', value)}
+          />
+          <InputField
+            label="Default Recipient"
+            type="tel"
+            value={sms.defaultRecipient || ''}
+            onChange={(value) => updateIntegration('sms', 'defaultRecipient', value)}
+          />
+          <InputField
+            label="Webhook URL"
+            value={sms.webhookUrl || ''}
+            onChange={(value) => updateIntegration('sms', 'webhookUrl', value)}
+          />
+        </div>
+      </div>
+
+      <div style={sectionCardStyle}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap' }}>
+          <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '600' }}>✉️ Email Delivery</h4>
+          <span style={statusBadgeStyle(emailReady)}>{emailReady ? 'Configured' : 'Needs sender details'}</span>
+        </div>
+        <p style={noteStyle}>Configure outbound email used by reminders, reports, and account notifications. Webhook lets you route mail through free automations like Apps Script or Cloudflare Workers.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <CheckboxField
+            label="Enable Email Delivery"
+            checked={Boolean(email.enabled)}
+            onChange={(value) => updateIntegration('email', 'enabled', value)}
+          />
+          <SelectField
+            label="Provider"
+            value={email.provider || 'webhook'}
+            onChange={(value) => updateIntegration('email', 'provider', value)}
+            options={[
+              { value: 'webhook', label: 'Custom Webhook (free-first)' },
+              { value: 'smtp', label: 'SMTP' },
+              { value: 'sendgrid', label: 'SendGrid' },
+              { value: 'mailgun', label: 'Mailgun' }
+            ]}
+          />
+          <InputField
+            label="From Name"
+            value={email.fromName || ''}
+            onChange={(value) => updateIntegration('email', 'fromName', value)}
+          />
+          <InputField
+            label="From Address"
+            type="email"
+            value={email.fromAddress || ''}
+            onChange={(value) => updateIntegration('email', 'fromAddress', value)}
+          />
+          <InputField
+            label="Reply-To Address"
+            type="email"
+            value={email.replyTo || ''}
+            onChange={(value) => updateIntegration('email', 'replyTo', value)}
+          />
+          {email.provider === 'webhook' ? (
+            <InputField
+              label="Webhook URL"
+              value={email.webhookUrl || ''}
+              onChange={(value) => updateIntegration('email', 'webhookUrl', value)}
+            />
+          ) : email.provider === 'smtp' ? (
+            <InputField
+              label="SMTP Host"
+              value={email.smtpHost || ''}
+              onChange={(value) => updateIntegration('email', 'smtpHost', value)}
+            />
+          ) : (
+            <InputField
+              label="API Domain / Base URL"
+              value={email.smtpHost || ''}
+              onChange={(value) => updateIntegration('email', 'smtpHost', value)}
+            />
+          )}
+          {email.provider !== 'webhook' && (
+            <NumberField
+              label={email.provider === 'smtp' ? 'SMTP Port' : 'Provider Port'}
+              value={email.smtpPort || 587}
+              onChange={(value) => updateIntegration('email', 'smtpPort', value)}
+            />
+          )}
+          {email.provider !== 'webhook' && (
+            <InputField
+              label={email.provider === 'smtp' ? 'Username' : 'API User / Key ID'}
+              value={email.username || ''}
+              onChange={(value) => updateIntegration('email', 'username', value)}
+            />
+          )}
+          {email.provider !== 'webhook' && (
+            <InputField
+              label={email.provider === 'smtp' ? 'Password' : 'API Secret'}
+              type="password"
+              value={email.password || ''}
+              onChange={(value) => updateIntegration('email', 'password', value)}
+            />
           )}
         </div>
+      </div>
 
-        <div style={{ marginTop: '12px', padding: '8px', background: '#fef3c7', borderRadius: '4px', fontSize: '0.85rem', color: '#92400e' }}>
-          📌 <strong>Tip:</strong> Without an API key, weather data will use demo mode with placeholder values.
+      <div style={sectionCardStyle}>
+        <h4 style={{ margin: '0 0 12px', fontSize: '1rem', fontWeight: '600' }}>📊 Analytics & Telemetry</h4>
+        <p style={noteStyle}>Control how operational analytics and diagnostic events are captured inside the app.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <CheckboxField
+            label="Enable Analytics"
+            checked={Boolean(analytics.enabled)}
+            onChange={(value) => updateIntegration('analytics', 'enabled', value)}
+          />
+          <SelectField
+            label="Primary Provider"
+            value={analytics.provider || 'local'}
+            onChange={(value) => updateIntegration('analytics', 'provider', value)}
+            options={[
+              { value: 'local', label: 'Local Only (free-first)' },
+              { value: 'firebase', label: 'Firebase Analytics' },
+              { value: 'hybrid', label: 'Hybrid' }
+            ]}
+          />
+          <CheckboxField
+            label="Track Usage Events"
+            checked={Boolean(analytics.trackUsage)}
+            onChange={(value) => updateIntegration('analytics', 'trackUsage', value)}
+          />
+          <CheckboxField
+            label="Track Error Events"
+            checked={Boolean(analytics.trackErrors)}
+            onChange={(value) => updateIntegration('analytics', 'trackErrors', value)}
+          />
+          <CheckboxField
+            label="Enable Predictive Insights"
+            checked={Boolean(analytics.predictiveInsights)}
+            onChange={(value) => updateIntegration('analytics', 'predictiveInsights', value)}
+          />
+          <CheckboxField
+            label="Export Snapshot Summaries"
+            checked={Boolean(analytics.exportSnapshots)}
+            onChange={(value) => updateIntegration('analytics', 'exportSnapshots', value)}
+          />
         </div>
       </div>
-
-      <div style={{ background: '#f3f4f6', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-        <h4 style={{ margin: '0 0 12px', fontSize: '1rem', fontWeight: '600' }}>📦 More Integrations Coming</h4>
-        <p style={{ color: '#6b7280', margin: 0, fontSize: '0.9rem' }}>
-          Support for additional services like SMS, email, and data analytics will be added soon.
-        </p>
-      </div>
     </div>
-  );
+  )
 }
 
 function DataManagementTab({ settings, updateSection }) {
@@ -967,7 +1325,7 @@ function DataManagementTab({ settings, updateSection }) {
       </div>
 
       {settings.lastBackupDate && (
-        <div style={{ background: '#f3f4f6', padding: '12px', borderRadius: '8px' }}>
+        <div style={{ background: 'var(--bg-secondary, #f3f4f6)', border: '1px solid var(--border-primary, #e5e7eb)', color: 'var(--text-primary, #1f2937)', padding: '12px', borderRadius: '8px' }}>
           <strong>Last Backup:</strong> {formatDate(settings.lastBackupDate, true)}
         </div>
       )}
@@ -1138,7 +1496,7 @@ function SystemTab({ settings, updateSection }) {
 function InputField({ label, value, onChange, type = 'text', tooltip, error }) {
   return (
     <div>
-      <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px' }}>
+      <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: 'var(--text-primary, #1f2937)' }}>
         {label}
         {tooltip && (
           <span
@@ -1170,9 +1528,10 @@ function InputField({ label, value, onChange, type = 'text', tooltip, error }) {
           width: '100%',
           padding: '10px 12px',
           borderRadius: '8px',
-          border: error ? '2px solid #ef4444' : '1px solid #d1d5db',
+          border: error ? '2px solid #ef4444' : '1px solid var(--border-secondary, #d1d5db)',
           fontSize: '14px',
-          background: error ? '#fee2e2' : 'white'
+          color: 'var(--text-primary, #1f2937)',
+          background: error ? '#fee2e2' : 'var(--bg-elevated, #ffffff)'
         }}
       />
       {error && (
@@ -1187,7 +1546,7 @@ function InputField({ label, value, onChange, type = 'text', tooltip, error }) {
 function SelectField({ label, value, onChange, options, tooltip }) {
   return (
     <div>
-      <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px' }}>
+      <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: 'var(--text-primary, #1f2937)' }}>
         {label}
         {tooltip && (
           <span
@@ -1218,8 +1577,10 @@ function SelectField({ label, value, onChange, options, tooltip }) {
           width: '100%',
           padding: '10px 12px',
           borderRadius: '8px',
-          border: '1px solid #d1d5db',
-          fontSize: '14px'
+          border: '1px solid var(--border-secondary, #d1d5db)',
+          fontSize: '14px',
+          color: 'var(--text-primary, #1f2937)',
+          background: 'var(--bg-elevated, #ffffff)'
         }}
       >
         {options.map(opt => (
@@ -1233,7 +1594,7 @@ function SelectField({ label, value, onChange, options, tooltip }) {
 function NumberField({ label, value, onChange, tooltip, error }) {
   return (
     <div>
-      <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px' }}>
+      <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: 'var(--text-primary, #1f2937)' }}>
         {label}
         {tooltip && (
           <span
@@ -1265,9 +1626,10 @@ function NumberField({ label, value, onChange, tooltip, error }) {
           width: '100%',
           padding: '10px 12px',
           borderRadius: '8px',
-          border: error ? '2px solid #ef4444' : '1px solid #d1d5db',
+          border: error ? '2px solid #ef4444' : '1px solid var(--border-secondary, #d1d5db)',
           fontSize: '14px',
-          background: error ? '#fee2e2' : 'white'
+          color: 'var(--text-primary, #1f2937)',
+          background: error ? '#fee2e2' : 'var(--bg-elevated, #ffffff)'
         }}
       />
       {error && (
@@ -1288,7 +1650,7 @@ function CheckboxField({ label, checked, onChange, tooltip }) {
         onChange={(e) => onChange(e.target.checked)}
         style={{ width: '18px', height: '18px', cursor: 'pointer' }}
       />
-      <label style={{ fontWeight: '500', fontSize: '14px', cursor: 'pointer' }}>
+      <label style={{ fontWeight: '500', fontSize: '14px', cursor: 'pointer', color: 'var(--text-primary, #1f2937)' }}>
         {label}
         {tooltip && (
           <span
@@ -1316,276 +1678,13 @@ function CheckboxField({ label, checked, onChange, tooltip }) {
   )
 }
 
-function CustomFieldsTab({ customFields, onRefresh, canEdit }) {
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [newField, setNewField] = useState({ key: '', value: '', type: 'text', label: '' })
-
-  const handleAddField = () => {
-    if (!newField.key || !newField.label) {
-      alert('❌ Please provide both field key and label')
-      return
-    }
-    if (addCustomField(newField.key, newField.value, newField.type, newField.label)) {
-      setShowAddForm(false)
-      setNewField({ key: '', value: '', type: 'text', label: '' })
-      onRefresh()
-      alert('✅ Custom field added successfully!')
-    } else {
-      alert('❌ Failed to add custom field')
-    }
-  }
-
-  const handleDeleteField = (fieldKey) => {
-    if (confirm(`Are you sure you want to delete the custom field "${fieldKey}"?`)) {
-      if (deleteCustomField(fieldKey)) {
-        onRefresh()
-        alert('✅ Custom field deleted successfully!')
-      } else {
-        alert('❌ Failed to delete custom field')
-      }
-    }
-  }
-
-  const handleUpdateField = (fieldKey, newValue) => {
-    const result = updateCustomField(fieldKey, newValue)
-    if (result.success) {
-      onRefresh()
-    } else {
-      alert('❌ Failed to update custom field: ' + result.error)
-    }
-  }
-
-  const fieldKeys = Object.keys(customFields)
-
-  return (
-    <div style={{ display: 'grid', gap: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700' }}>🎨 Custom Fields</h3>
-          <p style={{ margin: '8px 0 0', color: '#6b7280', fontSize: '14px' }}>
-            Add your own custom settings fields to track farm-specific data
-          </p>
-        </div>
-        {canEdit && (
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            style={{
-              padding: '8px 16px',
-              background: '#10b981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            {showAddForm ? '❌ Cancel' : '➕ Add Field'}
-          </button>
-        )}
-      </div>
-
-      {showAddForm && (
-        <div style={{
-          background: '#f0fdf4',
-          border: '2px solid #10b981',
-          padding: '20px',
-          borderRadius: '8px'
-        }}>
-          <h4 style={{ margin: '0 0 16px', fontSize: '1rem', fontWeight: '600' }}>Add New Custom Field</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <InputField
-              label="Field Key (unique identifier)"
-              value={newField.key}
-              onChange={(v) => setNewField({ ...newField, key: v.toLowerCase().replace(/\s+/g, '_') })}
-            />
-            <InputField
-              label="Field Label (display name)"
-              value={newField.label}
-              onChange={(v) => setNewField({ ...newField, label: v })}
-            />
-            <SelectField
-              label="Field Type"
-              value={newField.type}
-              onChange={(v) => setNewField({ ...newField, type: v })}
-              options={[
-                { value: 'text', label: 'Text' },
-                { value: 'number', label: 'Number' },
-                { value: 'boolean', label: 'Yes/No' },
-                { value: 'date', label: 'Date' }
-              ]}
-            />
-            {newField.type === 'text' && (
-              <InputField
-                label="Default Value"
-                value={newField.value}
-                onChange={(v) => setNewField({ ...newField, value: v })}
-              />
-            )}
-            {newField.type === 'number' && (
-              <NumberField
-                label="Default Value"
-                value={newField.value}
-                onChange={(v) => setNewField({ ...newField, value: v })}
-              />
-            )}
-            {newField.type === 'boolean' && (
-              <div>
-                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px' }}>Default Value</label>
-                <CheckboxField
-                  label="Enabled"
-                  checked={newField.value}
-                  onChange={(v) => setNewField({ ...newField, value: v })}
-                />
-              </div>
-            )}
-          </div>
-          <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
-            <button
-              onClick={handleAddField}
-              style={{
-                padding: '10px 20px',
-                background: '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}
-            >
-              ✅ Add Field
-            </button>
-            <button
-              onClick={() => setShowAddForm(false)}
-              style={{
-                padding: '10px 20px',
-                background: '#6b7280',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {fieldKeys.length === 0 ? (
-        <div style={{
-          background: '#f3f4f6',
-          padding: '40px',
-          borderRadius: '8px',
-          textAlign: 'center',
-          color: '#6b7280'
-        }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎨</div>
-          <div style={{ fontSize: '16px', fontWeight: '600' }}>No custom fields yet</div>
-          <div style={{ fontSize: '14px', marginTop: '8px' }}>Add custom fields to track farm-specific data</div>
-        </div>
-      ) : (
-        <div style={{ display: 'grid', gap: '16px' }}>
-          {fieldKeys.map(key => {
-            const field = customFields[key]
-            return (
-              <div
-                key={key}
-                style={{
-                  background: '#f9fafb',
-                  border: '1px solid #e5e7eb',
-                  padding: '16px',
-                  borderRadius: '8px'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
-                  <div>
-                    <div style={{ fontWeight: '600', fontSize: '14px', marginBottom: '4px' }}>
-                      {field.label}
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                      Key: <code style={{ background: '#e5e7eb', padding: '2px 6px', borderRadius: '4px' }}>{key}</code>
-                      {' • '}
-                      Type: {field.type}
-                    </div>
-                  </div>
-                  {canEdit && (
-                    <button
-                      onClick={() => handleDeleteField(key)}
-                      style={{
-                        padding: '6px 12px',
-                        background: '#ef4444',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
-                    >
-                      🗑️ Delete
-                    </button>
-                  )}
-                </div>
-                <div>
-                  {field.type === 'text' && (
-                    <InputField
-                      label="Value"
-                      value={field.value}
-                      onChange={(v) => handleUpdateField(key, v)}
-                    />
-                  )}
-                  {field.type === 'number' && (
-                    <NumberField
-                      label="Value"
-                      value={field.value}
-                      onChange={(v) => handleUpdateField(key, v)}
-                    />
-                  )}
-                  {field.type === 'boolean' && (
-                    <CheckboxField
-                      label="Enabled"
-                      checked={field.value}
-                      onChange={(v) => handleUpdateField(key, v)}
-                    />
-                  )}
-                  {field.type === 'date' && (
-                    <InputField
-                      label="Value"
-                      type="date"
-                      value={field.value}
-                      onChange={(v) => handleUpdateField(key, v)}
-                    />
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      <div style={{
-        background: '#eff6ff',
-        border: '1px solid #3b82f6',
-        padding: '12px 16px',
-        borderRadius: '8px',
-        fontSize: '14px',
-        color: '#1e40af'
-      }}>
-        <strong>💡 Tip:</strong> Custom fields let you add any farm-specific settings you need. These are saved with your other settings and can be exported/imported.
-      </div>
-    </div>
-  )
-}
-
 function HistoryTab({ history, onRestore, onClear, canEdit }) {
   return (
     <div style={{ display: 'grid', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700' }}>📜 Settings Change History</h3>
-          <p style={{ margin: '8px 0 0', color: '#6b7280', fontSize: '14px' }}>
+          <p style={{ margin: '8px 0 0', color: 'var(--text-secondary, #4b5563)', fontSize: '14px' }}>
             View and restore previous settings versions (last {history.length} changes)
           </p>
         </div>
@@ -1610,11 +1709,12 @@ function HistoryTab({ history, onRestore, onClear, canEdit }) {
 
       {history.length === 0 ? (
         <div style={{
-          background: '#f3f4f6',
+          background: 'var(--bg-secondary, #f3f4f6)',
+          border: '1px solid var(--border-primary, #e5e7eb)',
           padding: '40px',
           borderRadius: '8px',
           textAlign: 'center',
-          color: '#6b7280'
+          color: 'var(--text-secondary, #4b5563)'
         }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>📜</div>
           <div style={{ fontSize: '16px', fontWeight: '600' }}>No history available</div>
@@ -1626,13 +1726,14 @@ function HistoryTab({ history, onRestore, onClear, canEdit }) {
             <div
               key={entry.id}
               style={{
-                background: index === 0 ? '#f0fdf4' : '#f9fafb',
-                border: index === 0 ? '2px solid #10b981' : '1px solid #e5e7eb',
+                background: index === 0 ? 'rgba(16, 185, 129, 0.10)' : 'var(--bg-secondary, #f9fafb)',
+                border: index === 0 ? '1px solid rgba(16, 185, 129, 0.45)' : '1px solid var(--border-primary, #e5e7eb)',
                 padding: '16px',
                 borderRadius: '8px',
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center'
+                alignItems: 'center',
+                color: 'var(--text-primary, #1f2937)'
               }}
             >
               <div style={{ flex: 1 }}>
@@ -1651,7 +1752,7 @@ function HistoryTab({ history, onRestore, onClear, canEdit }) {
                     {entry.comment || 'Settings updated'}
                   </span>
                 </div>
-                <div style={{ color: '#6b7280', fontSize: '13px' }}>
+                <div style={{ color: 'var(--text-secondary, #4b5563)', fontSize: '13px' }}>
                   📅 {formatDate(entry.timestamp, true)} • 👤 {entry.user}
                 </div>
               </div>
@@ -1678,12 +1779,12 @@ function HistoryTab({ history, onRestore, onClear, canEdit }) {
       )}
 
       <div style={{
-        background: '#eff6ff',
-        border: '1px solid #3b82f6',
+        background: 'rgba(59, 130, 246, 0.12)',
+        border: '1px solid rgba(59, 130, 246, 0.45)',
         padding: '12px 16px',
         borderRadius: '8px',
         fontSize: '14px',
-        color: '#1e40af'
+        color: 'var(--text-primary, #1f2937)'
       }}>
         <strong>💡 Tip:</strong> Settings are automatically saved to history. You can restore any previous version by clicking the Restore button.
       </div>

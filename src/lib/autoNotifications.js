@@ -5,6 +5,7 @@
 
 import { showNotification, scheduleReminder, NOTIFICATION_TYPES, PRIORITIES } from './notifications'
 import { loadData } from './storage'
+import { getEnhancedSettings } from './enhancedSettings'
 
 /**
  * Check and notify for treatment due dates
@@ -200,10 +201,23 @@ export function checkInventoryAlerts(lowThreshold = 10, criticalThreshold = 5) {
  * Call this periodically (e.g., every hour or when app loads)
  */
 export function checkAllAutoNotifications() {
-  checkTreatmentReminders()
-  checkBreedingReminders()
-  checkTaskReminders()
-  checkInventoryAlerts()
+  const preferences = getEnhancedSettings()?.notifications || {}
+  if (preferences.enableNotifications === false) return
+
+  if (preferences.healthReminders !== false) {
+    checkTreatmentReminders()
+  }
+  if (preferences.breedingReminders !== false) {
+    checkBreedingReminders()
+  }
+  if (preferences.taskReminders !== false) {
+    checkTaskReminders()
+  }
+  if (preferences.inventoryAlerts !== false) {
+    const lowThreshold = Number(preferences.lowStockThreshold) || 10
+    const criticalThreshold = Math.max(1, Math.floor(lowThreshold / 2))
+    checkInventoryAlerts(lowThreshold, criticalThreshold)
+  }
 }
 
 /**

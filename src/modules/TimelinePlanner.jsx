@@ -119,13 +119,27 @@ export default function TimelinePlanner() {
     return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`
   }
 
+  const surfaceStyle = {
+    background: 'var(--bg-elevated, #ffffff)',
+    border: '1px solid var(--border-primary, #e5e7eb)',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.12)'
+  }
+
+  const mutedText = { color: 'var(--text-secondary, #4b5563)' }
+
   return (
-    <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: 'bold' }}>
+    <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto', color: 'var(--text-primary, #1f2937)' }}>
+      <div style={{
+        marginBottom: '24px',
+        padding: '20px',
+        borderRadius: '14px',
+        background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(59, 130, 246, 0.16) 100%)',
+        border: '1px solid var(--border-primary, #e5e7eb)'
+      }}>
+        <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: 'bold', color: 'var(--text-primary, #1f2937)' }}>
           📅 Timeline & Planning
         </h2>
-        <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+        <p style={{ margin: 0, fontSize: '14px', ...mutedText }}>
           Gantt view of crops, breeding, tasks, and treatments
         </p>
       </div>
@@ -137,30 +151,29 @@ export default function TimelinePlanner() {
         gap: '16px',
         marginBottom: '24px'
       }}>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Active Items</div>
+        <div style={{ ...surfaceStyle, padding: '16px', borderRadius: '8px' }}>
+          <div style={{ fontSize: '12px', marginBottom: '4px', ...mutedText }}>Active Items</div>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#3b82f6' }}>{stats.active || 0}</div>
         </div>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Upcoming</div>
+        <div style={{ ...surfaceStyle, padding: '16px', borderRadius: '8px' }}>
+          <div style={{ fontSize: '12px', marginBottom: '4px', ...mutedText }}>Upcoming</div>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{stats.upcoming || 0}</div>
         </div>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Completed</div>
+        <div style={{ ...surfaceStyle, padding: '16px', borderRadius: '8px' }}>
+          <div style={{ fontSize: '12px', marginBottom: '4px', ...mutedText }}>Completed</div>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#22c55e' }}>{stats.completed || 0}</div>
         </div>
-        <div style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Total Items</div>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#6b7280' }}>{stats.total || 0}</div>
+        <div style={{ ...surfaceStyle, padding: '16px', borderRadius: '8px' }}>
+          <div style={{ fontSize: '12px', marginBottom: '4px', ...mutedText }}>Total Items</div>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--text-primary, #1f2937)' }}>{stats.total || 0}</div>
         </div>
       </div>
 
       {/* Controls */}
       <div style={{
-        background: 'white',
+        ...surfaceStyle,
         padding: '16px',
         borderRadius: '8px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         marginBottom: '24px',
         display: 'flex',
         flexWrap: 'wrap',
@@ -176,14 +189,15 @@ export default function TimelinePlanner() {
               onClick={() => setSelectedCategory(cat)}
               style={{
                 padding: '8px 16px',
-                background: selectedCategory === cat ? '#3b82f6' : '#f3f4f6',
-                color: selectedCategory === cat ? 'white' : '#1f2937',
-                border: 'none',
+                background: selectedCategory === cat ? '#3b82f6' : 'var(--bg-secondary, #f3f4f6)',
+                color: selectedCategory === cat ? '#f8fafc' : 'var(--text-primary, #1f2937)',
+                border: selectedCategory === cat ? 'none' : '1px solid var(--border-primary, #e5e7eb)',
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontSize: '13px',
                 fontWeight: '500',
-                textTransform: 'capitalize'
+                textTransform: 'capitalize',
+                transition: 'all 0.2s ease'
               }}
             >
               {cat === 'all' ? 'All' : cat + 's'}
@@ -199,13 +213,14 @@ export default function TimelinePlanner() {
               onClick={() => setViewMode(mode)}
               style={{
                 padding: '8px 12px',
-                background: viewMode === mode ? '#059669' : '#f3f4f6',
-                color: viewMode === mode ? 'white' : '#1f2937',
-                border: 'none',
+                background: viewMode === mode ? '#059669' : 'var(--bg-secondary, #f3f4f6)',
+                color: viewMode === mode ? '#f8fafc' : 'var(--text-primary, #1f2937)',
+                border: viewMode === mode ? 'none' : '1px solid var(--border-primary, #e5e7eb)',
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontSize: '12px',
-                textTransform: 'capitalize'
+                textTransform: 'capitalize',
+                transition: 'all 0.2s ease'
               }}
             >
               {mode}
@@ -219,12 +234,13 @@ export default function TimelinePlanner() {
           style={{
             padding: '8px 16px',
             background: '#8b5cf6',
-            color: 'white',
+            color: '#f8fafc',
             border: 'none',
             borderRadius: '6px',
             cursor: 'pointer',
             fontSize: '13px',
-            fontWeight: '500'
+            fontWeight: '500',
+            transition: 'transform 0.2s ease'
           }}
         >
           📥 Export
@@ -233,10 +249,9 @@ export default function TimelinePlanner() {
 
       {/* Date Navigator */}
       <div style={{
-        background: 'white',
+        ...surfaceStyle,
         padding: '16px',
         borderRadius: '8px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         marginBottom: '24px',
         display: 'flex',
         alignItems: 'center',
@@ -246,30 +261,31 @@ export default function TimelinePlanner() {
           onClick={() => navigateDate(-1)}
           style={{
             padding: '8px 16px',
-            background: '#f3f4f6',
-            border: 'none',
+            background: 'var(--bg-secondary, #f3f4f6)',
+            border: '1px solid var(--border-primary, #e5e7eb)',
             borderRadius: '6px',
             cursor: 'pointer',
-            fontSize: '16px'
+            fontSize: '16px',
+            color: 'var(--text-primary, #1f2937)'
           }}
         >
           ←
         </button>
         
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '4px' }}>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '4px', color: 'var(--text-primary, #1f2937)' }}>
             {formatDateRange()}
           </div>
           <button
             onClick={() => setCurrentDate(new Date())}
             style={{
               padding: '4px 12px',
-              background: '#e5e7eb',
-              border: 'none',
+              background: 'var(--bg-secondary, #e5e7eb)',
+              border: '1px solid var(--border-primary, #d1d5db)',
               borderRadius: '4px',
               cursor: 'pointer',
               fontSize: '11px',
-              color: '#4b5563'
+              color: 'var(--text-secondary, #4b5563)'
             }}
           >
             Today
@@ -280,11 +296,12 @@ export default function TimelinePlanner() {
           onClick={() => navigateDate(1)}
           style={{
             padding: '8px 16px',
-            background: '#f3f4f6',
-            border: 'none',
+            background: 'var(--bg-secondary, #f3f4f6)',
+            border: '1px solid var(--border-primary, #e5e7eb)',
             borderRadius: '6px',
             cursor: 'pointer',
-            fontSize: '16px'
+            fontSize: '16px',
+            color: 'var(--text-primary, #1f2937)'
           }}
         >
           →
@@ -293,14 +310,13 @@ export default function TimelinePlanner() {
 
       {/* Timeline View */}
       <div style={{
-        background: 'white',
+        ...surfaceStyle,
         padding: '20px',
         borderRadius: '8px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         overflowX: 'auto'
       }}>
         {filteredItems.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary, #4b5563)' }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📅</div>
             <div>No items in this time period</div>
             <div style={{ fontSize: '13px', marginTop: '8px' }}>
@@ -327,12 +343,14 @@ export default function TimelinePlanner() {
                     marginBottom: '12px',
                     cursor: 'pointer',
                     position: 'relative',
-                    padding: '4px 0'
+                    padding: '6px 4px',
+                    borderRadius: '8px',
+                    transition: 'background-color 0.2s ease'
                   }}
                 >
                   <div style={{
                     fontSize: '12px',
-                    color: '#6b7280',
+                    color: 'var(--text-secondary, #4b5563)',
                     marginBottom: '4px',
                     display: 'flex',
                     alignItems: 'center',
@@ -348,7 +366,9 @@ export default function TimelinePlanner() {
                     <span>{item.name}</span>
                     <span style={{
                       fontSize: '10px',
-                      background: '#f3f4f6',
+                      background: 'var(--bg-secondary, #f3f4f6)',
+                      color: 'var(--text-secondary, #4b5563)',
+                      border: '1px solid var(--border-primary, #e5e7eb)',
                       padding: '2px 6px',
                       borderRadius: '4px',
                       textTransform: 'capitalize'
@@ -359,7 +379,7 @@ export default function TimelinePlanner() {
                   
                   <div style={{
                     height: '32px',
-                    background: '#f3f4f6',
+                    background: 'var(--bg-secondary, #f3f4f6)',
                     borderRadius: '6px',
                     position: 'relative',
                     overflow: 'hidden'
@@ -371,10 +391,11 @@ export default function TimelinePlanner() {
                       height: '100%',
                       background: item.color,
                       borderRadius: '6px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: 'white',
+                      color: '#f8fafc',
                       fontSize: '11px',
                       fontWeight: '500',
                       transition: 'all 0.2s'
@@ -422,7 +443,9 @@ export default function TimelinePlanner() {
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: 'white',
+              background: 'var(--bg-elevated, #ffffff)',
+              border: '1px solid var(--border-primary, #e5e7eb)',
+              color: 'var(--text-primary, #1f2937)',
               padding: '24px',
               borderRadius: '12px',
               maxWidth: '500px',
@@ -440,7 +463,7 @@ export default function TimelinePlanner() {
                   border: 'none',
                   fontSize: '24px',
                   cursor: 'pointer',
-                  color: '#6b7280'
+                  color: 'var(--text-secondary, #4b5563)'
                 }}
               >
                 ×
@@ -452,7 +475,7 @@ export default function TimelinePlanner() {
                 display: 'inline-block',
                 padding: '4px 12px',
                 background: selectedItem.color,
-                color: 'white',
+                color: '#f8fafc',
                 borderRadius: '6px',
                 fontSize: '12px',
                 fontWeight: '500',
@@ -474,11 +497,18 @@ export default function TimelinePlanner() {
               </div>
               
               {selectedItem.data && (
-                <div style={{ marginTop: '16px', padding: '12px', background: '#f9fafb', borderRadius: '6px', fontSize: '13px' }}>
+                <div style={{
+                  marginTop: '16px',
+                  padding: '12px',
+                  background: 'var(--bg-secondary, #f9fafb)',
+                  border: '1px solid var(--border-primary, #e5e7eb)',
+                  borderRadius: '6px',
+                  fontSize: '13px'
+                }}>
                   <div><strong>Additional Details:</strong></div>
                   {Object.entries(selectedItem.data).slice(0, 5).map(([key, value]) => (
                     <div key={key} style={{ marginTop: '4px' }}>
-                      <span style={{ color: '#6b7280' }}>{key}:</span> {String(value).slice(0, 50)}
+                      <span style={{ color: 'var(--text-secondary, #4b5563)' }}>{key}:</span> {String(value).slice(0, 50)}
                     </div>
                   ))}
                 </div>

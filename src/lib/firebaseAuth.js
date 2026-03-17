@@ -12,8 +12,13 @@ import {
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
-  updateProfile
+  updateProfile,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence
 } from 'firebase/auth'
+
+const FIREBASE_REMEMBER_SESSION_KEY = 'devinsfarm:firebase:rememberSession'
 
 // Check if Firebase Auth is available
 export function isFirebaseAuthAvailable() {
@@ -21,6 +26,30 @@ export function isFirebaseAuthAvailable() {
     return isFirebaseConfigured() && auth !== null && auth !== undefined
   } catch (error) {
     return false
+  }
+}
+
+export function getFirebaseRememberSessionPreference() {
+  try {
+    const raw = localStorage.getItem(FIREBASE_REMEMBER_SESSION_KEY)
+    return raw !== 'false'
+  } catch (error) {
+    return true
+  }
+}
+
+export async function setFirebaseRememberSessionPreference(remember) {
+  if (!isFirebaseAuthAvailable()) {
+    return { success: false, error: 'Firebase not configured' }
+  }
+
+  try {
+    localStorage.setItem(FIREBASE_REMEMBER_SESSION_KEY, remember ? 'true' : 'false')
+    await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence)
+    return { success: true }
+  } catch (error) {
+    console.error('Firebase persistence update error:', error)
+    return { success: false, error: error.message }
   }
 }
 
@@ -33,6 +62,7 @@ export async function loginWithFirebase(email, password) {
   }
 
   try {
+    await setPersistence(auth, getFirebaseRememberSessionPreference() ? browserLocalPersistence : browserSessionPersistence)
     const userCredential = await signInWithEmailAndPassword(auth, email, password)
     const user = userCredential.user
 
@@ -66,6 +96,7 @@ export async function registerWithFirebase(email, password, displayName) {
   }
 
   try {
+    await setPersistence(auth, getFirebaseRememberSessionPreference() ? browserLocalPersistence : browserSessionPersistence)
     const userCredential = await createUserWithEmailAndPassword(auth, email, password)
     const user = userCredential.user
 
@@ -186,5 +217,7 @@ export default {
   resetPasswordWithFirebase,
   onFirebaseAuthChange,
   getCurrentFirebaseUser,
-  isFirebaseUser
+  isFirebaseUser,
+  getFirebaseRememberSessionPreference,
+  setFirebaseRememberSessionPreference
 }

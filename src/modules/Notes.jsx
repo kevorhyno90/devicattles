@@ -133,8 +133,38 @@ export default function Notes() {
     return { total, pinned, dueSoon }
   }, [notes])
 
+  const surfaceCard = {
+    background: 'var(--bg-elevated, #ffffff)',
+    border: '1px solid var(--border-primary, #e5e7eb)',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.12)'
+  }
+
+  const inputBaseStyle = {
+    width: '100%',
+    padding: '10px 12px',
+    border: '1px solid var(--border-secondary, #d1d5db)',
+    borderRadius: '8px',
+    fontSize: '14px',
+    color: 'var(--text-primary, #111827)',
+    background: 'var(--bg-elevated, #ffffff)',
+    boxSizing: 'border-box'
+  }
+
+  const labelStyle = {
+    display: 'block',
+    fontSize: '12px',
+    fontWeight: 600,
+    color: 'var(--text-secondary, #374151)',
+    marginBottom: '6px'
+  }
+
   return (
-    <div style={{ padding: '24px', background: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{
+      padding: '24px',
+      background: 'var(--bg-primary, #f9fafb)',
+      color: 'var(--text-primary, #111827)',
+      minHeight: '100vh'
+    }}>
       {toast && (
         <div style={{
           position: 'fixed', top: '20px', right: '20px',
@@ -147,50 +177,37 @@ export default function Notes() {
       )}
 
       <div style={{ marginBottom: '16px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#111827', marginBottom: '6px' }}>🗒️ Notes & Scratchpad</h1>
-        <p style={{ color: '#6b7280', fontSize: '14px' }}>Capture quick notes before pushing them into the right modules.</p>
+        <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--text-primary, #111827)', marginBottom: '6px' }}>🗒️ Notes & Scratchpad</h1>
+        <p style={{ color: 'var(--text-secondary, #4b5563)', fontSize: '14px' }}>Capture quick notes before pushing them into the right modules.</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '20px' }}>
-        <div style={{ background: 'white', padding: '12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600 }}>Total Notes</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#111827' }}>{stats.total}</div>
+        <div style={{ ...surfaceCard, padding: '12px', borderRadius: '8px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary, #4b5563)', fontWeight: 600 }}>Total Notes</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary, #111827)' }}>{stats.total}</div>
         </div>
-        <div style={{ background: 'white', padding: '12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600 }}>Pinned</div>
+        <div style={{ ...surfaceCard, padding: '12px', borderRadius: '8px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary, #4b5563)', fontWeight: 600 }}>Pinned</div>
           <div style={{ fontSize: '24px', fontWeight: 700, color: '#8b5cf6' }}>{stats.pinned}</div>
         </div>
-        <div style={{ background: 'white', padding: '12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600 }}>Due Soon (3d)</div>
+        <div style={{ ...surfaceCard, padding: '12px', borderRadius: '8px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary, #4b5563)', fontWeight: 600 }}>Due Soon (3d)</div>
           <div style={{ fontSize: '24px', fontWeight: 700, color: '#f59e0b' }}>{stats.dueSoon}</div>
         </div>
       </div>
 
-      <div style={{ background: 'white', padding: '14px', borderRadius: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '18px', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ ...surfaceCard, padding: '14px', borderRadius: '10px', marginBottom: '18px', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           type="text"
           placeholder="Search notes by text or tags..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{
-            flex: 1,
-            minWidth: '220px',
-            padding: '10px 12px',
-            border: '1px solid #d1d5db',
-            borderRadius: '8px',
-            fontSize: '14px'
-          }}
+          style={{ ...inputBaseStyle, flex: 1, minWidth: '220px' }}
         />
         <select
           value={filterModule}
           onChange={(e) => setFilterModule(e.target.value)}
-          style={{
-            padding: '10px 12px',
-            border: '1px solid #d1d5db',
-            borderRadius: '8px',
-            fontSize: '14px',
-            background: 'white'
-          }}
+          style={{ ...inputBaseStyle, width: 'auto', minWidth: '180px' }}
         >
           <option value="All">All Modules</option>
           {MODULE_OPTIONS.map(opt => (
@@ -214,26 +231,26 @@ export default function Notes() {
       </div>
 
       {showForm && (
-        <div style={{ background: 'white', padding: '16px', borderRadius: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '18px' }}>
-          <h3 style={{ margin: '0 0 12px', fontSize: '16px', fontWeight: 700, color: '#111827' }}>
+        <div style={{ ...surfaceCard, padding: '16px', borderRadius: '10px', marginBottom: '18px' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: '16px', fontWeight: 700, color: 'var(--text-primary, #111827)' }}>
             {editingId ? 'Edit Note' : 'Add Note'}
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '12px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Title *</label>
+              <label style={labelStyle}>Title *</label>
               <input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }}
+                style={inputBaseStyle}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Module</label>
+              <label style={labelStyle}>Module</label>
               <select
                 value={form.module}
                 onChange={(e) => setForm({ ...form, module: e.target.value })}
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', background: 'white' }}
+                style={inputBaseStyle}
               >
                 {MODULE_OPTIONS.map(opt => (
                   <option key={opt} value={opt}>{opt}</option>
@@ -241,30 +258,30 @@ export default function Notes() {
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Tags (comma separated)</label>
+              <label style={labelStyle}>Tags (comma separated)</label>
               <input
                 type="text"
                 value={form.tags}
                 onChange={(e) => setForm({ ...form, tags: e.target.value })}
                 placeholder="e.g. vaccine, supplier"
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }}
+                style={inputBaseStyle}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Due Date (optional)</label>
+              <label style={labelStyle}>Due Date (optional)</label>
               <input
                 type="date"
                 value={form.dueDate}
                 onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }}
+                style={inputBaseStyle}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Priority</label>
+              <label style={labelStyle}>Priority</label>
               <select
                 value={form.priority}
                 onChange={(e) => setForm({ ...form, priority: e.target.value })}
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', background: 'white' }}
+                style={inputBaseStyle}
               >
                 <option>Low</option>
                 <option>Normal</option>
@@ -278,17 +295,17 @@ export default function Notes() {
                 checked={form.pinned}
                 onChange={(e) => setForm({ ...form, pinned: e.target.checked })}
               />
-              <label htmlFor="note-pinned" style={{ fontSize: '14px', color: '#374151' }}>Pin note</label>
+              <label htmlFor="note-pinned" style={{ fontSize: '14px', color: 'var(--text-secondary, #374151)' }}>Pin note</label>
             </div>
           </div>
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Details</label>
+            <label style={labelStyle}>Details</label>
             <textarea
               value={form.body}
               onChange={(e) => setForm({ ...form, body: e.target.value })}
               rows="4"
               placeholder="Capture details you will later copy into the right module..."
-              style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', fontFamily: 'inherit', boxSizing: 'border-box' }}
+              style={{ ...inputBaseStyle, fontFamily: 'inherit' }}
             />
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -300,7 +317,15 @@ export default function Notes() {
             </button>
             <button
               onClick={resetForm}
-              style={{ padding: '10px 16px', background: '#e5e7eb', color: '#111827', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
+              style={{
+                padding: '10px 16px',
+                background: 'var(--bg-secondary, #e5e7eb)',
+                color: 'var(--text-primary, #111827)',
+                border: '1px solid var(--border-primary, #d1d5db)',
+                borderRadius: '8px',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
             >
               ✖️ Cancel
             </button>
@@ -309,17 +334,17 @@ export default function Notes() {
       )}
 
       {filteredNotes.length === 0 ? (
-        <div style={{ background: 'white', padding: '32px', borderRadius: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', textAlign: 'center', color: '#6b7280' }}>
+        <div style={{ ...surfaceCard, padding: '32px', borderRadius: '10px', textAlign: 'center', color: 'var(--text-secondary, #4b5563)' }}>
           <div style={{ fontSize: '42px', marginBottom: '10px' }}>🗒️</div>
-          <div style={{ fontWeight: 700, marginBottom: '6px', color: '#111827' }}>No notes yet</div>
+          <div style={{ fontWeight: 700, marginBottom: '6px', color: 'var(--text-primary, #111827)' }}>No notes yet</div>
           <div style={{ fontSize: '14px' }}>Capture quick notes and later move them into the right modules.</div>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px' }}>
           {filteredNotes.map(note => (
-            <div key={note.id} style={{ background: 'white', padding: '14px', borderRadius: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', position: 'relative', borderLeft: note.priority === 'High' ? '4px solid #ef4444' : note.priority === 'Low' ? '4px solid #6b7280' : '4px solid #10b981' }}>
+            <div key={note.id} style={{ ...surfaceCard, padding: '14px', borderRadius: '10px', position: 'relative', borderLeft: note.priority === 'High' ? '4px solid #ef4444' : note.priority === 'Low' ? '4px solid #6b7280' : '4px solid #10b981' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <div style={{ fontWeight: 700, color: '#111827', fontSize: '15px' }}>{note.title}</div>
+                <div style={{ fontWeight: 700, color: 'var(--text-primary, #111827)', fontSize: '15px' }}>{note.title}</div>
                 <button
                   onClick={() => togglePin(note.id)}
                   style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '16px' }}
@@ -328,14 +353,14 @@ export default function Notes() {
                   {note.pinned ? '📌' : '📍'}
                 </button>
               </div>
-              <div style={{ fontSize: '13px', color: '#374151', whiteSpace: 'pre-wrap', marginBottom: '10px' }}>{note.body || 'No details provided.'}</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '12px', color: '#6b7280', marginBottom: '10px' }}>
-                <span style={{ background: '#eef2ff', color: '#4338ca', padding: '4px 8px', borderRadius: '6px', fontWeight: 600 }}>{note.module}</span>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary, #374151)', whiteSpace: 'pre-wrap', marginBottom: '10px' }}>{note.body || 'No details provided.'}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '12px', color: 'var(--text-secondary, #4b5563)', marginBottom: '10px' }}>
+                <span style={{ background: 'rgba(79, 70, 229, 0.14)', color: '#6366f1', padding: '4px 8px', borderRadius: '6px', fontWeight: 600, border: '1px solid rgba(99, 102, 241, 0.35)' }}>{note.module}</span>
                 {note.tags && note.tags.split(',').filter(Boolean).map(t => (
-                  <span key={t} style={{ background: '#f3f4f6', color: '#374151', padding: '4px 8px', borderRadius: '6px' }}>#{t.trim()}</span>
+                  <span key={t} style={{ background: 'var(--bg-secondary, #f3f4f6)', color: 'var(--text-secondary, #374151)', border: '1px solid var(--border-primary, #e5e7eb)', padding: '4px 8px', borderRadius: '6px' }}>#{t.trim()}</span>
                 ))}
                 {note.dueDate && (
-                  <span style={{ background: '#fff7ed', color: '#c2410c', padding: '4px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                  <span style={{ background: 'rgba(251, 146, 60, 0.16)', color: '#f97316', border: '1px solid rgba(249, 115, 22, 0.35)', padding: '4px 8px', borderRadius: '6px', fontWeight: 600 }}>
                     Due {new Date(note.dueDate).toLocaleDateString()}
                   </span>
                 )}
@@ -354,7 +379,7 @@ export default function Notes() {
                   🗑️ Delete
                 </button>
               </div>
-              <div style={{ marginTop: '10px', fontSize: '11px', color: '#9ca3af' }}>
+              <div style={{ marginTop: '10px', fontSize: '11px', color: 'var(--text-secondary, #4b5563)' }}>
                 Updated {new Date(note.updatedAt || note.createdAt).toLocaleString()}
               </div>
             </div>

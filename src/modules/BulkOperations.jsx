@@ -192,7 +192,7 @@ export default function BulkOperations() {
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px' }}>
       <h2>⚡ Bulk Operations</h2>
-      <p style={{ color: '#666', marginBottom: '20px' }}>Manage multiple records at once with batch import, edit, and delete operations.</p>
+      <p style={{ color: '#4b5563', marginBottom: '20px' }}>Manage multiple records at once with batch import, edit, and delete operations.</p>
 
       <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', borderBottom: '2px solid #e5e7eb' }}>
         {['animals', 'expenses', 'tasks'].map(tab => (
@@ -218,7 +218,7 @@ export default function BulkOperations() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '30px' }}>
         <div style={{ background: '#f0fdf4', padding: '16px', borderRadius: '8px', border: '1px solid #86efac' }}>
           <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>📥 Import Records</div>
-          <p style={{ fontSize: '12px', color: '#666', margin: '0 0 12px 0' }}>Add multiple {activeTab} at once from CSV or JSON</p>
+          <p style={{ fontSize: '12px', color: '#4b5563', margin: '0 0 12px 0' }}>Add multiple {activeTab} at once from CSV or JSON</p>
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={loading}
@@ -247,7 +247,7 @@ export default function BulkOperations() {
 
         <div style={{ background: '#fef3c7', padding: '16px', borderRadius: '8px', border: '1px solid #fcd34d' }}>
           <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>✏️ Bulk Edit</div>
-          <p style={{ fontSize: '12px', color: '#666', margin: '0 0 12px 0' }}>Update status, tags, or other fields for all</p>
+          <p style={{ fontSize: '12px', color: '#4b5563', margin: '0 0 12px 0' }}>Update status, tags, or other fields for all</p>
           <button
             onClick={activeTab === 'animals' ? handleBulkEditAnimals : handleBulkEditExpenses}
             style={{
@@ -267,7 +267,7 @@ export default function BulkOperations() {
 
         <div style={{ background: '#fecaca', padding: '16px', borderRadius: '8px', border: '1px solid #fca5a5' }}>
           <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>🗑️ Bulk Delete</div>
-          <p style={{ fontSize: '12px', color: '#666', margin: '0 0 12px 0' }}>Remove multiple records with optional filter</p>
+          <p style={{ fontSize: '12px', color: '#4b5563', margin: '0 0 12px 0' }}>Remove multiple records with optional filter</p>
           <button
             onClick={handleBulkDelete}
             style={{
@@ -287,7 +287,7 @@ export default function BulkOperations() {
 
         <div style={{ background: '#dbeafe', padding: '16px', borderRadius: '8px', border: '1px solid #93c5fd' }}>
           <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>📤 Export All</div>
-          <p style={{ fontSize: '12px', color: '#666', margin: '0 0 12px 0' }}>Download all {activeTab} as CSV or JSON</p>
+          <p style={{ fontSize: '12px', color: '#4b5563', margin: '0 0 12px 0' }}>Download all {activeTab} as CSV or JSON</p>
           <button
             onClick={handleBulkExport}
             style={{
@@ -398,7 +398,7 @@ export default function BulkOperations() {
                 {bulkData.slice(0, 10).map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
                     {Object.values(row).slice(0, 6).map((val, vidx) => (
-                      <td key={vidx} style={{ padding: '8px', color: '#666' }}>
+                      <td key={vidx} style={{ padding: '8px', color: '#4b5563' }}>
                         {typeof val === 'object' ? JSON.stringify(val) : String(val).substring(0, 30)}
                       </td>
                     ))}
@@ -407,7 +407,7 @@ export default function BulkOperations() {
               </tbody>
             </table>
             {bulkData.length > 10 && (
-              <div style={{ textAlign: 'center', padding: '12px', color: '#666', fontSize: '12px' }}>
+              <div style={{ textAlign: 'center', padding: '12px', color: '#4b5563', fontSize: '12px' }}>
                 +{bulkData.length - 10} more records
               </div>
             )}
@@ -434,7 +434,7 @@ export default function BulkOperations() {
 
       <div style={{ background: '#f0f9ff', padding: '16px', borderRadius: '8px', border: '1px solid #bae6fd' }}>
         <h4 style={{ margin: '0 0 12px 0' }}>💡 Tips</h4>
-        <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '14px', color: '#666' }}>
+        <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '14px', color: '#4b5563' }}>
           <li>Use CSV or JSON format for imports</li>
           <li>Export first to see the exact format needed</li>
           <li>Bulk edits apply to all records without filter</li>

@@ -1626,9 +1626,9 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
     if (isEmptyArray || isEmptyObject) return null
 
     function renderValue(val) {
-      if (val === null || val === undefined || val === '') return <span style={{ color: '#6b7280' }}>—</span>
+      if (val === null || val === undefined || val === '') return <span style={{ color: '#4b5563' }}>—</span>
       if (Array.isArray(val)) {
-        if (val.length === 0) return <span style={{ color: '#6b7280' }}>None</span>
+        if (val.length === 0) return <span style={{ color: '#4b5563' }}>None</span>
         return (
           <ul style={{ margin: '6px 0 0 18px', padding: 0 }}>
             {val.map((it, i) => (
@@ -1713,7 +1713,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
           <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Female</div>
         </div>
         <div className="card" style={{ padding: '16px', textAlign: 'center', ...mobileStyle.card }}>
-          <div style={{ fontSize: '24px', fontWeight: '700', color: '#6b7280' }}>{visibleGroups.length}</div>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#4b5563' }}>{visibleGroups.length}</div>
           <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Groups</div>
         </div>
       </div>
@@ -2093,7 +2093,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                             {a.name}
                             {a.qrCode && <span style={{ marginLeft: 8, fontSize: '0.8rem', color: '#8b5cf6' }} title="QR Code generated">📱</span>}
                           </h4>
-                          <div style={{ fontSize: '0.9rem', color: '#666', marginTop: 4 }}>
+                          <div style={{ fontSize: '0.9rem', color: '#4b5563', marginTop: 4 }}>
                             {a.tag && <span style={{ marginRight: 12 }}>🏷️ {a.tag}</span>}
                             <span style={{ marginRight: 12 }}>{a.sex === 'F' ? '♀' : '♂'} {a.breed}</span>
                             <span>📊 {a.status}</span>
@@ -2200,7 +2200,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                                 <h4 style={{ margin: '0 0 8px 0', fontSize: '0.95rem', fontWeight: '600', color: '#8b5cf6' }}>
                                   📱 QR Tag {a.qrCode && <span style={{ fontSize: '0.75rem', color: '#10b981', marginLeft: 8 }}>✓ Auto-generated</span>}
                                 </h4>
-                                <p style={{ margin: '0 0 12px 0', fontSize: '0.85rem', color: '#666' }}>
+                                <p style={{ margin: '0 0 12px 0', fontSize: '0.85rem', color: '#4b5563' }}>
                                   Scan this QR code to quickly access {a.name}'s records
                                 </p>
                                 <button 
@@ -2424,14 +2424,14 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                 <label style={{ display: 'block', marginBottom: 6 }}>Photos (up to 5, each ≤ 2 MB)</label>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
                   <input id="animal-photos" name="photos" type="file" accept="image/*" multiple onChange={handleFileInput} />
-                  <small style={{ color: '#666' }}>Files will be resized to {MAX_DIM}px and compressed.</small>
+                  <small style={{ color: '#4b5563' }}>Files will be resized to {MAX_DIM}px and compressed.</small>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {(form.photos || []).map((p, idx) => (
                     <div key={p.id} style={{ width: 120, border: '1px solid #ddd', padding: 6, borderRadius: 6, textAlign: 'center' }}>
                       <img src={p.dataUrl} alt={`preview ${idx+1}`} style={{ width: '100%', height: 72, objectFit: 'cover', borderRadius: 4 }} />
                       <div style={{ fontSize: 12, marginTop: 6 }}>{p.filename || 'photo'}</div>
-                      <div style={{ fontSize: 11, color: '#666' }}>{Math.round((p.size||0)/1024)} KB</div>
+                      <div style={{ fontSize: 11, color: '#4b5563' }}>{Math.round((p.size||0)/1024)} KB</div>
                       <button type="button" onClick={() => removePhoto(p.id)} aria-label={`Remove photo ${idx+1}`} style={{ marginTop: 6 }}>Remove</button>
                     </div>
                   ))}
@@ -2491,25 +2491,25 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <h4 style={{ gridColumn: '1 / -1', color: '#059669', marginBottom: 8 }}>📊 Production Metrics</h4>
               
-              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#666', marginTop: 12 }}>Milk Production</h5>
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#4b5563', marginTop: 12 }}>Milk Production</h5>
               <label>Total Lifetime (L)<input id="milk-total-lifetime" name="milkTotalLifetime" type="number" step="0.1" value={form.production?.milk?.totalLifetime || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, totalLifetime: e.target.value } } })} /></label>
               <label>Current Lactation (L)<input type="number" step="0.1" value={form.production?.milk?.currentLactation || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, currentLactation: e.target.value } } })} /></label>
               <label>Peak Yield (L/day)<input type="number" step="0.1" value={form.production?.milk?.peakYield || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, peakYield: e.target.value } } })} /></label>
               <label>Average Daily (L)<input type="number" step="0.1" value={form.production?.milk?.averageDaily || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, averageDaily: e.target.value } } })} /></label>
               
-              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#666', marginTop: 12 }}>Egg Production</h5>
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#4b5563', marginTop: 12 }}>Egg Production</h5>
               <label>Total Lifetime<input type="number" value={form.production?.eggs?.totalLifetime || ''} onChange={e => setForm({ ...form, production: { ...form.production, eggs: { ...form.production?.eggs, totalLifetime: e.target.value } } })} /></label>
               <label>Current Year<input type="number" value={form.production?.eggs?.currentYear || ''} onChange={e => setForm({ ...form, production: { ...form.production, eggs: { ...form.production?.eggs, currentYear: e.target.value } } })} /></label>
               <label>Average Daily<input type="number" step="0.1" value={form.production?.eggs?.averageDaily || ''} onChange={e => setForm({ ...form, production: { ...form.production, eggs: { ...form.production?.eggs, averageDaily: e.target.value } } })} /></label>
               <label>Last Recorded<input type="date" value={form.production?.eggs?.lastRecorded || ''} onChange={e => setForm({ ...form, production: { ...form.production, eggs: { ...form.production?.eggs, lastRecorded: e.target.value } } })} /></label>
               
-              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#666', marginTop: 12 }}>Meat/Wool/Work</h5>
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#4b5563', marginTop: 12 }}>Meat/Wool/Work</h5>
               <label>Expected Meat Yield (kg)<input type="number" step="0.1" value={form.production?.meat?.expectedYield || ''} onChange={e => setForm({ ...form, production: { ...form.production, meat: { ...form.production?.meat, expectedYield: e.target.value } } })} /></label>
               <label>Grading Score<input value={form.production?.meat?.gradingScore || ''} onChange={e => setForm({ ...form, production: { ...form.production, meat: { ...form.production?.meat, gradingScore: e.target.value } } })} /></label>
               <label>Wool Yield (kg)<input type="number" step="0.1" value={form.production?.wool?.averageYield || ''} onChange={e => setForm({ ...form, production: { ...form.production, wool: { ...form.production?.wool, averageYield: e.target.value } } })} /></label>
               <label>Wool Quality<input value={form.production?.wool?.quality || ''} onChange={e => setForm({ ...form, production: { ...form.production, wool: { ...form.production?.wool, quality: e.target.value } } })} /></label>
               
-              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#666', marginTop: 12 }}>Offspring</h5>
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#4b5563', marginTop: 12 }}>Offspring</h5>
               <label>Total Born<input type="number" value={form.production?.offspring?.totalBorn || ''} onChange={e => setForm({ ...form, production: { ...form.production, offspring: { ...form.production?.offspring, totalBorn: e.target.value } } })} /></label>
               <label>Total Weaned<input type="number" value={form.production?.offspring?.totalWeaned || ''} onChange={e => setForm({ ...form, production: { ...form.production, offspring: { ...form.production?.offspring, totalWeaned: e.target.value } } })} /></label>
               <label>Total Survived<input type="number" value={form.production?.offspring?.totalSurvived || ''} onChange={e => setForm({ ...form, production: { ...form.production, offspring: { ...form.production?.offspring, totalSurvived: e.target.value } } })} /></label>
@@ -2627,7 +2627,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               <label>Passport Number<input value={form.documentation?.passportNumber || ''} onChange={e => setForm({ ...form, documentation: { ...form.documentation, passportNumber: e.target.value } })} /></label>
               <label>Health Certificate<input value={form.documentation?.healthCertificate || ''} onChange={e => setForm({ ...form, documentation: { ...form.documentation, healthCertificate: e.target.value } })} /></label>
               <label>Birth Certificate<input value={form.documentation?.birthCertificate || ''} onChange={e => setForm({ ...form, documentation: { ...form.documentation, birthCertificate: e.target.value } })} /></label>
-              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#666', marginTop: 12 }}>Certifications</h5>
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#4b5563', marginTop: 12 }}>Certifications</h5>
               <label>Organic Certified<input type="checkbox" checked={form.certifications?.organic || false} onChange={e => setForm({ ...form, certifications: { ...form.certifications, organic: e.target.checked } })} /></label>
               <label>Free Range<input type="checkbox" checked={form.certifications?.freeRange || false} onChange={e => setForm({ ...form, certifications: { ...form.certifications, freeRange: e.target.checked } })} /></label>
               <label>Grass Fed<input type="checkbox" checked={form.certifications?.grassFed || false} onChange={e => setForm({ ...form, certifications: { ...form.certifications, grassFed: e.target.checked } })} /></label>
@@ -2656,7 +2656,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
 
           <div className="card" style={{ padding: 14, marginBottom: 14, borderLeft: '4px solid #0ea5e9' }}>
             <div style={{ fontWeight: 700, marginBottom: 10, color: '#0f172a' }}>Herd Targets & Alert Thresholds</div>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
+            <div style={{ fontSize: 12, color: '#475569', marginBottom: 8 }}>
               Last applied preset: {lastAppliedPreset.name} {lastAppliedPreset.at ? `at ${new Date(lastAppliedPreset.at).toLocaleString()}` : ''}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 900 ? '1fr' : '1fr auto auto', gap: 10, alignItems: 'end', marginBottom: 10 }}>
@@ -2874,33 +2874,33 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 14 }}>
             <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.milking), dairyKPIs.targets.milking).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.milking), dairyKPIs.targets.milking).border}` }}>
-              <div style={{ fontSize: 12, color: '#64748b' }}>Milking Cows</div>
+              <div style={{ fontSize: 12, color: '#475569' }}>Milking Cows</div>
               <div style={{ fontSize: 23, fontWeight: 700, color: '#065f46' }}>{dairyKPIs.milking}</div>
-              <div style={{ fontSize: 12, color: '#64748b' }}>{dairyKPIs.pct(dairyKPIs.milking)}% of herd • target {dairyKPIs.targets.milking}%</div>
+              <div style={{ fontSize: 12, color: '#475569' }}>{dairyKPIs.pct(dairyKPIs.milking)}% of herd • target {dairyKPIs.targets.milking}%</div>
               <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.milking), dairyKPIs.targets.milking).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.milking), dairyKPIs.targets.milking).label}</div>
             </div>
             <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.fresh), dairyKPIs.targets.fresh).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.fresh), dairyKPIs.targets.fresh).border}` }}>
-              <div style={{ fontSize: 12, color: '#64748b' }}>Fresh Cows</div>
+              <div style={{ fontSize: 12, color: '#475569' }}>Fresh Cows</div>
               <div style={{ fontSize: 23, fontWeight: 700, color: '#0369a1' }}>{dairyKPIs.fresh}</div>
-              <div style={{ fontSize: 12, color: '#64748b' }}>{dairyKPIs.pct(dairyKPIs.fresh)}% of herd • target {dairyKPIs.targets.fresh}%</div>
+              <div style={{ fontSize: 12, color: '#475569' }}>{dairyKPIs.pct(dairyKPIs.fresh)}% of herd • target {dairyKPIs.targets.fresh}%</div>
               <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.fresh), dairyKPIs.targets.fresh).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.fresh), dairyKPIs.targets.fresh).label}</div>
             </div>
             <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.dry), dairyKPIs.targets.dry).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.dry), dairyKPIs.targets.dry).border}` }}>
-              <div style={{ fontSize: 12, color: '#64748b' }}>Dry Cows</div>
+              <div style={{ fontSize: 12, color: '#475569' }}>Dry Cows</div>
               <div style={{ fontSize: 23, fontWeight: 700, color: '#9a3412' }}>{dairyKPIs.dry}</div>
-              <div style={{ fontSize: 12, color: '#64748b' }}>{dairyKPIs.pct(dairyKPIs.dry)}% of herd • target {dairyKPIs.targets.dry}%</div>
+              <div style={{ fontSize: 12, color: '#475569' }}>{dairyKPIs.pct(dairyKPIs.dry)}% of herd • target {dairyKPIs.targets.dry}%</div>
               <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.dry), dairyKPIs.targets.dry).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.dry), dairyKPIs.targets.dry).label}</div>
             </div>
             <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.heifers), dairyKPIs.targets.heifers, 12).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.heifers), dairyKPIs.targets.heifers, 12).border}` }}>
-              <div style={{ fontSize: 12, color: '#64748b' }}>Heifers/Youngstock</div>
+              <div style={{ fontSize: 12, color: '#475569' }}>Heifers/Youngstock</div>
               <div style={{ fontSize: 23, fontWeight: 700, color: '#1d4ed8' }}>{dairyKPIs.heifers}</div>
-              <div style={{ fontSize: 12, color: '#64748b' }}>{dairyKPIs.pct(dairyKPIs.heifers)}% of herd • target {dairyKPIs.targets.heifers}%</div>
+              <div style={{ fontSize: 12, color: '#475569' }}>{dairyKPIs.pct(dairyKPIs.heifers)}% of herd • target {dairyKPIs.targets.heifers}%</div>
               <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.heifers), dairyKPIs.targets.heifers, 12).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.heifers), dairyKPIs.targets.heifers, 12).label}</div>
             </div>
             <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.pregnant), dairyKPIs.targets.pregnant, 15).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.pregnant), dairyKPIs.targets.pregnant, 15).border}` }}>
-              <div style={{ fontSize: 12, color: '#64748b' }}>Pregnant</div>
+              <div style={{ fontSize: 12, color: '#475569' }}>Pregnant</div>
               <div style={{ fontSize: 23, fontWeight: 700, color: '#be185d' }}>{dairyKPIs.pregnant}</div>
-              <div style={{ fontSize: 12, color: '#64748b' }}>Avg DIM: {dairyKPIs.avgDIM ?? 'N/A'} • target {dairyKPIs.targets.pregnant}%</div>
+              <div style={{ fontSize: 12, color: '#475569' }}>Avg DIM: {dairyKPIs.avgDIM ?? 'N/A'} • target {dairyKPIs.targets.pregnant}%</div>
               <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.pregnant), dairyKPIs.targets.pregnant, 15).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.pregnant), dairyKPIs.targets.pregnant, 15).label}</div>
             </div>
           </div>
@@ -2977,7 +2977,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
           <div className="card" style={{ padding: 12 }}>
             <div style={{ display: 'grid', gap: 10 }}>
               {dairyGroupingRows.length === 0 && (
-                <div style={{ color: '#64748b', padding: 14 }}>No animals match this filter.</div>
+                <div style={{ color: '#475569', padding: 14 }}>No animals match this filter.</div>
               )}
               {dairyGroupingRows.map(a => (
                 <div key={a.id} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, background: '#fff' }}>
@@ -2992,8 +2992,8 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                         <span style={{ marginLeft: 8, fontSize: 12, color: '#334155' }}>Select</span>
                       </div>
                       <div style={{ fontWeight: 700, color: '#0f172a' }}>{a.name || a.tag || a.id}</div>
-                      <div style={{ fontSize: 13, color: '#64748b' }}>{a.tag || a.id} • {a.breed || 'No breed'} • {a.sex === 'F' ? 'Female' : 'Male'} • DIM: {getAnimalDIM(a) ?? 'N/A'}</div>
-                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                      <div style={{ fontSize: 13, color: '#475569' }}>{a.tag || a.id} • {a.breed || 'No breed'} • {a.sex === 'F' ? 'Female' : 'Male'} • DIM: {getAnimalDIM(a) ?? 'N/A'}</div>
+                      <div style={{ fontSize: 12, color: '#475569', marginTop: 4 }}>
                         Suggestion: {suggestDairyLifecycleStage(a).stage} ({suggestDairyLifecycleStage(a).confidence})
                       </div>
                     </div>
@@ -3135,7 +3135,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               <div style={{ padding: 40, textAlign: 'center', background: '#f0fdf4', borderRadius: 8 }}>
                 <div style={{ fontSize: 48, marginBottom: 16 }}>🏷️</div>
                 <h3>No groups yet</h3>
-                <p style={{ color: '#666' }}>Create your first group to organize animals</p>
+                <p style={{ color: '#4b5563' }}>Create your first group to organize animals</p>
               </div>
             ) : (
               visibleGroups.filter(g => g.name.toLowerCase().includes(filter.toLowerCase())).map(g => {
@@ -3166,23 +3166,23 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                         <button onClick={() => deleteGroup(g.id)} style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #dc2626', borderRadius: 6, padding: '6px 12px', fontWeight: '600', cursor: 'pointer' }}>🗑️ Delete</button>
                       </div>
                     </div>
-                    <p style={{ color: '#666', fontSize: 15, marginBottom: 12 }}>{g.desc || 'No description'}</p>
+                    <p style={{ color: '#4b5563', fontSize: 15, marginBottom: 12 }}>{g.desc || 'No description'}</p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12, marginBottom: 16 }}>
                       <div style={{ background: '#f0fdf4', borderRadius: 6, padding: 10, textAlign: 'center' }}>
                         <div style={{ fontSize: 18, fontWeight: '700', color: '#059669' }}>{groupAnimals.length}</div>
-                        <div style={{ fontSize: 13, color: '#666' }}>Total</div>
+                        <div style={{ fontSize: 13, color: '#4b5563' }}>Total</div>
                       </div>
                       <div style={{ background: '#eff6ff', borderRadius: 6, padding: 10, textAlign: 'center' }}>
                         <div style={{ fontSize: 18, fontWeight: '700', color: '#2563eb' }}>{groupAnimals.filter(a => a.status === 'Active').length}</div>
-                        <div style={{ fontSize: 13, color: '#666' }}>Active</div>
+                        <div style={{ fontSize: 13, color: '#4b5563' }}>Active</div>
                       </div>
                       <div style={{ background: '#fce7f3', borderRadius: 6, padding: 10, textAlign: 'center' }}>
                         <div style={{ fontSize: 18, fontWeight: '700', color: '#db2777' }}>{femaleCount}</div>
-                        <div style={{ fontSize: 13, color: '#666' }}>Female</div>
+                        <div style={{ fontSize: 13, color: '#4b5563' }}>Female</div>
                       </div>
                       <div style={{ background: '#dbeafe', borderRadius: 6, padding: 10, textAlign: 'center' }}>
                         <div style={{ fontSize: 18, fontWeight: '700', color: '#2563eb' }}>{maleCount}</div>
-                        <div style={{ fontSize: 13, color: '#666' }}>Male</div>
+                        <div style={{ fontSize: 13, color: '#4b5563' }}>Male</div>
                       </div>
                     </div>
                     <div style={{ fontSize: 14, marginBottom: 10 }}>
@@ -3196,7 +3196,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                     <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>Animals in this group:</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
                       {groupAnimals.length === 0 ? (
-                        <span style={{ color: '#666', fontSize: 13 }}>No animals in this group.</span>
+                        <span style={{ color: '#4b5563', fontSize: 13 }}>No animals in this group.</span>
                       ) : (
                         groupAnimals.slice(0, 10).map(a => (
                           <span key={a.id} style={{ fontSize: 13, padding: '6px 12px', background: '#f3f4f6', borderRadius: 6, border: '1px solid #e5e7eb', marginBottom: '4px' }}>
@@ -3205,7 +3205,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                         ))
                       )}
                       {groupAnimals.length > 10 && (
-                        <span style={{ fontSize: 13, padding: '6px 12px', color: '#666' }}>+{groupAnimals.length - 10} more</span>
+                        <span style={{ fontSize: 13, padding: '6px 12px', color: '#4b5563' }}>+{groupAnimals.length - 10} more</span>
                       )}
                     </div>
                   </div>

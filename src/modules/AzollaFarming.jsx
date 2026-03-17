@@ -183,19 +183,19 @@ export default function AzollaFarming() {
       {/* Summary Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
         <div className="card" style={{ padding: 16, background: '#f0fdf4' }}>
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Active Ponds</div>
+          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Active Ponds</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{activePonds.length}</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#eff6ff' }}>
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Area (m²)</div>
+          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Total Area (m²)</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>{totalSize.toFixed(1)}</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#fef3c7' }}>
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Weekly Yield (kg)</div>
+          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Weekly Yield (kg)</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f59e0b' }}>{totalYield.toFixed(1)}</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#d1fae5' }}>
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Total Harvest (kg)</div>
+          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Total Harvest (kg)</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{totalHarvest.toFixed(1)}</div>
         </div>
       </div>
@@ -203,7 +203,7 @@ export default function AzollaFarming() {
       {/* Info Card */}
       <div className="card" style={{ padding: 16, marginBottom: 20, background: '#e0f2fe', borderLeft: '4px solid #0ea5e9' }}>
         <h4 style={{ margin: '0 0 8px 0', color: '#075985' }}>💡 Azolla Farming Tips</h4>
-        <ul style={{ margin: 0, paddingLeft: 20, color: '#666', fontSize: 14 }}>
+        <ul style={{ margin: 0, paddingLeft: 20, color: '#4b5563', fontSize: 14 }}>
           <li>Optimal water temperature: 20-28°C</li>
           <li>pH range: 5.5-7.0 (ideal: 6.5)</li>
           <li>Doubles biomass every 3-5 days under ideal conditions</li>
@@ -310,7 +310,7 @@ export default function AzollaFarming() {
             <div style={{ padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
               <h4>No azolla ponds yet</h4>
-              <p style={{ color: '#666' }}>Add your first pond to start tracking</p>
+              <p style={{ color: '#4b5563' }}>Add your first pond to start tracking</p>
             </div>
           ) : (
             <div style={{ maxHeight: 600, overflowY: 'auto' }}>
@@ -341,13 +341,13 @@ export default function AzollaFarming() {
                               background: pond.status === 'Active' ? '#d1fae5' : pond.status === 'Maintenance' ? '#fef3c7' : '#fee2e2' 
                             }}>{pond.status}</span>
                           </div>
-                          <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
+                          <div style={{ fontSize: 14, color: '#4b5563', marginBottom: 4 }}>
                             <strong>Size:</strong> {pond.size}m² • <strong>Location:</strong> {pond.location} • <strong>Setup:</strong> {new Date(pond.setupDate).toLocaleDateString()} ({daysActive} days)
                           </div>
-                          <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+                          <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 4 }}>
                             <strong>Yield:</strong> {pond.yieldPerWeek}kg/week • <strong>Temp:</strong> {pond.waterTemp}°C • <strong>pH:</strong> {pond.pH}
                           </div>
-                          <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+                          <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 4 }}>
                             <strong>Nutrients:</strong> {pond.nutrients}
                           </div>
                           {pond.notes && (
@@ -443,7 +443,7 @@ export default function AzollaFarming() {
                         <span className="badge">{record.activity}</span>
                         {record.cost && <span className="badge" style={{ background: '#fee2e2' }}>{formatCurrency(parseFloat(record.cost))}</span>}
                       </div>
-                      <div style={{ fontSize: 13, color: '#666' }}>
+                      <div style={{ fontSize: 13, color: '#4b5563' }}>
                         {new Date(record.date).toLocaleDateString()}
                         {record.nutrients && ` • ${record.nutrients}`}
                         {record.nutrientAmount && ` (${record.nutrientAmount}kg)`}
@@ -533,7 +533,7 @@ export default function AzollaFarming() {
                         <span className="badge">{record.purpose}</span>
                         {record.salePrice && <span className="badge" style={{ background: '#d1fae5' }}>{formatCurrency(parseFloat(record.salePrice))}</span>}
                       </div>
-                      <div style={{ fontSize: 13, color: '#666' }}>
+                      <div style={{ fontSize: 13, color: '#4b5563' }}>
                         {new Date(record.date).toLocaleDateString()} • Weight: {record.weight}kg
                         {record.moisture && ` • Moisture: ${record.moisture}%`}
                         {record.usedFor && ` • For: ${record.usedFor}`}

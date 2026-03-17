@@ -15,7 +15,7 @@ const dummyInsights = [
   },
       <h2 style={{ marginBottom: 24 }}>AI-Powered Insights</h2>
       {insights.length === 0 ? (
-        <div style={{ textAlign: 'center', color: '#666', padding: 40 }}>
+        <div style={{ textAlign: 'center', color: '#4b5563', padding: 40 }}>
           <div style={{ fontSize: 48 }}>🎉</div>
           <p>No insights available.</p>
         </div>
@@ -37,7 +37,7 @@ const dummyInsights = [
                 <span style={{ fontSize: 32 }}>{getCategoryIcon(insight.category)}</span>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ margin: 0 }}>{insight.title}</h3>
-                  <p style={{ margin: '4px 0', color: '#555' }}>{insight.description}</p>
+                  <p style={{ margin: '4px 0', color: '#374151' }}>{insight.description}</p>
                 </div>
                 <button
                   onClick={() => setExpandedInsight(expandedInsight === insight.id ? null : insight.id)}
@@ -151,7 +151,7 @@ import {
                   ⬇️ Export JSON
                 </button>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>Category:</span>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Category:</span>
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
@@ -175,7 +175,7 @@ import {
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>Priority:</span>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Priority:</span>
           <select
             value={filterPriority}
             onChange={(e) => setFilterPriority(e.target.value)}
@@ -237,7 +237,7 @@ import {
         }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎉</div>
           <h3 style={{ margin: '0 0 8px 0', color: '#111' }}>All Clear!</h3>
-          <p style={{ margin: 0, color: '#666' }}>
+          <p style={{ margin: 0, color: '#4b5563' }}>
             {showActioned ? 'No insights match your filters' : 'No new insights at the moment'}
           </p>
         </div>
@@ -314,12 +314,12 @@ import {
                       {insight.priority}
                     </span>
                   </div>
-                  <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
+                  <p style={{ margin: 0, fontSize: '14px', color: '#4b5563' }}>
                     {insight.description}
                   </p>
                 </div>
 
-                <div style={{ fontSize: '20px', color: '#999' }}>
+                <div style={{ fontSize: '20px', color: '#4b5563' }}>
                   {expandedInsight === insight.id ? '▼' : '▶'}
                 </div>
               </div>
@@ -337,20 +337,20 @@ import {
                     marginTop: '16px'
                   }}>
                     <div style={{ marginBottom: '12px' }}>
-                      <strong style={{ fontSize: '13px', color: '#555' }}>💡 Impact:</strong>
+                      <strong style={{ fontSize: '13px', color: '#374151' }}>💡 Impact:</strong>
                       <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#333' }}>
                         {insight.impact}
                       </p>
                     </div>
                     <div style={{ marginBottom: '12px' }}>
-                      <strong style={{ fontSize: '13px', color: '#555' }}>📋 Recommended Action:</strong>
+                      <strong style={{ fontSize: '13px', color: '#374151' }}>📋 Recommended Action:</strong>
                       <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#333' }}>
                         {insight.recommendation}
                       </p>
                     </div>
                     {insight.affectedCount > 0 && (
                       <div style={{ marginBottom: '12px' }}>
-                        <strong style={{ fontSize: '13px', color: '#555' }}>🎯 Affected:</strong>
+                        <strong style={{ fontSize: '13px', color: '#374151' }}>🎯 Affected:</strong>
                         <span style={{ marginLeft: '8px', fontSize: '14px', color: '#333' }}>
                           {insight.affectedCount} items
                         </span>
@@ -358,7 +358,7 @@ import {
                     )}
                     {insight.estimatedCost > 0 && (
                       <div style={{ marginBottom: '12px' }}>
-                        <strong style={{ fontSize: '13px', color: '#555' }}>💵 Estimated Cost:</strong>
+                        <strong style={{ fontSize: '13px', color: '#374151' }}>💵 Estimated Cost:</strong>
                         <span style={{ marginLeft: '8px', fontSize: '14px', color: '#d97706' }}>
                           ${insight.estimatedCost.toFixed(2)}
                         </span>
@@ -366,7 +366,7 @@ import {
                     )}
                     {insight.estimatedSavings > 0 && (
                       <div style={{ marginBottom: '12px' }}>
-                        <strong style={{ fontSize: '13px', color: '#555' }}>💰 Potential Savings:</strong>
+                        <strong style={{ fontSize: '13px', color: '#374151' }}>💰 Potential Savings:</strong>
                         <span style={{ marginLeft: '8px', fontSize: '14px', color: '#059669' }}>
                           ${insight.estimatedSavings}
                         </span>
@@ -374,7 +374,7 @@ import {
                     )}
                     {insight.estimatedGain > 0 && (
                       <div>
-                        <strong style={{ fontSize: '13px', color: '#555' }}>📈 Potential Gain:</strong>
+                        <strong style={{ fontSize: '13px', color: '#374151' }}>📈 Potential Gain:</strong>
                         <span style={{ marginLeft: '8px', fontSize: '14px', color: '#059669' }}>
                           ${insight.estimatedGain}
                         </span>

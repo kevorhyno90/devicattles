@@ -119,8 +119,8 @@ export default function NotificationCenter() {
       case PRIORITIES.URGENT: return '#ef4444'
       case PRIORITIES.HIGH: return '#f59e0b'
       case PRIORITIES.MEDIUM: return '#3b82f6'
-      case PRIORITIES.LOW: return '#6b7280'
-      default: return '#6b7280'
+      case PRIORITIES.LOW: return '#4b5563'
+      default: return '#4b5563'
     }
   }
 
