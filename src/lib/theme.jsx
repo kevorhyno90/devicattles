@@ -126,16 +126,9 @@ export const themes = {
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
-    // Check localStorage first
-    const stored = localStorage.getItem('farm-theme');
-    if (stored === 'dark' || stored === 'light') return stored;
-    
-    // Check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    
-    return 'light';
+    // Load saved theme from localStorage, default to 'light'
+    const saved = localStorage.getItem('farm-theme');
+    return (saved === 'dark' || saved === 'light') ? saved : 'light';
   });
 
   useEffect(() => {
@@ -194,31 +187,12 @@ export const ThemeProvider = ({ children }) => {
     
   }, [theme]);
 
-  // Listen for system theme changes
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e) => {
-      // Only auto-switch if user hasn't manually set a preference
-      if (!localStorage.getItem('farm-theme-manual')) {
-        setTheme(e.matches ? 'dark' : 'light');
-      }
-    };
-    
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('farm-theme-manual', 'true'); // Mark as manually set
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
   const setThemeMode = (mode) => {
-    if (mode === 'light' || mode === 'dark') {
-      setTheme(mode);
-      localStorage.setItem('farm-theme-manual', 'true');
-    }
+    if (mode === 'light' || mode === 'dark') setTheme(mode);
   };
 
   const getThemeColors = () => themes[theme];
@@ -299,36 +273,6 @@ export const themedButton = (theme, variant = 'primary') => {
     transition: 'all 0.2s',
     ...variants[variant]
   };
-};
-
-// Theme toggle button component
-export const ThemeToggleButton = ({ style }) => {
-  const { theme, toggleTheme } = useTheme();
-  
-  return (
-    <button
-      onClick={toggleTheme}
-      style={{
-        padding: '8px 16px',
-        background: theme === 'dark' ? '#374151' : '#f3f4f6',
-        color: theme === 'dark' ? '#f9fafb' : '#1f2937',
-        border: 'none',
-        borderRadius: '6px',
-        cursor: 'pointer',
-        fontWeight: '500',
-        fontSize: '0.9rem',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        transition: 'all 0.2s',
-        ...style
-      }}
-      title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-    >
-      {theme === 'light' ? '🌙' : '☀️'}
-      {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-    </button>
-  );
 };
 
 // Removed default export. Use only named exports: import { ThemeProvider } from './theme';

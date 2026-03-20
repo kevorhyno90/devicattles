@@ -39,7 +39,7 @@ export default function AnimalCV({ animal = {}, groups = [], onClose = () => {},
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div ref={rootRef} style={{ width: '100%', maxWidth: 1000, maxHeight: '90vh', overflow: 'auto', background: '#fff', borderRadius: 10, padding: 18, boxShadow: '0 12px 40px rgba(2,6,23,0.3)' }}>
+      <div ref={rootRef} style={{ width: '100%', maxWidth: 1000, maxHeight: '90vh', overflow: 'auto', background: 'var(--bg-elevated)', borderRadius: 10, padding: 18, boxShadow: '0 12px 40px rgba(2,6,23,0.3)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
           <div>
             <h2 style={{ margin: 0 }}>{animal.name || animal.tag || animal.id}</h2>
@@ -60,23 +60,23 @@ export default function AnimalCV({ animal = {}, groups = [], onClose = () => {},
             ) : animal.photo ? (
               <img src={animal.photo} alt={animal.name} style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 8 }} />
             ) : (
-              <div style={{ width: '100%', height: 220, borderRadius: 8, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4b5563' }}>No photo</div>
+              <div style={{ width: '100%', height: 220, borderRadius: 8, background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>No photo</div>
             )}
 
             <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
-              <div style={{ padding: 10, background: '#f9fafb', borderRadius: 8 }}>
+              <div style={{ padding: 10, background: 'var(--bg-secondary)', borderRadius: 8 }}>
                 <strong>Group</strong>
-                <div style={{ color: '#374151' }}>{groupName}</div>
+                <div style={{ color: 'var(--text-secondary)' }}>{groupName}</div>
               </div>
-              <div style={{ padding: 10, background: '#f9fafb', borderRadius: 8 }}>
+              <div style={{ padding: 10, background: 'var(--bg-secondary)', borderRadius: 8 }}>
                 <strong>Owner</strong>
-                <div style={{ color: '#374151' }}>{animal.owner || '—'}</div>
+                <div style={{ color: 'var(--text-secondary)' }}>{animal.owner || '—'}</div>
               </div>
-              <div style={{ padding: 10, background: '#f9fafb', borderRadius: 8 }}>
+              <div style={{ padding: 10, background: 'var(--bg-secondary)', borderRadius: 8 }}>
                 <strong>Status</strong>
-                <div style={{ color: '#374151' }}>{animal.status || '—'}</div>
+                <div style={{ color: 'var(--text-secondary)' }}>{animal.status || '—'}</div>
               </div>
-              <div style={{ padding: 10, background: '#f9fafb', borderRadius: 8 }}>
+              <div style={{ padding: 10, background: 'var(--bg-secondary)', borderRadius: 8 }}>
                 <strong>QR</strong>
                 <div style={{ marginTop: 8 }}>{animal.qrCode ? <img src={animal.qrCode} alt="qr" style={{ width: 120, height: 120 }} /> : '—'}</div>
               </div>
@@ -85,16 +85,16 @@ export default function AnimalCV({ animal = {}, groups = [], onClose = () => {},
 
           <div>
             <section style={{ marginBottom: 12 }}>
-              <h4 style={{ margin: '4px 0', color: '#111827' }}>📋 Basic Information</h4>
+              <h4 style={{ margin: '4px 0', color: 'var(--text-primary)' }}>📋 Basic Information</h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8 }}>
-                <div><strong>Tag:</strong> <div style={{ color: '#374151' }}>{animal.tag || '—'}</div></div>
-                <div><strong>Registration:</strong> <div style={{ color: '#374151' }}>{animal.registration || '—'}</div></div>
-                <div><strong>Tattoo/ID:</strong> <div style={{ color: '#374151' }}>{animal.tattoo || '—'}</div></div>
-                <div><strong>DOB:</strong> <div style={{ color: '#374151' }}>{animal.dob || '—'}</div></div>
-                <div><strong>Weight:</strong> <div style={{ color: '#374151' }}>{animal.weight ? animal.weight + ' kg' : '—'}</div></div>
-                <div><strong>Color:</strong> <div style={{ color: '#374151' }}>{animal.color || '—'}</div></div>
-                <div><strong>Sire:</strong> <div style={{ color: '#374151' }}>{animal.sire || '—'}</div></div>
-                <div><strong>Dam:</strong> <div style={{ color: '#374151' }}>{animal.dam || '—'}</div></div>
-                <div style={{ gridColumn: '1 / -1' }}><strong>Notes:</strong> <div style={{ color: '#374151', marginTop: 6 }}>{animal.notes || '—'}</div></div>
+                <div><strong>Tag:</strong> <div style={{ color: 'var(--text-secondary)' }}>{animal.tag || '—'}</div></div>
+                <div><strong>Registration:</strong> <div style={{ color: 'var(--text-secondary)' }}>{animal.registration || '—'}</div></div>
+                <div><strong>Tattoo/ID:</strong> <div style={{ color: 'var(--text-secondary)' }}>{animal.tattoo || '—'}</div></div>
+                <div><strong>DOB:</strong> <div style={{ color: 'var(--text-secondary)' }}>{animal.dob || '—'}</div></div>
+                <div><strong>Weight:</strong> <div style={{ color: 'var(--text-secondary)' }}>{animal.weight ? animal.weight + ' kg' : '—'}</div></div>
+                <div><strong>Color:</strong> <div style={{ color: 'var(--text-secondary)' }}>{animal.color || '—'}</div></div>
+                <div><strong>Sire:</strong> <div style={{ color: 'var(--text-secondary)' }}>{animal.sire || '—'}</div></div>
+                <div><strong>Dam:</strong> <div style={{ color: 'var(--text-secondary)' }}>{animal.dam || '—'}</div></div>
+                <div style={{ gridColumn: '1 / -1' }}><strong>Notes:</strong> <div style={{ color: 'var(--text-secondary)', marginTop: 6 }}>{animal.notes || '—'}</div></div>
               </div>
             </section>

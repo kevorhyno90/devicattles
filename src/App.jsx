@@ -88,6 +88,7 @@ import ToastContainer from './components/ToastContainer'
 import useUISettings from './hooks/useUISettings'
 import Header from './components/Header'
 import useAuthInit from './hooks/useAuthInit'
+import { useTheme } from './lib/theme'
 import AudioEnableBanner from './components/AudioEnableBanner'
 import { getLivestockQualityScores } from './lib/livestockPhase1'
 // Lazy load stores to improve initial load time
@@ -169,10 +170,10 @@ const LoadingFallback = () => {
       }}>
         <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
         <h3 style={{ color: '#dc2626', marginBottom: '12px' }}>Module Failed to Load</h3>
-        <p style={{ color: '#6b7280', marginBottom: '20px' }}>
+        <p style={{ color: 'var(--text-tertiary)', marginBottom: '20px' }}>
           This module is taking too long to load. This might be due to:
         </p>
-        <ul style={{ textAlign: 'left', color: '#6b7280', marginBottom: '20px' }}>
+        <ul style={{ textAlign: 'left', color: 'var(--text-tertiary)', marginBottom: '20px' }}>
           <li>Slow internet connection</li>
           <li>Browser compatibility issue</li>
           <li>Module is too large for mobile device</li>
@@ -312,8 +313,11 @@ function AppContent() {
   
   // UI branding/settings - use hook to load/save from localStorage
   const SETTINGS_KEY = 'devinsfarm:ui:settings'
-  const defaultSettings = { backgroundOn: false, background: 'bg-farm.svg', logo: 'jr-farm-logo.svg', uploadedLogo: '', theme: 'adaptive' }
+  const defaultSettings = { backgroundOn: false, background: 'bg-farm.svg', logo: 'jr-farm-logo.svg', uploadedLogo: '' }
   const [settings, setSettings] = useUISettings(SETTINGS_KEY, defaultSettings)
+  const previewLogoSrc = settings.logo === 'uploaded' && settings.uploadedLogo
+    ? settings.uploadedLogo
+    : `/assets/${settings.logo || 'jr-farm-logo.svg'}`
 
   // Cleanup stale data from removed Market Prices feature.
   useEffect(() => {
@@ -692,7 +696,7 @@ function AppContent() {
               <button onClick={() => setView(authenticated ? 'dashboard' : 'dashboard')} style={{ background: '#0f766e', color: '#fff', border: 'none', borderRadius: 999, padding: '10px 18px', fontWeight: 700, cursor: 'pointer' }}>
                 {authenticated ? 'Open Dashboard' : 'Get Started'}
               </button>
-              <button onClick={() => setView('animals')} style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 999, padding: '10px 18px', fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={() => setView('animals')} style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid #cbd5e1', borderRadius: 999, padding: '10px 18px', fontWeight: 700, cursor: 'pointer' }}>
                 Preview Livestock
               </button>
             </div>
@@ -703,7 +707,7 @@ function AppContent() {
               <div style={{ display: 'inline-block', background: '#065f46', color: '#ecfdf5', borderRadius: 999, padding: '6px 12px', fontWeight: 700, fontSize: 12, letterSpacing: '0.04em', marginBottom: 14 }}>
                 OFFLINE-FIRST SMART FARM OS
               </div>
-              <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3.4rem)', lineHeight: 1.06, margin: '4px 0 14px', color: '#0f172a', maxWidth: 760 }}>
+              <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3.4rem)', lineHeight: 1.06, margin: '4px 0 14px', color: 'var(--text-primary)', maxWidth: 760 }}>
                 Run your farm with clarity, speed, and confidence.
               </h1>
               <p style={{ fontSize: 18, lineHeight: 1.65, color: '#334155', maxWidth: 690, marginBottom: 22 }}>
@@ -713,14 +717,14 @@ function AppContent() {
                 <button onClick={() => setView('dashboard')} style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 18px', fontWeight: 800, cursor: 'pointer' }}>
                   Enter Command Center
                 </button>
-                <button onClick={() => setView('settings')} style={{ background: '#fff', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 12, padding: '12px 18px', fontWeight: 800, cursor: 'pointer' }}>
+                <button onClick={() => setView('settings')} style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid #cbd5e1', borderRadius: 12, padding: '12px 18px', fontWeight: 800, cursor: 'pointer' }}>
                   Customize Experience
                 </button>
               </div>
             </div>
 
             <div style={{ background: '#ffffffcc', backdropFilter: 'blur(4px)', borderRadius: 24, border: '1px solid #e2e8f0', padding: 22, boxShadow: '0 16px 40px rgba(2,6,23,0.09)' }}>
-              <h3 style={{ marginTop: 0, marginBottom: 12, color: '#0f172a' }}>What You Can Manage</h3>
+              <h3 style={{ marginTop: 0, marginBottom: 12, color: 'var(--text-primary)' }}>What You Can Manage</h3>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
                   ['Livestock Records', 'Dairy, goats, poultry, canines, BSF'],
@@ -729,9 +733,9 @@ function AppContent() {
                   ['Finance and Inventory', 'Costs, revenue, stock and operations'],
                   ['Smart Alerts', 'Proactive reminders and risk flags']
                 ].map(([title, desc]) => (
-                  <div key={title} style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: '10px 12px', background: '#fff' }}>
-                    <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>{title}</div>
-                    <div style={{ fontSize: 13, color: '#475569' }}>{desc}</div>
+                  <div key={title} style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: '10px 12px', background: 'var(--bg-elevated)' }}>
+                    <div style={{ fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>{title}</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{desc}</div>
                   </div>
                 ))}
               </div>
@@ -745,9 +749,9 @@ function AppContent() {
               ['Offline Support', 'Keep working even without internet'],
               ['Cloud Sync Ready', 'Secure sync when authenticated']
             ].map(([title, desc]) => (
-              <div key={title} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 14 }}>
-                <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>{title}</div>
-                <div style={{ fontSize: 13, color: '#475569' }}>{desc}</div>
+              <div key={title} style={{ background: 'var(--bg-elevated)', border: '1px solid #e2e8f0', borderRadius: 12, padding: 14 }}>
+                <div style={{ fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>{title}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{desc}</div>
               </div>
             ))}
           </div>
@@ -1056,12 +1060,12 @@ function AppContent() {
             style={{
               textAlign: 'left',
               padding: '14px 16px',
-              background: active ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : colors.bg.elevated,
-              color: active ? '#ffffff' : colors.text.primary,
-              border: active ? '1px solid #047857' : `1px solid ${colors.border.primary}`,
+              background: active ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : 'var(--bg-elevated)',
+              color: active ? '#ffffff' : 'var(--text-primary)',
+              border: active ? '1px solid #047857' : '1px solid var(--border-primary)',
               borderRadius: '12px',
               cursor: 'pointer',
-              boxShadow: active ? colors.shadow.md : colors.shadow.sm
+              boxShadow: active ? '0 4px 6px -1px rgba(0,0,0,0.15)' : '0 1px 2px rgba(0,0,0,0.05)'
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -1101,7 +1105,7 @@ function AppContent() {
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
             <div>
               <div style={{ fontSize: '26px', fontWeight: '800', color: '#065f46', marginBottom: '6px' }}>{section.icon} {section.title} Section</div>
-              <div style={{ color: '#475569', maxWidth: '760px', lineHeight: 1.6 }}>{section.description}</div>
+              <div style={{ color: 'var(--text-secondary)', maxWidth: '760px', lineHeight: 1.6 }}>{section.description}</div>
               {section.quality && (
                 <div style={{ marginTop: '8px' }}>
                   <span style={{ fontSize: '12px', fontWeight: '700', padding: '4px 9px', borderRadius: '999px', background: scoreColor(section.quality.score).bg, color: scoreColor(section.quality.score).fg }}>
@@ -1110,14 +1114,14 @@ function AppContent() {
                 </div>
               )}
             </div>
-            <div style={{ minWidth: '140px', padding: '14px 16px', background: '#ffffff', borderRadius: '12px', border: '1px solid #d1fae5', boxShadow: colors.shadow.sm }}>
-              <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280', marginBottom: '4px' }}>Current Count</div>
+            <div style={{ minWidth: '140px', padding: '14px 16px', background: 'var(--bg-elevated)', borderRadius: '12px', border: '1px solid var(--border-primary)', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+              <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Current Count</div>
               <div style={{ fontSize: '28px', fontWeight: '800', color: '#047857' }}>{section.count}</div>
               <div style={{ fontSize: '12px', color: '#64748b' }}>{section.countLabel}</div>
             </div>
           </div>
           {renderLivestockSubNav()}
-          <div style={{ marginTop: 14, padding: '12px', borderRadius: '12px', background: '#ffffff', border: '1px solid #d1fae5' }}>
+          <div style={{ marginTop: 14, padding: '12px', borderRadius: '12px', background: 'var(--bg-elevated)', border: '1px solid #d1fae5' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#065f46' }}>
                 Comprehensive Record Coverage
@@ -1136,7 +1140,7 @@ function AppContent() {
                         key={item}
                         onClick={() => openLivestockRecord(sectionKey, domain, item)}
                         title={`Open ${section.title} → ${item}`}
-                        style={{ padding: '4px 9px', borderRadius: 999, background: '#ffffff', border: '1px solid #d1fae5', color: '#065f46', fontSize: 11, fontWeight: '700', cursor: 'pointer' }}
+                        style={{ padding: '4px 9px', borderRadius: 999, background: 'var(--bg-elevated)', border: '1px solid #d1fae5', color: '#065f46', fontSize: 11, fontWeight: '700', cursor: 'pointer' }}
                       >
                         {item}
                       </button>
@@ -1153,11 +1157,9 @@ function AppContent() {
   }
 
   return (
-    <div className={`app ${settings.backgroundOn? 'bg-on' : ''} theme-${settings.theme || 'adaptive'}`} 
+    <div className={`app ${settings.backgroundOn? 'bg-on' : ''}`} 
       style={{
         ...(settings.backgroundOn && settings.background ? { backgroundImage: `url('/assets/${settings.background}')` } : {}),
-        background: colors.bg.primary,
-        color: colors.text.primary,
         minHeight: '100vh',
         transition: 'background 0.3s, color 0.3s'
       }}>
@@ -1176,10 +1178,10 @@ function AppContent() {
       />
       <AudioEnableBanner />
       <nav style={{ 
-        background: colors.bg.elevated, 
+        background: 'var(--bg-elevated)', 
         padding: '10px 16px', 
-        boxShadow: colors.shadow.sm, 
-        borderBottom: `2px solid ${colors.border.primary}`,
+        boxShadow: 'var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.08))', 
+        borderBottom: '2px solid var(--border-primary)',
         display: 'flex',
         gap: '6px',
         flexWrap: 'wrap',
@@ -1206,8 +1208,8 @@ function AppContent() {
             className={view==='dashboard'? 'active':''} 
             onClick={()=>setView('dashboard')}
             style={{
-              background: view==='dashboard' ? colors.action.success : colors.bg.tertiary,
-              color: view==='dashboard' ? colors.text.inverse : colors.text.primary,
+              background: view==='dashboard' ? 'var(--action-success, #059669)' : 'var(--bg-tertiary)',
+              color: view==='dashboard' ? 'var(--text-inverse, #fff)' : 'var(--text-primary)',
               order: -10,
               border: 'none',
               padding: '8px 16px',
@@ -1222,8 +1224,8 @@ function AppContent() {
             className={view==='notifications'? 'active':''} 
             onClick={()=>setView('notifications')}
             style={{
-              background: view==='notifications' ? colors.action.success : colors.bg.tertiary,
-              color: view==='notifications' ? colors.text.inverse : colors.text.primary,
+              background: view==='notifications' ? 'var(--action-success, #059669)' : 'var(--bg-tertiary)',
+              color: view==='notifications' ? 'var(--text-inverse, #fff)' : 'var(--text-primary)',
               order: -5,
               border: 'none',
               padding: '8px 16px',
@@ -1511,7 +1513,7 @@ function AppContent() {
           {/* Theme Toggle Button */}
           <div style={{ marginLeft: 'auto' }}>
             {ThemeToggle ? <ThemeToggle /> : (
-              <button onClick={() => {}} style={{ padding: '8px 12px', borderRadius: '6px', border: 'none', background: colors.bg.tertiary, color: colors.text.primary }}>
+              <button onClick={() => {}} style={{ padding: '8px 12px', borderRadius: '6px', border: 'none', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}>
                 Theme
               </button>
             )}
@@ -1857,55 +1859,76 @@ function AppContent() {
 
             {/* Appearance Settings Tab */}
             {activeSettingsTab === 'appearance' && (
-            <div style={{ display: 'grid', gap: '24px', maxWidth: '800px' }}>
-              
-              {/* Appearance Section */}
-              <div className="card" style={{ padding: '24px' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '16px', color: 'inherit' }}>Appearance</h3>
-                <div style={{ display: 'grid', gap: '20px' }}>
-                  
-                  <div style={{ display: 'grid', gap: '8px' }}>
-                    <label style={{ fontWeight: '500', color: 'inherit', fontSize: '14px' }}>
-                      Theme
-                    </label>
-                    <select 
-                      value={settings.theme || 'adaptive'} 
-                      onChange={e=>setSettings(s=> ({ ...s, theme: e.target.value }))}
-                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-secondary, #d1d5db)', fontSize: '14px', fontWeight: '500', color: 'var(--text-primary, #1f2937)', background: 'var(--bg-elevated, #ffffff)' }}
-                    >
-                      <option value="adaptive">Adaptive Farm (Best for Light & Dark)</option>
-                      <option value="catalytics">Catalytics (Clean & Modern)</option>
-                      <option value="light">Light</option>
-                      <option value="bold">Bold Colorful</option>
-                      <option value="calm">Calm Green</option>
-                      <option value="contrast">High Contrast</option>
-                      <option value="evolution">Evolution X (dark neon)</option>
-                      <option value="cyberpunk">Cyberpunk (neon)</option>
-                    </select>
+            <div className="appearance-layout">
+              <div className="appearance-hero card">
+                <h3>Appearance</h3>
+                <p>Clean, modern farm visuals with strong contrast and readable text across all modules.</p>
+                <div className="appearance-preview-row" aria-hidden="true">
+                  <span className="preview-chip preview-chip-primary">Header</span>
+                  <span className="preview-chip preview-chip-surface">Cards</span>
+                  <span className="preview-chip preview-chip-text">Readable Text</span>
+                </div>
+                <div
+                  className="appearance-live-preview"
+                  style={settings.backgroundOn && settings.background
+                    ? { backgroundImage: `url('/assets/${settings.background}')` }
+                    : undefined}
+                >
+                  <div className="appearance-live-top">
+                    <div className="appearance-live-brand">
+                      <img
+                        src={previewLogoSrc}
+                        alt="Logo preview"
+                        onError={(e) => {
+                          e.currentTarget.src = '/assets/jr-farm-logo.svg'
+                        }}
+                      />
+                      <div>
+                        <strong>JR FARM</strong>
+                        <span>Comprehensive Farm Management</span>
+                      </div>
+                    </div>
+                    <span className="appearance-live-badge">Modern Agri UI</span>
                   </div>
+                  <div className="appearance-live-cards" aria-hidden="true">
+                    <div>
+                      <small>Herd Health</small>
+                      <strong>98%</strong>
+                    </div>
+                    <div>
+                      <small>Feed Stock</small>
+                      <strong>12 days</strong>
+                    </div>
+                    <div>
+                      <small>Tasks Today</small>
+                      <strong>7</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0' }}>
-                    <input 
-                      type="checkbox" 
+              <div className="appearance-grid">
+                <div className="appearance-card card">
+                  <h4>Background</h4>
+                  <p className="appearance-subtext">Choose whether the farm backdrop is displayed.</p>
+                  <div className="appearance-toggle-row">
+                    <input
+                      type="checkbox"
                       id="backgroundToggle"
-                      checked={settings.backgroundOn} 
+                      checked={settings.backgroundOn}
                       onChange={e=>setSettings(s=> ({ ...s, backgroundOn: e.target.checked }))}
-                      style={{ width: '16px', height: '16px' }}
                     />
-                    <label htmlFor="backgroundToggle" style={{ fontWeight: '500', color: 'inherit', fontSize: '14px' }}>
-                      Enable background image
-                    </label>
+                    <label htmlFor="backgroundToggle">Enable background image</label>
                   </div>
 
                   {settings.backgroundOn && (
-                    <div style={{ display: 'grid', gap: '8px' }}>
-                      <label style={{ fontWeight: '500', color: 'inherit', fontSize: '14px' }}>
-                        Background Image
-                      </label>
-                      <select 
-                        value={settings.background} 
+                    <div className="appearance-field">
+                      <label htmlFor="backgroundSelect">Background Image</label>
+                      <select
+                        id="backgroundSelect"
+                        value={settings.background}
                         onChange={e=>setSettings(s=> ({ ...s, background: e.target.value }))}
-                        style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-secondary, #d1d5db)', fontSize: '14px', fontWeight: '500', color: 'var(--text-primary, #1f2937)', background: 'var(--bg-elevated, #ffffff)' }}
+                        className="appearance-input"
                       >
                         <option value="">None</option>
                         <option value="bg-farm.svg">Farm (default)</option>
@@ -1913,23 +1936,19 @@ function AppContent() {
                       </select>
                     </div>
                   )}
-
                 </div>
-              </div>
 
-              {/* Branding Section */}
-              <div className="card" style={{ padding: '24px' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '16px', color: 'inherit' }}>Branding</h3>
-                <div style={{ display: 'grid', gap: '20px' }}>
-                  
-                  <div style={{ display: 'grid', gap: '8px' }}>
-                    <label style={{ fontWeight: '500', color: 'inherit', fontSize: '14px' }}>
-                      Logo Style
-                    </label>
-                    <select 
-                      value={settings.logo} 
+                <div className="appearance-card card">
+                  <h4>Branding</h4>
+                  <p className="appearance-subtext">Set how your farm identity appears in the header.</p>
+
+                  <div className="appearance-field">
+                    <label htmlFor="logoSelect">Logo Style</label>
+                    <select
+                      id="logoSelect"
+                      value={settings.logo}
                       onChange={e=>setSettings(s=> ({ ...s, logo: e.target.value }))}
-                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-secondary, #d1d5db)', fontSize: '14px', fontWeight: '500', color: 'var(--text-primary, #1f2937)', background: 'var(--bg-elevated, #ffffff)' }}
+                      className="appearance-input"
                     >
                       <option value="jr-farm-logo.svg">Classic Logo</option>
                       <option value="logo-wordmark.svg">Wordmark</option>
@@ -1939,13 +1958,12 @@ function AppContent() {
                     </select>
                   </div>
 
-                  <div style={{ display: 'grid', gap: '8px' }}>
-                    <label style={{ fontWeight: '500', color: 'inherit', fontSize: '14px' }}>
-                      Upload Custom Logo
-                    </label>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
+                  <div className="appearance-field">
+                    <label htmlFor="logoUpload">Upload Custom Logo</label>
+                    <input
+                      id="logoUpload"
+                      type="file"
+                      accept="image/*"
                       onChange={e=>{
                         const f = e.target.files && e.target.files[0]
                         if(!f) return
@@ -1953,46 +1971,39 @@ function AppContent() {
                         reader.onload = ev => { const data = ev.target.result; setSettings(s=> ({ ...s, uploadedLogo: data, logo: 'uploaded' })) }
                         reader.readAsDataURL(f)
                       }}
-                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-secondary, #d1d5db)', fontSize: '14px', fontWeight: '500', color: 'var(--text-primary, #1f2937)', background: 'var(--bg-elevated, #ffffff)' }}
+                      className="appearance-input"
                     />
-                    <p style={{ fontSize: '12px', color: 'var(--muted)', margin: 0 }}>
-                      Supports PNG, JPG, and SVG files
-                    </p>
+                    <p className="appearance-hint">Supports PNG, JPG, and SVG files.</p>
                   </div>
-
                 </div>
               </div>
 
-              {/* Data Management Section */}
-              <div className="card" style={{ padding: '24px' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '16px', color: 'inherit' }}>Data Management</h3>
-                <div style={{ display: 'grid', gap: '16px' }}>
-                  
-                  <div style={{ padding: '16px', background: 'rgba(251, 146, 60, 0.14)', border: '1px solid rgba(251, 146, 60, 0.45)', borderRadius: '8px', color: 'var(--text-primary, #1f2937)' }}>
-                    <h4 style={{ fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0', color: 'var(--text-primary, #1f2937)' }}>Reset Application Data</h4>
-                    <p style={{ fontSize: '14px', margin: '0 0 12px 0', color: 'var(--text-secondary, #4b5563)' }}>
-                      This will clear all local app data on this device, including animals, tasks, sync metadata, and settings.
-                    </p>
-                    <button 
-                      onClick={()=>{ if(confirm('Are you sure you want to clear all local app data on this device? This action cannot be undone.')){ localStorage.clear(); location.reload() }}}
-                      style={{ 
-                        background: '#dc2626', 
-                        color: '#ffffff', 
-                        border: 'none', 
-                        padding: '10px 16px', 
-                        borderRadius: '6px', 
-                        fontSize: '14px', 
-                        fontWeight: '600',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Clear All Data
-                    </button>
-                  </div>
-
+              <div className="appearance-card card">
+                <h4>Theme</h4>
+                <p className="appearance-subtext">Switch between light and dark themes with high contrast for readability.</p>
+                <div className="appearance-field">
+                  <label htmlFor="themeSelect">Theme Mode</label>
+                  <ThemeSelector />
                 </div>
               </div>
 
+              <div className="appearance-card card">
+                <h4>Data Management</h4>
+                <p className="appearance-subtext">Danger zone actions that affect all local data.</p>
+                <div className="appearance-danger-box">
+                  <h5>Reset Application Data</h5>
+                  <p>
+                    This clears all local app data on this device, including animals, tasks,
+                    sync metadata, and settings.
+                  </p>
+                  <button
+                    onClick={()=>{ if(confirm('Are you sure you want to clear all local app data on this device? This action cannot be undone.')){ localStorage.clear(); location.reload() }}}
+                    className="appearance-danger-btn"
+                  >
+                    Clear All Data
+                  </button>
+                </div>
+              </div>
             </div>
             )}
           </section>
@@ -2002,11 +2013,11 @@ function AppContent() {
       </main>
 
       <footer style={{ 
-        background: colors.bg.secondary, 
-        color: colors.text.secondary,
+        background: 'var(--bg-secondary)', 
+        color: 'var(--text-secondary)',
         padding: '16px',
         textAlign: 'center',
-        borderTop: `1px solid ${colors.border.primary}`
+        borderTop: '1px solid var(--border-primary)'
       }}>
         <small>© Devins Farm — Comprehensive Farm Management System</small>
       </footer>
@@ -2043,6 +2054,58 @@ function AppContent() {
       <ToastContainer />
     </div>
   )
+}
+
+// Theme selector component for appearance settings
+function ThemeSelector() {
+  const { theme, setThemeMode } = useTheme();
+  
+  return (
+    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+      <button
+        onClick={() => setThemeMode('light')}
+        style={{
+          flex: '1',
+          minWidth: '120px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          border: theme === 'light' ? '2px solid var(--action-primary)' : '1px solid var(--border-primary)',
+          background: theme === 'light' ? 'rgba(0, 168, 107, 0.1)' : 'var(--bg-secondary)',
+          color: 'var(--text-primary)',
+          fontWeight: '600',
+          cursor: 'pointer',
+          transition: 'all 0.2s',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px'
+        }}
+      >
+        ☀️ Light
+      </button>
+      <button
+        onClick={() => setThemeMode('dark')}
+        style={{
+          flex: '1',
+          minWidth: '120px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          border: theme === 'dark' ? '2px solid var(--action-primary)' : '1px solid var(--border-primary)',
+          background: theme === 'dark' ? 'rgba(0, 168, 107, 0.1)' : 'var(--bg-secondary)',
+          color: 'var(--text-primary)',
+          fontWeight: '600',
+          cursor: 'pointer',
+          transition: 'all 0.2s',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px'
+        }}
+      >
+        🌙 Dark
+      </button>
+    </div>
+  );
 }
 
 // Wrapper with AppShell for fast initial render

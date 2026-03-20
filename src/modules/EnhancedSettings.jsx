@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { useTheme } from '../lib/theme'
 import {
   getEnhancedSettings,
   saveEnhancedSettingsWithHistory,
@@ -304,8 +303,6 @@ export default function EnhancedSettings() {
     { id: 'history', icon: '📜', label: 'History' }
   ]
 
-  const { theme, toggleTheme } = useTheme()
-
   // User access control: Only MANAGER can edit settings, others view-only
   const [canEdit, setCanEdit] = useState(false);
   useEffect(() => {
@@ -409,21 +406,7 @@ export default function EnhancedSettings() {
           >
             {showPreview ? '👁️ Hide Preview' : '👁️ Show Preview'}
           </button>
-                    <button
-                      onClick={toggleTheme}
-                      style={{
-                        padding: '8px 16px',
-                        fontSize: '14px',
-                        background: theme === 'dark' ? 'var(--bg-tertiary, #374151)' : 'var(--bg-secondary, #f3f4f6)',
-                        color: 'var(--text-primary, #1f2937)',
-                        border: '1px solid var(--border-secondary, #d1d5db)',
-                        borderRadius: '8px',
-                        fontWeight: '600'
-                      }}
-                    >
-                      {theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}
-                    </button>
-          <button onClick={handleExport} style={{ padding: '8px 16px', fontSize: '14px' }}>
+                    <button onClick={handleExport} style={{ padding: '8px 16px', fontSize: '14px' }}>
             📥 Export
           </button>
           <label style={{ 

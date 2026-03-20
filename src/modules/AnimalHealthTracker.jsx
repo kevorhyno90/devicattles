@@ -180,7 +180,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
       .filter(r => r.animalId === animalId)
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0]
 
-    if (!recentHealth) return { status: 'unknown', color: '#4b5563' }
+    if (!recentHealth) return { status: 'unknown', color: 'var(--text-secondary)' }
     
     if (recentHealth.severity === 'critical') return { status: 'critical', color: '#dc2626' }
     if (recentHealth.severity === 'severe') return { status: 'severe', color: '#ea580c' }
@@ -240,7 +240,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
         <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#111', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           🏥 Animal Health Tracker
         </h1>
-        <p style={{ color: '#4b5563', fontSize: '14px' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
           Monitor animal health, vaccinations, and treatments
         </p>
       </div>
@@ -270,7 +270,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
       <div style={{ display: 'grid', gridTemplateColumns: selectedAnimal ? '350px 1fr' : '1fr', gap: '20px' }}>
         {/* Animal List */}
         <div>
-          <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <div style={{ background: 'var(--bg-elevated)', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
             {/* Search and Filters */}
             <div style={{ marginBottom: '16px' }}>
               <input
@@ -330,7 +330,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
             {/* Animals */}
             <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
               {filteredAnimals.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#4b5563' }}>
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-secondary)' }}>
                   <div style={{ fontSize: '48px', marginBottom: '12px' }}>🐄</div>
                   <div>No animals found</div>
                 </div>
@@ -357,7 +357,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
                         <div>
                           <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '600' }}>{animal.name}</h3>
-                          <div style={{ fontSize: '12px', color: '#4b5563' }}>{animal.tag || animal.id}</div>
+                          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{animal.tag || animal.id}</div>
                         </div>
                         <div style={{
                           width: '10px',
@@ -366,7 +366,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
                           background: healthStatus.color
                         }} />
                       </div>
-                      <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: '#4b5563' }}>
+                      <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: 'var(--text-secondary)' }}>
                         <span>📋 {recordCount} records</span>
                         <span>💉 {vaccineCount} vaccines</span>
                       </div>
@@ -381,11 +381,11 @@ export default function AnimalHealthTracker({ onNavigate }) {
         {/* Detail Panel */}
         {selectedAnimal && (
           <div>
-            <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '20px' }}>
+            <div style={{ background: 'var(--bg-elevated)', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px' }}>
                 <div>
                   <h2 style={{ margin: '0 0 8px 0', fontSize: '20px', fontWeight: '600' }}>{selectedAnimal.name}</h2>
-                  <div style={{ fontSize: '14px', color: '#4b5563' }}>
+                  <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
                     {selectedAnimal.type || 'Animal'} • {selectedAnimal.tag || selectedAnimal.id}
                   </div>
                 </div>
@@ -395,7 +395,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
                     onClick={() => setSelectedAnimal(null)}
                     style={{
                       padding: '6px 12px',
-                      background: '#f3f4f6',
+                      background: 'var(--bg-tertiary)',
                       border: '1px solid #e5e7eb',
                       borderRadius: '6px',
                       cursor: 'pointer',
@@ -458,7 +458,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
 
               {/* Form */}
               {showForm && (
-                <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', marginBottom: '20px' }}>
+                <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', marginBottom: '20px' }}>
                   <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600' }}>
                     {formType === 'health' ? '📋 New Health Record' : formType === 'vaccine' ? '💉 New Vaccination' : '💊 New Treatment'}
                   </h3>
@@ -589,8 +589,8 @@ export default function AnimalHealthTracker({ onNavigate }) {
                       style={{
                         flex: 1,
                         padding: '10px',
-                        background: '#e5e7eb',
-                        color: '#374151',
+                        background: 'var(--border-primary)',
+                        color: 'var(--text-secondary)',
                         border: 'none',
                         borderRadius: '6px',
                         cursor: 'pointer',
@@ -616,7 +616,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
                         key={record.id}
                         style={{
                           padding: '12px',
-                          background: '#f9fafb',
+                          background: 'var(--bg-secondary)',
                           border: '1px solid #e5e7eb',
                           borderRadius: '6px',
                           marginBottom: '8px'
@@ -641,7 +641,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: '12px', color: '#4b5563' }}>
+                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                               {new Date(record.timestamp).toLocaleString()}
                             </div>
                           </div>
@@ -662,25 +662,25 @@ export default function AnimalHealthTracker({ onNavigate }) {
                         </div>
                         
                         {record.symptoms && (
-                          <div style={{ fontSize: '13px', color: '#4b5563', marginBottom: '4px' }}>
+                          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                             <strong>Symptoms:</strong> {record.symptoms}
                           </div>
                         )}
                         
                         {record.medication && (
-                          <div style={{ fontSize: '13px', color: '#4b5563', marginBottom: '4px' }}>
+                          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                             <strong>Medication:</strong> {record.medication} {record.dosage && `(${record.dosage})`}
                           </div>
                         )}
                         
                         {record.veterinarian && (
-                          <div style={{ fontSize: '13px', color: '#4b5563', marginBottom: '4px' }}>
+                          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                             <strong>Vet:</strong> {record.veterinarian}
                           </div>
                         )}
                         
                         {record.cost && (
-                          <div style={{ fontSize: '13px', color: '#4b5563', marginBottom: '4px' }}>
+                          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                             <strong>Cost:</strong> ${record.cost}
                           </div>
                         )}
@@ -696,7 +696,7 @@ export default function AnimalHealthTracker({ onNavigate }) {
                   {healthRecords.filter(r => r.animalId === selectedAnimal.id).length === 0 &&
                    vaccinations.filter(v => v.animalId === selectedAnimal.id).length === 0 &&
                    treatments.filter(t => t.animalId === selectedAnimal.id).length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '40px 20px', color: '#4b5563' }}>
+                    <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-secondary)' }}>
                       <div style={{ fontSize: '48px', marginBottom: '12px' }}>📋</div>
                       <div>No health records yet</div>
                     </div>

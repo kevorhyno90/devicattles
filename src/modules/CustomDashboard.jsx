@@ -30,7 +30,7 @@ export default function CustomDashboard() {
 
   if (pins.length === 0) {
     return (
-      <div style={{ padding: 32, textAlign: 'center', color: '#4b5563' }}>
+      <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-secondary)' }}>
         <h2>📊 Custom Dashboard</h2>
         <p>No pinned reports or charts yet.<br/>Pin your favorite reports from the report builder!</p>
       </div>
@@ -56,7 +56,7 @@ export default function CustomDashboard() {
           <div style={{ fontSize: 18, fontWeight: 600, color: '#111' }}>
             {data[pin.id] && data[pin.id].length ? data[pin.id].length : 0}
           </div>
-          <div style={{ fontSize: 11, color: '#4b5563' }}>records</div>
+          <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>records</div>
         </div>
       ))}
     </div>
@@ -68,7 +68,7 @@ export default function CustomDashboard() {
       {mobileStats}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
         {pins.map(pin => (
-          <div key={pin.id} style={{ background: 'white', borderRadius: 10, boxShadow: '0 2px 8px #0001', padding: 18, minWidth: 280, maxWidth: 400, flex: 1 }}>
+          <div key={pin.id} style={{ background: 'var(--bg-elevated)', borderRadius: 10, boxShadow: '0 2px 8px #0001', padding: 18, minWidth: 280, maxWidth: 400, flex: 1 }}>
             <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 8 }}>{pin.name}</div>
             {/* Show chart if chartType is set */}
             {pin.chartType && data[pin.id] && data[pin.id].length > 0 ? (

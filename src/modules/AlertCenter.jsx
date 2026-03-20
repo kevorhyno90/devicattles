@@ -116,7 +116,7 @@ export default function AlertCenter() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px', color: '#4b5563' }}>
+      <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
         <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
         <div>Loading alerts...</div>
       </div>
@@ -130,7 +130,7 @@ export default function AlertCenter() {
         <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '700', color: '#111' }}>
           🔔 Alert Center
         </h1>
-        <p style={{ margin: 0, color: '#4b5563', fontSize: '14px' }}>
+        <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>
           Real-time notifications and alerts for your farm
         </p>
       </div>
@@ -189,7 +189,7 @@ export default function AlertCenter() {
 
       {/* Filters, Search, Export, Notification Settings, Bulk Actions */}
       <div style={{ 
-        background: 'white', 
+        background: 'var(--bg-elevated)', 
         padding: '16px', 
         borderRadius: '8px', 
         marginBottom: '20px',
@@ -287,7 +287,7 @@ export default function AlertCenter() {
                   ✓ Dismiss All Filtered
                 </button>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Type:</span>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-secondary)' }}>Type:</span>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
@@ -312,7 +312,7 @@ export default function AlertCenter() {
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Priority:</span>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-secondary)' }}>Priority:</span>
           <select
             value={filterPriority}
             onChange={(e) => setFilterPriority(e.target.value)}
@@ -363,7 +363,7 @@ export default function AlertCenter() {
       {/* Alerts List */}
       {filteredAlerts.length === 0 ? (
         <div style={{
-          background: 'white',
+          background: 'var(--bg-elevated)',
           padding: '60px 20px',
           borderRadius: '12px',
           textAlign: 'center',
@@ -371,7 +371,7 @@ export default function AlertCenter() {
         }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>✨</div>
           <h3 style={{ margin: '0 0 8px 0', color: '#111' }}>All Clear!</h3>
-          <p style={{ margin: 0, color: '#4b5563' }}>
+          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
             {alerts.length === 0 
               ? 'No alerts generated yet. Add some animals, tasks, or inventory to generate smart alerts.'
               : 'No active alerts match your current filters'
@@ -384,7 +384,7 @@ export default function AlertCenter() {
             <div
               key={alert.id}
               style={{
-                background: 'white',
+                background: 'var(--bg-elevated)',
                 borderRadius: '12px',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                 overflow: 'hidden',
@@ -424,12 +424,12 @@ export default function AlertCenter() {
                       {alert.priority}
                     </span>
                   </div>
-                  <p style={{ margin: 0, fontSize: '14px', color: '#4b5563' }}>
+                  <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>
                     {alert.message}
                   </p>
                 </div>
 
-                <div style={{ fontSize: '20px', color: '#4b5563' }}>
+                <div style={{ fontSize: '20px', color: 'var(--text-secondary)' }}>
                   {expandedAlert === alert.id ? '▼' : '▶'}
                 </div>
               </div>
@@ -441,14 +441,14 @@ export default function AlertCenter() {
                   borderTop: '1px solid #f0f0f0'
                 }}>
                   <div style={{ 
-                    background: '#f9fafb', 
+                    background: 'var(--bg-secondary)', 
                     padding: '16px', 
                     borderRadius: '8px',
                     marginTop: '16px',
                     marginBottom: '16px'
                   }}>
                     <div style={{ marginBottom: '8px' }}>
-                      <strong style={{ fontSize: '13px', color: '#374151' }}>Recommended Action:</strong>
+                      <strong style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Recommended Action:</strong>
                       <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#333' }}>
                         {alert.action}
                       </p>
@@ -456,7 +456,7 @@ export default function AlertCenter() {
 
                     {alert.dueDate && (
                       <div>
-                        <strong style={{ fontSize: '13px', color: '#374151' }}>Due Date:</strong>
+                        <strong style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Due Date:</strong>
                         <span style={{ marginLeft: '8px', fontSize: '14px', color: '#333' }}>
                           {new Date(alert.dueDate).toLocaleDateString()}
                         </span>

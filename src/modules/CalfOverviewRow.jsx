@@ -16,7 +16,7 @@ export default function CalfOverviewRow({ calf, batchMode, selected, onBatchSele
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
           <div>
             <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>{calf.name || 'Unnamed Calf'}</h4>
-            <div style={{ fontSize: '0.9rem', color: '#4b5563', marginTop: 4 }}>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: 4 }}>
               {calf.tag && <span style={{ marginRight: 12 }}>🏷️ {calf.tag}</span>}
               <span style={{ marginRight: 12 }}>{calf.sex === 'F' ? '♀' : '♂'} {calf.breed}</span>
               <span>📊 {calf.healthStatus || '-'}</span>
@@ -36,7 +36,7 @@ export default function CalfOverviewRow({ calf, batchMode, selected, onBatchSele
               {calf.weaningDate && <div><strong>Weaning Date:</strong> {calf.weaningDate}</div>}
             </div>
             {calf.notes && (
-              <div style={{ marginTop: 12, padding: 12, background: '#f9fafb', borderRadius: 6 }}>
+              <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-secondary)', borderRadius: 6 }}>
                 <strong>Notes:</strong> {calf.notes}
               </div>
             )}
@@ -44,7 +44,7 @@ export default function CalfOverviewRow({ calf, batchMode, selected, onBatchSele
         )}
         <button 
           onClick={() => setExpanded(e => !e)}
-          style={{ marginTop: 12, padding: '6px 12px', fontSize: '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db', width: 'auto' }}
+          style={{ marginTop: 12, padding: '6px 12px', fontSize: '0.85rem', background: 'var(--bg-tertiary)', border: '1px solid #d1d5db', width: 'auto' }}
         >
           {expanded ? '▲ Show Less' : '▼ Show More'}
         </button>

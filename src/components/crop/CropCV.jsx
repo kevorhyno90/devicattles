@@ -356,12 +356,12 @@ export default function CropCV({
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
         <div>
           <h3 style={{ margin: '0 0 6px 0' }}>Crop CV Report Center</h3>
-          <div style={{ fontSize: 13, color: '#475569' }}>Comprehensive records for {moduleLabel}</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Comprehensive records for {moduleLabel}</div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button onClick={exportModuleJSON} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer' }}>Export Module JSON</button>
-          <button onClick={exportModuleCSV} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer' }}>Export Module CSV</button>
-          <button onClick={exportModulePDF} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer' }}>Export Module PDF</button>
+          <button onClick={exportModuleJSON} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #d1d5db', background: 'var(--bg-elevated)', cursor: 'pointer' }}>Export Module JSON</button>
+          <button onClick={exportModuleCSV} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #d1d5db', background: 'var(--bg-elevated)', cursor: 'pointer' }}>Export Module CSV</button>
+          <button onClick={exportModulePDF} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #d1d5db', background: 'var(--bg-elevated)', cursor: 'pointer' }}>Export Module PDF</button>
           <button onClick={exportAllModulesPack} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #99f6e4', background: '#ecfeff', color: '#0f766e', cursor: 'pointer', fontWeight: 700 }}>Export All Modules CV Pack</button>
         </div>
       </div>
@@ -382,7 +382,7 @@ export default function CropCV({
 
       <div style={{ display: 'grid', gap: 10 }}>
         {visibleCrops.map(crop => (
-          <div key={crop.id} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, background: '#fff' }}>
+          <div key={crop.id} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, background: 'var(--bg-elevated)' }}>
             {(() => {
               const salesTotal = salesRecords.filter(r => r.cropId === crop.id).reduce((sum, row) => sum + (Number(row.totalValue) || (Number(row.quantity) * Number(row.unitPrice)) || 0), 0)
               const treatmentCost = treatmentRecords.filter(r => r.cropId === crop.id).reduce((sum, row) => sum + (Number(row.cost) || 0), 0)
@@ -396,7 +396,7 @@ export default function CropCV({
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontWeight: 700 }}>{crop.name} ({crop.id})</div>
-                <div style={{ fontSize: 12, color: '#475569' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                   {plantMeta[crop.plantSubmodule]?.label || 'Unassigned'} • {crop.variety || 'No variety'} • {crop.status || 'No status'}
                 </div>
                 <div style={{ fontSize: 12, color: margin >= 0 ? '#15803d' : '#dc2626', fontWeight: 700, marginTop: 4 }}>
@@ -404,14 +404,14 @@ export default function CropCV({
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button onClick={() => exportCropBundle(crop)} style={{ padding: '6px 9px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer' }}>JSON</button>
-                <button onClick={() => exportCropBundleCSV(crop)} style={{ padding: '6px 9px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer' }}>CSV</button>
-                <button onClick={() => exportCropBundlePDF(crop)} style={{ padding: '6px 9px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer' }}>PDF</button>
+                <button onClick={() => exportCropBundle(crop)} style={{ padding: '6px 9px', borderRadius: 6, border: '1px solid #d1d5db', background: 'var(--bg-elevated)', cursor: 'pointer' }}>JSON</button>
+                <button onClick={() => exportCropBundleCSV(crop)} style={{ padding: '6px 9px', borderRadius: 6, border: '1px solid #d1d5db', background: 'var(--bg-elevated)', cursor: 'pointer' }}>CSV</button>
+                <button onClick={() => exportCropBundlePDF(crop)} style={{ padding: '6px 9px', borderRadius: 6, border: '1px solid #d1d5db', background: 'var(--bg-elevated)', cursor: 'pointer' }}>PDF</button>
               </div>
             </div>
               )
             })()}
-            <div style={{ marginTop: 8, fontSize: 13, color: '#1f2937', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 6 }}>
+            <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-primary)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 6 }}>
               <div>Yields: {countBy(yieldRecords, crop.id)}</div>
               <div>Sales: {countBy(salesRecords, crop.id)}</div>
               <div>Treatments: {countBy(treatmentRecords, crop.id)}</div>
@@ -423,7 +423,7 @@ export default function CropCV({
             </div>
           </div>
         ))}
-        {visibleCrops.length === 0 && <div style={{ color: '#475569' }}>No crops available in this plant module for CV reporting yet.</div>}
+        {visibleCrops.length === 0 && <div style={{ color: 'var(--text-secondary)' }}>No crops available in this plant module for CV reporting yet.</div>}
       </div>
     </div>
   )

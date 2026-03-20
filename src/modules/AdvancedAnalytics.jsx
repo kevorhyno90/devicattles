@@ -182,7 +182,7 @@ export default function AdvancedAnalytics() {
     <div>
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '8px' }}>📊 Advanced Analytics</h2>
-        <p style={{ color: '#4b5563', margin: 0 }}>Visual insights and trends for your farm data</p>
+        <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Visual insights and trends for your farm data</p>
       </div>
 
       {/* Filters & Export */}
@@ -361,28 +361,28 @@ export default function AdvancedAnalytics() {
               <div style={{ fontSize: '24px', fontWeight: '700', color: '#059669' }}>
                 {animals.filter(a => a.status === 'Active').length}
               </div>
-              <div style={{ fontSize: '14px', color: '#4b5563', marginTop: '4px' }}>Active Animals</div>
+              <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>Active Animals</div>
             </div>
 
             <div style={{ padding: '16px', background: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
               <div style={{ fontSize: '24px', fontWeight: '700', color: '#3b82f6' }}>
                 {milkYield.reduce((sum, m) => sum + parseFloat(m.quantity || m.totalQuantity || 0), 0).toFixed(0)}L
               </div>
-              <div style={{ fontSize: '14px', color: '#4b5563', marginTop: '4px' }}>Total Milk Produced</div>
+              <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>Total Milk Produced</div>
             </div>
 
             <div style={{ padding: '16px', background: '#fef3c7', borderRadius: '8px', border: '1px solid #fde68a' }}>
               <div style={{ fontSize: '24px', fontWeight: '700', color: '#f59e0b' }}>
                 {formatCurrency(transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0))}
               </div>
-              <div style={{ fontSize: '14px', color: '#4b5563', marginTop: '4px' }}>Total Income</div>
+              <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>Total Income</div>
             </div>
 
             <div style={{ padding: '16px', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca' }}>
               <div style={{ fontSize: '24px', fontWeight: '700', color: '#ef4444' }}>
                 {formatCurrency(transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0))}
               </div>
-              <div style={{ fontSize: '14px', color: '#4b5563', marginTop: '4px' }}>Total Expenses</div>
+              <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>Total Expenses</div>
             </div>
           </div>
         </div>

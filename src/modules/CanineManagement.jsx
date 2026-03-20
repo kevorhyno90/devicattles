@@ -516,14 +516,14 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                         <div style={{cursor:'pointer'}} onClick={() => setSelectedCanine(dog)}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                             <div>
-                        <h4 style={{ margin: '0 0 4px 0', color: '#1f2937' }}>{dog.name}</h4>
-                        <p style={{ margin: '0', fontSize: '12px', color: '#4b5563' }}>{dog.breed || 'Mixed'}</p>
+                        <h4 style={{ margin: '0 0 4px 0', color: 'var(--text-primary)' }}>{dog.name}</h4>
+                        <p style={{ margin: '0', fontSize: '12px', color: 'var(--text-secondary)' }}>{dog.breed || 'Mixed'}</p>
                       </div>
                       <span style={{ background: '#d1fae5', color: '#065f46', padding: '3px 6px', borderRadius: '3px', fontSize: '11px', fontWeight: '500' }}>
                         {dog.role || 'Guard'}
                       </span>
                     </div>
-                    <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '8px', lineHeight: '1.5' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.5' }}>
                       <div>Training: {dog.trainingLevel || 'Basic'}</div>
                       <div>Work: {dog.workType || 'Herding'}</div>
                       <div>Weight: {dog.weight || 'N/A'} kg</div>
@@ -545,7 +545,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
               {filteredCanines.length === 0 && !showForm && (
                 <div style={{ background: 'var(--bg-elevated)', border: '2px dashed var(--border-secondary)', borderRadius: '8px', padding: '40px 20px', textAlign: 'center', marginBottom: '20px' }}>
                   <div style={{ fontSize: '32px', marginBottom: '10px' }}>🐕</div>
-                  <p style={{ margin: '0', color: '#4b5563' }}>{canines.length === 0 ? 'No canines registered yet' : 'No canines match the current filters'}</p>
+                  <p style={{ margin: '0', color: 'var(--text-secondary)' }}>{canines.length === 0 ? 'No canines registered yet' : 'No canines match the current filters'}</p>
                 </div>
               )}
 
@@ -596,7 +596,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
               {canines.map(dog => (
                 dog.healthRecords && dog.healthRecords.length > 0 && (
                   <div key={dog.id} style={{ marginBottom: '24px' }}>
-                    <h5 style={{ margin: '0 0 12px 0', color: '#1f2937' }}>🐕 {dog.name}</h5>
+                    <h5 style={{ margin: '0 0 12px 0', color: 'var(--text-primary)' }}>🐕 {dog.name}</h5>
                     {dog.healthRecords.map(record => (
                       <div key={record.id} style={{ background: 'var(--bg-elevated)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-primary)', marginBottom: '10px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
@@ -605,7 +605,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                             {record.severity}
                           </span>
                         </div>
-                        <div style={{ fontSize: '13px', lineHeight: '1.6', color: '#4b5563' }}>
+                        <div style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
                           <div>📅 {record.date}</div>
                           {record.treatment && <div>💊 Treatment: {record.treatment}</div>}
                           {record.vetNotes && <div>📝 Notes: {record.vetNotes}</div>}
@@ -620,7 +620,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
               ))}
               {canines.every(dog => !dog.healthRecords || dog.healthRecords.length === 0) && (
                 <div style={{ background: 'var(--bg-elevated)', border: '2px dashed var(--border-secondary)', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
-                  <p style={{ margin: 0, color: '#4b5563' }}>No health records yet. Select a canine from the list to add health records.</p>
+                  <p style={{ margin: 0, color: 'var(--text-secondary)' }}>No health records yet. Select a canine from the list to add health records.</p>
                 </div>
               )}
             </div>
@@ -632,7 +632,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
               {canines.map(dog => (
                 dog.vaccineRecords && dog.vaccineRecords.length > 0 && (
                   <div key={dog.id} style={{ marginBottom: '24px' }}>
-                    <h5 style={{ margin: '0 0 12px 0', color: '#1f2937' }}>🐕 {dog.name}</h5>
+                    <h5 style={{ margin: '0 0 12px 0', color: 'var(--text-primary)' }}>🐕 {dog.name}</h5>
                     {dog.vaccineRecords.map(record => (
                       <div key={record.id} style={{ background: 'var(--bg-elevated)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-primary)', marginBottom: '10px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
@@ -643,7 +643,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: '13px', lineHeight: '1.6', color: '#4b5563' }}>
+                        <div style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
                           <div>📅 Date: {record.date}</div>
                           {record.vet && <div>🏥 Vet: {record.vet}</div>}
                           {record.notes && <div>📝 Notes: {record.notes}</div>}
@@ -658,7 +658,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
               ))}
               {canines.every(dog => !dog.vaccineRecords || dog.vaccineRecords.length === 0) && (
                 <div style={{ background: 'var(--bg-elevated)', border: '2px dashed var(--border-secondary)', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
-                  <p style={{ margin: 0, color: '#4b5563' }}>No vaccination records yet. Select a canine from the list to add vaccination records.</p>
+                  <p style={{ margin: 0, color: 'var(--text-secondary)' }}>No vaccination records yet. Select a canine from the list to add vaccination records.</p>
                 </div>
               )}
             </div>
@@ -670,10 +670,10 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
               {canines.map(dog => (
                 dog.husbandryLog && dog.husbandryLog.length > 0 && (
                   <div key={dog.id} style={{ marginBottom: '24px' }}>
-                    <h5 style={{ margin: '0 0 12px 0', color: '#1f2937' }}>🐕 {dog.name}</h5>
+                    <h5 style={{ margin: '0 0 12px 0', color: 'var(--text-primary)' }}>🐕 {dog.name}</h5>
                     {dog.husbandryLog.map(record => (
                       <div key={record.id} style={{ background: 'var(--bg-elevated)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-primary)', marginBottom: '10px' }}>
-                        <div style={{ fontSize: '13px', lineHeight: '1.6', color: '#4b5563' }}>
+                        <div style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
                           <strong>{record.date}</strong>
                           <div>🍽️ Feed: {record.feedType} ({record.quantity}) - {record.frequency}</div>
                           <div>🏠 Housing: {record.housing}</div>
@@ -688,7 +688,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
               ))}
               {canines.every(dog => !dog.husbandryLog || dog.husbandryLog.length === 0) && (
                 <div style={{ background: 'var(--bg-elevated)', border: '2px dashed var(--border-secondary)', borderRadius: '8px', padding: '40px 20px', textAlign: 'center' }}>
-                  <p style={{ margin: 0, color: '#4b5563' }}>No husbandry logs yet. Select a canine from the list to add care records.</p>
+                  <p style={{ margin: 0, color: 'var(--text-secondary)' }}>No husbandry logs yet. Select a canine from the list to add care records.</p>
                 </div>
               )}
             </div>
@@ -728,7 +728,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                     <div><strong>Sex:</strong> {selectedCanine.sex}</div>
                   </div>
                   {selectedCanine.notes && (
-                    <div style={{ background: '#f9fafb', padding: '12px', borderRadius: '4px', marginBottom: '16px' }}>
+                    <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '4px', marginBottom: '16px' }}>
                       <strong>Notes:</strong> {selectedCanine.notes}
                     </div>
                   )}
@@ -766,10 +766,10 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <div>
                               <strong>{record.condition}</strong> ({record.severity})
-                              <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>
+                              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                                 {record.date} {record.vet && `- Dr. ${record.vet}`}
                               </div>
-                              {record.treatment && <div style={{ fontSize: '13px', marginTop: '6px', color: '#374151' }}>{record.treatment}</div>}
+                              {record.treatment && <div style={{ fontSize: '13px', marginTop: '6px', color: 'var(--text-secondary)' }}>{record.treatment}</div>}
                             </div>
                             <button onClick={() => deleteHealthRecord(selectedCanine.id, record.id)} style={{ padding: '4px 8px', background: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '12px' }}>
                               Delete
@@ -812,7 +812,7 @@ export default function CanineManagement({ animals = [], setAnimals, initialTab 
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <div>
                               <strong>{record.vaccineType}</strong>
-                              <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>
+                              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                                 Given: {record.date} {record.vet && `by Dr. ${record.vet}`}
                               </div>
                               {record.boosterDue && <div style={{ fontSize: '12px', color: '#d97706', marginTop: '4px' }}>⚠️ Booster due: {record.boosterDue}</div>}

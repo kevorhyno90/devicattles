@@ -15,7 +15,7 @@
     "deploy:vercel": "vercel --prod",
     "deploy:firebase": "npm run build && firebase deploy --only hosting",
     "deploy:gh-pages": "npm run build && gh-pages -d dist",
-    "test": "jest --env=jsdom"
+    "test": "jest --config jest.config.mjs --env=jsdom --passWithNoTests"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -55,6 +55,7 @@
     "babel-jest": "^30.2.0",
     "gh-pages": "^6.3.0",
     "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.3.0",
     "rollup-plugin-visualizer": "^5.14.0",
     "terser": "^5.36.0",
     "vite": "^7.3.0",

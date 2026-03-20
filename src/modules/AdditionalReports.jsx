@@ -232,11 +232,11 @@ export default function AdditionalReports() {
       </div>
 
       {loading ? (
-        <div style={{ padding: '40px', textAlign: 'center', color: '#4b5563' }}>
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
           <div style={{ fontSize: '18px' }}>⏳ Loading {activeReport} report...</div>
         </div>
       ) : !reportData ? (
-        <div style={{ padding: '40px', textAlign: 'center', color: '#4b5563' }}>
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
           <div style={{ fontSize: '18px' }}>No data available</div>
         </div>
       ) : (
@@ -298,7 +298,7 @@ export default function AdditionalReports() {
             </button>
           </div>
           {/* Scheduled/Automatic Report UI */}
-          <div style={{ background: '#f1f5f9', padding: '16px', borderRadius: '8px', marginBottom: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', marginBottom: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
             <input
               type="email"
               placeholder="Email for scheduled report"
@@ -322,15 +322,15 @@ export default function AdditionalReports() {
             >
               ⏰ Schedule Email
             </button>
-            <span style={{ fontSize: '13px', color: '#4b5563' }}>
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
               (This is a UI placeholder. Backend integration needed for real scheduling.)
             </span>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '30px' }}>
             {Object.entries(reportData.summary || {}).map(([key, value]) => (
-              <div key={key} style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                <div style={{ fontSize: '12px', color: '#4b5563', fontWeight: '600', marginBottom: '8px', textTransform: 'capitalize' }}>
+              <div key={key} style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '8px', textTransform: 'capitalize' }}>
                   {key.replace(/([A-Z])/g, ' $1')}
                 </div>
                 <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#059669' }}>
@@ -341,13 +341,13 @@ export default function AdditionalReports() {
           </div>
 
           {reportData.animals && reportData.animals.length > 0 && (
-            <div style={{ background: '#f9fafb', padding: '20px', borderRadius: '8px', border: '1px solid #e5e7eb', overflowX: 'auto' }}>
+            <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '8px', border: '1px solid #e5e7eb', overflowX: 'auto' }}>
               <h3 style={{ marginTop: 0 }}>
                 {activeReport === 'health' ? '🐄 Animal Health Status' : '👶 Breeding Animals'}
               </h3>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead>
-                  <tr style={{ background: '#e5e7eb' }}>
+                  <tr style={{ background: 'var(--border-primary)' }}>
                     {Object.keys(reportData.animals[0] || {}).map(key => (
                       <th key={key} style={{ padding: '10px', textAlign: 'left', borderBottom: '2px solid #d1d5db' }}>
                         {key.replace(/([A-Z])/g, ' $1')}
@@ -371,11 +371,11 @@ export default function AdditionalReports() {
           )}
 
           {reportData.expenses && reportData.expenses.length > 0 && (
-            <div style={{ background: '#f9fafb', padding: '20px', borderRadius: '8px', border: '1px solid #e5e7eb', overflowX: 'auto', marginTop: '20px' }}>
+            <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '8px', border: '1px solid #e5e7eb', overflowX: 'auto', marginTop: '20px' }}>
               <h3 style={{ marginTop: 0 }}>🌾 Feed Expenses</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead>
-                  <tr style={{ background: '#e5e7eb' }}>
+                  <tr style={{ background: 'var(--border-primary)' }}>
                     <th style={{ padding: '10px', textAlign: 'left', borderBottom: '2px solid #d1d5db' }}>Date</th>
                     <th style={{ padding: '10px', textAlign: 'left', borderBottom: '2px solid #d1d5db' }}>Amount</th>
                     <th style={{ padding: '10px', textAlign: 'left', borderBottom: '2px solid #d1d5db' }}>Category</th>

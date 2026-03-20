@@ -15,7 +15,7 @@ const dummyInsights = [
   },
       <h2 style={{ marginBottom: 24 }}>AI-Powered Insights</h2>
       {insights.length === 0 ? (
-        <div style={{ textAlign: 'center', color: '#4b5563', padding: 40 }}>
+        <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: 40 }}>
           <div style={{ fontSize: 48 }}>🎉</div>
           <p>No insights available.</p>
         </div>
@@ -25,7 +25,7 @@ const dummyInsights = [
             <div
               key={insight.id}
               style={{
-                background: '#fff',
+                background: 'var(--bg-elevated)',
                 borderRadius: 12,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                 borderLeft: `4px solid ${getPriorityColor(insight.priority)}`,
@@ -37,7 +37,7 @@ const dummyInsights = [
                 <span style={{ fontSize: 32 }}>{getCategoryIcon(insight.category)}</span>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ margin: 0 }}>{insight.title}</h3>
-                  <p style={{ margin: '4px 0', color: '#374151' }}>{insight.description}</p>
+                  <p style={{ margin: '4px 0', color: 'var(--text-secondary)' }}>{insight.description}</p>
                 </div>
                 <button
                   onClick={() => setExpandedInsight(expandedInsight === insight.id ? null : insight.id)}
@@ -151,7 +151,7 @@ import {
                   ⬇️ Export JSON
                 </button>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Category:</span>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-secondary)' }}>Category:</span>
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
@@ -175,7 +175,7 @@ import {
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Priority:</span>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-secondary)' }}>Priority:</span>
           <select
             value={filterPriority}
             onChange={(e) => setFilterPriority(e.target.value)}
@@ -229,7 +229,7 @@ import {
       {/* Insights List */}
       {filteredInsights.length === 0 ? (
         <div style={{
-          background: 'white',
+          background: 'var(--bg-elevated)',
           padding: '60px 20px',
           borderRadius: '12px',
           textAlign: 'center',
@@ -237,7 +237,7 @@ import {
         }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎉</div>
           <h3 style={{ margin: '0 0 8px 0', color: '#111' }}>All Clear!</h3>
-          <p style={{ margin: 0, color: '#4b5563' }}>
+          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
             {showActioned ? 'No insights match your filters' : 'No new insights at the moment'}
           </p>
         </div>
@@ -247,7 +247,7 @@ import {
             <div
               key={insight.id}
               style={{
-                background: 'white',
+                background: 'var(--bg-elevated)',
                 borderRadius: '12px',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                 overflow: 'hidden',
@@ -314,12 +314,12 @@ import {
                       {insight.priority}
                     </span>
                   </div>
-                  <p style={{ margin: 0, fontSize: '14px', color: '#4b5563' }}>
+                  <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>
                     {insight.description}
                   </p>
                 </div>
 
-                <div style={{ fontSize: '20px', color: '#4b5563' }}>
+                <div style={{ fontSize: '20px', color: 'var(--text-secondary)' }}>
                   {expandedInsight === insight.id ? '▼' : '▶'}
                 </div>
               </div>
@@ -331,26 +331,26 @@ import {
                   borderTop: '1px solid #f0f0f0'
                 }}>
                   <div style={{ 
-                    background: '#f9fafb', 
+                    background: 'var(--bg-secondary)', 
                     padding: '16px', 
                     borderRadius: '8px',
                     marginTop: '16px'
                   }}>
                     <div style={{ marginBottom: '12px' }}>
-                      <strong style={{ fontSize: '13px', color: '#374151' }}>💡 Impact:</strong>
+                      <strong style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>💡 Impact:</strong>
                       <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#333' }}>
                         {insight.impact}
                       </p>
                     </div>
                     <div style={{ marginBottom: '12px' }}>
-                      <strong style={{ fontSize: '13px', color: '#374151' }}>📋 Recommended Action:</strong>
+                      <strong style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>📋 Recommended Action:</strong>
                       <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#333' }}>
                         {insight.recommendation}
                       </p>
                     </div>
                     {insight.affectedCount > 0 && (
                       <div style={{ marginBottom: '12px' }}>
-                        <strong style={{ fontSize: '13px', color: '#374151' }}>🎯 Affected:</strong>
+                        <strong style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>🎯 Affected:</strong>
                         <span style={{ marginLeft: '8px', fontSize: '14px', color: '#333' }}>
                           {insight.affectedCount} items
                         </span>
@@ -358,7 +358,7 @@ import {
                     )}
                     {insight.estimatedCost > 0 && (
                       <div style={{ marginBottom: '12px' }}>
-                        <strong style={{ fontSize: '13px', color: '#374151' }}>💵 Estimated Cost:</strong>
+                        <strong style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>💵 Estimated Cost:</strong>
                         <span style={{ marginLeft: '8px', fontSize: '14px', color: '#d97706' }}>
                           ${insight.estimatedCost.toFixed(2)}
                         </span>
@@ -366,7 +366,7 @@ import {
                     )}
                     {insight.estimatedSavings > 0 && (
                       <div style={{ marginBottom: '12px' }}>
-                        <strong style={{ fontSize: '13px', color: '#374151' }}>💰 Potential Savings:</strong>
+                        <strong style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>💰 Potential Savings:</strong>
                         <span style={{ marginLeft: '8px', fontSize: '14px', color: '#059669' }}>
                           ${insight.estimatedSavings}
                         </span>
@@ -374,7 +374,7 @@ import {
                     )}
                     {insight.estimatedGain > 0 && (
                       <div>
-                        <strong style={{ fontSize: '13px', color: '#374151' }}>📈 Potential Gain:</strong>
+                        <strong style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>📈 Potential Gain:</strong>
                         <span style={{ marginLeft: '8px', fontSize: '14px', color: '#059669' }}>
                           ${insight.estimatedGain}
                         </span>

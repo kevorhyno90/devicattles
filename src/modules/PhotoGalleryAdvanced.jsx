@@ -545,7 +545,7 @@ export default function PhotoGalleryAdvanced() {
               onMouseEnter={() => setHoveredPhotoId(photo.id)}
               onMouseLeave={() => setHoveredPhotoId(null)}
               style={{
-                background: 'white',
+                background: 'var(--bg-elevated)',
                 borderRadius: '8px',
                 overflow: 'hidden',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -868,10 +868,10 @@ export default function PhotoGalleryAdvanced() {
                         key={tag}
                         style={{
                           padding: '4px 10px',
-                          background: '#f3f4f6',
+                          background: 'var(--bg-tertiary)',
                           borderRadius: '6px',
                           fontSize: '12px',
-                          color: '#1f2937'
+                          color: 'var(--text-primary)'
                         }}
                       >
                         #{tag}
@@ -968,7 +968,7 @@ export default function PhotoGalleryAdvanced() {
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setEditingPhoto(null)}
-                style={{ padding: '10px 14px', background: '#e5e7eb', color: '#1f2937', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
+                style={{ padding: '10px 14px', background: 'var(--border-primary)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
               >
                 ✖️ Cancel
               </button>

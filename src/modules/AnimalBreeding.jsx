@@ -398,19 +398,19 @@ export default function AnimalBreeding({ animals }){
       {/* Summary Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
         <div className="card" style={{ padding: 16, background: '#f0fdf4' }}>
-          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Total Breeding Events</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Total Breeding Events</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{filteredItems.length}</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#fef3c7' }}>
-          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Pregnant Animals</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Pregnant Animals</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f59e0b' }}>{pregnantAnimals.length}</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#fee2e2' }}>
-          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Due Within 30 Days</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Due Within 30 Days</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#dc2626' }}>{upcomingCalvings.length}</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#eff6ff' }}>
-          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Total Cost</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Total Cost</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>KSH {totalCost.toLocaleString()}</div>
         </div>
       </div>
@@ -425,7 +425,7 @@ export default function AnimalBreeding({ animals }){
             return (
               <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #fbbf24' }}>
                 <strong>{animal?.name || animal?.tag || item.animalId}</strong> - Due in {daysUntilDue} days ({new Date(item.expectedDue).toLocaleDateString()})
-                {item.sireName && <span style={{ color: '#4b5563' }}> • Sire: {item.sireName}</span>}
+                {item.sireName && <span style={{ color: 'var(--text-secondary)' }}> • Sire: {item.sireName}</span>}
               </div>
             )
           })}
@@ -564,7 +564,7 @@ export default function AnimalBreeding({ animals }){
           <div style={{ padding: 40, textAlign: 'center' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🐑</div>
             <h4>No breeding records yet</h4>
-            <p style={{ color: '#4b5563' }}>Add your first breeding record to start tracking</p>
+            <p style={{ color: 'var(--text-secondary)' }}>Add your first breeding record to start tracking</p>
           </div>
         ) : (
           <div style={{ maxHeight: 600, overflowY: 'auto' }}>
@@ -600,12 +600,12 @@ export default function AnimalBreeding({ animals }){
                           {item.method && <span className="badge" style={{ background: '#f3e8ff' }}>{item.method}</span>}
                           {item.cost > 0 && <span className="badge" style={{ background: '#d1fae5' }}>KSH {Number(item.cost).toLocaleString()}</span>}
                         </div>
-                        <div style={{ fontSize: 14, color: '#4b5563', marginBottom: 4 }}>
+                        <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 4 }}>
                           <strong>{animal?.name || animal?.tag || item.animalId}</strong> • {new Date(item.timestamp || item.date).toLocaleDateString()}
                           <button onClick={() => { const a = (animals||[]).find(x=>x.id===item.animalId); if(a){ setShowAnimalCV(a); recordClick('animal', a.id, 'view_cv') } }} style={{ marginLeft: 8, padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>👁️ View CV</button>
                         </div>
                         {item.sireName && (
-                          <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 4 }}>
+                          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>
                             Sire: <strong>{item.sireName}</strong> {item.sire && `(${item.sire})`}
                           </div>
                         )}
@@ -617,7 +617,7 @@ export default function AnimalBreeding({ animals }){
                           </div>
                         )}
                         {item.returnToHeat && (
-                          <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 4 }}>
+                          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>
                             Return to Heat: <strong>{new Date(item.returnToHeat).toLocaleDateString()}</strong>
                             {(() => {
                               const daysUntilHeat = Math.floor((new Date(item.returnToHeat) - new Date()) / (1000 * 60 * 60 * 24))
@@ -806,23 +806,23 @@ export default function AnimalBreeding({ animals }){
           {/* Summary Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 16 }}>
             <div className="card" style={{ padding: 16, background: '#f0fdf4' }}>
-              <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Total Bulls</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Total Bulls</div>
               <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{semenInventory.length}</div>
             </div>
             <div className="card" style={{ padding: 16, background: '#eff6ff' }}>
-              <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Total Straws</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Total Straws</div>
               <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>
                 {semenInventory.reduce((sum, s) => sum + (parseInt(s.straws) || 0), 0)}
               </div>
             </div>
             <div className="card" style={{ padding: 16, background: '#fef3c7' }}>
-              <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Total Value</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Total Value</div>
               <div style={{ fontSize: 24, fontWeight: 'bold', color: '#d97706' }}>
                 KSH {semenInventory.reduce((sum, s) => sum + ((parseInt(s.straws) || 0) * (parseFloat(s.price) || 0)), 0).toLocaleString()}
               </div>
             </div>
             <div className="card" style={{ padding: 16, background: '#fee2e2' }}>
-              <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Low Stock</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Low Stock</div>
               <div style={{ fontSize: 24, fontWeight: 'bold', color: '#dc2626' }}>
                 {semenInventory.filter(s => (parseInt(s.straws) || 0) < 10).length}
               </div>
@@ -849,7 +849,7 @@ export default function AnimalBreeding({ animals }){
                           <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '4px' }}>
                             {semen.bullName} {semen.bullId && `(${semen.bullId})`}
                           </div>
-                          <div style={{ fontSize: '14px', color: '#4b5563' }}>
+                          <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
                             {semen.breed} • Batch: {semen.batchNumber || 'N/A'}
                           </div>
                         </div>
@@ -884,7 +884,7 @@ export default function AnimalBreeding({ animals }){
                         {semen.productionDate && <div><strong>Production:</strong> {semen.productionDate}</div>}
                       </div>
                       {semen.notes && (
-                        <div style={{ marginTop: '8px', fontSize: '13px', color: '#4b5563', fontStyle: 'italic' }}>
+                        <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                           {semen.notes}
                         </div>
                       )}

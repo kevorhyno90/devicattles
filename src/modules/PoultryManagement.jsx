@@ -998,7 +998,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
           {eggRecords.length === 0 && (
             <div style={{ background: 'var(--bg-elevated)', padding: '60px 20px', borderRadius: '8px', textAlign: 'center', boxShadow: 'var(--shadow-sm)', marginTop: '16px' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🥚</div>
-              <div style={{ fontSize: '18px', color: '#1f2937', marginBottom: '8px' }}>No egg records</div>
+              <div style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '8px' }}>No egg records</div>
               <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Start recording daily egg production</div>
             </div>
           )}
@@ -1162,7 +1162,7 @@ export default function PoultryManagement({ initialView = 'flocks', recordSource
           {healthRecords.length === 0 && (
             <div style={{ background: 'var(--bg-elevated)', padding: '60px 20px', borderRadius: '8px', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏥</div>
-              <div style={{ fontSize: '18px', color: '#1f2937', marginBottom: '8px' }}>No health records</div>
+              <div style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '8px' }}>No health records</div>
               <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Track vaccinations, treatments, and health events</div>
             </div>
           )}

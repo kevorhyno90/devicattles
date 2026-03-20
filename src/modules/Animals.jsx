@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react'
-const Pastures = React.lazy(() => import('./Pastures'))
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 const HealthSystem = React.lazy(() => import('./HealthSystem'))
 const AnimalFeeding = React.lazy(() => import('./AnimalFeeding'))
 import AnimalMeasurement from './AnimalMeasurement'
@@ -9,7 +10,6 @@ const AnimalMilkYield = React.lazy(() => import('./AnimalMilkYield'))
 const AnimalTreatment = React.lazy(() => import('./AnimalTreatment'))
 const CalfManagement = React.lazy(() => import('./CalfManagement'))
 const BSFFarming = React.lazy(() => import('./BSFFarming'))
-const AzollaFarming = React.lazy(() => import('./AzollaFarming'))
 const PoultryManagement = React.lazy(() => import('./PoultryManagement'))
 const CanineManagement = React.lazy(() => import('./CanineManagement'))
 import PhotoGallery from '../components/PhotoGallery'
@@ -27,6 +27,7 @@ import { LineChart } from '../components/Charts'
 // Realized Animals component: HTML5 controls, inline validation, unique tag checks,
 // realistic sample data, and non-placeholder behavior.
 export default function Animals({ section = 'all', initialTab = 'list', recordSource = null }) {
+  const SINGLE_USER_OWNER = 'Me'
   const isDairySection = section === 'dairy'
   const dairyGroupId = 'G-001'
   const dairyFallbackGroup = { id: dairyGroupId, name: 'Bovine', desc: 'Cattle, dairy cows, beef cattle, and related breeds.' }
@@ -163,7 +164,8 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
     }
   ]
 
-  const [tab, setTab] = useState(isDairySection ? 'addGroup' : 'list')
+  const [tab, setTab] = useState(isDairySection ? 'record' : 'list')
+  const [showDairyAdvancedTabs, setShowDairyAdvancedTabs] = useState(false)
   const [formTab, setFormTab] = useState('basic') // New: for multi-tab animal form
   const [animals, setAnimals] = useState([])
   const [groups, setGroups] = useState([])
@@ -177,7 +179,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
   const debouncedFilter = useDebounce(filter, 300)
 
   const emptyAnimal = { 
-    id: '', tag: '', name: '', breed: '', sex: 'F', color: '', dob: '', weight: '', sire: '', dam: '', groupId: isDairySection ? dairyGroupId : '', status: 'Active', notes: '', owner: '', registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', photos: [], 
+    id: '', tag: '', name: '', breed: '', sex: 'F', color: '', dob: '', weight: '', sire: '', dam: '', groupId: isDairySection ? dairyGroupId : '', status: 'Active', notes: '', owner: SINGLE_USER_OWNER, registration: '', tattoo: '', purchaseDate: '', purchasePrice: '', vendor: '', tags: [], photo: '', photos: [], 
     pregnancyStatus: 'Unknown', expectedDue: '', parity: '', lactationStatus: 'NA',
     // Production Metrics
     production: {
@@ -736,13 +738,17 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
   }, [lastAppliedPreset, selectedDairyPreset])
   useEffect(() => {
     if (!isDairySection) return
-    if (['bsf', 'poultry', 'canine'].includes(tab)) setTab('addGroup')
+    if (['bsf', 'poultry', 'canine'].includes(tab)) setTab('record')
     if (filterGroup === 'ungrouped') setFilterGroup('all')
-  }, [filterGroup, isDairySection, tab])
+    if (!showDairyAdvancedTabs && ['feeding', 'health', 'treatment', 'breeding', 'milkyield', 'measurement', 'calf'].includes(tab)) {
+      setTab('record')
+    }
+  }, [filterGroup, isDairySection, showDairyAdvancedTabs, tab])
 
   useEffect(() => {
     const allowedTabs = new Set([
       'list',
+      'record',
       'addGroup',
       'feeding',
       'health',
@@ -751,13 +757,11 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
       'milkyield',
       'measurement',
       'calf',
-      'pastures',
-      'azolla',
       'poultry',
       'canine',
       'bsf'
     ])
-    const defaultTab = isDairySection ? 'addGroup' : 'list'
+    const defaultTab = isDairySection ? 'record' : 'list'
     const nextTab = allowedTabs.has(initialTab) ? initialTab : defaultTab
     setTab(prev => (prev === nextTab ? prev : nextTab))
   }, [initialTab, isDairySection])
@@ -1080,6 +1084,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
   async function saveAnimal(e) {
     e && e.preventDefault()
     const candidate = { ...form }
+    if (!candidate.owner || !String(candidate.owner).trim()) candidate.owner = SINGLE_USER_OWNER
     if (isDairySection) candidate.groupId = dairyGroupId
     if (!candidate.tag || !candidate.tag.trim()) candidate.tag = 'TAG' + (1000 + Math.floor(Math.random() * 9000))
     const eobj = validateAnimal(candidate)
@@ -1168,7 +1173,9 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
     }
 
     resetForm()
-    setTab('list')
+    setRecordAnimalId(animalId)
+    setRecordRefreshKey(prev => prev + 1)
+    setTab('record')
   }
 
   function startEditAnimal(a) {
@@ -1177,6 +1184,14 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
     setEditingId(a.id)
     setTab('addAnimal')
   }
+
+  function openAnimalRecord(animalId) {
+    if (!animalId) return
+    setRecordAnimalId(animalId)
+    setRecordRefreshKey(prev => prev + 1)
+    setTab('record')
+  }
+
   function deleteAnimal(id) { 
     const animal = animals.find(a => a.id === id)
     if (!window.confirm('Delete animal ' + id + '?')) return
@@ -1302,6 +1317,72 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
   const [inlineEditingId, setInlineEditingId] = useState(null)
   const [inlineForm, setInlineForm] = useState(emptyAnimal)
   const [modalOpenId, setModalOpenId] = useState(null)
+  const [recordAnimalId, setRecordAnimalId] = useState(recordSource?.animalId || '')
+  const [recordRefreshKey, setRecordRefreshKey] = useState(0)
+  const [recordTimelineTypeFilter, setRecordTimelineTypeFilter] = useState('all')
+  const [recordTimelineDaysFilter, setRecordTimelineDaysFilter] = useState('all')
+  const [recordTimelineSearch, setRecordTimelineSearch] = useState('')
+  const [recordTimelineLimit, setRecordTimelineLimit] = useState(20)
+  const [recordPrintSection, setRecordPrintSection] = useState('all')
+  const [recordEditEntry, setRecordEditEntry] = useState(null)
+  const [recordEditForm, setRecordEditForm] = useState({})
+  const [quickRecordForm, setQuickRecordForm] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    healthCondition: '',
+    healthSeverity: 'mild',
+    healthNotes: '',
+    vaccinationType: '',
+    vaccinationStatus: 'completed',
+    vaccinationNotes: '',
+    treatmentCondition: '',
+    treatmentMedication: '',
+    treatmentStatus: 'ongoing',
+    treatmentNotes: '',
+    breedingEvent: 'AI',
+    breedingStatus: 'Completed',
+    breedingNotes: '',
+    milkSession: 'Morning',
+    milkLiters: '',
+    milkQuality: 'Grade A',
+    milkNotes: '',
+    feedingType: '',
+    feedingQuantity: '',
+    feedingCost: '',
+    feedingMethod: 'Manual',
+    feedingNotes: '',
+    measurementType: 'Weight',
+    measurementValue: '',
+    measurementUnit: 'kg',
+    measurementCondition: 'Good',
+    measurementNotes: ''
+  })
+
+  useEffect(() => {
+    if (!scopedAnimals.length) {
+      if (recordAnimalId) setRecordAnimalId('')
+      return
+    }
+    if (recordAnimalId && scopedAnimals.some(a => a.id === recordAnimalId)) return
+    setRecordAnimalId(scopedAnimals[0].id)
+  }, [recordAnimalId, scopedAnimals])
+
+  useEffect(() => {
+    if (tab !== 'record') return
+    setRecordRefreshKey(prev => prev + 1)
+  }, [tab])
+
+  useEffect(() => {
+    setQuickRecordForm(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }))
+  }, [recordAnimalId])
+
+  useEffect(() => {
+    setRecordTimelineLimit(20)
+  }, [recordAnimalId, recordTimelineTypeFilter, recordTimelineDaysFilter, recordTimelineSearch])
+
+  useEffect(() => {
+    setRecordEditEntry(null)
+    setRecordEditForm({})
+  }, [recordAnimalId])
 
   function toggleExpand(id){
     // Open modal-like expansive view for a single animal to mimic Farmbrite
@@ -1524,6 +1605,990 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
     }
   }
 
+  function readArrayFromStorage(keys = []) {
+    for (const key of keys) {
+      try {
+        const raw = localStorage.getItem(key)
+        if (!raw) continue
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) return parsed
+      } catch (error) {
+        console.warn('Failed to read livestock record store:', key, error)
+      }
+    }
+    return []
+  }
+
+  function sortByRecordDate(items = []) {
+    return [...items].sort((left, right) => {
+      const leftTs = Date.parse(left?.timestamp || left?.date || 0) || 0
+      const rightTs = Date.parse(right?.timestamp || right?.date || 0) || 0
+      return rightTs - leftTs
+    })
+  }
+
+  function formatRecordDate(value, includeTime = false) {
+    if (!value) return 'Not recorded'
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) return String(value)
+    return includeTime
+      ? parsed.toLocaleString()
+      : parsed.toLocaleDateString()
+  }
+
+  function formatCurrencyValue(value) {
+    const numeric = Number(value)
+    if (!Number.isFinite(numeric) || numeric === 0) return 'KES 0'
+    return `KES ${numeric.toLocaleString()}`
+  }
+
+  function appendRecordToStore(storeKey, record) {
+    const current = readArrayFromStorage([storeKey])
+    localStorage.setItem(storeKey, JSON.stringify([...current, record]))
+  }
+
+  function removeRecordFromStore(storeKey, predicate) {
+    const current = readArrayFromStorage([storeKey])
+    const filtered = current.filter(item => !predicate(item))
+    localStorage.setItem(storeKey, JSON.stringify(filtered))
+  }
+
+  function updateRecordInStore(storeKey, predicate, updater) {
+    const current = readArrayFromStorage([storeKey])
+    let changed = false
+    const updated = current.map(item => {
+      if (!predicate(item)) return item
+      changed = true
+      return updater(item)
+    })
+    if (!changed) return false
+    localStorage.setItem(storeKey, JSON.stringify(updated))
+    return true
+  }
+
+  function toIsoFromDateInput(dateValue, fallbackValue) {
+    if (!dateValue) return fallbackValue
+    const parsed = new Date(`${dateValue}T12:00:00`)
+    if (Number.isNaN(parsed.getTime())) return fallbackValue
+    return parsed.toISOString()
+  }
+
+  function detectRecordSourceType(item) {
+    if (!item || typeof item !== 'object') return null
+    if (Object.prototype.hasOwnProperty.call(item, 'feedType')) return 'feeding'
+    if (Object.prototype.hasOwnProperty.call(item, 'liters') || Object.prototype.hasOwnProperty.call(item, 'session')) return 'milk'
+    if (Object.prototype.hasOwnProperty.call(item, 'event') || Object.prototype.hasOwnProperty.call(item, 'expectedDue')) return 'breeding'
+    if (Object.prototype.hasOwnProperty.call(item, 'medication') || Object.prototype.hasOwnProperty.call(item, 'treatment')) return 'treatment'
+    if (String(item.id || '').startsWith('vaccine-')) return 'vaccination'
+    if (Object.prototype.hasOwnProperty.call(item, 'value') || String(item.id || '').startsWith('MEAS-')) return 'measurement'
+    if (Object.prototype.hasOwnProperty.call(item, 'condition')) return 'health'
+    return null
+  }
+
+  function deleteRecordEntry(item, sourceTypeOverride = null) {
+    const sourceType = sourceTypeOverride || detectRecordSourceType(item)
+    if (!sourceType || !item?.id) {
+      window.alert('Could not determine record source for deletion.')
+      return
+    }
+    if (!window.confirm('Delete this entry from the unified record?')) return
+
+    try {
+      if (sourceType === 'health') removeRecordFromStore('animalHealthRecords', entry => String(entry?.id) === String(item.id))
+      if (sourceType === 'vaccination') removeRecordFromStore('animalVaccinations', entry => String(entry?.id) === String(item.id))
+      if (sourceType === 'treatment') removeRecordFromStore('animalTreatments', entry => String(entry?.id) === String(item.id))
+      if (sourceType === 'breeding') removeRecordFromStore('cattalytics:animal:breeding', entry => String(entry?.id) === String(item.id))
+      if (sourceType === 'milk') removeRecordFromStore('cattalytics:animal:milkyield', entry => String(entry?.id) === String(item.id))
+      if (sourceType === 'feeding') removeRecordFromStore('rumen8:feedingEvents', entry => String(entry?.id) === String(item.id))
+      if (sourceType === 'measurement') removeRecordFromStore('cattalytics:animal:measurement', entry => String(entry?.id) === String(item.id))
+      setRecordRefreshKey(prev => prev + 1)
+    } catch (error) {
+      console.error('Failed to delete record entry:', error)
+      window.alert('Failed to delete entry. Please try again.')
+    }
+  }
+
+  function openRecordEdit(item, sourceTypeOverride = null) {
+    const sourceItem = item?.raw || item
+    const sourceType = sourceTypeOverride || item?.sourceType || detectRecordSourceType(sourceItem)
+    if (!sourceType || !sourceItem?.id) {
+      window.alert('Could not determine record source for editing.')
+      return
+    }
+
+    const baseDate = sourceItem?.date || sourceItem?.timestamp?.slice?.(0, 10) || sourceItem?.created?.slice?.(0, 10) || new Date().toISOString().slice(0, 10)
+    let form = { date: baseDate }
+
+    if (sourceType === 'health') {
+      form = {
+        date: baseDate,
+        condition: sourceItem.condition || '',
+        severity: sourceItem.severity || 'mild',
+        status: sourceItem.status || 'ongoing',
+        notes: sourceItem.notes || ''
+      }
+    }
+    if (sourceType === 'vaccination') {
+      form = {
+        date: baseDate,
+        vaccineType: sourceItem.type || '',
+        status: sourceItem.status || 'completed',
+        notes: sourceItem.notes || ''
+      }
+    }
+    if (sourceType === 'treatment') {
+      form = {
+        date: baseDate,
+        condition: sourceItem.condition || '',
+        medication: sourceItem.medication || sourceItem.treatment || '',
+        status: sourceItem.status || 'ongoing',
+        notes: sourceItem.notes || ''
+      }
+    }
+    if (sourceType === 'breeding') {
+      form = {
+        date: baseDate,
+        event: sourceItem.event || 'AI',
+        status: sourceItem.status || 'Completed',
+        method: sourceItem.method || 'Manual Entry',
+        notes: sourceItem.notes || ''
+      }
+    }
+    if (sourceType === 'milk') {
+      form = {
+        date: baseDate,
+        session: sourceItem.session || 'Morning',
+        liters: sourceItem.liters ?? '',
+        quality: sourceItem.quality || 'Grade A',
+        notes: sourceItem.notes || ''
+      }
+    }
+    if (sourceType === 'feeding') {
+      form = {
+        date: baseDate,
+        feedType: sourceItem.feedType || '',
+        quantity: sourceItem.quantity ?? '',
+        cost: sourceItem.cost ?? '',
+        method: sourceItem.method || 'Manual',
+        notes: sourceItem.notes || ''
+      }
+    }
+    if (sourceType === 'measurement') {
+      form = {
+        date: baseDate,
+        measurementType: sourceItem.type || 'Weight',
+        value: sourceItem.value ?? '',
+        unit: sourceItem.unit || 'kg',
+        condition: sourceItem.condition || 'Good',
+        notes: sourceItem.notes || ''
+      }
+    }
+
+    setRecordEditEntry({
+      id: sourceItem.id,
+      sourceType,
+      animalId: sourceItem.animalId || recordAnimalId,
+      original: sourceItem
+    })
+    setRecordEditForm(form)
+  }
+
+  function updateRecordEditField(field, value) {
+    setRecordEditForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  function saveRecordEditEntry() {
+    if (!recordEditEntry?.id || !recordEditEntry?.sourceType) return
+
+    const id = String(recordEditEntry.id)
+    const type = recordEditEntry.sourceType
+    const date = recordEditForm.date || new Date().toISOString().slice(0, 10)
+
+    try {
+      let updated = false
+
+      if (type === 'health') {
+        if (!String(recordEditForm.condition || '').trim()) {
+          window.alert('Condition is required for health entries.')
+          return
+        }
+        updated = updateRecordInStore('animalHealthRecords', item => String(item?.id) === id, item => ({
+          ...item,
+          date,
+          timestamp: toIsoFromDateInput(date, item.timestamp),
+          condition: String(recordEditForm.condition || '').trim(),
+          severity: recordEditForm.severity || 'mild',
+          status: recordEditForm.status || item.status,
+          notes: String(recordEditForm.notes || '').trim()
+        }))
+      }
+
+      if (type === 'vaccination') {
+        if (!String(recordEditForm.vaccineType || '').trim()) {
+          window.alert('Vaccine type is required.')
+          return
+        }
+        updated = updateRecordInStore('animalVaccinations', item => String(item?.id) === id, item => ({
+          ...item,
+          date,
+          timestamp: toIsoFromDateInput(date, item.timestamp),
+          type: String(recordEditForm.vaccineType || '').trim(),
+          status: recordEditForm.status || item.status,
+          notes: String(recordEditForm.notes || '').trim()
+        }))
+      }
+
+      if (type === 'treatment') {
+        if (!String(recordEditForm.condition || '').trim()) {
+          window.alert('Condition is required for treatment entries.')
+          return
+        }
+        updated = updateRecordInStore('animalTreatments', item => String(item?.id) === id, item => ({
+          ...item,
+          date,
+          timestamp: toIsoFromDateInput(date, item.timestamp),
+          condition: String(recordEditForm.condition || '').trim(),
+          medication: String(recordEditForm.medication || '').trim(),
+          treatment: String(recordEditForm.medication || '').trim(),
+          status: recordEditForm.status || item.status,
+          notes: String(recordEditForm.notes || '').trim()
+        }))
+      }
+
+      if (type === 'breeding') {
+        updated = updateRecordInStore('cattalytics:animal:breeding', item => String(item?.id) === id, item => ({
+          ...item,
+          date,
+          timestamp: toIsoFromDateInput(date, item.timestamp),
+          event: recordEditForm.event || item.event,
+          method: recordEditForm.method || item.method,
+          status: recordEditForm.status || item.status,
+          notes: String(recordEditForm.notes || '').trim()
+        }))
+      }
+
+      if (type === 'milk') {
+        const liters = Number(recordEditForm.liters)
+        if (!Number.isFinite(liters) || liters <= 0) {
+          window.alert('Milk liters must be greater than zero.')
+          return
+        }
+        updated = updateRecordInStore('cattalytics:animal:milkyield', item => String(item?.id) === id, item => ({
+          ...item,
+          date,
+          timestamp: toIsoFromDateInput(date, item.timestamp),
+          session: recordEditForm.session || item.session,
+          liters,
+          quality: recordEditForm.quality || item.quality,
+          notes: String(recordEditForm.notes || '').trim()
+        }))
+      }
+
+      if (type === 'feeding') {
+        const quantity = Number(recordEditForm.quantity)
+        const cost = Number(recordEditForm.cost || 0)
+        if (!String(recordEditForm.feedType || '').trim()) {
+          window.alert('Feed type is required.')
+          return
+        }
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+          window.alert('Feeding quantity must be greater than zero.')
+          return
+        }
+        updated = updateRecordInStore('rumen8:feedingEvents', item => String(item?.id) === id, item => ({
+          ...item,
+          date,
+          created: toIsoFromDateInput(date, item.created),
+          feedType: String(recordEditForm.feedType || '').trim(),
+          quantity,
+          cost,
+          method: recordEditForm.method || item.method,
+          notes: String(recordEditForm.notes || '').trim()
+        }))
+      }
+
+      if (type === 'measurement') {
+        const value = Number(recordEditForm.value)
+        if (!Number.isFinite(value) || value <= 0) {
+          window.alert('Measurement value must be greater than zero.')
+          return
+        }
+        updated = updateRecordInStore('cattalytics:animal:measurement', item => String(item?.id) === id, item => ({
+          ...item,
+          date,
+          timestamp: toIsoFromDateInput(date, item.timestamp),
+          type: recordEditForm.measurementType || item.type,
+          value,
+          unit: String(recordEditForm.unit || '').trim() || item.unit,
+          condition: recordEditForm.condition || item.condition,
+          notes: String(recordEditForm.notes || '').trim()
+        }))
+        if ((recordEditForm.measurementType || '').toLowerCase() === 'weight') {
+          setAnimals(prev => prev.map(animal => {
+            if (animal.id !== recordAnimalId) return animal
+            return {
+              ...animal,
+              weight: value
+            }
+          }))
+        }
+      }
+
+      if (!updated) {
+        window.alert('Could not find this record to update.')
+        return
+      }
+
+      setRecordEditEntry(null)
+      setRecordEditForm({})
+      setRecordRefreshKey(prev => prev + 1)
+    } catch (error) {
+      console.error('Failed to update unified record entry:', error)
+      window.alert('Failed to update this entry. Please try again.')
+    }
+  }
+
+  function updateQuickRecordField(field, value) {
+    setQuickRecordForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  function submitQuickRecord(type) {
+    if (!selectedRecordAnimal) return
+
+    const timestamp = new Date().toISOString()
+    const date = quickRecordForm.date || timestamp.slice(0, 10)
+    const animalId = selectedRecordAnimal.id
+    const animalName = selectedRecordAnimal.name || selectedRecordAnimal.tag || selectedRecordAnimal.id
+
+    try {
+      if (type === 'health') {
+        if (!quickRecordForm.healthCondition.trim()) {
+          window.alert('Enter the health condition before saving.')
+          return
+        }
+        const healthStatus = quickRecordForm.healthSeverity === 'severe'
+          ? 'Sick'
+          : quickRecordForm.healthSeverity === 'moderate'
+            ? 'Fair'
+            : 'Healthy'
+        appendRecordToStore('animalHealthRecords', {
+          id: `health-${Date.now()}`,
+          animalId,
+          animalName,
+          timestamp,
+          date,
+          type: 'checkup',
+          condition: quickRecordForm.healthCondition.trim(),
+          severity: quickRecordForm.healthSeverity,
+          notes: quickRecordForm.healthNotes.trim(),
+          status: 'ongoing'
+        })
+        setAnimals(prev => prev.map(animal => {
+          if (animal.id !== animalId) return animal
+          return {
+            ...animal,
+            health: {
+              ...(animal.health || {}),
+              healthStatus,
+              lastVetVisit: date
+            }
+          }
+        }))
+        setQuickRecordForm(prev => ({ ...prev, healthCondition: '', healthNotes: '' }))
+      }
+
+      if (type === 'vaccination') {
+        if (!quickRecordForm.vaccinationType.trim()) {
+          window.alert('Enter the vaccine type before saving.')
+          return
+        }
+        appendRecordToStore('animalVaccinations', {
+          id: `vaccine-${Date.now()}`,
+          animalId,
+          animalName,
+          timestamp,
+          date,
+          type: quickRecordForm.vaccinationType.trim(),
+          status: quickRecordForm.vaccinationStatus,
+          notes: quickRecordForm.vaccinationNotes.trim()
+        })
+        setQuickRecordForm(prev => ({ ...prev, vaccinationType: '', vaccinationNotes: '' }))
+      }
+
+      if (type === 'treatment') {
+        if (!quickRecordForm.treatmentCondition.trim()) {
+          window.alert('Enter treatment condition before saving.')
+          return
+        }
+        appendRecordToStore('animalTreatments', {
+          id: `treatment-${Date.now()}`,
+          animalId,
+          animalName,
+          timestamp,
+          date,
+          condition: quickRecordForm.treatmentCondition.trim(),
+          medication: quickRecordForm.treatmentMedication.trim(),
+          status: quickRecordForm.treatmentStatus,
+          treatment: quickRecordForm.treatmentMedication.trim(),
+          notes: quickRecordForm.treatmentNotes.trim()
+        })
+        setQuickRecordForm(prev => ({ ...prev, treatmentCondition: '', treatmentMedication: '', treatmentNotes: '' }))
+      }
+
+      if (type === 'breeding') {
+        appendRecordToStore('cattalytics:animal:breeding', {
+          id: `BREED-${Math.floor(1000 + Math.random() * 9000)}`,
+          animalId,
+          animalName,
+          timestamp,
+          date,
+          event: quickRecordForm.breedingEvent,
+          method: 'Manual Entry',
+          status: quickRecordForm.breedingStatus,
+          notes: quickRecordForm.breedingNotes.trim()
+        })
+        setQuickRecordForm(prev => ({ ...prev, breedingNotes: '' }))
+      }
+
+      if (type === 'milk') {
+        const liters = Number(quickRecordForm.milkLiters)
+        if (!Number.isFinite(liters) || liters <= 0) {
+          window.alert('Enter milk liters greater than zero.')
+          return
+        }
+        appendRecordToStore('cattalytics:animal:milkyield', {
+          id: `MILK-${Math.floor(1000 + Math.random() * 9000)}`,
+          animalId,
+          animalName,
+          timestamp,
+          date,
+          session: quickRecordForm.milkSession,
+          liters,
+          quality: quickRecordForm.milkQuality,
+          notes: quickRecordForm.milkNotes.trim(),
+          sold: false,
+          milkSold: 0
+        })
+        setQuickRecordForm(prev => ({ ...prev, milkLiters: '', milkNotes: '' }))
+      }
+
+      if (type === 'feeding') {
+        const quantity = Number(quickRecordForm.feedingQuantity)
+        const cost = Number(quickRecordForm.feedingCost || 0)
+        if (!quickRecordForm.feedingType.trim()) {
+          window.alert('Enter feed type before saving.')
+          return
+        }
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+          window.alert('Enter feeding quantity greater than zero.')
+          return
+        }
+
+        appendRecordToStore('rumen8:feedingEvents', {
+          id: Date.now(),
+          date,
+          feedType: quickRecordForm.feedingType.trim(),
+          quantity,
+          cost,
+          supplier: '',
+          method: quickRecordForm.feedingMethod,
+          supplements: '',
+          response: '',
+          notes: quickRecordForm.feedingNotes.trim(),
+          animals: [animalId],
+          rationId: null,
+          created: timestamp
+        })
+
+        setQuickRecordForm(prev => ({ ...prev, feedingType: '', feedingQuantity: '', feedingCost: '', feedingNotes: '' }))
+      }
+
+      if (type === 'measurement') {
+        const value = Number(quickRecordForm.measurementValue)
+        if (!Number.isFinite(value) || value <= 0) {
+          window.alert('Enter a measurement value greater than zero.')
+          return
+        }
+        appendRecordToStore('cattalytics:animal:measurement', {
+          id: `MEAS-${Math.floor(1000 + Math.random() * 9000)}`,
+          animalId,
+          timestamp,
+          date,
+          type: quickRecordForm.measurementType,
+          value,
+          unit: quickRecordForm.measurementUnit,
+          condition: quickRecordForm.measurementCondition,
+          notes: quickRecordForm.measurementNotes.trim()
+        })
+        if (quickRecordForm.measurementType === 'Weight') {
+          setAnimals(prev => prev.map(animal => {
+            if (animal.id !== animalId) return animal
+            return {
+              ...animal,
+              weight: value,
+              weightLogs: [
+                ...(animal.weightLogs || []),
+                { weight: value, date: timestamp }
+              ]
+            }
+          }))
+        }
+        setQuickRecordForm(prev => ({ ...prev, measurementValue: '', measurementNotes: '' }))
+      }
+
+      setRecordRefreshKey(prev => prev + 1)
+    } catch (error) {
+      console.error('Failed to save quick livestock record:', error)
+      window.alert('Failed to save this record entry. Please try again.')
+    }
+  }
+
+  function getAnimalRecordCollections(animalId) {
+    if (!animalId) {
+      return {
+        healthRecords: [],
+        vaccinations: [],
+        treatments: [],
+        breedingEvents: [],
+        milkRecords: [],
+        feedingEvents: [],
+        measurements: []
+      }
+    }
+
+    const healthRecords = readArrayFromStorage(['animalHealthRecords']).filter(item => item?.animalId === animalId)
+    const vaccinations = readArrayFromStorage(['animalVaccinations']).filter(item => item?.animalId === animalId)
+    const treatments = readArrayFromStorage(['animalTreatments']).filter(item => item?.animalId === animalId)
+    const breedingEvents = readArrayFromStorage(['cattalytics:animal:breeding']).filter(item => item?.animalId === animalId)
+    const milkRecords = readArrayFromStorage(['cattalytics:animal:milkyield']).filter(item => item?.animalId === animalId)
+    const feedingEvents = readArrayFromStorage(['rumen8:feedingEvents']).filter(item => Array.isArray(item?.animals) && item.animals.includes(animalId))
+    const measurements = readArrayFromStorage(['cattalytics:animal:measurement']).filter(item => item?.animalId === animalId)
+
+    return {
+      healthRecords: sortByRecordDate(healthRecords),
+      vaccinations: sortByRecordDate(vaccinations),
+      treatments: sortByRecordDate(treatments),
+      breedingEvents: sortByRecordDate(breedingEvents),
+      milkRecords: sortByRecordDate(milkRecords),
+      feedingEvents: sortByRecordDate(feedingEvents),
+      measurements: sortByRecordDate(measurements)
+    }
+  }
+
+  const selectedRecordAnimal = useMemo(
+    () => scopedAnimals.find(animal => animal.id === recordAnimalId) || null,
+    [recordAnimalId, scopedAnimals]
+  )
+
+  const selectedRecordGroupName = useMemo(() => {
+    if (!selectedRecordAnimal) return ''
+    return visibleGroups.find(group => group.id === selectedRecordAnimal.groupId)?.name || 'No group'
+  }, [selectedRecordAnimal, visibleGroups])
+
+  const selectedRecordData = useMemo(
+    () => getAnimalRecordCollections(recordAnimalId),
+    [recordAnimalId, recordRefreshKey]
+  )
+
+  const selectedRecordTimeline = useMemo(() => {
+    const timeline = [
+      ...selectedRecordData.healthRecords.map(item => ({
+        id: item.id,
+        date: item.timestamp || item.date,
+        type: 'Health',
+        title: item.condition || item.type || 'Health entry',
+        detail: item.diagnosis || item.notes || item.status || '',
+        sourceType: 'health',
+        raw: item
+      })),
+      ...selectedRecordData.vaccinations.map(item => ({
+        id: item.id,
+        date: item.timestamp || item.date,
+        type: 'Vaccination',
+        title: item.type || 'Vaccination',
+        detail: item.notes || item.status || '',
+        sourceType: 'vaccination',
+        raw: item
+      })),
+      ...selectedRecordData.treatments.map(item => ({
+        id: item.id,
+        date: item.timestamp || item.date,
+        type: 'Treatment',
+        title: item.condition || item.medication || 'Treatment',
+        detail: item.treatment || item.notes || '',
+        sourceType: 'treatment',
+        raw: item
+      })),
+      ...selectedRecordData.breedingEvents.map(item => ({
+        id: item.id,
+        date: item.timestamp || item.date,
+        type: 'Breeding',
+        title: item.event || item.method || 'Breeding event',
+        detail: item.status || item.notes || '',
+        sourceType: 'breeding',
+        raw: item
+      })),
+      ...selectedRecordData.milkRecords.map(item => ({
+        id: item.id,
+        date: item.timestamp || item.date,
+        type: 'Milk',
+        title: `${item.session || 'Milking'} • ${item.liters || 0} L`,
+        detail: item.quality || item.notes || '',
+        sourceType: 'milk',
+        raw: item
+      })),
+      ...selectedRecordData.feedingEvents.map(item => ({
+        id: item.id,
+        date: item.created || item.date,
+        type: 'Feeding',
+        title: `${item.feedType || 'Feed'} • ${item.quantity || 0} kg`,
+        detail: item.notes || item.method || '',
+        sourceType: 'feeding',
+        raw: item
+      })),
+      ...selectedRecordData.measurements.map(item => ({
+        id: item.id,
+        date: item.timestamp || item.date,
+        type: 'Measurement',
+        title: `${item.type || 'Measurement'}${item.value ? ` • ${item.value} ${item.unit || ''}` : ''}`,
+        detail: item.condition || item.notes || '',
+        sourceType: 'measurement',
+        raw: item
+      }))
+    ]
+
+    return sortByRecordDate(timeline)
+  }, [selectedRecordData])
+
+  const filteredRecordTimeline = useMemo(() => {
+    const now = Date.now()
+    const daysLimit = Number(recordTimelineDaysFilter)
+    const q = String(recordTimelineSearch || '').trim().toLowerCase()
+
+    return selectedRecordTimeline.filter(entry => {
+      if (recordTimelineTypeFilter !== 'all' && entry.type !== recordTimelineTypeFilter) return false
+      if (!Number.isNaN(daysLimit) && daysLimit > 0) {
+        const ts = Date.parse(entry.date || 0) || 0
+        if (!ts) return false
+        const ageDays = (now - ts) / (24 * 60 * 60 * 1000)
+        if (ageDays > daysLimit) return false
+      }
+      if (q) {
+        const haystack = `${entry.type || ''} ${entry.title || ''} ${entry.detail || ''}`.toLowerCase()
+        if (!haystack.includes(q)) return false
+      }
+      return true
+    })
+  }, [recordTimelineDaysFilter, recordTimelineSearch, recordTimelineTypeFilter, selectedRecordTimeline])
+
+  function printUnifiedRecordSheet(animal) {
+    if (!animal) return
+    const timelineRows = selectedRecordTimeline.slice(0, 60)
+    const summaryRows = [
+      ['Animal ID', animal.id || ''],
+      ['Tag', animal.tag || ''],
+      ['Name', animal.name || ''],
+      ['Breed', animal.breed || ''],
+      ['Sex', animal.sex || ''],
+      ['Date of Birth', animal.dob || ''],
+      ['Group', selectedRecordGroupName || ''],
+      ['Status', animal.status || ''],
+      ['Owner', animal.owner || ''],
+      ['Weight', animal.weight ? `${animal.weight} kg` : '']
+    ]
+
+    const historyRows = [
+      ['Health Entries', String(selectedRecordData.healthRecords.length + selectedRecordData.vaccinations.length + selectedRecordData.treatments.length)],
+      ['Breeding Events', String(selectedRecordData.breedingEvents.length)],
+      ['Milk Records', String(selectedRecordData.milkRecords.length)],
+      ['Feeding Logs', String(selectedRecordData.feedingEvents.length)],
+      ['Measurements', String(selectedRecordData.measurements.length)]
+    ]
+
+    const renderRows = (rows) => rows.map(([k, v]) => `
+      <tr>
+        <th>${escapeHtml(k)}</th>
+        <td>${escapeHtml(v || 'Not recorded')}</td>
+      </tr>
+    `).join('')
+
+    const timelineHtml = timelineRows.map((entry, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${escapeHtml(formatRecordDate(entry.date, true))}</td>
+        <td>${escapeHtml(entry.type || '')}</td>
+        <td>${escapeHtml(entry.title || '')}</td>
+        <td>${escapeHtml(entry.detail || '')}</td>
+      </tr>
+    `).join('')
+
+    const html = `<!doctype html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <title>${escapeHtml(animal.name || animal.tag || animal.id)} - Unified Livestock Record</title>
+      <style>
+        body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 20px; }
+        h1 { margin: 0 0 6px 0; font-size: 22px; }
+        h2 { margin: 22px 0 8px 0; font-size: 16px; }
+        .meta { color: #475569; margin-bottom: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+        th, td { border: 1px solid #cbd5e1; padding: 7px 8px; font-size: 12px; vertical-align: top; text-align: left; }
+        thead th { background: #f1f5f9; font-weight: 700; }
+        .small { font-size: 11px; color: #64748b; }
+      </style>
+    </head>
+    <body>
+      <h1>Unified Livestock Record Sheet</h1>
+      <div class="meta">Generated: ${escapeHtml(new Date().toLocaleString())}</div>
+
+      <h2>Animal Profile</h2>
+      <table>
+        <tbody>${renderRows(summaryRows)}</tbody>
+      </table>
+
+      <h2>Record Summary</h2>
+      <table>
+        <tbody>${renderRows(historyRows)}</tbody>
+      </table>
+
+      <h2>Recent Timeline</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Title</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>${timelineHtml || '<tr><td colspan="5">No timeline records found.</td></tr>'}</tbody>
+      </table>
+
+      <div class="small">This print sheet summarizes data from the unified dossier and linked subsection stores.</div>
+      <script>window.print();</script>
+    </body>
+    </html>`
+
+    const win = window.open('', '_blank', 'noopener,noreferrer,width=980,height=720')
+    if (!win) {
+      window.alert('Unable to open print preview. Please allow popups and try again.')
+      return
+    }
+    win.document.open()
+    win.document.write(html)
+    win.document.close()
+  }
+
+  function getRecordSectionTypes(sectionKey = 'all') {
+    const sectionTypeMap = {
+      health: ['Health', 'Vaccination', 'Treatment'],
+      breeding: ['Breeding'],
+      milk: ['Milk'],
+      feeding: ['Feeding'],
+      measurement: ['Measurement']
+    }
+    return sectionTypeMap[sectionKey] || []
+  }
+
+  function getRecordSectionLabel(sectionKey = 'all') {
+    const sectionTitles = {
+      health: 'Health, Vaccination, and Treatment',
+      breeding: 'Breeding',
+      milk: 'Milk',
+      feeding: 'Feeding',
+      measurement: 'Measurement'
+    }
+    return sectionTitles[sectionKey] || 'All Sections'
+  }
+
+  function printRecordSectionSheet(animal, section = 'all') {
+    if (!animal) return
+    if (section === 'all') {
+      printUnifiedRecordSheet(animal)
+      return
+    }
+
+    const includedTypes = getRecordSectionTypes(section)
+    const sectionLabel = getRecordSectionLabel(section)
+    const timelineRows = selectedRecordTimeline.filter(entry => includedTypes.includes(entry.type)).slice(0, 120)
+
+    const profileRows = [
+      ['Animal ID', animal.id || ''],
+      ['Tag', animal.tag || ''],
+      ['Name', animal.name || ''],
+      ['Breed', animal.breed || ''],
+      ['Group', selectedRecordGroupName || ''],
+      ['Status', animal.status || '']
+    ]
+
+    const sectionSummaryRows = [
+      ['Section', sectionLabel],
+      ['Total Entries', String(timelineRows.length)],
+      ['Generated', new Date().toLocaleString()]
+    ]
+
+    const renderRows = (rows) => rows.map(([k, v]) => `
+      <tr>
+        <th>${escapeHtml(k)}</th>
+        <td>${escapeHtml(v || 'Not recorded')}</td>
+      </tr>
+    `).join('')
+
+    const timelineHtml = timelineRows.map((entry, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${escapeHtml(formatRecordDate(entry.date, true))}</td>
+        <td>${escapeHtml(entry.type || '')}</td>
+        <td>${escapeHtml(entry.title || '')}</td>
+        <td>${escapeHtml(entry.detail || '')}</td>
+      </tr>
+    `).join('')
+
+    const html = `<!doctype html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <title>${escapeHtml(animal.name || animal.tag || animal.id)} - ${escapeHtml(sectionLabel)} Record</title>
+      <style>
+        body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 20px; }
+        h1 { margin: 0 0 6px 0; font-size: 22px; }
+        h2 { margin: 22px 0 8px 0; font-size: 16px; }
+        .meta { color: #475569; margin-bottom: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+        th, td { border: 1px solid #cbd5e1; padding: 7px 8px; font-size: 12px; vertical-align: top; text-align: left; }
+        thead th { background: #f1f5f9; font-weight: 700; }
+        .small { font-size: 11px; color: #64748b; }
+      </style>
+    </head>
+    <body>
+      <h1>${escapeHtml(sectionLabel)} Record Sheet</h1>
+      <div class="meta">Generated: ${escapeHtml(new Date().toLocaleString())}</div>
+
+      <h2>Animal Profile</h2>
+      <table>
+        <tbody>${renderRows(profileRows)}</tbody>
+      </table>
+
+      <h2>Section Summary</h2>
+      <table>
+        <tbody>${renderRows(sectionSummaryRows)}</tbody>
+      </table>
+
+      <h2>Entries</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Title</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>${timelineHtml || '<tr><td colspan="5">No entries found for this section.</td></tr>'}</tbody>
+      </table>
+
+      <div class="small">This print sheet is generated from the unified dossier section view.</div>
+      <script>window.print();</script>
+    </body>
+    </html>`
+
+    const win = window.open('', '_blank', 'noopener,noreferrer,width=980,height=720')
+    if (!win) {
+      window.alert('Unable to open print preview. Please allow popups and try again.')
+      return
+    }
+    win.document.open()
+    win.document.write(html)
+    win.document.close()
+  }
+
+  function downloadUnifiedRecordPdf(animal, section = 'all') {
+    if (!animal) return
+
+    const isAllSections = section === 'all'
+    const sectionLabel = isAllSections ? 'All Sections' : getRecordSectionLabel(section)
+    const sectionTypes = getRecordSectionTypes(section)
+    const timelineRows = (isAllSections
+      ? selectedRecordTimeline
+      : selectedRecordTimeline.filter(entry => sectionTypes.includes(entry.type))
+    ).slice(0, 250)
+
+    const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' })
+    const title = isAllSections ? 'Unified Livestock Record PDF' : `${sectionLabel} Record PDF`
+    const animalName = animal.name || animal.tag || animal.id || 'Animal'
+
+    doc.setFontSize(16)
+    doc.text(title, 40, 44)
+    doc.setFontSize(10)
+    doc.text(`Animal: ${animalName}`, 40, 62)
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 76)
+    doc.text('Mode: Single user', 40, 90)
+
+    autoTable(doc, {
+      startY: 106,
+      head: [['Field', 'Value']],
+      body: [
+        ['Animal ID', animal.id || ''],
+        ['Tag', animal.tag || ''],
+        ['Breed', animal.breed || ''],
+        ['Sex', animal.sex || ''],
+        ['DOB', animal.dob || ''],
+        ['Group', selectedRecordGroupName || ''],
+        ['Owner', animal.owner || SINGLE_USER_OWNER],
+        ['Status', animal.status || ''],
+        ['Weight', animal.weight ? `${animal.weight} kg` : 'Not recorded'],
+        ['Section', sectionLabel]
+      ],
+      styles: { fontSize: 9, cellPadding: 5 },
+      headStyles: { fillColor: [17, 24, 39] }
+    })
+
+    const summaryRows = [
+      ['Health Entries', String(selectedRecordData.healthRecords.length + selectedRecordData.vaccinations.length + selectedRecordData.treatments.length)],
+      ['Breeding Events', String(selectedRecordData.breedingEvents.length)],
+      ['Milk Records', String(selectedRecordData.milkRecords.length)],
+      ['Feeding Logs', String(selectedRecordData.feedingEvents.length)],
+      ['Measurements', String(selectedRecordData.measurements.length)],
+      ['Timeline Rows In PDF', String(timelineRows.length)]
+    ]
+
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 14,
+      head: [['Summary Metric', 'Value']],
+      body: summaryRows,
+      styles: { fontSize: 9, cellPadding: 5 },
+      headStyles: { fillColor: [15, 118, 110] }
+    })
+
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 14,
+      head: [['Date', 'Type', 'Title', 'Details']],
+      body: timelineRows.length
+        ? timelineRows.map(entry => [
+            formatRecordDate(entry.date, true),
+            entry.type || '',
+            String(entry.title || '').slice(0, 80),
+            String(entry.detail || '').slice(0, 140)
+          ])
+        : [['', '', 'No records found for this selection.', '']],
+      styles: { fontSize: 8, cellPadding: 4 },
+      headStyles: { fillColor: [29, 78, 216] },
+      columnStyles: {
+        0: { cellWidth: 95 },
+        1: { cellWidth: 68 },
+        2: { cellWidth: 150 },
+        3: { cellWidth: 215 }
+      }
+    })
+
+    const safeName = String(animalName).replace(/[^a-z0-9-_]+/gi, '_')
+    const safeSection = String(section).replace(/[^a-z0-9-_]+/gi, '_')
+    doc.save(`${safeName}_${safeSection}_record.pdf`)
+  }
+
   function handleDownloadAnimalJSON(a) {
     exportToJSON(a, `${(a.tag||a.id||'animal')}_record.json`)
   }
@@ -1626,9 +2691,9 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
     if (isEmptyArray || isEmptyObject) return null
 
     function renderValue(val) {
-      if (val === null || val === undefined || val === '') return <span style={{ color: '#4b5563' }}>—</span>
+      if (val === null || val === undefined || val === '') return <span style={{ color: 'var(--text-tertiary)' }}>—</span>
       if (Array.isArray(val)) {
-        if (val.length === 0) return <span style={{ color: '#4b5563' }}>None</span>
+        if (val.length === 0) return <span style={{ color: 'var(--text-tertiary)' }}>None</span>
         return (
           <ul style={{ margin: '6px 0 0 18px', padding: 0 }}>
             {val.map((it, i) => (
@@ -1641,26 +2706,26 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
         return (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8 }}>
             {Object.entries(val).map(([k, v]) => (
-              <div key={k} style={{ background: '#fff', padding: 8, borderRadius: 6, border: '1px solid #eef2f7' }}>
-                <div style={{ fontSize: '0.85rem', color: '#374151' }}><strong>{k}</strong></div>
-                <div style={{ marginTop: 6, fontSize: '0.85rem', color: '#374151' }}>{typeof v === 'object' ? <pre style={{ margin: 0 }}>{JSON.stringify(v, null, 2)}</pre> : String(v ?? '—')}</div>
+              <div key={k} style={{ background: 'var(--bg-elevated)', padding: 8, borderRadius: 6, border: '1px solid var(--border-primary)' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}><strong>{k}</strong></div>
+                <div style={{ marginTop: 6, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{typeof v === 'object' ? <pre style={{ margin: 0 }}>{JSON.stringify(v, null, 2)}</pre> : String(v ?? '—')}</div>
               </div>
             ))}
           </div>
         )
       }
-      return <span style={{ color: '#111827' }}>{String(val)}</span>
+      return <span style={{ color: 'var(--text-primary)' }}>{String(val)}</span>
     }
 
     // Top-level rendering
     return (
       <div style={{ marginTop: 12 }}>
-        <h4 style={{ margin: '6px 0', color: '#111827' }}>{title}</h4>
+        <h4 style={{ margin: '6px 0', color: 'var(--text-primary)' }}>{title}</h4>
         {typeof obj === 'object' && !Array.isArray(obj) ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
             {Object.entries(obj).map(([k, v]) => (
-              <div key={k} style={{ background: '#f9fafb', padding: 10, borderRadius: 6, border: '1px solid #eef2f7' }}>
-                <div style={{ fontSize: '0.9rem', color: '#374151' }}><strong>{k}</strong></div>
+              <div key={k} style={{ background: 'var(--bg-secondary)', padding: 10, borderRadius: 6, border: '1px solid var(--border-primary)' }}>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}><strong>{k}</strong></div>
                 <div style={{ marginTop: 8 }}>{renderValue(v)}</div>
               </div>
             ))}
@@ -1687,12 +2752,12 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
   }
 
   return (
-    <section style={{ padding: '16px', ...mobileStyle.section }}>
+    <section className={`livestock-module-shell ${isDairySection ? 'dairy-module-shell' : ''}`.trim()} style={{ padding: '16px', ...mobileStyle.section }}>
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '8px', color: 'inherit' }}>🐄 Livestock Management</h2>
         <p style={{ color: 'var(--muted)', margin: 0 }}>Comprehensive livestock tracking and management system</p>
         {recordSource?.domain && recordSource?.item && (
-          <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
+          <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 700, color: 'var(--action-primary)', background: 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))', border: '1px solid color-mix(in srgb, var(--action-primary) 35%, var(--border-primary))', borderRadius: '999px', display: 'inline-flex', padding: '4px 10px' }}>
             Opened from Record Coverage: {recordSource.domain} / {recordSource.item}
           </div>
         )}
@@ -1713,24 +2778,59 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
           <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Female</div>
         </div>
         <div className="card" style={{ padding: '16px', textAlign: 'center', ...mobileStyle.card }}>
-          <div style={{ fontSize: '24px', fontWeight: '700', color: '#4b5563' }}>{visibleGroups.length}</div>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-secondary)' }}>{visibleGroups.length}</div>
           <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Groups</div>
         </div>
       </div>
 
       {/* Tab Navigation - scrollable, larger touch targets on mobile */}
-      <div style={{ borderBottom: '2px solid #e5e7eb', marginBottom: '20px' }}>
+      <div className={isDairySection ? 'dairy-nav-bar' : undefined} style={{ borderBottom: '2px solid var(--border-primary)', marginBottom: '20px' }}>
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap', overflowX: 'auto', scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch' }}>
+          <button
+            className={isDairySection ? `dairy-nav-tab ${tab === 'record' ? 'active' : ''}` : undefined}
+            onClick={() => setTab('record')}
+            style={{
+              padding: window.innerWidth <= 600 ? '14px 10px' : '12px 20px',
+              minWidth: window.innerWidth <= 600 ? '120px' : 'auto',
+              border: 'none',
+              borderBottom: tab === 'record' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'record' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+              color: tab === 'record' ? 'var(--green)' : 'var(--text-secondary)',
+              fontWeight: tab === 'record' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: window.innerWidth <= 600 ? '15px' : '14px'
+            }}
+          >
+            📑 Animal Record
+          </button>
+          <button
+            className={isDairySection ? `dairy-nav-tab ${tab === 'list' ? 'active' : ''}` : undefined}
+            onClick={() => setTab('list')}
+            style={{
+              padding: window.innerWidth <= 600 ? '14px 10px' : '12px 20px',
+              minWidth: window.innerWidth <= 600 ? '120px' : 'auto',
+              border: 'none',
+              borderBottom: tab === 'list' ? '3px solid var(--green)' : '3px solid transparent',
+              background: tab === 'list' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+              color: tab === 'list' ? 'var(--green)' : 'var(--text-secondary)',
+              fontWeight: tab === 'list' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: window.innerWidth <= 600 ? '15px' : '14px'
+            }}
+          >
+            📋 Animal List
+          </button>
           {isDairySection && (
             <button
+              className={`dairy-nav-tab ${tab === 'addGroup' ? 'active' : ''}`}
               onClick={() => setTab('addGroup')}
               style={{
                 padding: window.innerWidth <= 600 ? '14px 10px' : '12px 20px',
                 minWidth: window.innerWidth <= 600 ? '120px' : 'auto',
                 border: 'none',
                 borderBottom: tab === 'addGroup' ? '3px solid var(--green)' : '3px solid transparent',
-                background: tab === 'addGroup' ? '#f0fdf4' : 'transparent',
-                color: tab === 'addGroup' ? 'var(--green)' : '#6b7280',
+                background: tab === 'addGroup' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+                color: tab === 'addGroup' ? 'var(--green)' : 'var(--text-primary)',
                 fontWeight: tab === 'addGroup' ? '600' : '400',
                 cursor: 'pointer',
                 fontSize: window.innerWidth <= 600 ? '15px' : '14px'
@@ -1739,22 +2839,6 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               🥛 Dairy Groups
             </button>
           )}
-          <button
-            onClick={() => setTab('list')}
-            style={{
-              padding: window.innerWidth <= 600 ? '14px 10px' : '12px 20px',
-              minWidth: window.innerWidth <= 600 ? '120px' : 'auto',
-              border: 'none',
-              borderBottom: tab === 'list' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'list' ? '#f0fdf4' : 'transparent',
-              color: tab === 'list' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'list' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: window.innerWidth <= 600 ? '15px' : '14px'
-            }}
-          >
-            📋 Animal List
-          </button>
           {!isDairySection && (
             <button
               onClick={() => { resetGroupForm(); setTab('addGroup') }}
@@ -1763,8 +2847,8 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                 minWidth: window.innerWidth <= 600 ? '120px' : 'auto',
                 border: 'none',
                 borderBottom: tab === 'addGroup' ? '3px solid var(--green)' : '3px solid transparent',
-                background: tab === 'addGroup' ? '#f0fdf4' : 'transparent',
-                color: tab === 'addGroup' ? 'var(--green)' : '#6b7280',
+                background: tab === 'addGroup' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+                color: tab === 'addGroup' ? 'var(--green)' : 'var(--text-secondary)',
                 fontWeight: tab === 'addGroup' ? '600' : '400',
                 cursor: 'pointer',
                 fontSize: window.innerWidth <= 600 ? '15px' : '14px'
@@ -1773,126 +2857,140 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               👥 Groups
             </button>
           )}
-          <button
-            onClick={() => setTab('feeding')}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              borderBottom: tab === 'feeding' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'feeding' ? '#f0fdf4' : 'transparent',
-              color: tab === 'feeding' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'feeding' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            🌾 Feeding
-          </button>
-          <button
-            onClick={() => setTab('health')}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              borderBottom: tab === 'health' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'health' ? '#f0fdf4' : 'transparent',
-              color: tab === 'health' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'health' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            🏥 Health System
-          </button>
-          <button
-            onClick={() => setTab('treatment')}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              borderBottom: tab === 'treatment' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'treatment' ? '#f0fdf4' : 'transparent',
-              color: tab === 'treatment' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'treatment' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            💊 Treatment
-          </button>
-          <button
-            onClick={() => setTab('breeding')}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              borderBottom: tab === 'breeding' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'breeding' ? '#f0fdf4' : 'transparent',
-              color: tab === 'breeding' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'breeding' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            🤰 Breeding
-          </button>
-          <button
-            onClick={() => setTab('milkyield')}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              borderBottom: tab === 'milkyield' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'milkyield' ? '#f0fdf4' : 'transparent',
-              color: tab === 'milkyield' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'milkyield' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            🥛 Milk Yield
-          </button>
-          <button
-            onClick={() => setTab('measurement')}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              borderBottom: tab === 'measurement' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'measurement' ? '#f0fdf4' : 'transparent',
-              color: tab === 'measurement' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'measurement' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            📏 Measurement
-          </button>
-          <button
-            onClick={() => setTab('calf')}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              borderBottom: tab === 'calf' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'calf' ? '#f0fdf4' : 'transparent',
-              color: tab === 'calf' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'calf' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            🐮 Calf Mgmt
-          </button>
-          <button
-            onClick={() => setTab('pastures')}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              borderBottom: tab === 'pastures' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'pastures' ? '#f0fdf4' : 'transparent',
-              color: tab === 'pastures' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'pastures' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            🌱 Pastures
-          </button>
+          {(!isDairySection || showDairyAdvancedTabs) && (
+            <>
+              <button
+                className={`dairy-nav-tab ${tab === 'feeding' ? 'active' : ''}`}
+                onClick={() => setTab('feeding')}
+                style={{
+                  padding: '12px 20px',
+                  border: 'none',
+                  borderBottom: tab === 'feeding' ? '3px solid var(--green)' : '3px solid transparent',
+                  background: tab === 'feeding' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+                  color: tab === 'feeding' ? 'var(--green)' : 'var(--text-secondary)',
+                  fontWeight: tab === 'feeding' ? '600' : '400',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                🌾 Feeding
+              </button>
+              <button
+                className={`dairy-nav-tab ${tab === 'health' ? 'active' : ''}`}
+                onClick={() => setTab('health')}
+                style={{
+                  padding: '12px 20px',
+                  border: 'none',
+                  borderBottom: tab === 'health' ? '3px solid var(--green)' : '3px solid transparent',
+                  background: tab === 'health' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+                  color: tab === 'health' ? 'var(--green)' : 'var(--text-secondary)',
+                  fontWeight: tab === 'health' ? '600' : '400',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                🏥 Health System
+              </button>
+              <button
+                className={`dairy-nav-tab ${tab === 'treatment' ? 'active' : ''}`}
+                onClick={() => setTab('treatment')}
+                style={{
+                  padding: '12px 20px',
+                  border: 'none',
+                  borderBottom: tab === 'treatment' ? '3px solid var(--green)' : '3px solid transparent',
+                  background: tab === 'treatment' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+                  color: tab === 'treatment' ? 'var(--green)' : 'var(--text-secondary)',
+                  fontWeight: tab === 'treatment' ? '600' : '400',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                💊 Treatment
+              </button>
+              <button
+                className={`dairy-nav-tab ${tab === 'breeding' ? 'active' : ''}`}
+                onClick={() => setTab('breeding')}
+                style={{
+                  padding: '12px 20px',
+                  border: 'none',
+                  borderBottom: tab === 'breeding' ? '3px solid var(--green)' : '3px solid transparent',
+                  background: tab === 'breeding' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+                  color: tab === 'breeding' ? 'var(--green)' : 'var(--text-secondary)',
+                  fontWeight: tab === 'breeding' ? '600' : '400',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                🤰 Breeding
+              </button>
+              <button
+                className={`dairy-nav-tab ${tab === 'milkyield' ? 'active' : ''}`}
+                onClick={() => setTab('milkyield')}
+                style={{
+                  padding: '12px 20px',
+                  border: 'none',
+                  borderBottom: tab === 'milkyield' ? '3px solid var(--green)' : '3px solid transparent',
+                  background: tab === 'milkyield' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+                  color: tab === 'milkyield' ? 'var(--green)' : 'var(--text-secondary)',
+                  fontWeight: tab === 'milkyield' ? '600' : '400',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                🥛 Milk Yield
+              </button>
+              <button
+                className={`dairy-nav-tab ${tab === 'measurement' ? 'active' : ''}`}
+                onClick={() => setTab('measurement')}
+                style={{
+                  padding: '12px 20px',
+                  border: 'none',
+                  borderBottom: tab === 'measurement' ? '3px solid var(--green)' : '3px solid transparent',
+                  background: tab === 'measurement' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+                  color: tab === 'measurement' ? 'var(--green)' : 'var(--text-secondary)',
+                  fontWeight: tab === 'measurement' ? '600' : '400',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                📏 Measurement
+              </button>
+              <button
+                className={`dairy-nav-tab ${tab === 'calf' ? 'active' : ''}`}
+                onClick={() => setTab('calf')}
+                style={{
+                  padding: '12px 20px',
+                  border: 'none',
+                  borderBottom: tab === 'calf' ? '3px solid var(--green)' : '3px solid transparent',
+                  background: tab === 'calf' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+                  color: tab === 'calf' ? 'var(--green)' : 'var(--text-secondary)',
+                  fontWeight: tab === 'calf' ? '600' : '400',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                🐮 Calf Mgmt
+              </button>
+            </>
+          )}
+          {isDairySection && (
+            <button
+              className={`dairy-nav-tab dairy-nav-toggle ${showDairyAdvancedTabs ? 'active' : ''}`}
+              onClick={() => setShowDairyAdvancedTabs(prev => !prev)}
+              style={{
+                padding: '12px 20px',
+                border: 'none',
+                borderBottom: showDairyAdvancedTabs ? '3px solid var(--text-primary)' : '3px solid transparent',
+                background: showDairyAdvancedTabs ? 'var(--bg-secondary)' : 'transparent',
+                color: 'var(--text-secondary)',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              {showDairyAdvancedTabs ? 'Hide Advanced Tools' : 'Show Advanced Tools'}
+            </button>
+          )}
           {!isDairySection && (
             <button
               onClick={() => setTab('bsf')}
@@ -1900,8 +2998,8 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                 padding: '12px 20px',
                 border: 'none',
                 borderBottom: tab === 'bsf' ? '3px solid var(--green)' : '3px solid transparent',
-                background: tab === 'bsf' ? '#f0fdf4' : 'transparent',
-                color: tab === 'bsf' ? 'var(--green)' : '#6b7280',
+                background: tab === 'bsf' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+                color: tab === 'bsf' ? 'var(--green)' : 'var(--text-secondary)',
                 fontWeight: tab === 'bsf' ? '600' : '400',
                 cursor: 'pointer',
                 fontSize: '14px'
@@ -1910,21 +3008,6 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               🪰 BSF Farm
             </button>
           )}
-          <button
-            onClick={() => setTab('azolla')}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              borderBottom: tab === 'azolla' ? '3px solid var(--green)' : '3px solid transparent',
-              background: tab === 'azolla' ? '#f0fdf4' : 'transparent',
-              color: tab === 'azolla' ? 'var(--green)' : '#6b7280',
-              fontWeight: tab === 'azolla' ? '600' : '400',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            🌿 Azolla
-          </button>
           {!isDairySection && (
             <>
               <button
@@ -1933,8 +3016,8 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                   padding: '12px 20px',
                   border: 'none',
                   borderBottom: tab === 'poultry' ? '3px solid var(--green)' : '3px solid transparent',
-                  background: tab === 'poultry' ? '#f0fdf4' : 'transparent',
-                  color: tab === 'poultry' ? 'var(--green)' : '#6b7280',
+                  background: tab === 'poultry' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+                  color: tab === 'poultry' ? 'var(--green)' : 'var(--text-secondary)',
                   fontWeight: tab === 'poultry' ? '600' : '400',
                   cursor: 'pointer',
                   fontSize: '14px'
@@ -1948,8 +3031,8 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                   padding: '12px 20px',
                   border: 'none',
                   borderBottom: tab === 'canine' ? '3px solid var(--green)' : '3px solid transparent',
-                  background: tab === 'canine' ? '#f0fdf4' : 'transparent',
-                  color: tab === 'canine' ? 'var(--green)' : '#6b7280',
+                  background: tab === 'canine' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+                  color: tab === 'canine' ? 'var(--green)' : 'var(--text-secondary)',
                   fontWeight: tab === 'canine' ? '600' : '400',
                   cursor: 'pointer',
                   fontSize: '14px'
@@ -1963,8 +3046,8 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                   padding: '12px 20px',
                   border: 'none',
                   borderBottom: tab === 'addGroup' ? '3px solid var(--green)' : '3px solid transparent',
-                  background: tab === 'addGroup' ? '#f0fdf4' : 'transparent',
-                  color: tab === 'addGroup' ? 'var(--green)' : '#6b7280',
+                  background: tab === 'addGroup' ? 'color-mix(in srgb, var(--action-primary) 14%, var(--bg-elevated))' : 'transparent',
+                  color: tab === 'addGroup' ? 'var(--green)' : 'var(--text-secondary)',
                   fontWeight: tab === 'addGroup' ? '600' : '400',
                   cursor: 'pointer',
                   fontSize: '14px'
@@ -1998,12 +3081,12 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               ➕ Add Animal
             </button>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <button onClick={handleExportCSV} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📊 CSV</button>
-              <button onClick={handleExportExcel} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📈 Excel</button>
-              <button onClick={handleExportJSON} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📄 JSON</button>
+              <button onClick={handleExportCSV} style={{ padding: '8px 16px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📊 CSV</button>
+              <button onClick={handleExportExcel} style={{ padding: '8px 16px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📈 Excel</button>
+              <button onClick={handleExportJSON} style={{ padding: '8px 16px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📄 JSON</button>
               <button onClick={() => devDumpAnimals(20)} style={{ padding: '8px 16px', background: '#111827', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>DEV: Dump 20</button>
-              <button onClick={handleImportClick} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📥 Import</button>
-              <button onClick={handleBatchPrint} style={{ padding: '8px 16px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>🖨️ Print</button>
+              <button onClick={handleImportClick} style={{ padding: '8px 16px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>📥 Import</button>
+              <button onClick={handleBatchPrint} style={{ padding: '8px 16px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>🖨️ Print</button>
               <button onClick={() => batchPrintQRTags(sortedAnimals, 'animal')} style={{ padding: '8px 16px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>📱 Print QR Tags</button>
               <input 
                 ref={fileInputRef}
@@ -2023,12 +3106,12 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                 placeholder="🔍 Search animals..."
                 value={filter}
                 onChange={e => setFilter(e.target.value)}
-                style={{ flex: '1 1 200px', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                style={{ flex: '1 1 200px', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-primary)' }}
               />
               <select
                 value={filterGroup}
                 onChange={e => setFilterGroup(e.target.value)}
-                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-primary)' }}
               >
                 <option value="all">All Groups</option>
                 <option value="ungrouped">Ungrouped</option>
@@ -2037,7 +3120,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               <select
                 value={filterStatus}
                 onChange={e => setFilterStatus(e.target.value)}
-                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-primary)' }}
               >
                 <option value="all">All Status</option>
                 <option value="Active">Active</option>
@@ -2047,7 +3130,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               <select
                 value={filterSex}
                 onChange={e => setFilterSex(e.target.value)}
-                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-primary)' }}
               >
                 <option value="all">All</option>
                 <option value="F">Female</option>
@@ -2056,7 +3139,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value)}
-                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-primary)' }}
               >
                 <option value="name">Sort by Name</option>
                 <option value="tag">Sort by Tag</option>
@@ -2093,13 +3176,14 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                             {a.name}
                             {a.qrCode && <span style={{ marginLeft: 8, fontSize: '0.8rem', color: '#8b5cf6' }} title="QR Code generated">📱</span>}
                           </h4>
-                          <div style={{ fontSize: '0.9rem', color: '#4b5563', marginTop: 4 }}>
+                          <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: 4 }}>
                             {a.tag && <span style={{ marginRight: 12 }}>🏷️ {a.tag}</span>}
                             <span style={{ marginRight: 12 }}>{a.sex === 'F' ? '♀' : '♂'} {a.breed}</span>
                             <span>📊 {a.status}</span>
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={() => openAnimalRecord(a.id)} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#ecfeff', border: '1px solid #67e8f9', color: '#155e75', fontWeight: '500' }}>📑 Record</button>
                           <button onClick={() => startInlineEdit(a)} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#ffffcc', border: '1px solid #ffdd00', color: '#333', fontWeight: '500' }}>⚡ Quick</button>
                           <button onClick={() => startEditAnimal(a)} style={{ padding: '6px 12px', fontSize: '0.85rem' }}>✏️ Edit</button>
                           <button onClick={() => deleteAnimal(a.id)} style={{ padding: '6px 12px', fontSize: '0.85rem', background: '#fee', color: '#c00' }}>🗑️</button>
@@ -2119,14 +3203,14 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                             </select>
                             <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
                               <button onClick={saveInlineEdit} style={{ padding: '8px 12px', background: 'var(--green)', color: '#fff', border: 'none', borderRadius: 6 }}>Save</button>
-                              <button onClick={cancelInlineEdit} style={{ padding: '8px 12px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 6 }}>Cancel</button>
+                              <button onClick={cancelInlineEdit} style={{ padding: '8px 12px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', borderRadius: 6 }}>Cancel</button>
                             </div>
                           </div>
                         </div>
                       )}
 
                       {isExp && (
-                        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #e5e7eb', fontSize: '0.9rem' }}>
+                        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border-primary)', fontSize: '0.9rem' }}>
                           {/* Weight Trend Chart */}
                           <div style={{ marginBottom: 16 }}>
                             <LineChart
@@ -2164,7 +3248,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                             {a.lactationStatus && <div><strong>Lactation:</strong> {a.lactationStatus}</div>}
                           </div>
                           {a.notes && (
-                            <div style={{ marginTop: 12, padding: 12, background: '#f9fafb', borderRadius: 6 }}>
+                            <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-secondary)', borderRadius: 6 }}>
                               <strong>Notes:</strong> {a.notes}
                             </div>
                           )}
@@ -2187,7 +3271,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                           />
                           
                           {/* QR Code Display and Print */}
-                          <div style={{ marginTop: 16, padding: 12, background: '#f9fafb', borderRadius: 8, border: '1px solid #e5e7eb' }}>
+                          <div style={{ marginTop: 16, padding: 12, background: 'var(--bg-secondary)', borderRadius: 8, border: '1px solid var(--border-primary)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                               <div>
                                 <img 
@@ -2200,7 +3284,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                                 <h4 style={{ margin: '0 0 8px 0', fontSize: '0.95rem', fontWeight: '600', color: '#8b5cf6' }}>
                                   📱 QR Tag {a.qrCode && <span style={{ fontSize: '0.75rem', color: '#10b981', marginLeft: 8 }}>✓ Auto-generated</span>}
                                 </h4>
-                                <p style={{ margin: '0 0 12px 0', fontSize: '0.85rem', color: '#4b5563' }}>
+                                <p style={{ margin: '0 0 12px 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                                   Scan this QR code to quickly access {a.name}'s records
                                 </p>
                                 <button 
@@ -2239,7 +3323,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                       
                       <button 
                         onClick={() => toggleExpand(a.id)}
-                        style={{ marginTop: 12, padding: window.innerWidth <= 600 ? '10px 16px' : '6px 12px', fontSize: window.innerWidth <= 600 ? '1rem' : '0.85rem', background: '#f3f4f6', border: '1px solid #d1d5db', width: window.innerWidth <= 600 ? '100%' : 'auto' }}
+                        style={{ marginTop: 12, padding: window.innerWidth <= 600 ? '10px 16px' : '6px 12px', fontSize: window.innerWidth <= 600 ? '1rem' : '0.85rem', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', width: window.innerWidth <= 600 ? '100%' : 'auto' }}
                       >
                         {isExp ? '▲ Show Less' : '▼ Show More'}
                       </button>
@@ -2249,6 +3333,641 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               )
             }}
           />
+        </div>
+      )}
+
+      {tab === 'record' && (
+        <div>
+          <div className="card" style={{ padding: 16, marginBottom: 20, border: '1px solid var(--border-primary)', background: 'var(--bg-elevated)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <div>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-primary)' }}>📑 Unified Livestock Record</h3>
+                <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 760 }}>
+                  One readable dossier that combines the animal profile, health history, breeding history, milk records, measurements, and supporting sections into a single farm record.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <select value={recordAnimalId} onChange={e => setRecordAnimalId(e.target.value)} style={{ minWidth: 220, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border-primary)' }}>
+                  {scopedAnimals.map(animal => (
+                    <option key={animal.id} value={animal.id}>
+                      {animal.name || animal.tag || animal.id}{animal.tag ? ` • ${animal.tag}` : ''}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" onClick={() => setRecordRefreshKey(prev => prev + 1)} style={{ padding: '10px 14px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+                  Refresh
+                </button>
+                <button type="button" onClick={() => selectedRecordAnimal && startEditAnimal(selectedRecordAnimal)} disabled={!selectedRecordAnimal} style={{ padding: '10px 14px', background: selectedRecordAnimal ? '#0f766e' : '#94a3b8', color: '#fff', border: 'none', borderRadius: 8, cursor: selectedRecordAnimal ? 'pointer' : 'not-allowed', fontWeight: 600 }}>
+                  Edit Record
+                </button>
+                <button type="button" onClick={() => selectedRecordAnimal && handleDownloadAnimalExcel(selectedRecordAnimal)} disabled={!selectedRecordAnimal} style={{ padding: '10px 14px', background: selectedRecordAnimal ? '#1d4ed8' : '#94a3b8', color: '#fff', border: 'none', borderRadius: 8, cursor: selectedRecordAnimal ? 'pointer' : 'not-allowed', fontWeight: 600 }}>
+                  Export CV
+                </button>
+                <button type="button" onClick={() => printUnifiedRecordSheet(selectedRecordAnimal)} disabled={!selectedRecordAnimal} style={{ padding: '10px 14px', background: selectedRecordAnimal ? '#111827' : '#94a3b8', color: '#fff', border: 'none', borderRadius: 8, cursor: selectedRecordAnimal ? 'pointer' : 'not-allowed', fontWeight: 600 }}>
+                  Print Record Sheet
+                </button>
+                <button type="button" onClick={() => downloadUnifiedRecordPdf(selectedRecordAnimal, 'all')} disabled={!selectedRecordAnimal} style={{ padding: '10px 14px', background: selectedRecordAnimal ? '#4c1d95' : '#94a3b8', color: '#fff', border: 'none', borderRadius: 8, cursor: selectedRecordAnimal ? 'pointer' : 'not-allowed', fontWeight: 600 }}>
+                  Download PDF
+                </button>
+                <select value={recordPrintSection} onChange={e => setRecordPrintSection(e.target.value)} style={{ minWidth: 180, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border-primary)' }}>
+                  <option value="all">All Sections</option>
+                  <option value="health">Health Section</option>
+                  <option value="breeding">Breeding Section</option>
+                  <option value="milk">Milk Section</option>
+                  <option value="feeding">Feeding Section</option>
+                  <option value="measurement">Measurement Section</option>
+                </select>
+                <button type="button" onClick={() => printRecordSectionSheet(selectedRecordAnimal, recordPrintSection)} disabled={!selectedRecordAnimal} style={{ padding: '10px 14px', background: selectedRecordAnimal ? '#334155' : '#94a3b8', color: '#fff', border: 'none', borderRadius: 8, cursor: selectedRecordAnimal ? 'pointer' : 'not-allowed', fontWeight: 600 }}>
+                  Print Selected Section
+                </button>
+                <button type="button" onClick={() => downloadUnifiedRecordPdf(selectedRecordAnimal, recordPrintSection)} disabled={!selectedRecordAnimal} style={{ padding: '10px 14px', background: selectedRecordAnimal ? '#7c3aed' : '#94a3b8', color: '#fff', border: 'none', borderRadius: 8, cursor: selectedRecordAnimal ? 'pointer' : 'not-allowed', fontWeight: 600 }}>
+                  Download Section PDF
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {!selectedRecordAnimal ? (
+            <div className="card" style={{ padding: 24, textAlign: 'center', color: 'var(--text-secondary)' }}>
+              Add an animal first, then open its record here.
+            </div>
+          ) : (
+            <>
+              <div className="card" style={{ padding: 20, marginBottom: 20 }}>
+                <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                  <div style={{ width: 140, height: 140, borderRadius: 16, overflow: 'hidden', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {(selectedRecordAnimal.photos && selectedRecordAnimal.photos[0]?.dataUrl) || selectedRecordAnimal.photo ? (
+                      <img src={selectedRecordAnimal.photos?.[0]?.dataUrl || selectedRecordAnimal.photo} alt={selectedRecordAnimal.name || selectedRecordAnimal.tag} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ color: 'var(--text-tertiary)', fontSize: '2rem' }}>🐄</div>
+                    )}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 260 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                      <div>
+                        <h3 style={{ margin: '0 0 6px 0', fontSize: '1.55rem', fontWeight: 700 }}>{selectedRecordAnimal.name || selectedRecordAnimal.tag || selectedRecordAnimal.id}</h3>
+                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                          <span>🏷️ {selectedRecordAnimal.tag || 'No tag'}</span>
+                          <span>🐾 {selectedRecordAnimal.breed || 'Breed not set'}</span>
+                          <span>{selectedRecordAnimal.sex === 'F' ? '♀ Female' : '♂ Male'}</span>
+                          <span>👥 {selectedRecordGroupName}</span>
+                        </div>
+                      </div>
+                      <div style={{ padding: '8px 12px', borderRadius: 999, background: selectedRecordAnimal.status === 'Active' ? '#dcfce7' : '#fef2f2', color: selectedRecordAnimal.status === 'Active' ? '#166534' : '#991b1b', fontWeight: 700, fontSize: '0.9rem' }}>
+                        {selectedRecordAnimal.status || 'Unknown status'}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginTop: 18 }}>
+                      {[
+                        ['Date of Birth', formatRecordDate(selectedRecordAnimal.dob)],
+                        ['Weight', selectedRecordAnimal.weight ? `${selectedRecordAnimal.weight} kg` : 'Not recorded'],
+                        ['Pregnancy', selectedRecordAnimal.pregnancyStatus || 'Not recorded'],
+                        ['Lactation', selectedRecordAnimal.lactationStatus || 'Not recorded'],
+                        ['Owner', selectedRecordAnimal.owner || 'Not recorded'],
+                        ['Registration', selectedRecordAnimal.registration || 'Not recorded']
+                      ].map(([label, value]) => (
+                        <div key={label} style={{ padding: 12, background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 10 }}>
+                          <div style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-tertiary)', marginBottom: 4 }}>{label}</div>
+                          <div style={{ fontSize: '0.96rem', fontWeight: 600, color: 'var(--text-primary)' }}>{value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 20 }}>
+                {[
+                  { label: 'Health Entries', value: selectedRecordData.healthRecords.length + selectedRecordData.vaccinations.length + selectedRecordData.treatments.length, tone: '#dc2626' },
+                  { label: 'Breeding Events', value: selectedRecordData.breedingEvents.length, tone: '#7c3aed' },
+                  { label: 'Milk Records', value: selectedRecordData.milkRecords.length, tone: '#2563eb' },
+                  { label: 'Feeding Logs', value: selectedRecordData.feedingEvents.length, tone: '#0f766e' },
+                  { label: 'Measurements', value: selectedRecordData.measurements.length, tone: '#059669' }
+                ].map(card => (
+                  <div key={card.label} className="card" style={{ padding: 16, borderTop: `4px solid ${card.tone}` }}>
+                    <div style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 6 }}>{card.label}</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 700, color: card.tone }}>{card.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="card" style={{ padding: 16, marginBottom: 20, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
+                  <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Quick Subsection Entries</h4>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button type="button" onClick={() => setTab('health')} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', cursor: 'pointer' }}>Open Health Module</button>
+                    <button type="button" onClick={() => setTab('treatment')} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', cursor: 'pointer' }}>Open Treatment Module</button>
+                    <button type="button" onClick={() => setTab('breeding')} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', cursor: 'pointer' }}>Open Breeding Module</button>
+                    <button type="button" onClick={() => setTab('milkyield')} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', cursor: 'pointer' }}>Open Milk Module</button>
+                    <button type="button" onClick={() => setTab('feeding')} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', cursor: 'pointer' }}>Open Feeding Module</button>
+                    <button type="button" onClick={() => setTab('measurement')} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', cursor: 'pointer' }}>Open Measurement Module</button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
+                  <div style={{ background: 'var(--bg-elevated)', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
+                    <h5 style={{ margin: '0 0 10px 0', color: '#b91c1c' }}>Health Entry</h5>
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Date</label>
+                    <input type="date" value={quickRecordForm.date} onChange={e => updateQuickRecordField('date', e.target.value)} style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Condition</label>
+                    <input value={quickRecordForm.healthCondition} onChange={e => updateQuickRecordField('healthCondition', e.target.value)} placeholder="e.g. Mastitis" style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Severity</label>
+                    <select value={quickRecordForm.healthSeverity} onChange={e => updateQuickRecordField('healthSeverity', e.target.value)} style={{ width: '100%', marginBottom: 8 }}>
+                      <option value="mild">Mild</option>
+                      <option value="moderate">Moderate</option>
+                      <option value="severe">Severe</option>
+                    </select>
+                    <textarea rows={2} value={quickRecordForm.healthNotes} onChange={e => updateQuickRecordField('healthNotes', e.target.value)} placeholder="Notes" style={{ width: '100%', marginBottom: 8 }} />
+                    <button type="button" onClick={() => submitQuickRecord('health')} style={{ width: '100%', padding: '8px 10px', background: '#b91c1c', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+                      Save Health Entry
+                    </button>
+                  </div>
+
+                  <div style={{ background: 'var(--bg-elevated)', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
+                    <h5 style={{ margin: '0 0 10px 0', color: '#be123c' }}>Vaccination Entry</h5>
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Date</label>
+                    <input type="date" value={quickRecordForm.date} onChange={e => updateQuickRecordField('date', e.target.value)} style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Vaccine</label>
+                    <input value={quickRecordForm.vaccinationType} onChange={e => updateQuickRecordField('vaccinationType', e.target.value)} placeholder="e.g. FMD Vaccine" style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Status</label>
+                    <select value={quickRecordForm.vaccinationStatus} onChange={e => updateQuickRecordField('vaccinationStatus', e.target.value)} style={{ width: '100%', marginBottom: 8 }}>
+                      <option value="scheduled">Scheduled</option>
+                      <option value="completed">Completed</option>
+                      <option value="missed">Missed</option>
+                    </select>
+                    <textarea rows={2} value={quickRecordForm.vaccinationNotes} onChange={e => updateQuickRecordField('vaccinationNotes', e.target.value)} placeholder="Notes" style={{ width: '100%', marginBottom: 8 }} />
+                    <button type="button" onClick={() => submitQuickRecord('vaccination')} style={{ width: '100%', padding: '8px 10px', background: '#be123c', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+                      Save Vaccination Entry
+                    </button>
+                  </div>
+
+                  <div style={{ background: 'var(--bg-elevated)', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
+                    <h5 style={{ margin: '0 0 10px 0', color: '#7f1d1d' }}>Treatment Entry</h5>
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Date</label>
+                    <input type="date" value={quickRecordForm.date} onChange={e => updateQuickRecordField('date', e.target.value)} style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Condition</label>
+                    <input value={quickRecordForm.treatmentCondition} onChange={e => updateQuickRecordField('treatmentCondition', e.target.value)} placeholder="e.g. Fever" style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Medication / Treatment</label>
+                    <input value={quickRecordForm.treatmentMedication} onChange={e => updateQuickRecordField('treatmentMedication', e.target.value)} placeholder="e.g. Oxytetracycline" style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Status</label>
+                    <select value={quickRecordForm.treatmentStatus} onChange={e => updateQuickRecordField('treatmentStatus', e.target.value)} style={{ width: '100%', marginBottom: 8 }}>
+                      <option value="ongoing">Ongoing</option>
+                      <option value="completed">Completed</option>
+                      <option value="monitoring">Monitoring</option>
+                    </select>
+                    <textarea rows={2} value={quickRecordForm.treatmentNotes} onChange={e => updateQuickRecordField('treatmentNotes', e.target.value)} placeholder="Notes" style={{ width: '100%', marginBottom: 8 }} />
+                    <button type="button" onClick={() => submitQuickRecord('treatment')} style={{ width: '100%', padding: '8px 10px', background: '#7f1d1d', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+                      Save Treatment Entry
+                    </button>
+                  </div>
+
+                  <div style={{ background: 'var(--bg-elevated)', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
+                    <h5 style={{ margin: '0 0 10px 0', color: '#6d28d9' }}>Breeding Entry</h5>
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Date</label>
+                    <input type="date" value={quickRecordForm.date} onChange={e => updateQuickRecordField('date', e.target.value)} style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Event</label>
+                    <select value={quickRecordForm.breedingEvent} onChange={e => updateQuickRecordField('breedingEvent', e.target.value)} style={{ width: '100%', marginBottom: 8 }}>
+                      <option value="AI">AI</option>
+                      <option value="Natural Breeding">Natural Breeding</option>
+                      <option value="Heat Detection">Heat Detection</option>
+                      <option value="Pregnancy Check">Pregnancy Check</option>
+                    </select>
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Status</label>
+                    <select value={quickRecordForm.breedingStatus} onChange={e => updateQuickRecordField('breedingStatus', e.target.value)} style={{ width: '100%', marginBottom: 8 }}>
+                      <option value="Scheduled">Scheduled</option>
+                      <option value="Completed">Completed</option>
+                      <option value="Confirmed">Confirmed</option>
+                      <option value="Failed">Failed</option>
+                    </select>
+                    <textarea rows={2} value={quickRecordForm.breedingNotes} onChange={e => updateQuickRecordField('breedingNotes', e.target.value)} placeholder="Notes" style={{ width: '100%', marginBottom: 8 }} />
+                    <button type="button" onClick={() => submitQuickRecord('breeding')} style={{ width: '100%', padding: '8px 10px', background: '#6d28d9', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+                      Save Breeding Entry
+                    </button>
+                  </div>
+
+                  <div style={{ background: 'var(--bg-elevated)', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
+                    <h5 style={{ margin: '0 0 10px 0', color: '#1d4ed8' }}>Milk Entry</h5>
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Date</label>
+                    <input type="date" value={quickRecordForm.date} onChange={e => updateQuickRecordField('date', e.target.value)} style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Session</label>
+                    <select value={quickRecordForm.milkSession} onChange={e => updateQuickRecordField('milkSession', e.target.value)} style={{ width: '100%', marginBottom: 8 }}>
+                      <option value="Morning">Morning</option>
+                      <option value="Midday">Midday</option>
+                      <option value="Evening">Evening</option>
+                      <option value="Night">Night</option>
+                    </select>
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Liters</label>
+                    <input type="number" step="0.1" min="0" value={quickRecordForm.milkLiters} onChange={e => updateQuickRecordField('milkLiters', e.target.value)} placeholder="0.0" style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Quality</label>
+                    <select value={quickRecordForm.milkQuality} onChange={e => updateQuickRecordField('milkQuality', e.target.value)} style={{ width: '100%', marginBottom: 8 }}>
+                      <option value="Grade A">Grade A</option>
+                      <option value="Grade B">Grade B</option>
+                      <option value="Grade C">Grade C</option>
+                    </select>
+                    <textarea rows={2} value={quickRecordForm.milkNotes} onChange={e => updateQuickRecordField('milkNotes', e.target.value)} placeholder="Notes" style={{ width: '100%', marginBottom: 8 }} />
+                    <button type="button" onClick={() => submitQuickRecord('milk')} style={{ width: '100%', padding: '8px 10px', background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+                      Save Milk Entry
+                    </button>
+                  </div>
+
+                  <div style={{ background: 'var(--bg-elevated)', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
+                    <h5 style={{ margin: '0 0 10px 0', color: '#0f766e' }}>Feeding Entry</h5>
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Date</label>
+                    <input type="date" value={quickRecordForm.date} onChange={e => updateQuickRecordField('date', e.target.value)} style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Feed Type</label>
+                    <input value={quickRecordForm.feedingType} onChange={e => updateQuickRecordField('feedingType', e.target.value)} placeholder="e.g. Dairy meal" style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Quantity (kg)</label>
+                    <input type="number" step="0.1" min="0" value={quickRecordForm.feedingQuantity} onChange={e => updateQuickRecordField('feedingQuantity', e.target.value)} placeholder="0.0" style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Cost</label>
+                    <input type="number" step="0.01" min="0" value={quickRecordForm.feedingCost} onChange={e => updateQuickRecordField('feedingCost', e.target.value)} placeholder="0" style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Method</label>
+                    <select value={quickRecordForm.feedingMethod} onChange={e => updateQuickRecordField('feedingMethod', e.target.value)} style={{ width: '100%', marginBottom: 8 }}>
+                      <option value="Manual">Manual</option>
+                      <option value="Automatic">Automatic</option>
+                      <option value="Group Feeding">Group Feeding</option>
+                    </select>
+                    <textarea rows={2} value={quickRecordForm.feedingNotes} onChange={e => updateQuickRecordField('feedingNotes', e.target.value)} placeholder="Notes" style={{ width: '100%', marginBottom: 8 }} />
+                    <button type="button" onClick={() => submitQuickRecord('feeding')} style={{ width: '100%', padding: '8px 10px', background: '#0f766e', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+                      Save Feeding Entry
+                    </button>
+                  </div>
+
+                  <div style={{ background: 'var(--bg-elevated)', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
+                    <h5 style={{ margin: '0 0 10px 0', color: '#047857' }}>Measurement Entry</h5>
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Date</label>
+                    <input type="date" value={quickRecordForm.date} onChange={e => updateQuickRecordField('date', e.target.value)} style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Type</label>
+                    <select value={quickRecordForm.measurementType} onChange={e => updateQuickRecordField('measurementType', e.target.value)} style={{ width: '100%', marginBottom: 8 }}>
+                      <option value="Weight">Weight</option>
+                      <option value="Height">Height</option>
+                      <option value="Length">Length</option>
+                      <option value="Girth">Girth</option>
+                    </select>
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Value</label>
+                    <input type="number" step="0.1" min="0" value={quickRecordForm.measurementValue} onChange={e => updateQuickRecordField('measurementValue', e.target.value)} placeholder="0.0" style={{ width: '100%', marginBottom: 8 }} />
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>Unit</label>
+                    <input value={quickRecordForm.measurementUnit} onChange={e => updateQuickRecordField('measurementUnit', e.target.value)} placeholder="kg / cm" style={{ width: '100%', marginBottom: 8 }} />
+                    <textarea rows={2} value={quickRecordForm.measurementNotes} onChange={e => updateQuickRecordField('measurementNotes', e.target.value)} placeholder="Notes" style={{ width: '100%', marginBottom: 8 }} />
+                    <button type="button" onClick={() => submitQuickRecord('measurement')} style={{ width: '100%', padding: '8px 10px', background: '#047857', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+                      Save Measurement Entry
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, marginBottom: 20 }}>
+                <div className="card" style={{ padding: 16 }}>
+                  <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Identity And Acquisition</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    {[
+                      ['Animal ID', selectedRecordAnimal.id],
+                      ['Tag', selectedRecordAnimal.tag],
+                      ['Name', selectedRecordAnimal.name],
+                      ['Breed', selectedRecordAnimal.breed],
+                      ['Sire', selectedRecordAnimal.sire],
+                      ['Dam', selectedRecordAnimal.dam],
+                      ['Purchase Date', formatRecordDate(selectedRecordAnimal.purchaseDate)],
+                      ['Purchase Price', formatCurrencyValue(selectedRecordAnimal.purchasePrice)],
+                      ['Vendor', selectedRecordAnimal.vendor],
+                      ['Tattoo / ID', selectedRecordAnimal.tattoo]
+                    ].map(([label, value]) => (
+                      <div key={label}>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{value || 'Not recorded'}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="card" style={{ padding: 16 }}>
+                  <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Current Snapshot</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    {[
+                      ['Health Status', selectedRecordAnimal.health?.healthStatus],
+                      ['Body Condition', selectedRecordAnimal.health?.bodyConditionScore],
+                      ['Last Vet Visit', formatRecordDate(selectedRecordAnimal.health?.lastVetVisit)],
+                      ['Next Vet Visit', formatRecordDate(selectedRecordAnimal.health?.nextVetVisit)],
+                      ['Expected Due', formatRecordDate(selectedRecordAnimal.expectedDue)],
+                      ['Parity', selectedRecordAnimal.parity],
+                      ['Barn', selectedRecordAnimal.location?.barn],
+                      ['Pen / Stall', selectedRecordAnimal.location?.pen || selectedRecordAnimal.location?.stall]
+                    ].map(([label, value]) => (
+                      <div key={label}>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{value || 'Not recorded'}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, marginBottom: 20 }}>
+                <div className="card" style={{ padding: 16 }}>
+                  <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Production Summary</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    {[
+                      ['Milk Lifetime', selectedRecordAnimal.production?.milk?.totalLifetime ? `${selectedRecordAnimal.production.milk.totalLifetime} L` : 'Not recorded'],
+                      ['Current Lactation', selectedRecordAnimal.production?.milk?.currentLactation ? `${selectedRecordAnimal.production.milk.currentLactation} L` : 'Not recorded'],
+                      ['Peak Yield', selectedRecordAnimal.production?.milk?.peakYield ? `${selectedRecordAnimal.production.milk.peakYield} L/day` : 'Not recorded'],
+                      ['Average Daily', selectedRecordAnimal.production?.milk?.averageDaily ? `${selectedRecordAnimal.production.milk.averageDaily} L` : 'Not recorded'],
+                      ['Offspring Born', selectedRecordAnimal.production?.offspring?.totalBorn],
+                      ['Offspring Weaned', selectedRecordAnimal.production?.offspring?.totalWeaned]
+                    ].map(([label, value]) => (
+                      <div key={label}>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{value || 'Not recorded'}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="card" style={{ padding: 16 }}>
+                  <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Financial Summary</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    {[
+                      ['Acquisition Cost', formatCurrencyValue(selectedRecordAnimal.financial?.acquisitionCost || selectedRecordAnimal.purchasePrice)],
+                      ['Current Value', formatCurrencyValue(selectedRecordAnimal.financial?.currentValue)],
+                      ['Feed Cost', formatCurrencyValue(selectedRecordAnimal.financial?.feedCost)],
+                      ['Veterinary Cost', formatCurrencyValue(selectedRecordAnimal.financial?.veterinaryCost)],
+                      ['Production Revenue', formatCurrencyValue(selectedRecordAnimal.financial?.productionRevenue)],
+                      ['ROI', selectedRecordAnimal.financial?.roi ? `${selectedRecordAnimal.financial.roi}%` : 'Not recorded']
+                    ].map(([label, value]) => (
+                      <div key={label}>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{value || 'Not recorded'}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {selectedRecordAnimal.notes && (
+                <div className="card" style={{ padding: 16, marginBottom: 20 }}>
+                  <h4 style={{ margin: '0 0 10px 0', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Record Notes</h4>
+                  <div style={{ color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{selectedRecordAnimal.notes}</div>
+                </div>
+              )}
+
+              {recordEditEntry && (
+                <div className="card" style={{ padding: 16, marginBottom: 20, border: '1px solid #bbf7d0', background: '#f0fdf4' }}>
+                  <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 700, color: '#166534' }}>
+                    Edit {recordEditEntry.sourceType.charAt(0).toUpperCase() + recordEditEntry.sourceType.slice(1)} Entry
+                  </h4>
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Date</label>
+                      <input type="date" value={recordEditForm.date || ''} onChange={e => updateRecordEditField('date', e.target.value)} style={{ width: '100%' }} />
+                    </div>
+
+                    {recordEditEntry.sourceType === 'health' && (
+                      <>
+                        <input value={recordEditForm.condition || ''} onChange={e => updateRecordEditField('condition', e.target.value)} placeholder="Condition" style={{ width: '100%' }} />
+                        <select value={recordEditForm.severity || 'mild'} onChange={e => updateRecordEditField('severity', e.target.value)} style={{ width: '100%' }}>
+                          <option value="mild">Mild</option>
+                          <option value="moderate">Moderate</option>
+                          <option value="severe">Severe</option>
+                        </select>
+                        <select value={recordEditForm.status || 'ongoing'} onChange={e => updateRecordEditField('status', e.target.value)} style={{ width: '100%' }}>
+                          <option value="ongoing">Ongoing</option>
+                          <option value="resolved">Resolved</option>
+                          <option value="monitoring">Monitoring</option>
+                        </select>
+                      </>
+                    )}
+
+                    {recordEditEntry.sourceType === 'vaccination' && (
+                      <>
+                        <input value={recordEditForm.vaccineType || ''} onChange={e => updateRecordEditField('vaccineType', e.target.value)} placeholder="Vaccine type" style={{ width: '100%' }} />
+                        <select value={recordEditForm.status || 'completed'} onChange={e => updateRecordEditField('status', e.target.value)} style={{ width: '100%' }}>
+                          <option value="completed">Completed</option>
+                          <option value="scheduled">Scheduled</option>
+                          <option value="due">Due</option>
+                        </select>
+                      </>
+                    )}
+
+                    {recordEditEntry.sourceType === 'treatment' && (
+                      <>
+                        <input value={recordEditForm.condition || ''} onChange={e => updateRecordEditField('condition', e.target.value)} placeholder="Condition" style={{ width: '100%' }} />
+                        <input value={recordEditForm.medication || ''} onChange={e => updateRecordEditField('medication', e.target.value)} placeholder="Medication" style={{ width: '100%' }} />
+                        <select value={recordEditForm.status || 'ongoing'} onChange={e => updateRecordEditField('status', e.target.value)} style={{ width: '100%' }}>
+                          <option value="ongoing">Ongoing</option>
+                          <option value="completed">Completed</option>
+                          <option value="monitoring">Monitoring</option>
+                        </select>
+                      </>
+                    )}
+
+                    {recordEditEntry.sourceType === 'breeding' && (
+                      <>
+                        <select value={recordEditForm.event || 'AI'} onChange={e => updateRecordEditField('event', e.target.value)} style={{ width: '100%' }}>
+                          <option value="AI">AI</option>
+                          <option value="Natural Breeding">Natural Breeding</option>
+                          <option value="Heat Detection">Heat Detection</option>
+                          <option value="Pregnancy Check">Pregnancy Check</option>
+                        </select>
+                        <input value={recordEditForm.method || ''} onChange={e => updateRecordEditField('method', e.target.value)} placeholder="Method" style={{ width: '100%' }} />
+                        <select value={recordEditForm.status || 'Completed'} onChange={e => updateRecordEditField('status', e.target.value)} style={{ width: '100%' }}>
+                          <option value="Scheduled">Scheduled</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Confirmed">Confirmed</option>
+                          <option value="Failed">Failed</option>
+                        </select>
+                      </>
+                    )}
+
+                    {recordEditEntry.sourceType === 'milk' && (
+                      <>
+                        <select value={recordEditForm.session || 'Morning'} onChange={e => updateRecordEditField('session', e.target.value)} style={{ width: '100%' }}>
+                          <option value="Morning">Morning</option>
+                          <option value="Midday">Midday</option>
+                          <option value="Evening">Evening</option>
+                          <option value="Night">Night</option>
+                        </select>
+                        <input type="number" step="0.1" min="0" value={recordEditForm.liters || ''} onChange={e => updateRecordEditField('liters', e.target.value)} placeholder="Liters" style={{ width: '100%' }} />
+                        <select value={recordEditForm.quality || 'Grade A'} onChange={e => updateRecordEditField('quality', e.target.value)} style={{ width: '100%' }}>
+                          <option value="Grade A">Grade A</option>
+                          <option value="Grade B">Grade B</option>
+                          <option value="Grade C">Grade C</option>
+                        </select>
+                      </>
+                    )}
+
+                    {recordEditEntry.sourceType === 'feeding' && (
+                      <>
+                        <input value={recordEditForm.feedType || ''} onChange={e => updateRecordEditField('feedType', e.target.value)} placeholder="Feed type" style={{ width: '100%' }} />
+                        <input type="number" step="0.1" min="0" value={recordEditForm.quantity || ''} onChange={e => updateRecordEditField('quantity', e.target.value)} placeholder="Quantity" style={{ width: '100%' }} />
+                        <input type="number" step="0.01" min="0" value={recordEditForm.cost || ''} onChange={e => updateRecordEditField('cost', e.target.value)} placeholder="Cost" style={{ width: '100%' }} />
+                        <select value={recordEditForm.method || 'Manual'} onChange={e => updateRecordEditField('method', e.target.value)} style={{ width: '100%' }}>
+                          <option value="Manual">Manual</option>
+                          <option value="Automatic">Automatic</option>
+                          <option value="Group Feeding">Group Feeding</option>
+                        </select>
+                      </>
+                    )}
+
+                    {recordEditEntry.sourceType === 'measurement' && (
+                      <>
+                        <select value={recordEditForm.measurementType || 'Weight'} onChange={e => updateRecordEditField('measurementType', e.target.value)} style={{ width: '100%' }}>
+                          <option value="Weight">Weight</option>
+                          <option value="Height">Height</option>
+                          <option value="Length">Length</option>
+                          <option value="Girth">Girth</option>
+                        </select>
+                        <input type="number" step="0.1" min="0" value={recordEditForm.value || ''} onChange={e => updateRecordEditField('value', e.target.value)} placeholder="Value" style={{ width: '100%' }} />
+                        <input value={recordEditForm.unit || ''} onChange={e => updateRecordEditField('unit', e.target.value)} placeholder="Unit" style={{ width: '100%' }} />
+                        <select value={recordEditForm.condition || 'Good'} onChange={e => updateRecordEditField('condition', e.target.value)} style={{ width: '100%' }}>
+                          <option value="Excellent">Excellent</option>
+                          <option value="Good">Good</option>
+                          <option value="Fair">Fair</option>
+                          <option value="Poor">Poor</option>
+                        </select>
+                      </>
+                    )}
+
+                    <textarea rows={3} value={recordEditForm.notes || ''} onChange={e => updateRecordEditField('notes', e.target.value)} placeholder="Notes" style={{ width: '100%' }} />
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      <button type="button" onClick={saveRecordEditEntry} style={{ padding: '8px 12px', borderRadius: 6, border: 'none', background: '#15803d', color: '#fff', cursor: 'pointer', fontWeight: 700 }}>
+                        Save Changes
+                      </button>
+                      <button type="button" onClick={() => { setRecordEditEntry(null); setRecordEditForm({}) }} style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #d1d5db', background: 'var(--bg-elevated)', cursor: 'pointer', fontWeight: 600 }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, marginBottom: 20 }}>
+                <div className="card" style={{ padding: 16 }}>
+                  <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Health And Treatment History</h4>
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {[...selectedRecordData.healthRecords.slice(0, 3), ...selectedRecordData.vaccinations.slice(0, 2), ...selectedRecordData.treatments.slice(0, 3)].slice(0, 6).map(item => (
+                      <div key={item.id} style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 12, background: 'var(--bg-elevated)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                          <strong style={{ color: 'var(--text-primary)' }}>{item.condition || item.type || item.medication || 'Health entry'}</strong>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{formatRecordDate(item.timestamp || item.date, true)}</span>
+                            <button type="button" onClick={() => openRecordEdit(item)} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}>
+                              Edit
+                            </button>
+                            <button type="button" onClick={() => deleteRecordEntry(item)} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #fecaca', background: '#fef2f2', color: '#991b1b', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}>
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                        <div style={{ marginTop: 6, color: 'var(--text-secondary)', fontSize: '0.92rem' }}>{item.diagnosis || item.treatment || item.notes || item.status || 'No extra details recorded'}</div>
+                      </div>
+                    ))}
+                    {selectedRecordData.healthRecords.length + selectedRecordData.vaccinations.length + selectedRecordData.treatments.length === 0 && (
+                      <div style={{ color: 'var(--text-secondary)' }}>No health, vaccination, or treatment records yet.</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="card" style={{ padding: 16 }}>
+                  <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Breeding, Milk, Feeding, And Measurement History</h4>
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {[...selectedRecordData.breedingEvents.slice(0, 2), ...selectedRecordData.milkRecords.slice(0, 2), ...selectedRecordData.feedingEvents.slice(0, 2), ...selectedRecordData.measurements.slice(0, 2)].slice(0, 8).map(item => (
+                      <div key={item.id} style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 12, background: 'var(--bg-elevated)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                          <strong style={{ color: 'var(--text-primary)' }}>{item.event || item.session || item.feedType || item.type || 'Record entry'}</strong>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{formatRecordDate(item.timestamp || item.created || item.date, true)}</span>
+                            <button type="button" onClick={() => openRecordEdit(item)} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}>
+                              Edit
+                            </button>
+                            <button type="button" onClick={() => deleteRecordEntry(item)} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #fecaca', background: '#fef2f2', color: '#991b1b', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}>
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                        <div style={{ marginTop: 6, color: 'var(--text-secondary)', fontSize: '0.92rem' }}>
+                          {item.liters ? `${item.liters} L` : ''}
+                          {item.quantity ? `${item.liters || item.value ? ' • ' : ''}${item.quantity} kg` : ''}
+                          {item.value ? `${item.type ? (item.liters ? ' • ' : '') : ''}${item.value} ${item.unit || ''}` : ''}
+                          {!item.liters && !item.value && !item.quantity && (item.status || item.notes || item.method || 'No extra details recorded')}
+                          {(item.liters || item.value || item.quantity) && (item.status || item.notes || item.method) ? ` • ${item.status || item.notes || item.method}` : ''}
+                        </div>
+                      </div>
+                    ))}
+                    {selectedRecordData.breedingEvents.length + selectedRecordData.milkRecords.length + selectedRecordData.feedingEvents.length + selectedRecordData.measurements.length === 0 && (
+                      <div style={{ color: 'var(--text-secondary)' }}>No breeding, milk, feeding, or measurement records yet.</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="card" style={{ padding: 16, marginBottom: 20 }}>
+                <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Record Timeline</h4>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                  <select value={recordTimelineTypeFilter} onChange={e => setRecordTimelineTypeFilter(e.target.value)} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #d1d5db' }}>
+                    <option value="all">All Types</option>
+                    <option value="Health">Health</option>
+                    <option value="Vaccination">Vaccination</option>
+                    <option value="Treatment">Treatment</option>
+                    <option value="Breeding">Breeding</option>
+                    <option value="Milk">Milk</option>
+                    <option value="Feeding">Feeding</option>
+                    <option value="Measurement">Measurement</option>
+                  </select>
+                  <select value={recordTimelineDaysFilter} onChange={e => setRecordTimelineDaysFilter(e.target.value)} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #d1d5db' }}>
+                    <option value="all">All Time</option>
+                    <option value="7">Last 7 Days</option>
+                    <option value="30">Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                    <option value="365">Last 1 Year</option>
+                  </select>
+                  <input value={recordTimelineSearch} onChange={e => setRecordTimelineSearch(e.target.value)} placeholder="Search timeline..." style={{ flex: '1 1 240px', minWidth: 180, padding: '8px 10px', borderRadius: 6, border: '1px solid #d1d5db' }} />
+                </div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {filteredRecordTimeline.slice(0, recordTimelineLimit).map(item => (
+                    <div key={`${item.type}-${item.id}`} style={{ display: 'grid', gridTemplateColumns: '120px 140px 1fr', gap: 12, alignItems: 'start', padding: '10px 0', borderBottom: '1px solid #e2e8f0' }}>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>{formatRecordDate(item.date, true)}</div>
+                      <div style={{ fontWeight: 700, color: '#0f766e' }}>{item.type}</div>
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
+                          <span>{item.title}</span>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <button type="button" onClick={() => openRecordEdit(item, item.sourceType)} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}>
+                              Edit
+                            </button>
+                            <button type="button" onClick={() => deleteRecordEntry(item.raw || item, item.sourceType)} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #fecaca', background: '#fef2f2', color: '#991b1b', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}>
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                        {item.detail && <div style={{ marginTop: 4, color: 'var(--text-secondary)', fontSize: '0.92rem' }}>{item.detail}</div>}
+                      </div>
+                    </div>
+                  ))}
+                  {filteredRecordTimeline.length === 0 && (
+                    <div style={{ color: 'var(--text-tertiary)' }}>No timeline entries match your current filter.</div>
+                  )}
+                  {filteredRecordTimeline.length > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 }}>
+                      <div style={{ color: 'var(--text-tertiary)', fontSize: '0.85rem' }}>
+                        Showing {Math.min(recordTimelineLimit, filteredRecordTimeline.length)} of {filteredRecordTimeline.length}
+                      </div>
+                      {recordTimelineLimit < filteredRecordTimeline.length && (
+                        <button type="button" onClick={() => setRecordTimelineLimit(prev => prev + 20)} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #d1d5db', background: 'var(--bg-elevated)', cursor: 'pointer', fontWeight: 600 }}>
+                          Load More
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+                {renderSection('Health Profile', selectedRecordAnimal.health)}
+                {renderSection('Location Profile', selectedRecordAnimal.location)}
+                {renderSection('Genetics Profile', selectedRecordAnimal.genetics)}
+                {renderSection('Documentation', { ...(selectedRecordAnimal.documentation || {}), certifications: selectedRecordAnimal.certifications || {} })}
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -2424,14 +4143,14 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                 <label style={{ display: 'block', marginBottom: 6 }}>Photos (up to 5, each ≤ 2 MB)</label>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
                   <input id="animal-photos" name="photos" type="file" accept="image/*" multiple onChange={handleFileInput} />
-                  <small style={{ color: '#4b5563' }}>Files will be resized to {MAX_DIM}px and compressed.</small>
+                  <small style={{ color: 'var(--text-secondary)' }}>Files will be resized to {MAX_DIM}px and compressed.</small>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {(form.photos || []).map((p, idx) => (
                     <div key={p.id} style={{ width: 120, border: '1px solid #ddd', padding: 6, borderRadius: 6, textAlign: 'center' }}>
                       <img src={p.dataUrl} alt={`preview ${idx+1}`} style={{ width: '100%', height: 72, objectFit: 'cover', borderRadius: 4 }} />
                       <div style={{ fontSize: 12, marginTop: 6 }}>{p.filename || 'photo'}</div>
-                      <div style={{ fontSize: 11, color: '#4b5563' }}>{Math.round((p.size||0)/1024)} KB</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{Math.round((p.size||0)/1024)} KB</div>
                       <button type="button" onClick={() => removePhoto(p.id)} aria-label={`Remove photo ${idx+1}`} style={{ marginTop: 6 }}>Remove</button>
                     </div>
                   ))}
@@ -2491,25 +4210,25 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <h4 style={{ gridColumn: '1 / -1', color: '#059669', marginBottom: 8 }}>📊 Production Metrics</h4>
               
-              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#4b5563', marginTop: 12 }}>Milk Production</h5>
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: 'var(--text-secondary)', marginTop: 12 }}>Milk Production</h5>
               <label>Total Lifetime (L)<input id="milk-total-lifetime" name="milkTotalLifetime" type="number" step="0.1" value={form.production?.milk?.totalLifetime || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, totalLifetime: e.target.value } } })} /></label>
               <label>Current Lactation (L)<input type="number" step="0.1" value={form.production?.milk?.currentLactation || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, currentLactation: e.target.value } } })} /></label>
               <label>Peak Yield (L/day)<input type="number" step="0.1" value={form.production?.milk?.peakYield || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, peakYield: e.target.value } } })} /></label>
               <label>Average Daily (L)<input type="number" step="0.1" value={form.production?.milk?.averageDaily || ''} onChange={e => setForm({ ...form, production: { ...form.production, milk: { ...form.production?.milk, averageDaily: e.target.value } } })} /></label>
               
-              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#4b5563', marginTop: 12 }}>Egg Production</h5>
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: 'var(--text-secondary)', marginTop: 12 }}>Egg Production</h5>
               <label>Total Lifetime<input type="number" value={form.production?.eggs?.totalLifetime || ''} onChange={e => setForm({ ...form, production: { ...form.production, eggs: { ...form.production?.eggs, totalLifetime: e.target.value } } })} /></label>
               <label>Current Year<input type="number" value={form.production?.eggs?.currentYear || ''} onChange={e => setForm({ ...form, production: { ...form.production, eggs: { ...form.production?.eggs, currentYear: e.target.value } } })} /></label>
               <label>Average Daily<input type="number" step="0.1" value={form.production?.eggs?.averageDaily || ''} onChange={e => setForm({ ...form, production: { ...form.production, eggs: { ...form.production?.eggs, averageDaily: e.target.value } } })} /></label>
               <label>Last Recorded<input type="date" value={form.production?.eggs?.lastRecorded || ''} onChange={e => setForm({ ...form, production: { ...form.production, eggs: { ...form.production?.eggs, lastRecorded: e.target.value } } })} /></label>
               
-              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#4b5563', marginTop: 12 }}>Meat/Wool/Work</h5>
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: 'var(--text-secondary)', marginTop: 12 }}>Meat/Wool/Work</h5>
               <label>Expected Meat Yield (kg)<input type="number" step="0.1" value={form.production?.meat?.expectedYield || ''} onChange={e => setForm({ ...form, production: { ...form.production, meat: { ...form.production?.meat, expectedYield: e.target.value } } })} /></label>
               <label>Grading Score<input value={form.production?.meat?.gradingScore || ''} onChange={e => setForm({ ...form, production: { ...form.production, meat: { ...form.production?.meat, gradingScore: e.target.value } } })} /></label>
               <label>Wool Yield (kg)<input type="number" step="0.1" value={form.production?.wool?.averageYield || ''} onChange={e => setForm({ ...form, production: { ...form.production, wool: { ...form.production?.wool, averageYield: e.target.value } } })} /></label>
               <label>Wool Quality<input value={form.production?.wool?.quality || ''} onChange={e => setForm({ ...form, production: { ...form.production, wool: { ...form.production?.wool, quality: e.target.value } } })} /></label>
               
-              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#4b5563', marginTop: 12 }}>Offspring</h5>
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: 'var(--text-secondary)', marginTop: 12 }}>Offspring</h5>
               <label>Total Born<input type="number" value={form.production?.offspring?.totalBorn || ''} onChange={e => setForm({ ...form, production: { ...form.production, offspring: { ...form.production?.offspring, totalBorn: e.target.value } } })} /></label>
               <label>Total Weaned<input type="number" value={form.production?.offspring?.totalWeaned || ''} onChange={e => setForm({ ...form, production: { ...form.production, offspring: { ...form.production?.offspring, totalWeaned: e.target.value } } })} /></label>
               <label>Total Survived<input type="number" value={form.production?.offspring?.totalSurvived || ''} onChange={e => setForm({ ...form, production: { ...form.production, offspring: { ...form.production?.offspring, totalSurvived: e.target.value } } })} /></label>
@@ -2627,7 +4346,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               <label>Passport Number<input value={form.documentation?.passportNumber || ''} onChange={e => setForm({ ...form, documentation: { ...form.documentation, passportNumber: e.target.value } })} /></label>
               <label>Health Certificate<input value={form.documentation?.healthCertificate || ''} onChange={e => setForm({ ...form, documentation: { ...form.documentation, healthCertificate: e.target.value } })} /></label>
               <label>Birth Certificate<input value={form.documentation?.birthCertificate || ''} onChange={e => setForm({ ...form, documentation: { ...form.documentation, birthCertificate: e.target.value } })} /></label>
-              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: '#4b5563', marginTop: 12 }}>Certifications</h5>
+              <h5 style={{ gridColumn: '1 / -1', fontSize: '14px', color: 'var(--text-secondary)', marginTop: 12 }}>Certifications</h5>
               <label>Organic Certified<input type="checkbox" checked={form.certifications?.organic || false} onChange={e => setForm({ ...form, certifications: { ...form.certifications, organic: e.target.checked } })} /></label>
               <label>Free Range<input type="checkbox" checked={form.certifications?.freeRange || false} onChange={e => setForm({ ...form, certifications: { ...form.certifications, freeRange: e.target.checked } })} /></label>
               <label>Grass Fed<input type="checkbox" checked={form.certifications?.grassFed || false} onChange={e => setForm({ ...form, certifications: { ...form.certifications, grassFed: e.target.checked } })} /></label>
@@ -2640,7 +4359,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               <button type="submit" style={{ background: 'var(--green)', color: '#fff', padding: '12px 24px', fontWeight: 'bold', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '15px' }}>
                 {editingId ? '✓ Update Animal' : '+ Add Animal'}
               </button>
-              <button type="button" onClick={resetForm} style={{ padding: '12px 24px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '15px' }}>Reset</button>
+              <button type="button" onClick={resetForm} style={{ padding: '12px 24px', background: 'var(--bg-tertiary)', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '15px' }}>Reset</button>
               {editingId && <button type="button" onClick={() => { resetForm(); setTab('list') }} style={{ padding: '12px 24px', background: '#666', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '15px' }}>Cancel</button>}
             </div>
           </form>
@@ -2650,13 +4369,13 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
       {isDairySection && tab === 'addGroup' && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 12, flexWrap: 'wrap' }}>
-            <h2 style={{ fontSize: '1.7rem', fontWeight: '700', color: '#059669', margin: 0 }}>🥛 Dairy Lifecycle Grouping</h2>
-            <div style={{ color: '#475569', fontSize: 14 }}>Set each cow stage: fresh, early/mid/late lactation, dry, heifer, transition, and more.</div>
+            <h2 style={{ fontSize: '1.7rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>🥛 Dairy Lifecycle Grouping</h2>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Set each cow stage: fresh, early/mid/late lactation, dry, heifer, transition, and more.</div>
           </div>
 
-          <div className="card" style={{ padding: 14, marginBottom: 14, borderLeft: '4px solid #0ea5e9' }}>
-            <div style={{ fontWeight: 700, marginBottom: 10, color: '#0f172a' }}>Herd Targets & Alert Thresholds</div>
-            <div style={{ fontSize: 12, color: '#475569', marginBottom: 8 }}>
+          <div className="card" style={{ padding: 14, marginBottom: 14, borderLeft: '4px solid var(--action-primary)' }}>
+            <div style={{ fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>Herd Targets & Alert Thresholds</div>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>
               Last applied preset: {lastAppliedPreset.name} {lastAppliedPreset.at ? `at ${new Date(lastAppliedPreset.at).toLocaleString()}` : ''}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 900 ? '1fr' : '1fr auto auto', gap: 10, alignItems: 'end', marginBottom: 10 }}>
@@ -2673,14 +4392,14 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                   ))}
                 </select>
               </label>
-              <button type="button" onClick={() => applyDairyPreset(selectedDairyPreset)} style={{ padding: '9px 12px', background: '#e0f2fe', border: '1px solid #7dd3fc', borderRadius: 6, cursor: 'pointer', color: '#075985' }}>
+              <button type="button" onClick={() => applyDairyPreset(selectedDairyPreset)} style={{ padding: '9px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 6, cursor: 'pointer', color: 'var(--text-primary)' }}>
                 Re-apply Preset
               </button>
-              <button type="button" onClick={resetDairyKpiSettings} style={{ padding: '9px 12px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}>
+              <button type="button" onClick={resetDairyKpiSettings} style={{ padding: '9px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 6, cursor: 'pointer', color: 'var(--text-primary)' }}>
                 Reset Defaults
               </button>
             </div>
-            <div style={{ fontSize: 13, color: '#475569', marginTop: -4, marginBottom: 10 }}>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: -4, marginBottom: 10 }}>
               {selectedPresetMeta.description}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 900 ? '1fr' : '1.2fr 1.3fr auto auto', gap: 10, alignItems: 'end', marginBottom: 10 }}>
@@ -2704,10 +4423,10 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                   style={{ width: '100%' }}
                 />
               </label>
-              <button type="button" onClick={saveCustomDairyPreset} style={{ padding: '9px 12px', background: '#dcfce7', border: '1px solid #86efac', borderRadius: 6, cursor: 'pointer', color: '#166534' }}>
+              <button type="button" onClick={saveCustomDairyPreset} style={{ padding: '9px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 6, cursor: 'pointer', color: 'var(--text-primary)' }}>
                 Save Custom
               </button>
-              <button type="button" onClick={deleteSelectedCustomPreset} disabled={!selectedDairyPreset.startsWith('custom::')} style={{ padding: '9px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, cursor: selectedDairyPreset.startsWith('custom::') ? 'pointer' : 'not-allowed', color: '#991b1b', opacity: selectedDairyPreset.startsWith('custom::') ? 1 : 0.6 }}>
+              <button type="button" onClick={deleteSelectedCustomPreset} disabled={!selectedDairyPreset.startsWith('custom::')} style={{ padding: '9px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 6, cursor: selectedDairyPreset.startsWith('custom::') ? 'pointer' : 'not-allowed', color: 'var(--text-primary)', opacity: selectedDairyPreset.startsWith('custom::') ? 1 : 0.6 }}>
                 Delete Custom
               </button>
             </div>
@@ -2715,19 +4434,19 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               <div style={{ marginTop: -2, marginBottom: 10, border: '1px solid #fcd34d', borderRadius: 8, background: '#fffbeb', padding: 10 }}>
                 {!isEditingSelectedPresetNote ? (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <div style={{ fontSize: 12, color: '#92400e' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>
                       <strong>Selected Note:</strong>
                       <div style={{ marginTop: 4 }}>
                         {renderPresetNoteContent(selectedPresetMeta.description)}
                       </div>
                     </div>
-                    <button type="button" onClick={startInlineEditSelectedCustomPresetNote} style={{ padding: '7px 10px', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 6, cursor: 'pointer', color: '#92400e', fontSize: 12 }}>
+                    <button type="button" onClick={startInlineEditSelectedCustomPresetNote} style={{ padding: '7px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 6, cursor: 'pointer', color: 'var(--text-primary)', fontSize: 12 }}>
                       Edit Note For Selected Custom Preset
                     </button>
                   </div>
                 ) : (
                   <div>
-                    <div style={{ fontSize: 12, color: '#92400e', marginBottom: 6 }}>Editing note for {selectedPresetMeta.label}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>Editing note for {selectedPresetMeta.label}</div>
                     <textarea
                       ref={selectedPresetNoteEditorRef}
                       value={selectedPresetNoteDraft}
@@ -2740,22 +4459,22 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                       maxLength={240}
                       style={{ width: '100%', resize: 'none', overflow: 'hidden', minHeight: 96 }}
                     />
-                    <div style={{ marginTop: 6, marginBottom: 6, fontSize: 12, color: '#92400e' }}>
+                    <div style={{ marginTop: 6, marginBottom: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
                       Tip: start lines with `- ` or `* ` to create bullet notes.
                     </div>
-                    <div style={{ marginTop: 4, marginBottom: 8, padding: 8, borderRadius: 6, border: '1px solid #fde68a', background: '#fffef7', fontSize: 12, color: '#78350f' }}>
+                    <div style={{ marginTop: 4, marginBottom: 8, padding: 8, borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', fontSize: 12, color: 'var(--text-primary)' }}>
                       <strong>Preview</strong>
                       <div style={{ marginTop: 4 }}>
                         {renderPresetNoteContent(selectedPresetNoteDraft)}
                       </div>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, gap: 8, flexWrap: 'wrap' }}>
-                      <div style={{ fontSize: 12, color: '#92400e' }}>{String(selectedPresetNoteDraft || '').length}/240</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{String(selectedPresetNoteDraft || '').length}/240</div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button type="button" onClick={saveInlineSelectedCustomPresetNote} style={{ padding: '7px 10px', background: '#16a34a', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#fff', fontSize: 12 }}>
                           Save Note
                         </button>
-                        <button type="button" onClick={cancelInlineSelectedCustomPresetNote} style={{ padding: '7px 10px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer', color: '#334155', fontSize: 12 }}>
+                        <button type="button" onClick={cancelInlineSelectedCustomPresetNote} style={{ padding: '7px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 6, cursor: 'pointer', color: 'var(--text-primary)', fontSize: 12 }}>
                           Cancel
                         </button>
                       </div>
@@ -2765,37 +4484,37 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               </div>
             )}
             <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 900 ? '1fr' : 'auto auto auto', gap: 10, alignItems: 'center', marginBottom: 10 }}>
-              <button type="button" onClick={exportDairyPresets} style={{ padding: '8px 12px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 6, cursor: 'pointer', color: '#0c4a6e' }}>
+              <button type="button" onClick={exportDairyPresets} style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 6, cursor: 'pointer', color: 'var(--text-primary)' }}>
                 Export Presets JSON
               </button>
-              <button type="button" onClick={() => presetImportInputRef.current?.click()} style={{ padding: '8px 12px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 6, cursor: 'pointer', color: '#0c4a6e' }}>
+              <button type="button" onClick={() => presetImportInputRef.current?.click()} style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 6, cursor: 'pointer', color: 'var(--text-primary)' }}>
                 Import Presets JSON
               </button>
               <input ref={presetImportInputRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={importDairyPresetsFile} />
             </div>
             {pendingPresetImport && (
-              <div style={{ marginBottom: 10, padding: '12px 14px', borderRadius: 8, border: '1px solid #bfdbfe', background: '#eff6ff' }}>
-                <div style={{ fontWeight: 700, color: '#1d4ed8', marginBottom: 8 }}>Import Preview</div>
-                <div style={{ fontSize: 13, color: '#334155', marginBottom: 6 }}>
+              <div style={{ marginBottom: 10, padding: '12px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)' }}>
+                <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>Import Preview</div>
+                <div style={{ fontSize: 13, color: 'var(--text-primary)', marginBottom: 6 }}>
                   File: {pendingPresetImport.fileName} • {pendingPresetImport.importedNames.length} preset(s) • {pendingPresetImport.newNames.length} new • {pendingPresetImport.overwriteNames.length} overwrite
                 </div>
                 {pendingPresetImport.currentSettings && (
-                  <div style={{ fontSize: 13, color: '#334155', marginBottom: 6 }}>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 6 }}>
                     File also contains current settings that can be applied.
                   </div>
                 )}
                 {pendingPresetImport.newNames.length > 0 && (
-                  <div style={{ fontSize: 13, marginBottom: 4, color: '#166534' }}>
+                  <div style={{ fontSize: 13, marginBottom: 4, color: 'var(--text-primary)' }}>
                     New: {pendingPresetImport.newNames.join(', ')}
                   </div>
                 )}
                 {pendingPresetImport.overwriteNames.length > 0 && (
-                  <div style={{ fontSize: 13, marginBottom: 8, color: '#92400e' }}>
+                  <div style={{ fontSize: 13, marginBottom: 8, color: 'var(--text-secondary)' }}>
                     Overwrite: {pendingPresetImport.overwriteNames.join(', ')}
                   </div>
                 )}
                 {pendingPresetImport.importedNames.length > 0 && (
-                  <div style={{ fontSize: 12, color: '#475569', marginBottom: 8 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>
                     {pendingPresetImport.importedNames.slice(0, 3).map(name => {
                       const note = pendingPresetImport.importedCustom?.[name]?.notes
                       return `${name}${note ? `: ${note}` : ''}`
@@ -2812,7 +4531,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                       Import And Apply Settings
                     </button>
                   )}
-                  <button type="button" onClick={cancelPresetImportPreview} style={{ padding: '8px 12px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}>
+                  <button type="button" onClick={cancelPresetImportPreview} style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 6, cursor: 'pointer', color: 'var(--text-primary)' }}>
                     Cancel
                   </button>
                 </div>
@@ -2874,42 +4593,42 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 14 }}>
             <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.milking), dairyKPIs.targets.milking).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.milking), dairyKPIs.targets.milking).border}` }}>
-              <div style={{ fontSize: 12, color: '#475569' }}>Milking Cows</div>
-              <div style={{ fontSize: 23, fontWeight: 700, color: '#065f46' }}>{dairyKPIs.milking}</div>
-              <div style={{ fontSize: 12, color: '#475569' }}>{dairyKPIs.pct(dairyKPIs.milking)}% of herd • target {dairyKPIs.targets.milking}%</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Milking Cows</div>
+              <div style={{ fontSize: 23, fontWeight: 700, color: 'var(--text-primary)' }}>{dairyKPIs.milking}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{dairyKPIs.pct(dairyKPIs.milking)}% of herd • target {dairyKPIs.targets.milking}%</div>
               <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.milking), dairyKPIs.targets.milking).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.milking), dairyKPIs.targets.milking).label}</div>
             </div>
             <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.fresh), dairyKPIs.targets.fresh).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.fresh), dairyKPIs.targets.fresh).border}` }}>
-              <div style={{ fontSize: 12, color: '#475569' }}>Fresh Cows</div>
-              <div style={{ fontSize: 23, fontWeight: 700, color: '#0369a1' }}>{dairyKPIs.fresh}</div>
-              <div style={{ fontSize: 12, color: '#475569' }}>{dairyKPIs.pct(dairyKPIs.fresh)}% of herd • target {dairyKPIs.targets.fresh}%</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Fresh Cows</div>
+              <div style={{ fontSize: 23, fontWeight: 700, color: 'var(--text-primary)' }}>{dairyKPIs.fresh}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{dairyKPIs.pct(dairyKPIs.fresh)}% of herd • target {dairyKPIs.targets.fresh}%</div>
               <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.fresh), dairyKPIs.targets.fresh).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.fresh), dairyKPIs.targets.fresh).label}</div>
             </div>
             <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.dry), dairyKPIs.targets.dry).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.dry), dairyKPIs.targets.dry).border}` }}>
-              <div style={{ fontSize: 12, color: '#475569' }}>Dry Cows</div>
-              <div style={{ fontSize: 23, fontWeight: 700, color: '#9a3412' }}>{dairyKPIs.dry}</div>
-              <div style={{ fontSize: 12, color: '#475569' }}>{dairyKPIs.pct(dairyKPIs.dry)}% of herd • target {dairyKPIs.targets.dry}%</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Dry Cows</div>
+              <div style={{ fontSize: 23, fontWeight: 700, color: 'var(--text-primary)' }}>{dairyKPIs.dry}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{dairyKPIs.pct(dairyKPIs.dry)}% of herd • target {dairyKPIs.targets.dry}%</div>
               <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.dry), dairyKPIs.targets.dry).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.dry), dairyKPIs.targets.dry).label}</div>
             </div>
             <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.heifers), dairyKPIs.targets.heifers, 12).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.heifers), dairyKPIs.targets.heifers, 12).border}` }}>
-              <div style={{ fontSize: 12, color: '#475569' }}>Heifers/Youngstock</div>
-              <div style={{ fontSize: 23, fontWeight: 700, color: '#1d4ed8' }}>{dairyKPIs.heifers}</div>
-              <div style={{ fontSize: 12, color: '#475569' }}>{dairyKPIs.pct(dairyKPIs.heifers)}% of herd • target {dairyKPIs.targets.heifers}%</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Heifers/Youngstock</div>
+              <div style={{ fontSize: 23, fontWeight: 700, color: 'var(--text-primary)' }}>{dairyKPIs.heifers}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{dairyKPIs.pct(dairyKPIs.heifers)}% of herd • target {dairyKPIs.targets.heifers}%</div>
               <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.heifers), dairyKPIs.targets.heifers, 12).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.heifers), dairyKPIs.targets.heifers, 12).label}</div>
             </div>
             <div className="card" style={{ padding: 12, background: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.pregnant), dairyKPIs.targets.pregnant, 15).bg, borderLeft: `4px solid ${getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.pregnant), dairyKPIs.targets.pregnant, 15).border}` }}>
-              <div style={{ fontSize: 12, color: '#475569' }}>Pregnant</div>
-              <div style={{ fontSize: 23, fontWeight: 700, color: '#be185d' }}>{dairyKPIs.pregnant}</div>
-              <div style={{ fontSize: 12, color: '#475569' }}>Avg DIM: {dairyKPIs.avgDIM ?? 'N/A'} • target {dairyKPIs.targets.pregnant}%</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Pregnant</div>
+              <div style={{ fontSize: 23, fontWeight: 700, color: 'var(--text-primary)' }}>{dairyKPIs.pregnant}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Avg DIM: {dairyKPIs.avgDIM ?? 'N/A'} • target {dairyKPIs.targets.pregnant}%</div>
               <div style={{ fontSize: 12, fontWeight: 700, color: getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.pregnant), dairyKPIs.targets.pregnant, 15).color }}>{getKpiStatusStyle(dairyKPIs.pct(dairyKPIs.pregnant), dairyKPIs.targets.pregnant, 15).label}</div>
             </div>
           </div>
 
           {dairyKPIs.alerts.length > 0 && (
-            <div className="card" style={{ marginBottom: 14, padding: 12, borderLeft: '4px solid #f59e0b', background: '#fffbeb' }}>
-              <div style={{ fontWeight: 700, marginBottom: 8, color: '#92400e' }}>Stage Alerts</div>
+            <div className="card" style={{ marginBottom: 14, padding: 12, borderLeft: '4px solid #f59e0b', background: 'var(--bg-secondary)' }}>
+              <div style={{ fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>Stage Alerts</div>
               {dairyKPIs.alerts.map((a, idx) => (
-                <div key={idx} style={{ fontSize: 13, color: a.level === 'warning' ? '#92400e' : '#1e3a8a', marginBottom: 4 }}>
+                <div key={idx} style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   • {a.text}
                 </div>
               ))}
@@ -2923,12 +4642,12 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                 placeholder="Search by name, tag, breed, stage..."
                 value={dairyGroupingFilter}
                 onChange={e => setDairyGroupingFilter(e.target.value)}
-                style={{ padding: '9px 12px', borderRadius: 6, border: '1px solid #d1d5db' }}
+                style={{ padding: '9px 12px', borderRadius: 6, border: '1px solid var(--border-primary)', color: 'var(--text-primary)', background: 'var(--bg-elevated)' }}
               />
               <select
                 value={dairyLifecycleFilter}
                 onChange={e => setDairyLifecycleFilter(e.target.value)}
-                style={{ padding: '9px 12px', borderRadius: 6, border: '1px solid #d1d5db' }}
+                style={{ padding: '9px 12px', borderRadius: 6, border: '1px solid var(--border-primary)', color: 'var(--text-primary)', background: 'var(--bg-elevated)' }}
               >
                 <option value="all">All Lifecycle Stages</option>
                 {DAIRY_LIFECYCLE_STAGES.map(stage => <option key={stage} value={stage}>{stage}</option>)}
@@ -2938,7 +4657,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               <select
                 value={bulkLifecycleStage}
                 onChange={e => setBulkLifecycleStage(e.target.value)}
-                style={{ padding: '9px 12px', borderRadius: 6, border: '1px solid #d1d5db' }}
+                style={{ padding: '9px 12px', borderRadius: 6, border: '1px solid var(--border-primary)', color: 'var(--text-primary)', background: 'var(--bg-elevated)' }}
               >
                 <option value="">Bulk: choose lifecycle stage</option>
                 {DAIRY_LIFECYCLE_STAGES.map(stage => <option key={stage} value={stage}>{stage}</option>)}
@@ -2950,16 +4669,16 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                 Auto-suggest selected
               </button>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" onClick={selectAllFilteredDairy} style={{ flex: 1, padding: '9px 12px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}>
+                <button type="button" onClick={selectAllFilteredDairy} style={{ flex: 1, padding: '9px 12px', background: 'var(--bg-secondary)', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}>
                   Select all filtered
                 </button>
-                <button type="button" onClick={clearSelectedDairy} style={{ flex: 1, padding: '9px 12px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}>
+                <button type="button" onClick={clearSelectedDairy} style={{ flex: 1, padding: '9px 12px', background: 'var(--bg-secondary)', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}>
                   Clear
                 </button>
               </div>
             </div>
             <div style={{ marginTop: 8, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <button type="button" onClick={() => applyAutoSuggestionToIds(dairyGroupingRows.map(a => a.id))} style={{ padding: '8px 12px', background: '#eff6ff', border: '1px solid #93c5fd', borderRadius: 6, cursor: 'pointer', color: '#1e40af' }}>
+                <button type="button" onClick={() => applyAutoSuggestionToIds(dairyGroupingRows.map(a => a.id))} style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 6, cursor: 'pointer', color: 'var(--text-primary)' }}>
                 Auto-suggest all filtered ({dairyGroupingRows.length})
               </button>
             </div>
@@ -2968,8 +4687,8 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 10, marginBottom: 18 }}>
             {DAIRY_LIFECYCLE_STAGES.map(stage => (
               <div key={stage} className="card" style={{ padding: 10, borderLeft: '4px solid #059669' }}>
-                <div style={{ fontSize: 12, color: '#475569', minHeight: 34 }}>{stage}</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: '#065f46' }}>{dairyStageSummary[stage] || 0}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', minHeight: 34 }}>{stage}</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)' }}>{dairyStageSummary[stage] || 0}</div>
               </div>
             ))}
           </div>
@@ -2977,10 +4696,10 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
           <div className="card" style={{ padding: 12 }}>
             <div style={{ display: 'grid', gap: 10 }}>
               {dairyGroupingRows.length === 0 && (
-                <div style={{ color: '#475569', padding: 14 }}>No animals match this filter.</div>
+                <div style={{ color: 'var(--text-secondary)', padding: 14 }}>No animals match this filter.</div>
               )}
               {dairyGroupingRows.map(a => (
-                <div key={a.id} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, background: '#fff' }}>
+                <div key={a.id} style={{ border: '1px solid var(--border-primary)', borderRadius: 8, padding: 12, background: 'var(--bg-elevated)' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 900 ? '1fr' : '1.3fr 1fr 1fr 0.8fr', gap: 10, alignItems: 'center' }}>
                     <div>
                       <div style={{ marginBottom: 4 }}>
@@ -2989,11 +4708,11 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                           checked={selectedDairyAnimalIds.includes(a.id)}
                           onChange={() => toggleDairySelection(a.id)}
                         />
-                        <span style={{ marginLeft: 8, fontSize: 12, color: '#334155' }}>Select</span>
+                        <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--text-secondary)' }}>Select</span>
                       </div>
-                      <div style={{ fontWeight: 700, color: '#0f172a' }}>{a.name || a.tag || a.id}</div>
-                      <div style={{ fontSize: 13, color: '#475569' }}>{a.tag || a.id} • {a.breed || 'No breed'} • {a.sex === 'F' ? 'Female' : 'Male'} • DIM: {getAnimalDIM(a) ?? 'N/A'}</div>
-                      <div style={{ fontSize: 12, color: '#475569', marginTop: 4 }}>
+                      <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{a.name || a.tag || a.id}</div>
+                      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{a.tag || a.id} • {a.breed || 'No breed'} • {a.sex === 'F' ? 'Female' : 'Male'} • DIM: {getAnimalDIM(a) ?? 'N/A'}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
                         Suggestion: {suggestDairyLifecycleStage(a).stage} ({suggestDairyLifecycleStage(a).confidence})
                       </div>
                     </div>
@@ -3051,7 +4770,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                         style={{ width: '100%', marginTop: 4 }}
                       />
                     </label>
-                    <button type="button" onClick={() => updateDairyLifecycle(a.id, { lactationStatus: suggestDairyLifecycleStage(a).stage })} style={{ alignSelf: 'end', padding: '9px 12px', background: '#e0f2fe', border: '1px solid #7dd3fc', borderRadius: 6, cursor: 'pointer', color: '#075985' }}>
+                    <button type="button" onClick={() => updateDairyLifecycle(a.id, { lactationStatus: suggestDairyLifecycleStage(a).stage })} style={{ alignSelf: 'end', padding: '9px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 6, cursor: 'pointer', color: 'var(--text-primary)' }}>
                       Apply suggestion
                     </button>
                   </div>
@@ -3124,7 +4843,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               </div>
               <div style={{ marginTop: 20, display: 'flex', gap: 12 }}>
                 <button type="submit" style={{ background: '#059669', color: '#fff', padding: '10px 20px', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '1rem', cursor: 'pointer' }}>{editingGroupId ? 'Update Group' : 'Create Group'}</button>
-                <button type="button" onClick={() => { resetGroupForm(); setTab('addGroup'); }} style={{ padding: '10px 20px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '1rem' }}>Cancel</button>
+                <button type="button" onClick={() => { resetGroupForm(); setTab('addGroup'); }} style={{ padding: '10px 20px', background: 'var(--bg-tertiary)', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '1rem' }}>Cancel</button>
               </div>
             </form>
           </div>
@@ -3135,7 +4854,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
               <div style={{ padding: 40, textAlign: 'center', background: '#f0fdf4', borderRadius: 8 }}>
                 <div style={{ fontSize: 48, marginBottom: 16 }}>🏷️</div>
                 <h3>No groups yet</h3>
-                <p style={{ color: '#4b5563' }}>Create your first group to organize animals</p>
+                <p style={{ color: 'var(--text-secondary)' }}>Create your first group to organize animals</p>
               </div>
             ) : (
               visibleGroups.filter(g => g.name.toLowerCase().includes(filter.toLowerCase())).map(g => {
@@ -3158,31 +4877,31 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                   return `${Math.floor(Math.min(...ages))} - ${Math.ceil(Math.max(...ages))} yrs`;
                 })()
                 return (
-                  <div key={g.id} className="card" style={{ padding: 24, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #e5e7eb', border: '2px solid #059669', position: 'relative' }}>
+                  <div key={g.id} className="card" style={{ padding: 24, background: 'var(--bg-elevated)', borderRadius: 12, boxShadow: '0 2px 8px #e5e7eb', border: '2px solid #059669', position: 'relative' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                       <h3 style={{ margin: 0, fontWeight: '700', color: '#059669' }}>{g.name}</h3>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => startEditGroup(g)} style={{ background: '#f3f4f6', color: '#059669', border: '1px solid #059669', borderRadius: 6, padding: '6px 12px', fontWeight: '600', cursor: 'pointer' }}>✏️ Edit</button>
+                        <button onClick={() => startEditGroup(g)} style={{ background: 'var(--bg-tertiary)', color: '#059669', border: '1px solid #059669', borderRadius: 6, padding: '6px 12px', fontWeight: '600', cursor: 'pointer' }}>✏️ Edit</button>
                         <button onClick={() => deleteGroup(g.id)} style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #dc2626', borderRadius: 6, padding: '6px 12px', fontWeight: '600', cursor: 'pointer' }}>🗑️ Delete</button>
                       </div>
                     </div>
-                    <p style={{ color: '#4b5563', fontSize: 15, marginBottom: 12 }}>{g.desc || 'No description'}</p>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: 15, marginBottom: 12 }}>{g.desc || 'No description'}</p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12, marginBottom: 16 }}>
-                      <div style={{ background: '#f0fdf4', borderRadius: 6, padding: 10, textAlign: 'center' }}>
+                      <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 6, padding: 10, textAlign: 'center' }}>
                         <div style={{ fontSize: 18, fontWeight: '700', color: '#059669' }}>{groupAnimals.length}</div>
-                        <div style={{ fontSize: 13, color: '#4b5563' }}>Total</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Total</div>
                       </div>
-                      <div style={{ background: '#eff6ff', borderRadius: 6, padding: 10, textAlign: 'center' }}>
+                      <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 6, padding: 10, textAlign: 'center' }}>
                         <div style={{ fontSize: 18, fontWeight: '700', color: '#2563eb' }}>{groupAnimals.filter(a => a.status === 'Active').length}</div>
-                        <div style={{ fontSize: 13, color: '#4b5563' }}>Active</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Active</div>
                       </div>
-                      <div style={{ background: '#fce7f3', borderRadius: 6, padding: 10, textAlign: 'center' }}>
+                      <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 6, padding: 10, textAlign: 'center' }}>
                         <div style={{ fontSize: 18, fontWeight: '700', color: '#db2777' }}>{femaleCount}</div>
-                        <div style={{ fontSize: 13, color: '#4b5563' }}>Female</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Female</div>
                       </div>
-                      <div style={{ background: '#dbeafe', borderRadius: 6, padding: 10, textAlign: 'center' }}>
+                      <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 6, padding: 10, textAlign: 'center' }}>
                         <div style={{ fontSize: 18, fontWeight: '700', color: '#2563eb' }}>{maleCount}</div>
-                        <div style={{ fontSize: 13, color: '#4b5563' }}>Male</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Male</div>
                       </div>
                     </div>
                     <div style={{ fontSize: 14, marginBottom: 10 }}>
@@ -3196,16 +4915,16 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
                     <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>Animals in this group:</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
                       {groupAnimals.length === 0 ? (
-                        <span style={{ color: '#4b5563', fontSize: 13 }}>No animals in this group.</span>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>No animals in this group.</span>
                       ) : (
                         groupAnimals.slice(0, 10).map(a => (
-                          <span key={a.id} style={{ fontSize: 13, padding: '6px 12px', background: '#f3f4f6', borderRadius: 6, border: '1px solid #e5e7eb', marginBottom: '4px' }}>
+                          <span key={a.id} style={{ fontSize: 13, padding: '6px 12px', background: 'var(--bg-tertiary)', borderRadius: 6, border: '1px solid #e5e7eb', marginBottom: '4px' }}>
                             {a.name || a.tag || a.id}
                           </span>
                         ))
                       )}
                       {groupAnimals.length > 10 && (
-                        <span style={{ fontSize: 13, padding: '6px 12px', color: '#4b5563' }}>+{groupAnimals.length - 10} more</span>
+                        <span style={{ fontSize: 13, padding: '6px 12px', color: 'var(--text-secondary)' }}>+{groupAnimals.length - 10} more</span>
                       )}
                     </div>
                   </div>
@@ -3217,13 +4936,13 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
           {/* Ungrouped Animals Warning */}
           {scopedAnimals.filter(a => !a.groupId).length > 0 && (
             <div className="card" style={{ padding: 20, marginTop: 24, background: '#fef3c7', borderLeft: '6px solid #f59e0b', borderRadius: 8 }}>
-              <h3 style={{ margin: '0 0 8px 0', color: '#92400e' }}>⚠️ Ungrouped Animals</h3>
-              <p style={{ margin: '0 0 8px 0', color: '#78350f', fontSize: 15 }}>
+              <h3 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)' }}>⚠️ Ungrouped Animals</h3>
+              <p style={{ margin: '0 0 8px 0', color: 'var(--text-secondary)', fontSize: 15 }}>
                 {scopedAnimals.filter(a => !a.groupId).length} animal(s) are not assigned to any group.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
                 {scopedAnimals.filter(a => !a.groupId).map(a => (
-                  <span key={a.id} style={{ fontSize: 13, padding: '6px 12px', background: 'white', borderRadius: 6, border: '1px solid #fbbf24' }}>
+                  <span key={a.id} style={{ fontSize: 13, padding: '6px 12px', background: 'var(--bg-elevated)', borderRadius: 6, border: '1px solid #fbbf24' }}>
                     {a.name || a.tag || a.id}
                   </span>
                 ))}
@@ -3235,16 +4954,8 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
 
       <div>
         {/* Submodules - single column on mobile */}
-        {tab === 'pastures' && (
-          <div style={{ marginBottom: 16, width: '100%' }}>
-            <React.Suspense fallback={<div>Loading...</div>}>
-              <Pastures />
-            </React.Suspense>
-          </div>
-        )}
-
         {tab === 'health' && (
-          <div style={{ marginBottom: 16, width: '100%' }}>
+          <div className={isDairySection ? 'dairy-theme-surface' : undefined} style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
               <HealthSystem animals={scopedAnimals} setAnimals={setAnimals} groups={visibleGroups} />
             </React.Suspense>
@@ -3252,7 +4963,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
         )}
 
         {tab === 'feeding' && (
-          <div style={{ marginBottom: 16, width: '100%' }}>
+          <div className={isDairySection ? 'dairy-theme-surface' : undefined} style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
               <AnimalFeeding animals={scopedAnimals} />
             </React.Suspense>
@@ -3260,7 +4971,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
         )}
 
         {tab === 'measurement' && (
-          <div style={{ marginBottom: 16, width: '100%' }}>
+          <div className={isDairySection ? 'dairy-theme-surface' : undefined} style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
               <AnimalMeasurement animals={scopedAnimals} />
             </React.Suspense>
@@ -3268,7 +4979,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
         )}
 
         {tab === 'breeding' && (
-          <div style={{ marginBottom: 16, width: '100%' }}>
+          <div className={isDairySection ? 'dairy-theme-surface' : undefined} style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
               <AnimalBreeding animals={scopedAnimals} />
             </React.Suspense>
@@ -3276,7 +4987,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
         )}
 
         {tab === 'milkyield' && (
-          <div style={{ marginBottom: 16, width: '100%' }}>
+          <div className={isDairySection ? 'dairy-theme-surface' : undefined} style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
               <AnimalMilkYield animals={scopedAnimals} />
             </React.Suspense>
@@ -3284,7 +4995,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
         )}
 
         {tab === 'treatment' && (
-          <div style={{ marginBottom: 16, width: '100%' }}>
+          <div className={isDairySection ? 'dairy-theme-surface' : undefined} style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
               <AnimalTreatment animals={scopedAnimals} />
             </React.Suspense>
@@ -3292,7 +5003,7 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
         )}
 
         {tab === 'calf' && (
-          <div style={{ marginBottom: 16, width: '100%' }}>
+          <div className={isDairySection ? 'dairy-theme-surface' : undefined} style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
               <CalfManagement animals={scopedAnimals} />
             </React.Suspense>
@@ -3303,14 +5014,6 @@ export default function Animals({ section = 'all', initialTab = 'list', recordSo
           <div style={{ marginBottom: 16, width: '100%' }}>
             <React.Suspense fallback={<div>Loading...</div>}>
               <BSFFarming />
-            </React.Suspense>
-          </div>
-        )}
-
-        {tab === 'azolla' && (
-          <div style={{ marginBottom: 16, width: '100%' }}>
-            <React.Suspense fallback={<div>Loading...</div>}>
-              <AzollaFarming />
             </React.Suspense>
           </div>
         )}

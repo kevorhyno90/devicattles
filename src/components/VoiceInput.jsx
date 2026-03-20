@@ -145,7 +145,7 @@ export default function VoiceInput({ value, onChange, placeholder = 'Enter text.
           top: '50%',
           transform: 'translateY(-50%)',
           fontSize: '12px',
-          color: '#4b5563'
+          color: 'var(--text-secondary)'
         }}>
           Voice input not supported
         </div>

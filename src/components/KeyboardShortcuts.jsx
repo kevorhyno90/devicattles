@@ -160,14 +160,14 @@ export default function KeyboardShortcuts({ onClose }) {
                           )}
                           <kbd style={{
                             padding: '4px 8px',
-                            background: '#fff',
+                            background: 'var(--bg-elevated)',
                             border: '1px solid #d1d5db',
                             borderBottom: '2px solid #9ca3af',
                             borderRadius: '4px',
                             fontSize: '12px',
                             fontWeight: '600',
                             fontFamily: 'monospace',
-                            color: '#374151',
+                            color: 'var(--text-secondary)',
                             minWidth: '32px',
                             textAlign: 'center',
                             boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
@@ -195,7 +195,7 @@ export default function KeyboardShortcuts({ onClose }) {
         }}>
           <strong>💡 Tip:</strong> Press <kbd style={{
             padding: '2px 6px',
-            background: '#fff',
+            background: 'var(--bg-elevated)',
             border: '1px solid #d1d5db',
             borderRadius: '3px',
             fontSize: '12px',

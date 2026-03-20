@@ -929,7 +929,7 @@ export default function AnimalFeeding({ animals }){
 
           <div className="card" style={{ padding: 0, overflow: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead style={{ background: '#f9fafb', position: 'sticky', top: 0 }}>
+              <thead style={{ background: 'var(--bg-secondary)', position: 'sticky', top: 0 }}>
                 <tr>
                   <th style={{ padding: 10, textAlign: 'left' }}>Ingredient</th>
                   <th style={{ padding: 10 }}>DM%</th>
@@ -948,7 +948,7 @@ export default function AnimalFeeding({ animals }){
                   <tr key={`${ing.name}-${ing.category}`} style={{ borderBottom: '1px solid #e5e7eb' }}>
                     <td style={{ padding: 10 }}>
                       <div style={{ fontWeight: 600 }}>{ing.name}</div>
-                      <div style={{ fontSize: 12, color: '#4b5563' }}>{ing.category}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{ing.category}</div>
                     </td>
                     <td style={{ padding: 10, textAlign: 'center' }}>{ing.DM.toFixed(1)}</td>
                     <td style={{ padding: 10, textAlign: 'center' }}>{ing.CP.toFixed(1)}</td>
@@ -979,11 +979,11 @@ export default function AnimalFeeding({ animals }){
           
           <div style={{ display: 'grid', gap: 16 }}>
             {filteredRequirements.map(([animal, req]) => (
-              <div key={animal} className="card" style={{ padding: 16, background: '#f9fafb' }}>
+              <div key={animal} className="card" style={{ padding: 16, background: 'var(--bg-secondary)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                   <div>
                     <h5 style={{ margin: 0 }}>{animal}</h5>
-                    <div style={{ fontSize: 12, color: '#4b5563', marginTop: 4 }}>{req.category}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>{req.category}</div>
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 12, fontSize: 14 }}>
@@ -1085,55 +1085,55 @@ export default function AnimalFeeding({ animals }){
               <h4>Nutritional Analysis</h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginTop: 16 }}>
                 <div>
-                  <div style={{ fontSize: 12, color: '#4b5563' }}>Dry Matter</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Dry Matter</div>
                   <div style={{ fontSize: 24, fontWeight: 'bold' }}>{analysis.DM.toFixed(1)} kg</div>
                   {requirements && <div style={{ fontSize: 12, color: analysis.DM >= requirements.DM ? '#059669' : '#dc2626' }}>
                     Target: {requirements.DM} kg
                   </div>}
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: '#4b5563' }}>Crude Protein</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Crude Protein</div>
                   <div style={{ fontSize: 24, fontWeight: 'bold' }}>{analysis.CP.toFixed(1)}%</div>
                   {requirements && <div style={{ fontSize: 12, color: analysis.CP >= requirements.CP ? '#059669' : '#dc2626' }}>
                     Target: {requirements.CP}%
                   </div>}
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: '#4b5563' }}>NDF</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>NDF</div>
                   <div style={{ fontSize: 24, fontWeight: 'bold' }}>{analysis.NDF.toFixed(1)}%</div>
                   {requirements && <div style={{ fontSize: 12, color: Math.abs(analysis.NDF - requirements.NDF) <= 5 ? '#059669' : '#dc2626' }}>
                     Target: {requirements.NDF}%
                   </div>}
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: '#4b5563' }}>NEL</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>NEL</div>
                   <div style={{ fontSize: 24, fontWeight: 'bold' }}>{analysis.NEL.toFixed(2)}</div>
                   {requirements && <div style={{ fontSize: 12, color: analysis.NEL >= requirements.NEL ? '#059669' : '#dc2626' }}>
                     Target: {requirements.NEL}
                   </div>}
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: '#4b5563' }}>ME (MJ/kg DM)</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>ME (MJ/kg DM)</div>
                   <div style={{ fontSize: 24, fontWeight: 'bold' }}>{analysis.ME.toFixed(1)}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: '#4b5563' }}>Calcium</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Calcium</div>
                   <div style={{ fontSize: 24, fontWeight: 'bold' }}>{analysis.Ca.toFixed(2)}%</div>
                   {requirements && <div style={{ fontSize: 12, color: analysis.Ca >= requirements.Ca ? '#059669' : '#dc2626' }}>
                     Target: {requirements.Ca}%
                   </div>}
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: '#4b5563' }}>Phosphorus</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Phosphorus</div>
                   <div style={{ fontSize: 24, fontWeight: 'bold' }}>{analysis.P.toFixed(2)}%</div>
                   {requirements && <div style={{ fontSize: 12, color: analysis.P >= requirements.P ? '#059669' : '#dc2626' }}>
                     Target: {requirements.P}%
                   </div>}
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: '#4b5563' }}>Cost</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Cost</div>
                   <div style={{ fontSize: 24, fontWeight: 'bold' }}>KES {analysis.costPerKg.toFixed(2)}/kg</div>
-                  <div style={{ fontSize: 12, color: '#4b5563' }}>KES {(analysis.costPerKg * analysis.DM).toFixed(2)}/head/day</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>KES {(analysis.costPerKg * analysis.DM).toFixed(2)}/head/day</div>
                 </div>
               </div>
               <div style={{ marginTop: 20, display: 'flex', gap: 8 }}>
@@ -1151,7 +1151,7 @@ export default function AnimalFeeding({ animals }){
           {diets.length === 0 ? (
             <div className="card" style={{ padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 48 }}>💾</div>
-              <p style={{ color: '#4b5563' }}>No saved diets yet</p>
+              <p style={{ color: 'var(--text-secondary)' }}>No saved diets yet</p>
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 16 }}>
@@ -1186,7 +1186,7 @@ export default function AnimalFeeding({ animals }){
                       ) : (
                         <>
                           <h4 style={{ margin: '0 0 8px 0' }}>{diet.name}</h4>
-                          <div style={{ fontSize: 14, color: '#4b5563' }}>{diet.targetAnimal}</div>
+                          <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>{diet.targetAnimal}</div>
                         </>
                       )}
                     </div>
@@ -1272,8 +1272,8 @@ export default function AnimalFeeding({ animals }){
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <div>
                       <h5 style={{ margin: 0 }}>{r.name}</h5>
-                      <div style={{ fontSize: 13, color: '#4b5563' }}>Diet: {r.dietName}</div>
-                      <div style={{ fontSize: 13, color: '#4b5563' }}>{r.animals.length} animals assigned</div>
+                      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Diet: {r.dietName}</div>
+                      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{r.animals.length} animals assigned</div>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={() => startEditRation(r)}>✏️ Edit</button>
@@ -1439,7 +1439,7 @@ export default function AnimalFeeding({ animals }){
           {feedingEvents.length > 0 ? (
             <div className="card" style={{ padding: 0, overflow: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead style={{ background: '#f9fafb', position: 'sticky', top: 0 }}>
+                <thead style={{ background: 'var(--bg-secondary)', position: 'sticky', top: 0 }}>
                   <tr>
                     <th style={{ padding: 10, textAlign: 'left' }}>Date/Time</th>
                     <th style={{ padding: 10, textAlign: 'left' }}>Feed Type</th>
@@ -1462,11 +1462,11 @@ export default function AnimalFeeding({ animals }){
                       <tr key={event.id || `feeding-event-${event.date}-${Math.random()}`} style={{ borderBottom: '1px solid #e5e7eb' }}>
                         <td style={{ padding: 10 }}>
                           <div style={{ fontWeight: 600 }}>{new Date(event.date).toLocaleDateString()}</div>
-                          <div style={{ fontSize: 12, color: '#4b5563' }}>{new Date(event.date).toLocaleTimeString()}</div>
+                          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{new Date(event.date).toLocaleTimeString()}</div>
                         </td>
                         <td style={{ padding: 10 }}>
                           <div style={{ fontWeight: 600 }}>{event.feedType}</div>
-                          {event.supplier && <div style={{ fontSize: 12, color: '#4b5563' }}>Supplier: {event.supplier}</div>}
+                          {event.supplier && <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Supplier: {event.supplier}</div>}
                         </td>
                         <td style={{ padding: 10, textAlign: 'center' }}>{event.quantity.toFixed(1)}</td>
                         <td style={{ padding: 10, textAlign: 'center' }}>
@@ -1497,7 +1497,7 @@ export default function AnimalFeeding({ animals }){
                               <div>N/A</div>
                             )}
                           </div>
-                          <div style={{ fontSize: 12, color: '#4b5563' }}>{event.animals.length} animal(s)</div>
+                          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{event.animals.length} animal(s)</div>
                         </td>
                         <td style={{ padding: 10 }}>{event.method}</td>
                         <td style={{ padding: 10 }}>
@@ -1526,7 +1526,7 @@ export default function AnimalFeeding({ animals }){
           ) : (
             <div className="card" style={{ padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 48 }}>📝</div>
-              <p style={{ color: '#4b5563' }}>No feeding events logged yet</p>
+              <p style={{ color: 'var(--text-secondary)' }}>No feeding events logged yet</p>
             </div>
           )}
         </div>
@@ -1541,7 +1541,7 @@ export default function AnimalFeeding({ animals }){
             <h5 style={{ marginBottom: 12 }}>Feed Cost Analysis</h5>
             <table style={{ margin: '0 auto', borderCollapse: 'collapse', minWidth: 320 }}>
               <thead>
-                <tr style={{ background: '#f3f4f6' }}>
+                <tr style={{ background: 'var(--bg-tertiary)' }}>
                   <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Feed Type</th>
                   <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Total Cost</th>
                   <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Avg. Cost/Day</th>
@@ -1566,7 +1566,7 @@ export default function AnimalFeeding({ animals }){
             <h5 style={{ marginBottom: 12 }}>Nutrient Balance Report</h5>
             <table style={{ margin: '0 auto', borderCollapse: 'collapse', minWidth: 320 }}>
               <thead>
-                <tr style={{ background: '#f3f4f6' }}>
+                <tr style={{ background: 'var(--bg-tertiary)' }}>
                   <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Nutrient</th>
                   <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Target</th>
                   <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Actual</th>
@@ -1607,7 +1607,7 @@ export default function AnimalFeeding({ animals }){
         <div style={{ position: 'fixed', bottom: 20, right: 20, background: toast.type === 'error' ? '#dc2626' : '#10b981', color: 'white', padding: '12px 20px', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: 12, zIndex: 10000 }}>
           <span>{toast.message}</span>
           {toast.undo && (
-            <button onClick={undoLastChange} style={{ background: 'white', color: '#10b981', border: 'none', padding: '4px 12px', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
+            <button onClick={undoLastChange} style={{ background: 'var(--bg-elevated)', color: '#10b981', border: 'none', padding: '4px 12px', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
               Undo
             </button>
           )}

@@ -112,7 +112,7 @@ export const InlineEditField = ({ value, onSave, type = 'text', placeholder = 'C
       onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
       onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
     >
-      {value || <span style={{ color: '#4b5563', fontStyle: 'italic' }}>{placeholder}</span>}
+      {value || <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>{placeholder}</span>}
     </div>
   )
 }
@@ -161,7 +161,7 @@ export const InlineEditTable = ({
       <table style={{ 
         width: '100%', 
         borderCollapse: 'collapse',
-        background: 'white',
+        background: 'var(--bg-elevated)',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
       }}>
         <thead>
@@ -207,7 +207,7 @@ export const InlineEditTable = ({
                 style={{ 
                   padding: '40px', 
                   textAlign: 'center',
-                  color: '#4b5563',
+                  color: 'var(--text-secondary)',
                   fontStyle: 'italic'
                 }}
               >
@@ -321,7 +321,7 @@ export const InlineEditTable = ({
                             e.currentTarget.style.borderColor = 'transparent'
                           }}
                         >
-                          {cellValue || <span style={{ color: '#4b5563', fontStyle: 'italic' }}>Click to edit</span>}
+                          {cellValue || <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>Click to edit</span>}
                         </div>
                       )}
                     </td>
@@ -359,7 +359,7 @@ export const InlineEditTable = ({
         background: '#f5f5f5', 
         borderRadius: '4px',
         fontSize: '12px',
-        color: '#4b5563'
+        color: 'var(--text-secondary)'
       }}>
         💡 <strong>Tip:</strong> Click any cell to edit inline. Press <kbd>Enter</kbd> to save, <kbd>Esc</kbd> to cancel.
       </div>
@@ -371,7 +371,7 @@ export const InlineEditTable = ({
 export const InlineEditCard = ({ data, onSave, onDelete }) => {
   return (
     <div style={{
-      background: 'white',
+      background: 'var(--bg-elevated)',
       padding: '20px',
       borderRadius: '8px',
       boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
@@ -385,7 +385,7 @@ export const InlineEditCard = ({ data, onSave, onDelete }) => {
             <label style={{ 
               display: 'block', 
               fontWeight: '600', 
-              color: '#374151',
+              color: 'var(--text-secondary)',
               marginBottom: '5px',
               fontSize: '13px',
               textTransform: 'capitalize'

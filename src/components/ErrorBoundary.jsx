@@ -75,7 +75,7 @@ class ErrorBoundary extends React.Component {
           <h2 style={{
             fontSize: '24px',
             fontWeight: '600',
-            color: '#1f2937',
+            color: 'var(--text-primary)',
             marginBottom: '12px'
           }}>
             {this.state.isQuotaError ? 'Storage Full' : 'Something Went Wrong'}
@@ -83,7 +83,7 @@ class ErrorBoundary extends React.Component {
           
           <p style={{
             fontSize: '16px',
-            color: '#4b5563',
+            color: 'var(--text-secondary)',
             marginBottom: '24px',
             lineHeight: '1.5'
           }}>
@@ -148,7 +148,7 @@ class ErrorBoundary extends React.Component {
               <pre style={{
                 marginTop: '12px',
                 padding: '12px',
-                backgroundColor: '#fff',
+                backgroundColor: 'var(--bg-elevated)',
                 borderRadius: '4px',
                 overflow: 'auto',
                 fontSize: '12px'

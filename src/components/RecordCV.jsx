@@ -34,7 +34,7 @@ export default function RecordCV({ entity = {}, title = 'Record', fields = [], o
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div ref={rootRef} style={{ width: '100%', maxWidth: 900, maxHeight: '90vh', overflow: 'auto', background: '#fff', borderRadius: 10, padding: 18 }}>
+      <div ref={rootRef} style={{ width: '100%', maxWidth: 900, maxHeight: '90vh', overflow: 'auto', background: 'var(--bg-elevated)', borderRadius: 10, padding: 18 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h2 style={{ margin: 0 }}>{title}</h2>
@@ -52,9 +52,9 @@ export default function RecordCV({ entity = {}, title = 'Record', fields = [], o
             <h4 style={{ margin: '4px 0' }}>Details</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8 }}>
               {fields && fields.length > 0 ? fields.map(f => (
-                <div key={f.key}><strong>{f.label}:</strong> <div style={{ color: '#374151' }}>{entity[f.key] ?? '—'}</div></div>
+                <div key={f.key}><strong>{f.label}:</strong> <div style={{ color: 'var(--text-secondary)' }}>{entity[f.key] ?? '—'}</div></div>
               )) : Object.keys(entity).map(k => (
-                <div key={k}><strong>{k}:</strong> <div style={{ color: '#374151' }}>{String(entity[k] ?? '')}</div></div>
+                <div key={k}><strong>{k}:</strong> <div style={{ color: 'var(--text-secondary)' }}>{String(entity[k] ?? '')}</div></div>
               ))}
             </div>
           </section>

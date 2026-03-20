@@ -121,7 +121,7 @@ export default function OfflineIndicator() {
       {showDetails && (
         <div
           style={{
-            backgroundColor: '#f3f4f6',
+            backgroundColor: 'var(--bg-tertiary)',
             border: '1px solid #d1d5db',
             borderRadius: '4px',
             padding: '10px',
@@ -129,39 +129,39 @@ export default function OfflineIndicator() {
             fontSize: '12px'
           }}
         >
-          <div style={{ fontWeight: '600', marginBottom: '8px', color: '#374151' }}>
+          <div style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}>
             Status Info
           </div>
-          <div style={{ marginBottom: '6px', color: '#4b5563' }}>
+          <div style={{ marginBottom: '6px', color: 'var(--text-secondary)' }}>
             {isOffline ? '🔴 Offline Mode' : '🟢 Online'}
           </div>
           {isOffline && (
-            <div style={{ marginBottom: '6px', color: '#4b5563' }}>
+            <div style={{ marginBottom: '6px', color: 'var(--text-secondary)' }}>
               ✓ All data stored locally in browser
             </div>
           )}
           {queueStats.total > 0 && (
             <>
-              <div style={{ marginBottom: '6px', color: '#4b5563' }}>
+              <div style={{ marginBottom: '6px', color: 'var(--text-secondary)' }}>
                 ⏳ Pending: {queueStats.total} operation{queueStats.total !== 1 ? 's' : ''}
               </div>
               {queueStats.grouped.animals > 0 && (
-                <div style={{ marginBottom: '3px', color: '#4b5563', fontSize: '11px' }}>
+                <div style={{ marginBottom: '3px', color: 'var(--text-secondary)', fontSize: '11px' }}>
                   • {queueStats.grouped.animals} animal{queueStats.grouped.animals !== 1 ? 's' : ''}
                 </div>
               )}
               {queueStats.grouped.tasks > 0 && (
-                <div style={{ marginBottom: '3px', color: '#4b5563', fontSize: '11px' }}>
+                <div style={{ marginBottom: '3px', color: 'var(--text-secondary)', fontSize: '11px' }}>
                   • {queueStats.grouped.tasks} task{queueStats.grouped.tasks !== 1 ? 's' : ''}
                 </div>
               )}
               {queueStats.grouped.finance > 0 && (
-                <div style={{ marginBottom: '3px', color: '#4b5563', fontSize: '11px' }}>
+                <div style={{ marginBottom: '3px', color: 'var(--text-secondary)', fontSize: '11px' }}>
                   • {queueStats.grouped.finance} finance transaction{queueStats.grouped.finance !== 1 ? 's' : ''}
                 </div>
               )}
               {queueStats.oldest && (
-                <div style={{ marginTop: '6px', color: '#4b5563', fontSize: '11px', borderTop: '1px solid #ddd', paddingTop: '6px' }}>
+                <div style={{ marginTop: '6px', color: 'var(--text-secondary)', fontSize: '11px', borderTop: '1px solid #ddd', paddingTop: '6px' }}>
                   Since: {new Date(queueStats.oldest).toLocaleTimeString()}
                 </div>
               )}

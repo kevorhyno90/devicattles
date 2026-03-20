@@ -140,7 +140,7 @@ export default function DashboardCustomizer({ onClose }) {
       overflow: 'auto'
     }}>
       <div style={{
-        background: 'white',
+        background: 'var(--bg-elevated)',
         borderRadius: 12,
         maxWidth: 1400,
         width: '100%',
@@ -199,7 +199,7 @@ export default function DashboardCustomizer({ onClose }) {
           display: 'flex',
           gap: 12,
           flexWrap: 'wrap',
-          background: '#f9fafb'
+          background: 'var(--bg-secondary)'
         }}>
           <button onClick={() => setShowWidgetLibrary(!showWidgetLibrary)} style={{
             padding: '10px 20px',
@@ -274,7 +274,7 @@ export default function DashboardCustomizer({ onClose }) {
         {showWidgetLibrary && (
           <div style={{
             padding: 24,
-            background: '#f3f4f6',
+            background: 'var(--bg-tertiary)',
             borderBottom: '2px solid #d1d5db'
           }}>
             <h3 style={{ marginTop: 0 }}>📚 Widget Library</h3>
@@ -282,7 +282,7 @@ export default function DashboardCustomizer({ onClose }) {
               <div key={category} style={{ marginBottom: 24 }}>
                 <h4 style={{
                   margin: '0 0 12px 0',
-                  color: '#4b5563',
+                  color: 'var(--text-secondary)',
                   fontSize: 12,
                   textTransform: 'uppercase',
                   letterSpacing: 1
@@ -297,7 +297,7 @@ export default function DashboardCustomizer({ onClose }) {
                   {widgets.map(widget => (
                     <div key={widget.id} style={{
                       padding: 16,
-                      background: 'white',
+                      background: 'var(--bg-elevated)',
                       borderRadius: 8,
                       border: '2px solid #e5e7eb',
                       cursor: 'pointer',
@@ -309,13 +309,13 @@ export default function DashboardCustomizer({ onClose }) {
                     >
                       <div style={{ fontSize: 32, marginBottom: 8 }}>{widget.icon}</div>
                       <div style={{ fontWeight: 'bold', marginBottom: 4 }}>{widget.name}</div>
-                      <div style={{ fontSize: 12, color: '#4b5563' }}>{widget.description}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{widget.description}</div>
                       <div style={{
                         marginTop: 8,
                         display: 'flex',
                         gap: 8,
                         fontSize: 11,
-                        color: '#4b5563'
+                        color: 'var(--text-secondary)'
                       }}>
                         <span>Size: {widget.defaultSize.w}x{widget.defaultSize.h}</span>
                         {widget.resizable && <span>• Resizable</span>}
@@ -333,7 +333,7 @@ export default function DashboardCustomizer({ onClose }) {
         {showPresets && (
           <div style={{
             padding: 24,
-            background: '#f3f4f6',
+            background: 'var(--bg-tertiary)',
             borderBottom: '2px solid #d1d5db'
           }}>
             <h3 style={{ marginTop: 0 }}>📋 Layout Presets</h3>
@@ -345,7 +345,7 @@ export default function DashboardCustomizer({ onClose }) {
               {Object.entries(PRESET_LAYOUTS).map(([key, preset]) => (
                 <div key={key} style={{
                   padding: 20,
-                  background: 'white',
+                  background: 'var(--bg-elevated)',
                   borderRadius: 8,
                   border: '2px solid #e5e7eb',
                   cursor: 'pointer',
@@ -358,10 +358,10 @@ export default function DashboardCustomizer({ onClose }) {
                   <div style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8 }}>
                     {preset.name}
                   </div>
-                  <div style={{ fontSize: 14, color: '#4b5563', marginBottom: 12 }}>
+                  <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12 }}>
                     {preset.description}
                   </div>
-                  <div style={{ fontSize: 12, color: '#4b5563' }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                     {preset.layout.length} widgets
                   </div>
                 </div>
@@ -386,7 +386,7 @@ export default function DashboardCustomizer({ onClose }) {
                 <div key={widget.id} style={{
                   gridColumn: `span ${widget.w}`,
                   gridRow: `span ${widget.h}`,
-                  background: 'white',
+                  background: 'var(--bg-elevated)',
                   border: isSelected ? '3px solid #3b82f6' : '2px solid #e5e7eb',
                   borderRadius: 12,
                   padding: 16,
@@ -419,7 +419,7 @@ export default function DashboardCustomizer({ onClose }) {
                           handleDuplicateWidget(widget.id)
                         }} style={{
                           padding: '4px 8px',
-                          background: '#f3f4f6',
+                          background: 'var(--bg-tertiary)',
                           border: '1px solid #d1d5db',
                           borderRadius: 4,
                           cursor: 'pointer',
@@ -450,10 +450,10 @@ export default function DashboardCustomizer({ onClose }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#374151',
+                    color: 'var(--text-secondary)',
                     fontSize: 13,
                     textAlign: 'center',
-                    background: '#f3f4f6',
+                    background: 'var(--bg-tertiary)',
                     borderRadius: 6,
                     minHeight: 60
                   }}>
@@ -484,7 +484,7 @@ export default function DashboardCustomizer({ onClose }) {
                       gap: 8,
                       justifyContent: 'center',
                       padding: 8,
-                      background: 'white',
+                      background: 'var(--bg-elevated)',
                       border: '2px solid #3b82f6',
                       borderTop: 'none',
                       borderRadius: '0 0 12px 12px',
@@ -517,12 +517,12 @@ export default function DashboardCustomizer({ onClose }) {
         {/* Help Section */}
         <div style={{
           padding: 24,
-          background: '#f9fafb',
+          background: 'var(--bg-secondary)',
           borderTop: '1px solid #e5e7eb',
           borderRadius: '0 0 12px 12px'
         }}>
           <h4 style={{ margin: '0 0 12px 0', fontSize: 14 }}>💡 Quick Guide</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16, fontSize: 13, color: '#4b5563' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16, fontSize: 13, color: 'var(--text-secondary)' }}>
             <div>• <strong>Click widget</strong> to select and show controls</div>
             <div>• <strong>Arrow buttons</strong> to move widget</div>
             <div>• <strong>W+/W-</strong> to adjust width</div>
@@ -555,7 +555,7 @@ function WidgetPreview({ widget }) {
       return (
         <div style={{ width: '100%' }}>
           <div style={{ fontSize: 32, fontWeight: 'bold', color: '#059669' }}>{data.total}</div>
-          <div style={{ fontSize: 14, color: '#4b5563', marginTop: 4 }}>Total Animals</div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>Total Animals</div>
           <div style={{ marginTop: 12, fontSize: 12 }}>
             {Object.entries(data.bySpecies).map(([species, count]) => (
               <div key={species} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
@@ -576,13 +576,13 @@ function WidgetPreview({ widget }) {
             data.map(task => (
               <div key={task.id} style={{
                 padding: 8,
-                background: '#f9fafb',
+                background: 'var(--bg-secondary)',
                 borderRadius: 6,
                 marginBottom: 8,
                 fontSize: 12
               }}>
                 <div style={{ fontWeight: 'bold' }}>{task.title}</div>
-                <div style={{ color: '#4b5563', fontSize: 11, marginTop: 4 }}>
+                <div style={{ color: 'var(--text-secondary)', fontSize: 11, marginTop: 4 }}>
                   Due: {task.dueDate}
                 </div>
               </div>

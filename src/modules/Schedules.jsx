@@ -729,27 +729,27 @@ export default function Schedules() {
       }}>
         <div style={{ background: '#e3f2fd', padding: 16, borderRadius: 8, textAlign: 'center' }}>
           <div style={{ fontSize: 32, fontWeight: 'bold', color: '#1976d2' }}>{stats.total}</div>
-          <div style={{ fontSize: 14, color: '#4b5563' }}>Total Schedules</div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Total Schedules</div>
         </div>
         <div style={{ background: '#fff9c4', padding: 16, borderRadius: 8, textAlign: 'center' }}>
           <div style={{ fontSize: 32, fontWeight: 'bold', color: '#f57c00' }}>{stats.today}</div>
-          <div style={{ fontSize: 14, color: '#4b5563' }}>Today's Tasks</div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Today's Tasks</div>
         </div>
         <div style={{ background: '#ffe0b2', padding: 16, borderRadius: 8, textAlign: 'center' }}>
           <div style={{ fontSize: 32, fontWeight: 'bold', color: '#e65100' }}>{stats.pending}</div>
-          <div style={{ fontSize: 14, color: '#4b5563' }}>Pending</div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Pending</div>
         </div>
         <div style={{ background: '#c8e6c9', padding: 16, borderRadius: 8, textAlign: 'center' }}>
           <div style={{ fontSize: 32, fontWeight: 'bold', color: '#388e3c' }}>{stats.inProgress}</div>
-          <div style={{ fontSize: 14, color: '#4b5563' }}>In Progress</div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>In Progress</div>
         </div>
         <div style={{ background: '#ffcdd2', padding: 16, borderRadius: 8, textAlign: 'center' }}>
           <div style={{ fontSize: 32, fontWeight: 'bold', color: '#d32f2f' }}>{stats.overdue}</div>
-          <div style={{ fontSize: 14, color: '#4b5563' }}>Overdue</div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Overdue</div>
         </div>
         <div style={{ background: '#f0f4c3', padding: 16, borderRadius: 8, textAlign: 'center' }}>
           <div style={{ fontSize: 32, fontWeight: 'bold', color: '#689f38' }}>{activeEmployees.length}</div>
-          <div style={{ fontSize: 14, color: '#4b5563' }}>Active Staff</div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Active Staff</div>
         </div>
       </div>
 
@@ -813,7 +813,7 @@ export default function Schedules() {
 
       {/* Calendar View */}
       {view === 'calendar' && (
-        <div style={{ background: 'white', padding: 20, borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'var(--bg-elevated)', padding: 20, borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
           {/* Calendar Mode Toggle */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16, gap: 8 }}>
             <button 
@@ -995,7 +995,7 @@ export default function Schedules() {
                     </div>
                   ))}
                   {daySchedules.length > 3 && (
-                    <div style={{ fontSize: 10, color: '#4b5563', marginTop: 2 }}>
+                    <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>
                       +{daySchedules.length - 3} more
                     </div>
                   )}
@@ -1023,7 +1023,7 @@ export default function Schedules() {
                         border: '1px solid #ddd',
                         borderRadius: 8,
                         padding: 16,
-                        background: 'white'
+                        background: 'var(--bg-elevated)'
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -1057,7 +1057,7 @@ export default function Schedules() {
                               {STATUS_TYPES[sch.status]}
                             </span>
                           </div>
-                          <div style={{ fontSize: 14, color: '#4b5563', marginBottom: 4 }}>{sch.description}</div>
+                          <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 4 }}>{sch.description}</div>
                           <div style={{ fontSize: 13, color: '#888' }}>
                             ⏰ {sch.startTime} ({sch.duration} min) | 📍 {sch.location || 'Not specified'} | 
                             🔔 Reminder: {sch.reminderMinutes} min before
@@ -1108,7 +1108,7 @@ export default function Schedules() {
 
       {/* List View */}
       {view === 'list' && (
-        <div style={{ background: 'white', padding: 20, borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'var(--bg-elevated)', padding: 20, borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h3>All Schedules</h3>
             <button onClick={() => openModal()} style={{ background: '#4CAF50' }}>
@@ -1164,12 +1164,12 @@ export default function Schedules() {
                     <tr key={sch.id} style={{ borderBottom: '1px solid #eee' }}>
                       <td style={{ padding: 12 }}>
                         <div style={{ fontWeight: 'bold' }}>{sch.title}</div>
-                        <div style={{ fontSize: 12, color: '#4b5563' }}>{sch.description}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{sch.description}</div>
                       </td>
                       <td style={{ padding: 12 }}>{SCHEDULE_TYPES[sch.type]}</td>
                       <td style={{ padding: 12 }}>
                         <div>{new Date(sch.startDate).toLocaleDateString()}</div>
-                        <div style={{ fontSize: 12, color: '#4b5563' }}>{sch.startTime} ({sch.duration}m)</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{sch.startTime} ({sch.duration}m)</div>
                       </td>
                       <td style={{ padding: 12 }}>
                         {sch.assignedTo.map(id => {
@@ -1242,7 +1242,7 @@ export default function Schedules() {
 
       {/* Employees View */}
       {view === 'employees' && (
-        <div style={{ background: 'white', padding: 20, borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'var(--bg-elevated)', padding: 20, borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h3>Employee Management</h3>
             <button onClick={() => openEmployeeModal()} style={{ background: '#4CAF50' }}>
@@ -1495,7 +1495,7 @@ export default function Schedules() {
                         <div style={{ fontSize: 11, color: '#333' }}>
                           📅 {new Date(nextLeave.startDate).toLocaleDateString()} - {new Date(nextLeave.endDate).toLocaleDateString()}
                         </div>
-                        <div style={{ fontSize: 10, color: '#4b5563', marginTop: 2 }}>
+                        <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>
                           {LEAVE_TYPES[nextLeave.type]} ({nextLeave.days} days)
                         </div>
                       </div>
@@ -1507,19 +1507,19 @@ export default function Schedules() {
                         <div style={{ fontSize: 16, fontWeight: 'bold', color: '#4CAF50' }}>
                           {emp.leaveBalance?.vacation || 0}
                         </div>
-                        <div style={{ fontSize: 10, color: '#4b5563' }}>Vacation</div>
+                        <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>Vacation</div>
                       </div>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: 16, fontWeight: 'bold', color: '#f57c00' }}>
                           {emp.leaveBalance?.sick || 0}
                         </div>
-                        <div style={{ fontSize: 10, color: '#4b5563' }}>Sick</div>
+                        <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>Sick</div>
                       </div>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: 16, fontWeight: 'bold', color: '#9c27b0' }}>
                           {emp.leaveBalance?.personal || 0}
                         </div>
-                        <div style={{ fontSize: 10, color: '#4b5563' }}>Personal</div>
+                        <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>Personal</div>
                       </div>
                     </div>
                     
@@ -1547,7 +1547,7 @@ export default function Schedules() {
                       📋 ACTIVE TASKS ({assignedTasks.length})
                     </div>
                     {assignedTasks.length === 0 ? (
-                      <div style={{ fontSize: 11, color: '#4b5563', textAlign: 'center', padding: '8px 0' }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', textAlign: 'center', padding: '8px 0' }}>
                         No active tasks
                       </div>
                     ) : (
@@ -1576,7 +1576,7 @@ export default function Schedules() {
                       ))
                     )}
                     {assignedTasks.length > 3 && (
-                      <div style={{ fontSize: 10, color: '#4b5563', marginTop: 4, textAlign: 'center' }}>
+                      <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 4, textAlign: 'center' }}>
                         +{assignedTasks.length - 3} more tasks
                       </div>
                     )}
@@ -1584,7 +1584,7 @@ export default function Schedules() {
 
                   {/* Action Buttons */}
                   {inlineEditId !== emp.id && (
-                    <div style={{ padding: 12, display: 'flex', gap: 8, background: '#fafafa' }}>
+                    <div style={{ padding: 12, display: 'flex', gap: 8, background: 'var(--bg-secondary)' }}>
                       <button 
                         onClick={() => startInlineEdit(emp)}
                         style={{ fontSize: 11, padding: '8px 12px', background: '#ffffcc', color: '#333', border: '1px solid #ffdd00' }}
@@ -1626,7 +1626,7 @@ export default function Schedules() {
 
       {/* Timetable View */}
       {view === 'timetable' && (
-        <div style={{ background: 'white', padding: 20, borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'var(--bg-elevated)', padding: 20, borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <button onClick={() => {
@@ -1734,7 +1734,7 @@ export default function Schedules() {
                             {daySchedules.length === 0 ? (
                               <div style={{ 
                                 fontSize: 12, 
-                                color: '#4b5563', 
+                                color: 'var(--text-secondary)', 
                                 textAlign: 'center',
                                 paddingTop: 20
                               }}>
@@ -1775,7 +1775,7 @@ export default function Schedules() {
                                   }}>
                                     {sch.title}
                                   </div>
-                                  <div style={{ fontSize: 10, color: '#4b5563', marginTop: 2 }}>
+                                  <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>
                                     {sch.duration}min • {sch.location}
                                   </div>
                                   <div style={{
@@ -1819,12 +1819,12 @@ export default function Schedules() {
                       
                       return (
                         <div key={slot} style={{ 
-                          background: 'white',
+                          background: 'var(--bg-elevated)',
                           padding: 8,
                           borderRadius: 4,
                           textAlign: 'center'
                         }}>
-                          <div style={{ fontSize: 10, color: '#4b5563', marginBottom: 4 }}>
+                          <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginBottom: 4 }}>
                             {slot.split(' ')[0]}
                           </div>
                           <div style={{ fontSize: 16, fontWeight: 'bold', color: '#333' }}>
@@ -1840,7 +1840,7 @@ export default function Schedules() {
 
                   {/* Task Type Summary */}
                   <div style={{ 
-                    background: '#fafafa',
+                    background: 'var(--bg-secondary)',
                     padding: 12,
                     borderTop: '1px solid #e0e0e0',
                     display: 'flex',
@@ -1859,7 +1859,7 @@ export default function Schedules() {
                         <div key={key} style={{ 
                           fontSize: 11,
                           padding: '4px 8px',
-                          background: 'white',
+                          background: 'var(--bg-elevated)',
                           borderRadius: 12,
                           border: '1px solid #e0e0e0'
                         }}>
@@ -1947,7 +1947,7 @@ export default function Schedules() {
           padding: 20
         }}>
           <div style={{
-            background: 'white',
+            background: 'var(--bg-elevated)',
             borderRadius: 12,
             maxWidth: 600,
             width: '100%',
@@ -2170,7 +2170,7 @@ export default function Schedules() {
           padding: 20
         }}>
           <div style={{
-            background: 'white',
+            background: 'var(--bg-elevated)',
             borderRadius: 12,
             maxWidth: 600,
             width: '100%',
@@ -2499,7 +2499,7 @@ export default function Schedules() {
           padding: 20
         }}>
           <div style={{
-            background: 'white',
+            background: 'var(--bg-elevated)',
             borderRadius: 12,
             maxWidth: 500,
             width: '100%',
@@ -2545,10 +2545,10 @@ export default function Schedules() {
               </div>
 
               <div style={{ padding: 12, background: '#f0f4ff', borderRadius: 8 }}>
-                <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 4 }}>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Duration: {Math.ceil((new Date(leaveForm.endDate) - new Date(leaveForm.startDate)) / (1000 * 60 * 60 * 24)) + 1} days
                 </div>
-                <div style={{ fontSize: 12, color: '#4b5563' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                   Available Balance: 
                   {leaveForm.type === 'VACATION' && ` ${selectedEmployee.leaveBalance?.vacation || 0} vacation days`}
                   {leaveForm.type === 'SICK' && ` ${selectedEmployee.leaveBalance?.sick || 0} sick days`}
@@ -2596,7 +2596,7 @@ export default function Schedules() {
           padding: 20
         }}>
           <div style={{
-            background: 'white',
+            background: 'var(--bg-elevated)',
             borderRadius: 12,
             maxWidth: 800,
             width: '100%',
@@ -2646,21 +2646,21 @@ export default function Schedules() {
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div>
-                    <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Date of Birth</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Date of Birth</div>
                     <div style={{ fontSize: 14, fontWeight: 'bold' }}>
                       {detailsEmployee.dateOfBirth ? new Date(detailsEmployee.dateOfBirth).toLocaleDateString() : 'N/A'}
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Email</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Email</div>
                     <div style={{ fontSize: 14, fontWeight: 'bold' }}>{detailsEmployee.email}</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Phone</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Phone</div>
                     <div style={{ fontSize: 14, fontWeight: 'bold' }}>{detailsEmployee.phone}</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Status</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Status</div>
                     <div style={{ 
                       fontSize: 12, 
                       fontWeight: 'bold',
@@ -2675,7 +2675,7 @@ export default function Schedules() {
                 </div>
                 {detailsEmployee.address && (
                   <div style={{ marginTop: 16 }}>
-                    <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Address</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Address</div>
                     <div style={{ fontSize: 14, fontWeight: 'bold' }}>
                       {detailsEmployee.address}<br/>
                       {detailsEmployee.city}, {detailsEmployee.state} {detailsEmployee.zipCode}
@@ -2692,11 +2692,11 @@ export default function Schedules() {
                   </h3>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div>
-                      <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Name</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Name</div>
                       <div style={{ fontSize: 14, fontWeight: 'bold' }}>{detailsEmployee.emergencyContact}</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Phone</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Phone</div>
                       <div style={{ fontSize: 14, fontWeight: 'bold' }}>{detailsEmployee.emergencyPhone}</div>
                     </div>
                   </div>
@@ -2710,36 +2710,36 @@ export default function Schedules() {
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div>
-                    <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Date Employed</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Date Employed</div>
                     <div style={{ fontSize: 14, fontWeight: 'bold' }}>
                       {detailsEmployee.dateEmployed ? new Date(detailsEmployee.dateEmployed).toLocaleDateString() : 'N/A'}
                     </div>
-                    <div style={{ fontSize: 11, color: '#4b5563', marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
                       ({((new Date() - new Date(detailsEmployee.dateEmployed)) / (1000 * 60 * 60 * 24 * 365)).toFixed(1)} years)
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Position</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Position</div>
                     <div style={{ fontSize: 14, fontWeight: 'bold' }}>{detailsEmployee.role}</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Hourly Rate</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Hourly Rate</div>
                     <div style={{ fontSize: 14, fontWeight: 'bold' }}>
                       ${(detailsEmployee.hourlyRate || 0).toFixed(2)}/hr
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Weekly Hours</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Weekly Hours</div>
                     <div style={{ fontSize: 14, fontWeight: 'bold' }}>{detailsEmployee.weeklyHours || 40} hours</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Weekly Earnings</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Weekly Earnings</div>
                     <div style={{ fontSize: 14, fontWeight: 'bold', color: '#4CAF50' }}>
                       ${((detailsEmployee.hourlyRate || 0) * (detailsEmployee.weeklyHours || 40)).toFixed(2)}
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Annual Salary (Est.)</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Annual Salary (Est.)</div>
                     <div style={{ fontSize: 14, fontWeight: 'bold', color: '#4CAF50' }}>
                       ${((detailsEmployee.hourlyRate || 0) * (detailsEmployee.weeklyHours || 40) * 52).toFixed(2)}
                     </div>
@@ -2775,19 +2775,19 @@ export default function Schedules() {
                     <div style={{ fontSize: 24, fontWeight: 'bold', color: '#4CAF50' }}>
                       {detailsEmployee.leaveBalance?.vacation || 0}
                     </div>
-                    <div style={{ fontSize: 12, color: '#4b5563' }}>Vacation Days</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Vacation Days</div>
                   </div>
                   <div style={{ background: '#fff3e0', padding: 12, borderRadius: 8, textAlign: 'center' }}>
                     <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f57c00' }}>
                       {detailsEmployee.leaveBalance?.sick || 0}
                     </div>
-                    <div style={{ fontSize: 12, color: '#4b5563' }}>Sick Days</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Sick Days</div>
                   </div>
                   <div style={{ background: '#f3e5f5', padding: 12, borderRadius: 8, textAlign: 'center' }}>
                     <div style={{ fontSize: 24, fontWeight: 'bold', color: '#9c27b0' }}>
                       {detailsEmployee.leaveBalance?.personal || 0}
                     </div>
-                    <div style={{ fontSize: 12, color: '#4b5563' }}>Personal Days</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Personal Days</div>
                   </div>
                 </div>
                 
@@ -2818,7 +2818,7 @@ export default function Schedules() {
                     padding: 20, 
                     background: '#f5f5f5', 
                     borderRadius: 8,
-                    color: '#4b5563'
+                    color: 'var(--text-secondary)'
                   }}>
                     No leave history
                   </div>
@@ -2858,15 +2858,15 @@ export default function Schedules() {
                                   {leave.status}
                                 </span>
                               </div>
-                              <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>
+                              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>
                                 {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()} ({leave.days} days)
                               </div>
                               {leave.reason && (
-                                <div style={{ fontSize: 12, color: '#4b5563', marginTop: 4, fontStyle: 'italic' }}>
+                                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, fontStyle: 'italic' }}>
                                   "{leave.reason}"
                                 </div>
                               )}
-                              <div style={{ fontSize: 11, color: '#4b5563', marginTop: 4 }}>
+                              <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>
                                 Requested: {new Date(leave.requestedAt).toLocaleDateString()}
                               </div>
                             </div>
@@ -2929,7 +2929,7 @@ export default function Schedules() {
         <div style={{ position: 'fixed', bottom: 20, right: 20, background: toast.type === 'error' ? '#dc2626' : '#10b981', color: 'white', padding: '12px 20px', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: 12, zIndex: 10000 }}>
           <span>{toast.message}</span>
           {toast.undo && (
-            <button onClick={undoLastChange} style={{ background: 'white', color: '#10b981', border: 'none', padding: '4px 12px', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
+            <button onClick={undoLastChange} style={{ background: 'var(--bg-elevated)', color: '#10b981', border: 'none', padding: '4px 12px', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
               Undo
             </button>
           )}

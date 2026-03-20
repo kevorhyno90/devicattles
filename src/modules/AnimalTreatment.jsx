@@ -532,31 +532,31 @@ export default function AnimalTreatment({ animals }){
       {/* Summary Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
         <div className="card" style={{ padding: 16, background: '#f0fdf4' }}>
-          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Total Treatments</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Total Treatments</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>{filteredItems.length}</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#fee2e2' }}>
-          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Critical Cases</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Critical Cases</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#dc2626' }}>{criticalCases.length}</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#fef3c7' }}>
-          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Upcoming (30 days)</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Upcoming (30 days)</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f59e0b' }}>{upcomingTreatments.length}</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#e0f2fe' }}>
-          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Pending Follow-ups</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Pending Follow-ups</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#0284c7' }}>{pendingFollowups.length}</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#eff6ff' }}>
-          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Total Cost</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Total Cost</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>${totalCost.toFixed(2)}</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#fff1f2' }}>
-          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Overdue Follow-ups</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Overdue Follow-ups</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#be123c' }}>{overdueTreatments.length}</div>
         </div>
         <div className="card" style={{ padding: 16, background: '#f0f9ff' }}>
-          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 4 }}>Vaccines Due (30d)</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Vaccines Due (30d)</div>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#0369a1' }}>{vaccinationDueSoon.length}</div>
         </div>
       </div>
@@ -723,13 +723,13 @@ export default function AnimalTreatment({ animals }){
 
       {/* Treatment Summary */}
       {Object.keys(treatmentSummary).length > 0 && (
-        <div className="card" style={{ padding: 16, marginBottom: 16, background: '#f9fafb' }}>
+        <div className="card" style={{ padding: 16, marginBottom: 16, background: 'var(--bg-secondary)' }}>
           <h4 style={{ margin: '0 0 12px 0' }}>Treatment Summary by Type</h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
             {Object.entries(treatmentSummary).map(([type, data]) => (
-              <div key={type} style={{ padding: 12, background: 'white', borderRadius: 6 }}>
+              <div key={type} style={{ padding: 12, background: 'var(--bg-elevated)', borderRadius: 6 }}>
                 <div style={{ fontWeight: 600, marginBottom: 4 }}>{type}</div>
-                <div style={{ fontSize: 13, color: '#4b5563' }}>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
                   {data.count} treatments • ${data.cost.toFixed(2)}
                 </div>
               </div>
@@ -744,7 +744,7 @@ export default function AnimalTreatment({ animals }){
           <div style={{ padding: 40, textAlign: 'center' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>💊</div>
             <h4>No treatment records yet</h4>
-            <p style={{ color: '#4b5563' }}>Add your first treatment record to start tracking</p>
+            <p style={{ color: 'var(--text-secondary)' }}>Add your first treatment record to start tracking</p>
           </div>
         ) : (
           <div style={{ maxHeight: 600, overflowY: 'auto' }}>
@@ -788,17 +788,17 @@ export default function AnimalTreatment({ animals }){
                         <button onClick={() => { const a = (animals||[]).find(x => x.id === item.animalId); if (a) { setShowAnimalCV(a); recordClick('animal', a.id, 'view_cv') } }} style={{ marginLeft: 8, padding: '6px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6 }}>👁️ View CV</button>
                         {item.cost > 0 && <span className="badge" style={{ background: '#d1fae5' }}>KSH {Number(item.cost).toLocaleString()}</span>}
                       </div>
-                      <div style={{ fontSize: 14, color: '#4b5563', marginBottom: 8 }}>
+                      <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8 }}>
                         <strong>{animal?.name || animal?.tag || item.animalId}</strong> • {new Date(item.timestamp || item.date).toLocaleDateString()}
                         {item.veterinarian && ` • ${item.veterinarian}`}
                       </div>
                       {item.medication && (
-                        <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 4 }}>
+                        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>
                           <strong>Medication:</strong> {item.medication} {item.dosage && `(${item.dosage})`}
                         </div>
                       )}
                       {item.duration && (
-                        <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 4 }}>
+                        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>
                           <strong>Duration:</strong> {item.duration}
                         </div>
                       )}
@@ -808,7 +808,7 @@ export default function AnimalTreatment({ animals }){
                         </div>
                       )}
                       {item.notes && (
-                        <div style={{ fontSize: 13, color: '#888', marginTop: 8, padding: 8, background: '#f9fafb', borderRadius: 4 }}>
+                        <div style={{ fontSize: 13, color: '#888', marginTop: 8, padding: 8, background: 'var(--bg-secondary)', borderRadius: 4 }}>
                           {item.notes}
                         </div>
                       )}

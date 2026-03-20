@@ -70,7 +70,7 @@ function downloadPDF(data, filenameNoExt, title) {
 function SectionActions({ name, onJSON, onCSV, onPDF }) {
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
-      <span style={{ color: '#4b5563', fontSize: '0.85rem' }}>Download {name}:</span>
+      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Download {name}:</span>
       <button onClick={onJSON} style={{ padding: '5px 10px', border: 'none', borderRadius: 6, background: '#111827', color: '#fff', cursor: 'pointer' }}>JSON</button>
       <button onClick={onCSV} style={{ padding: '5px 10px', border: 'none', borderRadius: 6, background: '#059669', color: '#fff', cursor: 'pointer' }}>CSV</button>
       <button onClick={onPDF} style={{ padding: '5px 10px', border: 'none', borderRadius: 6, background: '#0ea5e9', color: '#fff', cursor: 'pointer' }}>PDF</button>
@@ -82,9 +82,9 @@ function InfoGrid({ items }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
       {items.map(([label, value]) => (
-        <div key={label} style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: 10 }}>
-          <div style={{ fontSize: '0.75rem', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>{label}</div>
-          <div style={{ marginTop: 5, color: '#111827', wordBreak: 'break-word' }}>{fmt(value)}</div>
+        <div key={label} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 8, padding: 10 }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>{label}</div>
+          <div style={{ marginTop: 5, color: 'var(--text-primary)', wordBreak: 'break-word' }}>{fmt(value)}</div>
         </div>
       ))}
     </div>
@@ -92,22 +92,22 @@ function InfoGrid({ items }) {
 }
 
 function DataTable({ columns, rows, empty = 'No records found.' }) {
-  if (!rows || rows.length === 0) return <div style={{ color: '#4b5563' }}>{empty}</div>
+  if (!rows || rows.length === 0) return <div style={{ color: 'var(--text-secondary)' }}>{empty}</div>
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
         <thead>
-          <tr style={{ background: '#f3f4f6' }}>
+          <tr style={{ background: 'var(--bg-elevated)' }}>
             {columns.map(c => (
-              <th key={c.key} style={{ padding: '8px 10px', textAlign: 'left', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap' }}>{c.label}</th>
+              <th key={c.key} style={{ padding: '8px 10px', textAlign: 'left', borderBottom: '2px solid var(--border-primary)', whiteSpace: 'nowrap' }}>{c.label}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 ? '#fafafa' : '#fff' }}>
+            <tr key={i} style={{ borderBottom: '1px solid var(--border-primary)', background: 'var(--bg-elevated)' }}>
               {columns.map(c => (
-                <td key={c.key} style={{ padding: '7px 10px', color: '#374151' }}>
+                <td key={c.key} style={{ padding: '7px 10px', color: 'var(--text-primary)' }}>
                   {c.render ? c.render(row[c.key], row) : fmt(row[c.key])}
                 </td>
               ))}
@@ -164,7 +164,7 @@ function SectionBasic({ animal, groupName, tag }) {
         ['Vendor', animal.vendor], ['Pregnancy', animal.pregnancyStatus],
         ['Expected Due', animal.expectedDue], ['Parity', animal.parity], ['Lactation', animal.lactationStatus],
       ]} />
-      {animal.notes && <div style={{ marginTop: 12, padding: 10, background: '#f9fafb', borderRadius: 8, border: '1px solid #e5e7eb' }}><strong>Notes</strong><div style={{ marginTop: 6 }}>{animal.notes}</div></div>}
+      {animal.notes && <div style={{ marginTop: 12, padding: 10, background: 'var(--bg-elevated)', borderRadius: 8, border: '1px solid var(--border-primary)' }}><strong>Notes</strong><div style={{ marginTop: 6 }}>{animal.notes}</div></div>}
     </>
   )
 }
@@ -257,7 +257,7 @@ function SectionHealth({ animal, tag }) {
       ]} />
 
       <div style={{ marginTop: 14 }}>
-        <h5 style={{ margin: '0 0 6px', color: '#374151' }}>Vaccinations</h5>
+        <h5 style={{ margin: '0 0 6px', color: 'var(--text-secondary)' }}>Vaccinations</h5>
         <DataTable
           columns={[{ key: 'vaccine', label: 'Vaccine' }, { key: 'date', label: 'Date' }, { key: 'nextDue', label: 'Next Due' }, { key: 'notes', label: 'Notes' }]}
           rows={vaccinations.map(v => typeof v === 'string' ? { vaccine: v } : v)}
@@ -266,7 +266,7 @@ function SectionHealth({ animal, tag }) {
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <h5 style={{ margin: '0 0 6px', color: '#374151' }}>Treatments</h5>
+        <h5 style={{ margin: '0 0 6px', color: 'var(--text-secondary)' }}>Treatments</h5>
         <DataTable
           columns={[{ key: 'type', label: 'Type' }, { key: 'date', label: 'Date' }, { key: 'medication', label: 'Medication' }, { key: 'dosage', label: 'Dosage' }, { key: 'notes', label: 'Notes' }]}
           rows={treatments.map(t => typeof t === 'string' ? { type: t } : t)}
@@ -275,7 +275,7 @@ function SectionHealth({ animal, tag }) {
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <h5 style={{ margin: '0 0 6px', color: '#374151' }}>Diagnoses</h5>
+        <h5 style={{ margin: '0 0 6px', color: 'var(--text-secondary)' }}>Diagnoses</h5>
         <DataTable
           columns={[{ key: 'condition', label: 'Condition' }, { key: 'date', label: 'Date' }, { key: 'severity', label: 'Severity' }, { key: 'notes', label: 'Notes' }]}
           rows={diagnoses.map(d => typeof d === 'string' ? { condition: d } : d)}
@@ -406,12 +406,12 @@ function SectionMilkYieldRecords({ animalId, tag }) {
       />
       {records.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(140px, 1fr))', gap: 10, marginBottom: 12 }}>
-          <div style={{ background: '#f0f9ff', border: '1px solid #dbeafe', borderRadius: 8, padding: 10 }}>
-            <div style={{ fontSize: '0.75rem', color: '#4b5563', fontWeight: 700 }}>TOTAL RECORDS</div>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 8, padding: 10 }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700 }}>TOTAL RECORDS</div>
             <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0ea5e9' }}>{records.length}</div>
           </div>
-          <div style={{ background: '#ecfdf5', border: '1px solid #d1fae5', borderRadius: 8, padding: 10 }}>
-            <div style={{ fontSize: '0.75rem', color: '#4b5563', fontWeight: 700 }}>TOTAL YIELD</div>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 8, padding: 10 }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700 }}>TOTAL YIELD</div>
             <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#059669' }}>{totalYield.toFixed(1)} L</div>
           </div>
         </div>
@@ -570,8 +570,8 @@ export default function AnimalCV({ animal = {}, groups = [], onClose = () => {},
     padding: '10px 14px',
     border: 'none',
     borderBottom: tab === id ? '3px solid #059669' : '3px solid transparent',
-    background: tab === id ? '#f0fdf4' : 'transparent',
-    color: tab === id ? '#059669' : '#6b7280',
+    background: tab === id ? 'var(--bg-elevated)' : 'transparent',
+    color: tab === id ? '#059669' : 'var(--text-secondary)',
     fontWeight: tab === id ? 700 : 500,
     cursor: 'pointer',
     whiteSpace: 'nowrap',
@@ -580,11 +580,11 @@ export default function AnimalCV({ animal = {}, groups = [], onClose = () => {},
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12 }}>
-      <div ref={rootRef} style={{ width: '100%', maxWidth: 1080, maxHeight: '92vh', overflow: 'hidden', background: '#fff', borderRadius: 12, boxShadow: '0 12px 40px rgba(2,6,23,0.3)' }}>
-        <div style={{ padding: '14px 16px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+      <div ref={rootRef} style={{ width: '100%', maxWidth: 1080, maxHeight: '92vh', overflow: 'hidden', background: 'var(--bg-elevated)', borderRadius: 12, boxShadow: '0 12px 40px rgba(2,6,23,0.3)' }}>
+        <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-primary)', display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div>
             <h2 style={{ margin: 0 }}>{animal.name || tag}</h2>
-            <div style={{ color: '#4b5563', marginTop: 2 }}>{animal.tag} • {animal.breed} • {animal.sex === 'F' ? 'Female' : 'Male'}</div>
+            <div style={{ color: 'var(--text-secondary)', marginTop: 2 }}>{animal.tag} • {animal.breed} • {animal.sex === 'F' ? 'Female' : 'Male'}</div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button onClick={() => onDownloadJSON()} style={{ padding: '8px 12px', background: '#111827', color: 'white', border: 'none', borderRadius: 6 }}>JSON</button>
@@ -595,7 +595,7 @@ export default function AnimalCV({ animal = {}, groups = [], onClose = () => {},
           </div>
         </div>
 
-        <div style={{ borderBottom: '1px solid #e5e7eb', overflowX: 'auto', whiteSpace: 'nowrap', background: '#fafafa' }}>
+        <div style={{ borderBottom: '1px solid var(--border-primary)', overflowX: 'auto', whiteSpace: 'nowrap', background: 'var(--bg-elevated)' }}>
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={tabButton(t.id)}>{t.label}</button>
           ))}

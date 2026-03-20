@@ -458,13 +458,13 @@ export default function Finance(){
           <div className="card" style={{ padding: '20px', background: '#f0fdf4' }}>
             <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#15803d' }}>Total Income</h3>
             <div style={{ fontSize: '28px', fontWeight: '700', color: '#15803d' }}>KES {stats.totalIncome.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-            <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>This Month: KES {stats.monthlyIncome.toFixed(2)}</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>This Month: KES {stats.monthlyIncome.toFixed(2)}</div>
           </div>
           
           <div className="card" style={{ padding: '20px', background: '#fef2f2' }}>
             <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#dc2626' }}>Total Expenses</h3>
             <div style={{ fontSize: '28px', fontWeight: '700', color: '#dc2626' }}>KES {stats.totalExpenses.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-            <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>This Month: KES {stats.monthlyExpenses.toFixed(2)}</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>This Month: KES {stats.monthlyExpenses.toFixed(2)}</div>
           </div>
 
           <div className="card" style={{ padding: '20px', background: stats.netProfit >= 0 ? '#ecfdf5' : '#fef2f2' }}>
@@ -472,7 +472,7 @@ export default function Finance(){
             <div style={{ fontSize: '28px', fontWeight: '700', color: stats.netProfit >= 0 ? '#059669' : '#dc2626' }}>
               {stats.netProfit >= 0 ? '+' : ''}KES {stats.netProfit.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
             </div>
-            <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>This Month: {stats.monthlyNet >= 0 ? '+' : ''}KES {stats.monthlyNet.toFixed(2)}</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>This Month: {stats.monthlyNet >= 0 ? '+' : ''}KES {stats.monthlyNet.toFixed(2)}</div>
           </div>
           
           <div className="card" style={{ padding: '20px', background: profitMargin >= 0 ? '#eff6ff' : '#fef2f2' }}>
@@ -480,7 +480,7 @@ export default function Finance(){
             <div style={{ fontSize: '28px', fontWeight: '700', color: profitMargin >= 0 ? '#2563eb' : '#dc2626' }}>
               {profitMargin.toFixed(1)}%
             </div>
-            <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
               {profitMargin >= 20 ? '🎉 Excellent' : profitMargin >= 10 ? '👍 Good' : profitMargin >= 0 ? '⚠️ Low' : '❌ Loss'}
             </div>
           </div>
@@ -492,12 +492,12 @@ export default function Finance(){
             <h3 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>Income & Expenses by Source</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
               {integratedSummary.sources.map(source => (
-                <div key={source.source} style={{ padding: '12px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                  <div style={{ fontWeight: '600', fontSize: '14px', marginBottom: '8px', color: '#374151' }}>{source.source}</div>
-                  <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px' }}>
+                <div key={source.source} style={{ padding: '12px', background: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                  <div style={{ fontWeight: '600', fontSize: '14px', marginBottom: '8px', color: 'var(--text-secondary)' }}>{source.source}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                     Income: <span style={{ color: '#15803d', fontWeight: '600' }}>KES {source.income.toFixed(2)}</span>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                     Expenses: <span style={{ color: '#dc2626', fontWeight: '600' }}>KES {source.expenses.toFixed(2)}</span>
                   </div>
                   <div style={{ fontSize: '12px', borderTop: '1px solid #e5e7eb', paddingTop: '4px', marginTop: '4px' }}>
@@ -595,7 +595,7 @@ export default function Finance(){
             style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
           />
           {searchTerm && (
-            <div style={{ marginTop: '4px', fontSize: '14px', color: '#4b5563' }}>
+            <div style={{ marginTop: '4px', fontSize: '14px', color: 'var(--text-secondary)' }}>
               Found {filteredItems.length} transaction{filteredItems.length !== 1 ? 's' : ''}
             </div>
           )}
@@ -704,7 +704,7 @@ export default function Finance(){
                   </div>
                 </div>
                 
-                <div style={{ fontSize: '0.75rem', color: '#4b5563', marginTop: 4 }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 4 }}>
                   💡 Press Enter to save, Escape to cancel
                 </div>
               </div>
@@ -788,7 +788,7 @@ export default function Finance(){
                     </div>
                     <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                       {entryNotes.slice().reverse().map(note => (
-                        <div key={note.id} style={{ padding: '12px', background: '#f9fafb', borderRadius: '8px', marginBottom: '12px' }}>
+                        <div key={note.id} style={{ padding: '12px', background: 'var(--bg-secondary)', borderRadius: '8px', marginBottom: '12px' }}>
                           <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '4px' }}>
                             {note.author} • {new Date(note.date).toLocaleString()}
                           </div>

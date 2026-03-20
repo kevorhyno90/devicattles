@@ -419,7 +419,7 @@ export default function Marketplace() {
             onClick={() => setSelectedListing(null)}
             style={{
               padding: '8px 16px',
-              background: '#f3f4f6',
+              background: 'var(--bg-tertiary)',
               border: 'none',
               borderRadius: '8px',
               cursor: 'pointer',
@@ -435,7 +435,7 @@ export default function Marketplace() {
         )}
         <h2 style={{ margin: 0 }}>🏪 Marketplace</h2>
       </div>
-      <p style={{ color: '#4b5563', marginBottom: 8, margin: 0 }}>Buy & sell livestock, equipment, and farm supplies</p>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: 8, margin: 0 }}>Buy & sell livestock, equipment, and farm supplies</p>
       
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 8, marginTop: 16, marginBottom: 20, borderBottom: '2px solid #e5e7eb' }}>
@@ -728,7 +728,7 @@ export default function Marketplace() {
               </button>
               <button 
                 onClick={() => setShowAddForm(false)}
-                style={{ background: '#e2e8f0', border: 'none', padding: '10px 20px', borderRadius: 6, cursor: 'pointer' }}
+                style={{ background: 'var(--border-primary)', border: 'none', padding: '10px 20px', borderRadius: 6, cursor: 'pointer' }}
               >
                 Cancel
               </button>
@@ -791,7 +791,7 @@ export default function Marketplace() {
 
       {/* Listings Grid */}
       {filteredListings.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#4b5563' }}>
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-secondary)' }}>
           <div style={{ fontSize: 48, marginBottom: 10 }}>🔍</div>
           <div>No listings found. Try adjusting your filters or post a new listing!</div>
         </div>
@@ -801,7 +801,7 @@ export default function Marketplace() {
             <div 
               key={listing.id} 
               style={{ 
-                background: 'white', 
+                background: 'var(--bg-elevated)', 
                 border: favorites.includes(listing.id) ? '2px solid #f56565' : '1px solid #e2e8f0',
                 borderRadius: 8, 
                 overflow: 'hidden',
@@ -858,7 +858,7 @@ export default function Marketplace() {
                       {listing.status}
                     </div>
                     <h3 style={{ margin: '0 0 5px 0', fontSize: 16 }}>{listing.title}</h3>
-                    <div style={{ fontSize: 12, color: '#4b5563' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                       {listing.category} {listing.type && `• ${listing.type}`}
                     </div>
                   </div>
@@ -882,7 +882,7 @@ export default function Marketplace() {
                 {/* Description */}
                 <p style={{ 
                   fontSize: 13, 
-                  color: '#4b5563', 
+                  color: 'var(--text-secondary)', 
                   margin: '10px 0',
                   height: 60,
                   overflow: 'hidden',
@@ -905,7 +905,7 @@ export default function Marketplace() {
                 </div>
                 
                 {/* Metadata */}
-                <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 10 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10 }}>
                   <div>📍 {listing.location}</div>
                   <div>👤 {listing.seller}</div>
                   {listing.condition && <div>⚙️ {listing.condition}</div>}
@@ -917,7 +917,7 @@ export default function Marketplace() {
                   display: 'flex', 
                   justifyContent: 'space-between', 
                   fontSize: 12,
-                  color: '#4b5563',
+                  color: 'var(--text-secondary)',
                   padding: '10px 0',
                   borderTop: '1px solid #e2e8f0'
                 }}>
@@ -949,7 +949,7 @@ export default function Marketplace() {
                       likeListing(listing.id)
                     }}
                     style={{
-                      background: '#e2e8f0',
+                      background: 'var(--border-primary)',
                       border: 'none',
                       padding: '8px 12px',
                       borderRadius: 4,
@@ -985,7 +985,7 @@ export default function Marketplace() {
         >
           <div 
             style={{
-              background: 'white',
+              background: 'var(--bg-elevated)',
               borderRadius: 12,
               maxWidth: 800,
               width: '100%',
@@ -998,14 +998,14 @@ export default function Marketplace() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 20 }}>
               <div>
                 <h2 style={{ margin: '0 0 10px 0' }}>{selectedListing.title}</h2>
-                <div style={{ fontSize: 14, color: '#4b5563' }}>
+                <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
                   {selectedListing.category} {selectedListing.type && `• ${selectedListing.type}`}
                 </div>
               </div>
               <button
                 onClick={() => setSelectedListing(null)}
                 style={{
-                  background: '#e2e8f0',
+                  background: 'var(--border-primary)',
                   border: 'none',
                   width: 32,
                   height: 32,
@@ -1075,7 +1075,7 @@ export default function Marketplace() {
             {/* Description */}
             <div style={{ marginBottom: 20 }}>
               <h3>Description</h3>
-              <p style={{ color: '#4b5563', lineHeight: 1.6 }}>{selectedListing.description}</p>
+              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>{selectedListing.description}</p>
             </div>
             
             {/* Details */}
@@ -1103,7 +1103,7 @@ export default function Marketplace() {
               <h3>Rating & Reviews</h3>
               <div style={{ fontSize: 24, color: '#f59e0b', marginBottom: 10 }}>
                 {'⭐'.repeat(Math.round(selectedListing.rating))}
-                <span style={{ fontSize: 16, color: '#4b5563', marginLeft: 10 }}>
+                <span style={{ fontSize: 16, color: 'var(--text-secondary)', marginLeft: 10 }}>
                   {selectedListing.rating > 0 ? selectedListing.rating.toFixed(1) : 'No ratings yet'}
                   {selectedListing.reviews > 0 && ` (${selectedListing.reviews} review${selectedListing.reviews > 1 ? 's' : ''})`}
                 </span>
@@ -1174,7 +1174,7 @@ export default function Marketplace() {
                     <button
                       onClick={() => setShowReviewForm(false)}
                       style={{
-                        background: '#e2e8f0',
+                        background: 'var(--border-primary)',
                         border: 'none',
                         padding: '8px 16px',
                         borderRadius: 4,
@@ -1308,18 +1308,18 @@ export default function Marketplace() {
             </button>
           </div>
           {orders.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 40, background: '#f9fafb', borderRadius: 8 }}>
+            <div style={{ textAlign: 'center', padding: 40, background: 'var(--bg-secondary)', borderRadius: 8 }}>
               <p style={{ fontSize: 48, margin: 0 }}>📦</p>
-              <p style={{ color: '#4b5563', marginTop: 16 }}>No orders yet</p>
+              <p style={{ color: 'var(--text-secondary)', marginTop: 16 }}>No orders yet</p>
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 16 }}>
               {orders.map(order => (
-                <div key={order.id} style={{ background: 'white', padding: 20, borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <div key={order.id} style={{ background: 'var(--bg-elevated)', padding: 20, borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                     <div>
                       <h4 style={{ margin: 0, marginBottom: 4 }}>{order.listingTitle}</h4>
-                      <p style={{ margin: 0, color: '#4b5563', fontSize: 14 }}>Order ID: {order.id}</p>
+                      <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14 }}>Order ID: {order.id}</p>
                     </div>
                     <span style={{
                       padding: '4px 12px',
@@ -1334,8 +1334,8 @@ export default function Marketplace() {
                   </div>
                   
                   <p style={{ margin: '8px 0', fontSize: 18, fontWeight: 'bold', color: '#10b981' }}>{order.currency} {order.price.toLocaleString()}</p>
-                  <p style={{ margin: '4px 0', fontSize: 14, color: '#4b5563' }}>Seller: {order.seller}</p>
-                  <p style={{ margin: '4px 0', fontSize: 14, color: '#4b5563' }}>Order Date: {order.orderDate}</p>
+                  <p style={{ margin: '4px 0', fontSize: 14, color: 'var(--text-secondary)' }}>Seller: {order.seller}</p>
+                  <p style={{ margin: '4px 0', fontSize: 14, color: 'var(--text-secondary)' }}>Order Date: {order.orderDate}</p>
                   
                   {/* Tracking Steps */}
                   <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #e5e7eb' }}>
@@ -1362,7 +1362,7 @@ export default function Marketplace() {
                               {step.step}
                             </p>
                             {step.date && (
-                              <p style={{ margin: 0, fontSize: 12, color: '#4b5563' }}>
+                              <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>
                                 {new Date(step.date).toLocaleString()}
                               </p>
                             )}
@@ -1383,18 +1383,18 @@ export default function Marketplace() {
         <div>
           <h3 style={{ marginBottom: 16 }}>💰 Price Negotiations</h3>
           {negotiations.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 40, background: '#f9fafb', borderRadius: 8 }}>
+            <div style={{ textAlign: 'center', padding: 40, background: 'var(--bg-secondary)', borderRadius: 8 }}>
               <p style={{ fontSize: 48, margin: 0 }}>💰</p>
-              <p style={{ color: '#4b5563', marginTop: 16 }}>No negotiations yet</p>
+              <p style={{ color: 'var(--text-secondary)', marginTop: 16 }}>No negotiations yet</p>
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 16 }}>
               {negotiations.map(neg => (
-                <div key={neg.id} style={{ background: 'white', padding: 20, borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <div key={neg.id} style={{ background: 'var(--bg-elevated)', padding: 20, borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                     <div>
                       <h4 style={{ margin: 0, marginBottom: 4 }}>{neg.listingTitle}</h4>
-                      <p style={{ margin: 0, color: '#4b5563', fontSize: 14 }}>Negotiation ID: {neg.id}</p>
+                      <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14 }}>Negotiation ID: {neg.id}</p>
                     </div>
                     <span style={{
                       padding: '4px 12px',
@@ -1410,16 +1410,16 @@ export default function Marketplace() {
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 12 }}>
                     <div>
-                      <p style={{ margin: 0, fontSize: 12, color: '#4b5563' }}>Original Price</p>
+                      <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>Original Price</p>
                       <p style={{ margin: '4px 0', fontSize: 16, fontWeight: 600 }}>KES {neg.originalPrice.toLocaleString()}</p>
                     </div>
                     <div>
-                      <p style={{ margin: 0, fontSize: 12, color: '#4b5563' }}>Your Offer</p>
+                      <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>Your Offer</p>
                       <p style={{ margin: '4px 0', fontSize: 16, fontWeight: 600, color: '#f59e0b' }}>KES {neg.offerPrice.toLocaleString()}</p>
                     </div>
                   </div>
                   
-                  <p style={{ margin: '12px 0 4px 0', fontSize: 14, color: '#4b5563' }}>Date: {neg.date}</p>
+                  <p style={{ margin: '12px 0 4px 0', fontSize: 14, color: 'var(--text-secondary)' }}>Date: {neg.date}</p>
                   
                   {neg.status === 'Pending' && (
                     <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
@@ -1439,7 +1439,7 @@ export default function Marketplace() {
                   )}
                   
                   {neg.sellerResponse && (
-                    <p style={{ marginTop: 12, padding: 12, background: '#f9fafb', borderRadius: 6, fontSize: 14 }}>
+                    <p style={{ marginTop: 12, padding: 12, background: 'var(--bg-secondary)', borderRadius: 6, fontSize: 14 }}>
                       <strong>Seller Response:</strong> {neg.sellerResponse}
                     </p>
                   )}
@@ -1455,18 +1455,18 @@ export default function Marketplace() {
         <div>
           <h3 style={{ marginBottom: 16 }}>💬 Messages</h3>
           {messages.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 40, background: '#f9fafb', borderRadius: 8 }}>
+            <div style={{ textAlign: 'center', padding: 40, background: 'var(--bg-secondary)', borderRadius: 8 }}>
               <p style={{ fontSize: 48, margin: 0 }}>💬</p>
-              <p style={{ color: '#4b5563', marginTop: 16 }}>No messages yet</p>
+              <p style={{ color: 'var(--text-secondary)', marginTop: 16 }}>No messages yet</p>
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 16 }}>
               {messages.map(msg => (
-                <div key={msg.id} style={{ background: 'white', padding: 20, borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <div key={msg.id} style={{ background: 'var(--bg-elevated)', padding: 20, borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                     <div>
                       <h4 style={{ margin: 0, marginBottom: 4 }}>{msg.listingTitle}</h4>
-                      <p style={{ margin: 0, color: '#4b5563', fontSize: 14 }}>From: {msg.from} → To: {msg.to}</p>
+                      <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14 }}>From: {msg.from} → To: {msg.to}</p>
                     </div>
                     {!msg.read && (
                       <span style={{ padding: '4px 8px', background: '#3b82f6', color: 'white', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>
@@ -1475,8 +1475,8 @@ export default function Marketplace() {
                     )}
                   </div>
                   
-                  <p style={{ margin: '12px 0', fontSize: 14, color: '#374151', lineHeight: 1.6 }}>{msg.text}</p>
-                  <p style={{ margin: 0, fontSize: 12, color: '#4b5563' }}>{msg.timestamp}</p>
+                  <p style={{ margin: '12px 0', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{msg.text}</p>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>{msg.timestamp}</p>
                 </div>
               ))}
             </div>
@@ -1487,9 +1487,9 @@ export default function Marketplace() {
       {/* Negotiate Modal */}
       {showNegotiateModal && selectedListing && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowNegotiateModal(false)}>
-          <div style={{ background: 'white', padding: 30, borderRadius: 12, maxWidth: 500, width: '90%' }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: 'var(--bg-elevated)', padding: 30, borderRadius: 12, maxWidth: 500, width: '90%' }} onClick={e => e.stopPropagation()}>
             <h3 style={{ marginTop: 0 }}>💰 Make an Offer</h3>
-            <p style={{ color: '#4b5563', fontSize: 14 }}>{selectedListing.title}</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{selectedListing.title}</p>
             <p style={{ fontWeight: 'bold', fontSize: 18, margin: '10px 0' }}>Original Price: {selectedListing.currency} {selectedListing.price.toLocaleString()}</p>
             
             <label style={{ display: 'block', marginTop: 16, marginBottom: 6, fontWeight: 500 }}>Your Offer ({selectedListing.currency})</label>
@@ -1503,7 +1503,7 @@ export default function Marketplace() {
             
             <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
               <button onClick={startNegotiation} style={{ flex: 1, padding: 12, background: '#10b981', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Submit Offer</button>
-              <button onClick={() => setShowNegotiateModal(false)} style={{ padding: 12, background: '#e5e7eb', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setShowNegotiateModal(false)} style={{ padding: 12, background: 'var(--border-primary)', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Cancel</button>
             </div>
           </div>
         </div>
@@ -1512,9 +1512,9 @@ export default function Marketplace() {
       {/* Message Modal */}
       {showMessageModal && selectedListing && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowMessageModal(false)}>
-          <div style={{ background: 'white', padding: 30, borderRadius: 12, maxWidth: 500, width: '90%' }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: 'var(--bg-elevated)', padding: 30, borderRadius: 12, maxWidth: 500, width: '90%' }} onClick={e => e.stopPropagation()}>
             <h3 style={{ marginTop: 0 }}>💬 Message Seller</h3>
-            <p style={{ color: '#4b5563', fontSize: 14 }}>{selectedListing.title}</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{selectedListing.title}</p>
             <p style={{ fontWeight: 500, margin: '10px 0' }}>To: {selectedListing.seller}</p>
             
             <label style={{ display: 'block', marginTop: 16, marginBottom: 6, fontWeight: 500 }}>Message</label>
@@ -1528,7 +1528,7 @@ export default function Marketplace() {
             
             <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
               <button onClick={sendMessage} style={{ flex: 1, padding: 12, background: '#3b82f6', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Send Message</button>
-              <button onClick={() => setShowMessageModal(false)} style={{ padding: 12, background: '#e5e7eb', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setShowMessageModal(false)} style={{ padding: 12, background: 'var(--border-primary)', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Cancel</button>
             </div>
           </div>
         </div>
@@ -1537,20 +1537,20 @@ export default function Marketplace() {
       {/* Order Confirmation Modal */}
       {showOrderModal && selectedListing && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowOrderModal(false)}>
-          <div style={{ background: 'white', padding: 30, borderRadius: 12, maxWidth: 500, width: '90%' }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: 'var(--bg-elevated)', padding: 30, borderRadius: 12, maxWidth: 500, width: '90%' }} onClick={e => e.stopPropagation()}>
             <h3 style={{ marginTop: 0 }}>🛒 Confirm Purchase</h3>
-            <div style={{ background: '#f9fafb', padding: 16, borderRadius: 8, marginBottom: 16 }}>
+            <div style={{ background: 'var(--bg-secondary)', padding: 16, borderRadius: 8, marginBottom: 16 }}>
               <p style={{ margin: '4px 0', fontWeight: 500 }}>{selectedListing.title}</p>
-              <p style={{ margin: '4px 0', color: '#4b5563', fontSize: 14 }}>Seller: {selectedListing.seller}</p>
-              <p style={{ margin: '4px 0', color: '#4b5563', fontSize: 14 }}>Location: {selectedListing.location}</p>
+              <p style={{ margin: '4px 0', color: 'var(--text-secondary)', fontSize: 14 }}>Seller: {selectedListing.seller}</p>
+              <p style={{ margin: '4px 0', color: 'var(--text-secondary)', fontSize: 14 }}>Location: {selectedListing.location}</p>
               <p style={{ margin: '12px 0 4px 0', fontSize: 20, fontWeight: 'bold', color: '#10b981' }}>{selectedListing.currency} {selectedListing.price.toLocaleString()}</p>
             </div>
             
-            <p style={{ fontSize: 14, color: '#4b5563', marginBottom: 20 }}>Click "Proceed to Payment" to complete your purchase.</p>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20 }}>Click "Proceed to Payment" to complete your purchase.</p>
             
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={createOrder} style={{ flex: 1, padding: 12, background: '#10b981', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Proceed to Payment</button>
-              <button onClick={() => setShowOrderModal(false)} style={{ padding: 12, background: '#e5e7eb', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setShowOrderModal(false)} style={{ padding: 12, background: 'var(--border-primary)', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Cancel</button>
             </div>
           </div>
         </div>
@@ -1559,7 +1559,7 @@ export default function Marketplace() {
       {/* Payment Modal */}
       {showPaymentModal && orders[0] && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowPaymentModal(false)}>
-          <div style={{ background: 'white', padding: 30, borderRadius: 12, maxWidth: 500, width: '90%' }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: 'var(--bg-elevated)', padding: 30, borderRadius: 12, maxWidth: 500, width: '90%' }} onClick={e => e.stopPropagation()}>
             <h3 style={{ marginTop: 0 }}>💳 Payment</h3>
             <p style={{ fontSize: 20, fontWeight: 'bold', margin: '16px 0' }}>Total: {orders[0].currency} {orders[0].price.toLocaleString()}</p>
             
@@ -1579,7 +1579,7 @@ export default function Marketplace() {
               </button>
             </div>
             
-            <button onClick={() => setShowPaymentModal(false)} style={{ marginTop: 16, padding: 12, background: '#e5e7eb', border: 'none', borderRadius: 6, cursor: 'pointer', width: '100%' }}>Cancel</button>
+            <button onClick={() => setShowPaymentModal(false)} style={{ marginTop: 16, padding: 12, background: 'var(--border-primary)', border: 'none', borderRadius: 6, cursor: 'pointer', width: '100%' }}>Cancel</button>
           </div>
         </div>
       )}

@@ -207,9 +207,9 @@ export default function CalendarView() {
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: '#e5e7eb' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: 'var(--border-primary)' }}>
         {weekDays.map(day => (
-          <div key={day} style={{ background: '#f3f4f6', padding: '12px', textAlign: 'center', fontWeight: '600', fontSize: '14px' }}>
+          <div key={day} style={{ background: 'var(--bg-tertiary)', padding: '12px', textAlign: 'center', fontWeight: '600', fontSize: '14px' }}>
             {day}
           </div>
         ))}
@@ -255,7 +255,7 @@ export default function CalendarView() {
                       </div>
                     ))}
                     {dayEvents.length > 3 && (
-                      <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '2px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
                         +{dayEvents.length - 3} more
                       </div>
                     )}
@@ -274,8 +274,8 @@ export default function CalendarView() {
     const hours = Array.from({ length: 24 }, (_, i) => i)
 
     return (
-      <div style={{ display: 'flex', gap: '1px', background: '#e5e7eb', overflowX: 'auto' }}>
-        <div style={{ minWidth: '60px', background: '#f3f4f6' }}>
+      <div style={{ display: 'flex', gap: '1px', background: 'var(--border-primary)', overflowX: 'auto' }}>
+        <div style={{ minWidth: '60px', background: 'var(--bg-tertiary)' }}>
           <div style={{ height: '60px', borderBottom: '1px solid #e5e7eb' }}></div>
           {hours.map(hour => (
             <div key={hour} style={{ height: '60px', padding: '4px', fontSize: '12px', borderBottom: '1px solid #e5e7eb' }}>
@@ -288,7 +288,7 @@ export default function CalendarView() {
           const isToday = day.toDateString() === new Date().toDateString()
 
           return (
-            <div key={day.toISOString()} style={{ flex: 1, minWidth: '120px', background: '#fff' }}>
+            <div key={day.toISOString()} style={{ flex: 1, minWidth: '120px', background: 'var(--bg-elevated)' }}>
               <div style={{
                 height: '60px',
                 padding: '8px',
@@ -342,15 +342,15 @@ export default function CalendarView() {
     const dayEvents = getEventsForDate(currentDate)
 
     return (
-      <div style={{ display: 'flex', gap: '1px', background: '#e5e7eb' }}>
-        <div style={{ minWidth: '80px', background: '#f3f4f6' }}>
+      <div style={{ display: 'flex', gap: '1px', background: 'var(--border-primary)' }}>
+        <div style={{ minWidth: '80px', background: 'var(--bg-tertiary)' }}>
           {hours.map(hour => (
             <div key={hour} style={{ height: '80px', padding: '8px', fontSize: '14px', borderBottom: '1px solid #e5e7eb' }}>
               {hour.toString().padStart(2, '0')}:00
             </div>
           ))}
         </div>
-        <div style={{ flex: 1, background: '#fff', position: 'relative' }}>
+        <div style={{ flex: 1, background: 'var(--bg-elevated)', position: 'relative' }}>
           {hours.map(hour => (
             <div key={hour} style={{ height: '80px', borderBottom: '1px solid #f3f4f6' }}></div>
           ))}
@@ -474,7 +474,7 @@ export default function CalendarView() {
       </div>
 
       {/* Legend */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', marginBottom: '20px', padding: '15px', background: '#f9fafb', borderRadius: '8px' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', marginBottom: '20px', padding: '15px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ width: '16px', height: '16px', background: '#3b82f6', borderRadius: '4px' }}></div>
           <span style={{ fontSize: '14px' }}>Tasks</span>
@@ -502,7 +502,7 @@ export default function CalendarView() {
       </div>
 
       {/* Calendar View */}
-      <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+      <div style={{ background: 'var(--bg-elevated)', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         {view === 'month' && renderMonthView()}
         {view === 'week' && renderWeekView()}
         {view === 'day' && renderDayView()}
@@ -528,7 +528,7 @@ export default function CalendarView() {
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              background: 'white',
+              background: 'var(--bg-elevated)',
               padding: '30px',
               borderRadius: '12px',
               maxWidth: '500px',
@@ -541,7 +541,7 @@ export default function CalendarView() {
               <h3 style={{ fontSize: '20px', fontWeight: '700', margin: 0 }}>{selectedEvent.title}</h3>
               <button
                 onClick={() => setShowEventModal(false)}
-                style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#4b5563' }}
+                style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--text-secondary)' }}
               >
                 ×
               </button>

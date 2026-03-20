@@ -24,7 +24,7 @@ export default function PushNotificationDemo() {
   }
 
   return (
-    <div style={{ background: '#f3f4f6', padding: 16, borderRadius: 8, margin: '16px 0' }}>
+    <div style={{ background: 'var(--bg-tertiary)', padding: 16, borderRadius: 8, margin: '16px 0' }}>
       <h3>Browser Push Notification Demo</h3>
       <div>Current permission: <b>{permission}</b></div>
       <button onClick={requestPermission} style={{ margin: '8px 8px 8px 0', padding: '8px 16px', borderRadius: 6, background: '#059669', color: 'white', border: 'none', cursor: 'pointer' }}>

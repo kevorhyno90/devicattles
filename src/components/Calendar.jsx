@@ -36,7 +36,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
     feeding: { label: 'Feeding', color: '#10b981', icon: '🌾' },
     milking: { label: 'Milking', color: '#f59e0b', icon: '🥛' },
     checkup: { label: 'Checkup', color: '#06b6d4', icon: '🩺' },
-    other: { label: 'Other', color: '#4b5563', icon: '📌' }
+    other: { label: 'Other', color: 'var(--text-secondary)', icon: '📌' }
   };
 
   // Filter events by category and search
@@ -172,7 +172,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
           gridTemplateColumns: 'repeat(7, 1fr)', 
           gap: 1, 
           marginBottom: 1,
-          background: '#e5e7eb'
+          background: 'var(--border-primary)'
         }}>
           {weekDays.map(day => (
             <div key={day} style={{ 
@@ -180,8 +180,8 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
               textAlign: 'center', 
               fontWeight: '600', 
               fontSize: '0.85rem',
-              background: '#f3f4f6',
-              color: '#374151'
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-secondary)'
             }}>
               {day}
             </div>
@@ -193,7 +193,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
           display: 'grid', 
           gridTemplateColumns: 'repeat(7, 1fr)', 
           gap: 1,
-          background: '#e5e7eb'
+          background: 'var(--border-primary)'
         }}>
           {days.map((day, idx) => {
             const dayEvents = getEventsForDate(day.date);
@@ -259,9 +259,9 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
                     >
                       {/* Avatar/Icon */}
                       {event.avatarUrl ? (
-                        <img src={event.avatarUrl} alt="avatar" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', background: '#fff', border: '1px solid #e5e7eb' }} />
+                        <img src={event.avatarUrl} alt="avatar" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', background: 'var(--bg-elevated)', border: '1px solid #e5e7eb' }} />
                       ) : (
-                        <span style={{ width: 24, height: 24, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: categories[event.category]?.color, border: '1px solid #e5e7eb' }}>
+                        <span style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: categories[event.category]?.color, border: '1px solid #e5e7eb' }}>
                           {categories[event.category]?.icon}
                         </span>
                       )}
@@ -269,7 +269,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
                     </div>
                   ))}
                   {dayEvents.length > 3 && (
-                    <div style={{ fontSize: '0.8rem', color: '#4b5563', textAlign: 'center', marginTop: 2 }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: 2 }}>
                       +{dayEvents.length - 3} more
                     </div>
                   )}
@@ -290,8 +290,8 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
     return (
       <div>
         {/* Day headers */}
-        <div style={{ display: 'grid', gridTemplateColumns: '60px repeat(7, 1fr)', gap: 1, marginBottom: 1, background: '#e5e7eb' }}>
-          <div style={{ background: '#f3f4f6' }}></div>
+        <div style={{ display: 'grid', gridTemplateColumns: '60px repeat(7, 1fr)', gap: 1, marginBottom: 1, background: 'var(--border-primary)' }}>
+          <div style={{ background: 'var(--bg-tertiary)' }}></div>
           {weekDates.map((date, i) => {
             const isTodayDate = isToday(date);
             return (
@@ -316,8 +316,8 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
         {/* Time grid */}
         <div style={{ maxHeight: 600, overflowY: 'auto' }}>
           {hours.map(hour => (
-            <div key={hour} style={{ display: 'grid', gridTemplateColumns: '60px repeat(7, 1fr)', gap: 1, background: '#e5e7eb', marginBottom: 1 }}>
-              <div style={{ padding: 8, background: '#f3f4f6', fontSize: '0.75rem', textAlign: 'right', color: '#4b5563' }}>
+            <div key={hour} style={{ display: 'grid', gridTemplateColumns: '60px repeat(7, 1fr)', gap: 1, background: 'var(--border-primary)', marginBottom: 1 }}>
+              <div style={{ padding: 8, background: 'var(--bg-tertiary)', fontSize: '0.75rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
                 {hour.toString().padStart(2, '0')}:00
               </div>
               {weekDates.map((date, i) => {
@@ -330,7 +330,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
                   <div key={i} style={{ 
                     minHeight: 60, 
                     padding: 4, 
-                    background: 'white',
+                    background: 'var(--bg-elevated)',
                     cursor: 'pointer',
                     position: 'relative'
                   }}
@@ -374,14 +374,14 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
 
     return (
       <div>
-        <div style={{ padding: 16, background: '#f3f4f6', marginBottom: 16, borderRadius: 8, textAlign: 'center' }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937' }}>
+        <div style={{ padding: 16, background: 'var(--bg-tertiary)', marginBottom: 16, borderRadius: 8, textAlign: 'center' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)' }}>
             {currentDate.toLocaleDateString('en-US', { weekday: 'long' })}
           </div>
-          <div style={{ fontSize: '1.1rem', color: '#4b5563', marginTop: 4 }}>
+          <div style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginTop: 4 }}>
             {currentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </div>
-          <div style={{ marginTop: 12, fontSize: '0.9rem', color: '#374151' }}>
+          <div style={{ marginTop: 12, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
             {dayEvents.length} event{dayEvents.length !== 1 ? 's' : ''} scheduled
           </div>
         </div>
@@ -393,14 +393,14 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
             );
 
             return (
-              <div key={hour} style={{ display: 'flex', gap: 12, marginBottom: 1, background: '#e5e7eb', minHeight: 60 }}>
-                <div style={{ width: 80, padding: 12, background: '#f3f4f6', fontSize: '0.9rem', textAlign: 'right', color: '#4b5563' }}>
+              <div key={hour} style={{ display: 'flex', gap: 12, marginBottom: 1, background: 'var(--border-primary)', minHeight: 60 }}>
+                <div style={{ width: 80, padding: 12, background: 'var(--bg-tertiary)', fontSize: '0.9rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
                   {hour.toString().padStart(2, '0')}:00
                 </div>
                 <div style={{ 
                   flex: 1, 
                   padding: 8, 
-                  background: 'white',
+                  background: 'var(--bg-elevated)',
                   cursor: 'pointer'
                 }}
                 onClick={() => onAddEvent && onAddEvent(currentDate, `${hour.toString().padStart(2, '0')}:00`)}
@@ -451,7 +451,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
   };
 
   return (
-    <div style={{ padding: 20, position: 'relative', minHeight: 700, background: '#f3f4f6', borderRadius: 16, boxShadow: '0 4px 24px #0001' }}>
+    <div style={{ padding: 20, position: 'relative', minHeight: 700, background: 'var(--bg-tertiary)', borderRadius: 16, boxShadow: '0 4px 24px #0001' }}>
       {/* Floating Action Button for Adding Events */}
       <button
         onClick={() => onAddEvent && onAddEvent(currentDate)}
@@ -491,7 +491,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
             const newDate = new Date(currentDate);
             newDate.setDate(newDate.getDate() - 1);
             setCurrentDate(newDate);
-          }} style={{ padding: '8px 12px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }}>
+          }} style={{ padding: '8px 12px', background: 'var(--bg-tertiary)', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }}>
             ◀
           </button>
           
@@ -503,7 +503,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
             const newDate = new Date(currentDate);
             newDate.setDate(newDate.getDate() + 1);
             setCurrentDate(newDate);
-          }} style={{ padding: '8px 12px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }}>
+          }} style={{ padding: '8px 12px', background: 'var(--bg-tertiary)', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }}>
             ▶
           </button>
 
@@ -628,7 +628,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
           position: 'fixed',
           bottom: 20,
           right: 20,
-          background: 'white',
+          background: 'var(--bg-elevated)',
           padding: 16,
           borderRadius: 8,
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
@@ -638,21 +638,21 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
           <div style={{ fontWeight: '600', marginBottom: 8, color: categories[hoveredEvent.category]?.color }}>
             {categories[hoveredEvent.category]?.icon} {hoveredEvent.title}
           </div>
-          <div style={{ fontSize: '0.8rem', color: '#374151', marginBottom: 4 }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 4 }}>
             <strong>Event Date:</strong> {hoveredEvent.date}
           </div>
           {hoveredEvent.description && (
-            <div style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: 4 }}>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: 4 }}>
               <strong>Description:</strong> {hoveredEvent.description}
             </div>
           )}
           {hoveredEvent.time && (
-            <div style={{ fontSize: '0.8rem', color: '#4b5563' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               <strong>Time:</strong> 🕐 {hoveredEvent.time}
             </div>
           )}
           {hoveredEvent.animal && (
-            <div style={{ fontSize: '0.8rem', color: '#4b5563' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               <strong>Animal:</strong> 🐄 {hoveredEvent.animal}
             </div>
           )}
@@ -677,7 +677,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
         >
           <div
             style={{
-              background: 'white',
+              background: 'var(--bg-elevated)',
               borderRadius: 16,
               boxShadow: '0 8px 32px #0002',
               padding: 32,
@@ -696,7 +696,7 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
                 background: 'none',
                 border: 'none',
                 fontSize: 22,
-                color: '#4b5563',
+                color: 'var(--text-secondary)',
                 cursor: 'pointer',
               }}
               onClick={() => setModalEvent(null)}
@@ -705,27 +705,27 @@ const Calendar = ({ events = [], onEventClick, onAddEvent, view = 'month' }) => 
             <div style={{ fontWeight: '700', fontSize: '1.2rem', marginBottom: 12, color: categories[modalEvent.category]?.color }}>
               {categories[modalEvent.category]?.icon} {modalEvent.title}
             </div>
-            <div style={{ fontSize: '1rem', color: '#374151', marginBottom: 8 }}>
+            <div style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: 8 }}>
               <strong>Date:</strong> {modalEvent.date}
             </div>
             {modalEvent.time && (
-              <div style={{ fontSize: '0.95rem', color: '#374151', marginBottom: 8 }}>
+              <div style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginBottom: 8 }}>
                 <strong>Time:</strong> 🕐 {modalEvent.time}
               </div>
             )}
             {modalEvent.description && (
-              <div style={{ fontSize: '0.95rem', color: '#4b5563', marginBottom: 8 }}>
+              <div style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginBottom: 8 }}>
                 <strong>Description:</strong> {modalEvent.description}
               </div>
             )}
             {modalEvent.animal && (
-              <div style={{ fontSize: '0.95rem', color: '#4b5563', marginBottom: 8 }}>
+              <div style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginBottom: 8 }}>
                 <strong>Animal:</strong> 🐄 {modalEvent.animal}
               </div>
             )}
             {/* Color customization */}
             <div style={{ marginTop: 16, marginBottom: 8 }}>
-              <label style={{ fontWeight: '500', color: '#374151', marginRight: 8 }}>Event Color:</label>
+              <label style={{ fontWeight: '500', color: 'var(--text-secondary)', marginRight: 8 }}>Event Color:</label>
               <input
                 id="event-color"
                 name="eventColor"

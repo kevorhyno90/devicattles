@@ -20,7 +20,7 @@ export default function BottomNav() {
       left: 0,
       right: 0,
       height: 60,
-      background: '#fff',
+      background: 'var(--bg-elevated)',
       borderTop: '1px solid #e5e7eb',
       display: 'flex',
       justifyContent: 'space-around',

@@ -39,7 +39,7 @@ export default function Login({ onLoginSuccess }) {
       padding: '20px'
     }}>
       <div style={{
-        background: 'white',
+        background: 'var(--bg-elevated)',
         borderRadius: '16px',
         padding: '40px',
         maxWidth: '400px',
@@ -57,7 +57,7 @@ export default function Login({ onLoginSuccess }) {
           }}>
             🌾 Devins Farm
           </h1>
-          <p style={{ margin: 0, color: '#4b5563', fontSize: '14px' }}>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>
             Farm Management System
           </p>
         </div>
@@ -148,19 +148,19 @@ export default function Login({ onLoginSuccess }) {
         <div style={{
           marginTop: '32px',
           padding: '16px',
-          background: '#f9fafb',
+          background: 'var(--bg-secondary)',
           borderRadius: '8px',
           fontSize: '13px'
         }}>
-          <div style={{ fontWeight: 600, marginBottom: '12px', color: '#1f2937' }}>Demo Accounts:</div>
+          <div style={{ fontWeight: 600, marginBottom: '12px', color: 'var(--text-primary)' }}>Demo Accounts:</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ color: '#4b5563' }}>
+            <div style={{ color: 'var(--text-secondary)' }}>
               <strong>Manager:</strong> admin / admin123
             </div>
-            <div style={{ color: '#4b5563' }}>
+            <div style={{ color: 'var(--text-secondary)' }}>
               <strong>Worker:</strong> worker / worker123
             </div>
-            <div style={{ color: '#4b5563' }}>
+            <div style={{ color: 'var(--text-secondary)' }}>
               <strong>Vet:</strong> vet / vet123
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function Login({ onLoginSuccess }) {
           marginTop: '24px',
           textAlign: 'center',
           fontSize: '12px',
-          color: '#4b5563'
+          color: 'var(--text-secondary)'
         }}>
           <p style={{ margin: 0 }}>
             By logging in, you agree to our terms and conditions

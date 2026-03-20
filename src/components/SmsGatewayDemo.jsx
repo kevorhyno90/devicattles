@@ -42,7 +42,7 @@ export default function SmsGatewayDemo() {
         style={{ padding: '8px 16px', borderRadius: 6, background: '#059669', color: 'white', border: 'none', cursor: 'pointer' }}
       >Send SMS</button>
       {status && <div style={{ marginTop: 8, color: '#b45309' }}>{status}</div>}
-      <div style={{ marginTop: 12, fontSize: 13, color: '#4b5563' }}>
+      <div style={{ marginTop: 12, fontSize: 13, color: 'var(--text-secondary)' }}>
         <b>Note:</b> For real SMS, set up a backend endpoint to securely call Twilio API.<br />
         Twilio trial allows free SMS to verified numbers only.
       </div>

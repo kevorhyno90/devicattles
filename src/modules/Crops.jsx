@@ -8,6 +8,8 @@ import { savePhoto, deletePhoto, getPhotosByEntity } from '../lib/photoAnalysis'
 import { LineChart } from '../components/Charts'
 import { getCurrentWeather } from '../lib/weatherApi'
 
+const AzollaFarming = React.lazy(() => import('./AzollaFarming'))
+
 const SAMPLE = [
   { id: 'C-001', name: 'Premium Alfalfa', variety: 'Vernal', planted: '2025-03-15', plantDate: '2025-03-15', expectedHarvest: '2025-07-15', area: 5.2, field: 'North Field A', status: 'Growing', soilType: 'Clay Loam', irrigationType: 'Sprinkler', seedCost: 450, actualHarvest: '', notes: '', healthScore: 90, stressLevel: 'Low', diseaseRisk: 'Low', pestPressure: 'Low', treatments: [], yieldRecords: [], soilTests: [], irrigationRecords: [], pestManagement: [], fieldOperations: [], healthMonitoring: [], scoutingReports: [], diseaseMonitoring: [], weatherData: [], complianceRecords: [], sustainabilityMetrics: {}, riskAssessment: {}, gpsCoordinates: { lat: 40.7128, lng: -74.0060 }, seedingRate: 25, rowSpacing: 7, plantingDepth: 0.5, cultivar: 'Vernal', certificationLevel: 'Certified Organic', marketDestination: 'Local Dairy Farms', contractPrice: 0, insuranceCoverage: true },
   { id: 'C-002', name: 'Field Corn', variety: 'Pioneer 1234', planted: '2025-04-20', plantDate: '2025-04-20', expectedHarvest: '2025-09-15', area: 12.8, field: 'South Field B', status: 'Planted', seedCost: 2800, healthScore: 85, stressLevel: 'Low', diseaseRisk: 'Medium', pestPressure: 'Low', soilType: 'Sandy Loam', irrigationType: 'Center Pivot', actualHarvest: '', notes: [], treatments: [], yieldRecords: [], soilTests: [], irrigationRecords: [], pestManagement: [], fieldOperations: [], gpsCoordinates: { lat: 40.7200, lng: -74.0100 }, seedingRate: 32000, rowSpacing: 30, plantingDepth: 2, cultivar: 'Pioneer 1234', certificationLevel: 'Conventional', marketDestination: 'Grain Elevator', contractPrice: 4.85, insuranceCoverage: true, weatherData: [] },
@@ -50,7 +52,8 @@ const WORKSPACE_VIEWS = [
   { id: 'disease', label: 'Disease', icon: '🦠', description: 'Disease surveillance, severity tracking, and response logs.' },
   { id: 'pests', label: 'Pests', icon: '🐛', description: 'Pest events, pressure trends, and intervention history.' },
   { id: 'health', label: 'Health', icon: '🩺', description: 'Crop health checks, vigor scoring, and stress observations.' },
-  { id: 'scouting', label: 'Scouting', icon: '🔎', description: 'Scout observations, weed pressure, and field recommendations.' }
+  { id: 'scouting', label: 'Scouting', icon: '🔎', description: 'Scout observations, weed pressure, and field recommendations.' },
+  { id: 'azolla', label: 'Azolla', icon: '🌿', description: 'Manage azolla ponds and harvest logs within Crop OS.' }
 ]
 const INITIAL_TAB_MAP = {
   portfolio: 'portfolio',
@@ -65,6 +68,7 @@ const INITIAL_TAB_MAP = {
   scouting: 'scouting',
   disease: 'disease',
   pests: 'pests',
+  azolla: 'azolla',
   routines: 'treatments',
   yields: 'sales',
   subsections: 'compliance'
@@ -212,13 +216,13 @@ const CropCard = React.memo(({ crop, onViewDetails, onDelete }) => {
   )
 })
 
-export default function Crops({ initialTab, recordSource } = {}){
+export default function Crops({ initialTab, initialPlantSubmodule, recordSource } = {}){
   const KEY = 'cattalytics:crops:v2' // Changed key to force reload of new data
   const [items, setItems] = useState([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [modalOpenId, setModalOpenId] = useState(null)
   const [showRecordCV, setShowRecordCV] = useState(null)
-  const [workspaceView, setWorkspaceView] = useState(INITIAL_TAB_MAP[initialTab] || 'portfolio')
+  const [workspaceView, setWorkspaceView] = useState(INITIAL_TAB_MAP[initialPlantSubmodule || initialTab] || 'portfolio')
   const [activeTab, setActiveTab] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
   const [sortBy, setSortBy] = useState('planted')
@@ -276,10 +280,10 @@ export default function Crops({ initialTab, recordSource } = {}){
   }, [items])
 
   useEffect(() => {
-    if (initialTab) {
-      setWorkspaceView(INITIAL_TAB_MAP[initialTab] || 'portfolio')
+    if (initialPlantSubmodule || initialTab) {
+      setWorkspaceView(INITIAL_TAB_MAP[initialPlantSubmodule || initialTab] || 'portfolio')
     }
-  }, [initialTab])
+  }, [initialPlantSubmodule, initialTab])
 
   async function add(){
     if(!formData.name.trim() || !formData.area) return
@@ -1384,7 +1388,7 @@ export default function Crops({ initialTab, recordSource } = {}){
                 <div className="card" style={{ padding: '14px' }}><div style={{ fontSize: '24px', fontWeight: 700, color: '#059669' }}>{stats.total}</div><div style={{ fontSize: '13px', color: 'var(--muted)' }}>Registered crops</div></div>
                 <div className="card" style={{ padding: '14px' }}><div style={{ fontSize: '24px', fontWeight: 700, color: '#d97706' }}>{stats.totalArea.toFixed(1)}</div><div style={{ fontSize: '13px', color: 'var(--muted)' }}>Managed acres</div></div>
                 <div className="card" style={{ padding: '14px' }}><div style={{ fontSize: '24px', fontWeight: 700, color: '#2563eb' }}>{stats.active}</div><div style={{ fontSize: '13px', color: 'var(--muted)' }}>Active campaigns</div></div>
-                <div className="card" style={{ padding: '14px' }}><div style={{ fontSize: '24px', fontWeight: 700, color: '#475569' }}>{stats.harvested}</div><div style={{ fontSize: '13px', color: 'var(--muted)' }}>Closed campaigns</div></div>
+                <div className="card" style={{ padding: '14px' }}><div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-secondary)' }}>{stats.harvested}</div><div style={{ fontSize: '13px', color: 'var(--muted)' }}>Closed campaigns</div></div>
               </div>
             )}
 
@@ -1429,7 +1433,7 @@ export default function Crops({ initialTab, recordSource } = {}){
                 <div className="card" style={{ padding: '14px' }}><div style={{ fontSize: '24px', fontWeight: 700, color: '#2563eb' }}>{workspaceStats.insuredCrops}</div><div style={{ fontSize: '13px', color: 'var(--muted)' }}>Insured crops</div></div>
                 <div className="card" style={{ padding: '14px' }}><div style={{ fontSize: '24px', fontWeight: 700, color: '#7c3aed' }}>{workspaceStats.certifiedCrops}</div><div style={{ fontSize: '13px', color: 'var(--muted)' }}>Certified blocks</div></div>
                 <div className="card" style={{ padding: '14px' }}><div style={{ fontSize: '24px', fontWeight: 700, color: '#0f766e' }}>{workspaceStats.totalSoilTests}</div><div style={{ fontSize: '13px', color: 'var(--muted)' }}>Soil tests</div></div>
-                <div className="card" style={{ padding: '14px' }}><div style={{ fontSize: '24px', fontWeight: 700, color: '#475569' }}>{workspaceStats.totalComplianceLogs}</div><div style={{ fontSize: '13px', color: 'var(--muted)' }}>Compliance logs</div></div>
+                <div className="card" style={{ padding: '14px' }}><div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-secondary)' }}>{workspaceStats.totalComplianceLogs}</div><div style={{ fontSize: '13px', color: 'var(--muted)' }}>Compliance logs</div></div>
               </div>
             )}
           </div>
@@ -1710,6 +1714,22 @@ export default function Crops({ initialTab, recordSource } = {}){
             {renderWorkflowList(activityBoards.recentDisease, (entry) => setDiseaseForm({ editId: entry.entryId, cropId: entry.cropId, date: entry.raw.date || getTodayDate(), disease: entry.raw.disease || '', severity: String(entry.raw.severity || ''), coverage: String(entry.raw.coverage || ''), treatment: entry.raw.treatment || '', effectiveness: entry.raw.effectiveness || '', cost: String(entry.raw.cost || '') }), (entry) => confirmWorkflowDelete(entry, 'diseaseMonitoring', 'Disease record deleted'), 'No disease logs yet.')}
           </div>
         )}
+
+        {workspaceView === 'azolla' && (
+          <div style={{ display: 'grid', gap: '12px' }}>
+            <div className="card" style={{ padding: '14px 16px', borderLeft: `4px solid ${cropTheme.accent}`, background: cropTheme.surface }}>
+              <div style={{ fontWeight: 700, color: cropTheme.text, marginBottom: '4px' }}>Azolla Workspace</div>
+              <div style={{ fontSize: '13px', color: cropTheme.textMuted }}>
+                Azolla now lives under Crop OS, but opens as its own full module view instead of a compact crop workflow card.
+              </div>
+            </div>
+            <div style={{ width: '100%' }}>
+              <React.Suspense fallback={<div>Loading azolla workspace...</div>}>
+                <AzollaFarming />
+              </React.Suspense>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Add Crop Form */}
@@ -1835,7 +1855,7 @@ export default function Crops({ initialTab, recordSource } = {}){
           </select>
         </div>
         {searchTerm && (
-          <div style={{ marginTop: '8px', fontSize: '14px', color: '#4b5563' }}>
+          <div style={{ marginTop: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>
             Found {filteredItems.length} crop{filteredItems.length !== 1 ? 's' : ''}
           </div>
         )}

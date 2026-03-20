@@ -98,7 +98,7 @@ export default function KeyboardShortcutsHelp() {
     >
       <div
         style={{
-          background: 'white',
+          background: 'var(--bg-elevated)',
           borderRadius: '16px',
           maxWidth: '900px',
           width: '100%',
@@ -184,7 +184,7 @@ export default function KeyboardShortcutsHelp() {
                         borderBottom: itemIdx < section.items.length - 1 ? '1px solid #f3f4f6' : 'none'
                       }}
                     >
-                      <span style={{ fontSize: '14px', color: '#374151', flex: 1 }}>
+                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', flex: 1 }}>
                         {item.description}
                       </span>
                       <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
@@ -198,7 +198,7 @@ export default function KeyboardShortcutsHelp() {
                               fontSize: '12px',
                               fontWeight: '600',
                               fontFamily: 'monospace',
-                              color: '#374151',
+                              color: 'var(--text-secondary)',
                               boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
                               minWidth: '32px',
                               textAlign: 'center'
@@ -206,7 +206,7 @@ export default function KeyboardShortcutsHelp() {
                               {key}
                             </kbd>
                             {keyIdx < item.keys.length - 1 && (
-                              <span style={{ color: '#4b5563', fontSize: '12px', alignSelf: 'center' }}>
+                              <span style={{ color: 'var(--text-secondary)', fontSize: '12px', alignSelf: 'center' }}>
                                 +
                               </span>
                             )}
@@ -235,7 +235,7 @@ export default function KeyboardShortcutsHelp() {
             <div style={{ flex: 1 }}>
               <p style={{ margin: 0, fontSize: '14px', color: '#166534', fontWeight: '500' }}>
                 <strong>Pro Tip:</strong> Press <kbd style={{
-                  background: 'white',
+                  background: 'var(--bg-elevated)',
                   border: '1px solid #bbf7d0',
                   borderRadius: '3px',
                   padding: '2px 6px',

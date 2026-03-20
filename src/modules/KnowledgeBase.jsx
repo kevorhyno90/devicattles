@@ -209,7 +209,7 @@ export default function KnowledgeBase() {
             onClick={() => setSelectedGuide(null)}
             style={{
               padding: '8px 16px',
-              background: '#f3f4f6',
+              background: 'var(--bg-tertiary)',
               border: 'none',
               borderRadius: '8px',
               cursor: 'pointer',
@@ -227,7 +227,7 @@ export default function KnowledgeBase() {
           <span>📚</span> Knowledge Base
         </h1>
       </div>
-      <p style={{ color: '#4b5563', marginBottom: '24px' }}>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
         Learn farming best practices, get answers, and chat with our AI assistant
       </p>
 
@@ -315,7 +315,7 @@ export default function KnowledgeBase() {
                 border: '2px solid #e5e7eb',
                 borderRadius: '8px',
                 fontSize: '14px',
-                background: '#fff',
+                background: 'var(--bg-elevated)',
                 cursor: 'pointer'
               }}
             >
@@ -330,7 +330,7 @@ export default function KnowledgeBase() {
               onClick={() => setSearchQuery('')}
               style={{
                 padding: '12px',
-                background: '#f3f4f6',
+                background: 'var(--bg-tertiary)',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: 'pointer',
@@ -351,7 +351,7 @@ export default function KnowledgeBase() {
                     onClick={() => setSelectedGuide(guide)}
                     style={{
                       padding: '6px 12px',
-                      background: '#fff',
+                      background: 'var(--bg-elevated)',
                       border: '1px solid #d97706',
                       borderRadius: '6px',
                       cursor: 'pointer',
@@ -370,7 +370,7 @@ export default function KnowledgeBase() {
               <div
                 key={guide.id}
                 style={{
-                  background: '#fff',
+                  background: 'var(--bg-elevated)',
                   padding: '20px',
                   borderRadius: '12px',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -430,10 +430,10 @@ export default function KnowledgeBase() {
                     {guide.category}
                   </span>
                   <h3 style={{ margin: '8px 0', fontSize: '18px' }}>{guide.title}</h3>
-                  <p style={{ margin: '0 0 12px 0', color: '#4b5563', fontSize: '14px', lineHeight: '1.5' }}>
+                  <p style={{ margin: '0 0 12px 0', color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5' }}>
                     {guide.description}
                   </p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#4b5563' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-secondary)' }}>
                     <span>📖 {guide.readTime}</span>
                     <span>⭐ {guide.rating}/5</span>
                   </div>
@@ -468,7 +468,7 @@ export default function KnowledgeBase() {
               <div
                 key={faq.id}
                 style={{
-                  background: '#fff',
+                  background: 'var(--bg-elevated)',
                   padding: '20px',
                   borderRadius: '12px',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -499,7 +499,7 @@ export default function KnowledgeBase() {
                   </span>
                 </div>
                 {expandedFaq === faq.id && (
-                  <p style={{ margin: '12px 0 0 0', color: '#4b5563', lineHeight: '1.6' }}>
+                  <p style={{ margin: '12px 0 0 0', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
                     {faq.answer}
                   </p>
                 )}
@@ -512,7 +512,7 @@ export default function KnowledgeBase() {
       {/* Chatbot Tab */}
       {activeTab === 'chatbot' && (
         <div style={{
-          background: '#fff',
+          background: 'var(--bg-elevated)',
           borderRadius: '12px',
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
           height: '600px',
@@ -633,7 +633,7 @@ export default function KnowledgeBase() {
             <div
               key={tip.id}
               style={{
-                background: '#fff',
+                background: 'var(--bg-elevated)',
                 padding: '20px',
                 borderRadius: '12px',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
@@ -641,11 +641,11 @@ export default function KnowledgeBase() {
             >
               <div style={{ fontSize: '48px', marginBottom: '12px' }}>{tip.icon}</div>
               <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>{tip.title}</h3>
-              <p style={{ margin: '0 0 16px 0', color: '#4b5563', fontSize: '14px', lineHeight: '1.5' }}>
+              <p style={{ margin: '0 0 16px 0', color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5' }}>
                 {tip.description}
               </p>
               <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '12px' }}>
-                <div style={{ fontSize: '13px', color: '#4b5563', marginBottom: '8px' }}>Was this helpful?</div>
+                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Was this helpful?</div>
                 <div style={{ display: 'flex', gap: '4px' }}>
                   {[1, 2, 3, 4, 5].map(star => (
                     <button
@@ -663,7 +663,7 @@ export default function KnowledgeBase() {
                     </button>
                   ))}
                   {ratedTips[tip.id] && (
-                    <span style={{ marginLeft: '8px', fontSize: '13px', color: '#4b5563' }}>
+                    <span style={{ marginLeft: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                       ({ratedTips[tip.id]} stars)
                     </span>
                   )}
@@ -690,7 +690,7 @@ export default function KnowledgeBase() {
           padding: '20px'
         }} onClick={() => setSelectedGuide(null)}>
           <div style={{
-            background: '#fff',
+            background: 'var(--bg-elevated)',
             borderRadius: '12px',
             maxWidth: '800px',
             maxHeight: '90vh',
@@ -723,14 +723,14 @@ export default function KnowledgeBase() {
               {selectedGuide.category}
             </span>
             <h2 style={{ margin: '12px 0', fontSize: '28px' }}>{selectedGuide.title}</h2>
-            <p style={{ margin: '0 0 24px 0', color: '#4b5563', fontSize: '16px', lineHeight: '1.6' }}>
+            <p style={{ margin: '0 0 24px 0', color: 'var(--text-secondary)', fontSize: '16px', lineHeight: '1.6' }}>
               {selectedGuide.description}
             </p>
-            <div style={{ marginBottom: '24px', display: 'flex', gap: '24px', fontSize: '14px', color: '#4b5563' }}>
+            <div style={{ marginBottom: '24px', display: 'flex', gap: '24px', fontSize: '14px', color: 'var(--text-secondary)' }}>
               <span>📖 {selectedGuide.readTime}</span>
               <span>⭐ {selectedGuide.rating}/5</span>
             </div>
-            <div style={{ lineHeight: '1.8', color: '#374151' }}>
+            <div style={{ lineHeight: '1.8', color: 'var(--text-secondary)' }}>
               {selectedGuide.content}
             </div>
             <button

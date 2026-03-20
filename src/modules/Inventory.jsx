@@ -902,19 +902,19 @@ export default function Inventory({ initialView = 'supplies' }){
       {view === 'supplies' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
           <div className="card" style={{ padding: '16px', background: '#f0fdf4' }}>
-            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Total Inventory Value</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Inventory Value</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>KES {totalValue.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#fef3c7' }}>
-            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Low Stock Alerts</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Low Stock Alerts</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{lowStockItems.length}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#fee2e2' }}>
-            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Expiring Soon (90 days)</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Expiring Soon (90 days)</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#dc2626' }}>{expiringSoon.length}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#eff6ff' }}>
-            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Total Items</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Items</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#2563eb' }}>{items.length}</div>
           </div>
         </div>
@@ -924,19 +924,19 @@ export default function Inventory({ initialView = 'supplies' }){
       {view === 'equipment' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
           <div className="card" style={{ padding: '16px', background: '#f0fdf4' }}>
-            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Total Equipment Value</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Equipment Value</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>KES {totalEquipmentValue.toLocaleString('en-KE')}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#fef3c7' }}>
-            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Service Due (30 days)</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Service Due (30 days)</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{equipmentNeedingService.length}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#e0f2fe' }}>
-            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Operational</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Operational</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#0284c7' }}>{operationalEquipment}/{equipment.length}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#eff6ff' }}>
-            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Total Equipment</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Equipment</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#2563eb' }}>{equipment.length}</div>
           </div>
         </div>
@@ -946,27 +946,27 @@ export default function Inventory({ initialView = 'supplies' }){
       {view === 'orders' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
           <div className="card" style={{ padding: '16px', background: '#f0f9ff' }}>
-            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Total Orders</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Orders</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#0369a1' }}>{orders.length}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#fef3c7' }}>
-            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Pending / Payment</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Pending / Payment</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#b45309' }}>{pendingOrders}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#e0f2fe' }}>
-            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>In Transit</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>In Transit</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#0284c7' }}>{inTransitOrders}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#ecfdf5' }}>
-            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Delivered</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Delivered</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>{deliveredOrders}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#fee2e2' }}>
-            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Cancelled</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Cancelled</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#dc2626' }}>{cancelledOrders}</div>
           </div>
           <div className="card" style={{ padding: '16px', background: '#f5f3ff' }}>
-            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px' }}>Total Order Value</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Order Value</div>
             <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#7c3aed' }}>KES {totalOrderValue.toLocaleString('en-KE')}</div>
           </div>
         </div>
@@ -1426,7 +1426,7 @@ export default function Inventory({ initialView = 'supplies' }){
                 </div>
 
                 {eq.servicePerson && (
-                  <div style={{ marginTop: '12px', padding: '12px', background: '#f9fafb', borderRadius: '6px', fontSize: '13px' }}>
+                  <div style={{ marginTop: '12px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '6px', fontSize: '13px' }}>
                     <strong>Service Provider:</strong> {eq.servicePerson}
                     {eq.serviceContact && <span> • 📞 {eq.serviceContact}</span>}
                   </div>
@@ -1598,7 +1598,7 @@ export default function Inventory({ initialView = 'supplies' }){
                     </div>
                   </div>
                   
-                  <div style={{ fontSize: '0.75rem', color: '#4b5563', marginTop: 4 }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 4 }}>
                     💡 Press Enter to save, Escape to cancel
                   </div>
                 </div>
@@ -1811,19 +1811,19 @@ export default function Inventory({ initialView = 'supplies' }){
                       <h4>Maintenance History</h4>
                       <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                         {eq.maintenanceHistory.sort((a, b) => new Date(b.date) - new Date(a.date)).map((m, idx) => (
-                          <div key={idx} style={{ padding: '12px', marginBottom: '8px', background: '#f9fafb', borderRadius: '6px', borderLeft: '3px solid var(--green)' }}>
+                          <div key={idx} style={{ padding: '12px', marginBottom: '8px', background: 'var(--bg-secondary)', borderRadius: '6px', borderLeft: '3px solid var(--green)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                               <div>
                                 <strong style={{ fontSize: '14px' }}>{m.type}</strong>
-                                <div style={{ fontSize: '12px', color: '#4b5563' }}>{new Date(m.date).toLocaleDateString()}</div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{new Date(m.date).toLocaleDateString()}</div>
                               </div>
                               <div style={{ textAlign: 'right' }}>
                                 <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--green)' }}>${(m.cost || 0).toLocaleString()}</div>
-                                {m.hours && <div style={{ fontSize: '12px', color: '#4b5563' }}>{m.hours} hours</div>}
+                                {m.hours && <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{m.hours} hours</div>}
                               </div>
                             </div>
-                            <div style={{ fontSize: '13px', color: '#374151', marginBottom: '4px' }}>{m.description}</div>
-                            {m.provider && <div style={{ fontSize: '12px', color: '#4b5563' }}>Provider: {m.provider}</div>}
+                            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>{m.description}</div>
+                            {m.provider && <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Provider: {m.provider}</div>}
                           </div>
                         ))}
                       </div>

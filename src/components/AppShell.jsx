@@ -75,7 +75,7 @@ export default function AppShell() {
             Loading Farm Management System
           </h2>
           <p style={{
-            color: '#4b5563',
+            color: 'var(--text-secondary)',
             fontSize: '14px'
           }}>
             Preparing your dashboard...
@@ -105,7 +105,7 @@ export default function AppShell() {
 
       {/* Bottom navigation skeleton */}
       <nav style={{
-        background: 'white',
+        background: 'var(--bg-elevated)',
         padding: '12px 20px',
         boxShadow: '0 -2px 8px rgba(0,0,0,0.1)',
         borderTop: '1px solid #e5e7eb'
@@ -123,7 +123,7 @@ export default function AppShell() {
               style={{
                 width: '60px',
                 height: '40px',
-                background: '#f3f4f6',
+                background: 'var(--bg-tertiary)',
                 borderRadius: '6px'
               }}
             ></div>

@@ -421,7 +421,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
         <div>
           <h2 style={{ margin: 0 }}>Professional Reports Center</h2>
-          <div style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
             Comprehensive reports for every module and nested subsection. Reports update automatically after record edits.
           </div>
         </div>
@@ -447,16 +447,16 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
           <div style={{ fontSize: 12, color: '#9a3412' }}>Total Records Indexed</div>
           <div style={{ fontSize: 24, fontWeight: 800, color: '#9a3412' }}>{catalog.summary.totalRows}</div>
         </div>
-        <div className="card" style={{ padding: 14, background: '#f8fafc' }}>
-          <div style={{ fontSize: 12, color: '#475569' }}>Last Scan</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#334155' }}>{new Date(catalog.summary.generatedAt).toLocaleString()}</div>
+        <div className="card" style={{ padding: 14, background: 'var(--bg-secondary)' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Last Scan</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-secondary)' }}>{new Date(catalog.summary.generatedAt).toLocaleString()}</div>
         </div>
       </div>
 
       <div className="card" style={{ padding: 14, marginBottom: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
           <div>
-            <label style={{ fontSize: 12, color: '#475569' }}>Search Reports</label>
+            <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Search Reports</label>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -464,7 +464,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
             />
           </div>
           <div>
-            <label style={{ fontSize: 12, color: '#475569' }}>Module</label>
+            <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Module</label>
             <select value={moduleFilter} onChange={(e) => setModuleFilter(e.target.value)}>
               {moduleOptions.map((m) => (
                 <option key={m} value={m}>{m === 'all' ? 'All Modules' : m}</option>
@@ -472,7 +472,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
             </select>
           </div>
           <div>
-            <label style={{ fontSize: 12, color: '#475569' }}>Subsection (Dropdown)</label>
+            <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Subsection (Dropdown)</label>
             <select value={subsectionFilter} onChange={(e) => setSubsectionFilter(e.target.value)}>
               {subsectionOptions.map((s) => (
                 <option key={s} value={s}>{s === 'all' ? 'All Subsections' : s}</option>
@@ -480,20 +480,20 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
             </select>
           </div>
           <div>
-            <label style={{ fontSize: 12, color: '#475569' }}>Select Detailed Section</label>
+            <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Select Detailed Section</label>
             <select value={selectedReportId} onChange={(e) => setSelectedReportId(e.target.value)}>
               {visibleReports.map((r) => (
                 <option key={r.id} value={r.id}>{r.module} - {r.subsection}</option>
               ))}
             </select>
             {!!selectedReportHelp && (
-              <div style={{ marginTop: 6, fontSize: 11, color: '#475569' }}>
+              <div style={{ marginTop: 6, fontSize: 11, color: 'var(--text-secondary)' }}>
                 {selectedReportHelp}
               </div>
             )}
           </div>
           <div>
-            <label style={{ fontSize: 12, color: '#475569' }}>Professional Notes (included in exports)</label>
+            <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Professional Notes (included in exports)</label>
             <input
               value={reportNotes}
               onChange={(e) => setReportNotes(e.target.value)}
@@ -510,15 +510,15 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
         <h3 style={{ marginTop: 0, marginBottom: 8 }}>Master Report Builder</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
           <div>
-            <label style={{ fontSize: 12, color: '#475569' }}>Master Title</label>
+            <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Master Title</label>
             <input value={masterTitle} onChange={(e) => setMasterTitle(e.target.value)} />
           </div>
           <div>
-            <label style={{ fontSize: 12, color: '#475569' }}>Audience</label>
+            <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Audience</label>
             <input value={masterAudience} onChange={(e) => setMasterAudience(e.target.value)} />
           </div>
           <div>
-            <label style={{ fontSize: 12, color: '#475569' }}>Scope</label>
+            <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Scope</label>
             <select value={masterScope} onChange={(e) => setMasterScope(e.target.value)}>
               <option value={MASTER_SCOPE.visible}>Visible Sections</option>
               <option value={MASTER_SCOPE.module}>Current Module ({selectedReport?.module || 'N/A'})</option>
@@ -526,8 +526,8 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
             </select>
           </div>
           <div>
-            <label style={{ fontSize: 12, color: '#475569' }}>Master Coverage</label>
-            <div style={{ marginTop: 8, fontSize: 13, color: '#334155' }}>
+            <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Master Coverage</label>
+            <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-secondary)' }}>
               {masterSections.length} sections | {masterSections.reduce((sum, s) => sum + s.rowCount, 0)} records
             </div>
           </div>
@@ -548,7 +548,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
           </div>
           <div style={{ maxHeight: 600, overflowY: 'auto' }}>
             {visibleReports.length === 0 && (
-              <div style={{ padding: 16, color: '#475569' }}>No reports found for current filters.</div>
+              <div style={{ padding: 16, color: 'var(--text-secondary)' }}>No reports found for current filters.</div>
             )}
             {visibleReports.map((report) => {
               const active = report.id === selectedReportId
@@ -566,9 +566,9 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
                     cursor: 'pointer'
                   }}
                 >
-                  <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>{report.module} - {report.subsection}</div>
-                  <div style={{ fontSize: 12, color: '#475569', marginTop: 3 }}>{report.rowCount} records</div>
-                  <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>{getSectionHelp(report.module, report.subsection)}</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>{report.module} - {report.subsection}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 3 }}>{report.rowCount} records</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{getSectionHelp(report.module, report.subsection)}</div>
                   <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{report.storageKey}</div>
                   <div style={{ marginTop: 8 }}>
                     <span
@@ -607,7 +607,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
 
         <div className="card" style={{ padding: 14 }}>
           {!selectedReport && (
-            <div style={{ color: '#475569' }}>Select a report on the left to preview full records.</div>
+            <div style={{ color: 'var(--text-secondary)' }}>Select a report on the left to preview full records.</div>
           )}
 
           {selectedReport && (
@@ -615,7 +615,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
                 <div>
                   <h3 style={{ margin: 0 }}>{selectedReport.module} - {selectedReport.subsection}</h3>
-                  <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
                     Source key: {selectedReport.storageKey} | Rows: {selectedReport.rowCount} | Fields: {selectedReport.fields.length}
                   </div>
                 </div>
@@ -629,14 +629,14 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
                 </div>
               </div>
 
-              <div className="card" style={{ padding: 12, marginBottom: 10, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+              <div className="card" style={{ padding: 12, marginBottom: 10, background: 'var(--bg-secondary)', border: '1px solid #e2e8f0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
                   <strong>Native + Detailed Technical Narrative (Editable)</strong>
                   <button onClick={regenerateSelectedNarrative}>Regenerate Auto Narrative</button>
                 </div>
                 <div style={{ display: 'grid', gap: 8 }}>
                   <div>
-                    <label style={{ fontSize: 12, color: '#475569' }}>Native Summary</label>
+                    <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Native Summary</label>
                     <textarea
                       rows={2}
                       value={selectedDraft?.nativeSummary || ''}
@@ -644,7 +644,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, color: '#475569' }}>Detailed Technical Report</label>
+                    <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Detailed Technical Report</label>
                     <textarea
                       rows={3}
                       value={selectedDraft?.detailedTechnicalReport || ''}
@@ -652,7 +652,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, color: '#475569' }}>Operational Risks</label>
+                    <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Operational Risks</label>
                     <textarea
                       rows={2}
                       value={selectedDraft?.operationalRisks || ''}
@@ -660,7 +660,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, color: '#475569' }}>Corrective Actions</label>
+                    <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Corrective Actions</label>
                     <textarea
                       rows={2}
                       value={selectedDraft?.correctiveActions || ''}
@@ -668,7 +668,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, color: '#475569' }}>Editor Notes</label>
+                    <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Editor Notes</label>
                     <textarea
                       rows={2}
                       value={selectedDraft?.editorNotes || ''}
@@ -679,14 +679,14 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
               </div>
 
               {selectedReport.rows.length === 0 && (
-                <div style={{ marginBottom: 10, padding: 10, borderRadius: 8, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#475569', fontSize: 13 }}>
+                <div style={{ marginBottom: 10, padding: 10, borderRadius: 8, border: '1px solid #e2e8f0', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontSize: 13 }}>
                   No records in this section yet. Open the real section to add or sync records.
                 </div>
               )}
 
               <div style={{ overflow: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, maxHeight: 560 }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                  <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
+                  <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-secondary)', zIndex: 1 }}>
                     <tr>
                       {(selectedReport.fields.length ? selectedReport.fields : ['status']).map((field) => (
                         <th key={field} style={{ borderBottom: '1px solid #e2e8f0', padding: '8px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>
@@ -721,14 +721,14 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
 
       <div className="card" style={{ padding: 14, marginTop: 16 }}>
         <h3 style={{ marginTop: 0 }}>Master Report Preview</h3>
-        <div style={{ fontSize: 13, color: '#475569', marginBottom: 10 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 10 }}>
           Title: {masterTitle} | Audience: {masterAudience} | Sections: {masterSections.length}
         </div>
         <div style={{ maxHeight: 380, overflowY: 'auto', display: 'grid', gap: 10 }}>
           {masterSections.map((section, index) => (
-            <div key={section.id} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 10, background: '#fff' }}>
-              <div style={{ fontWeight: 700, color: '#0f172a' }}>{index + 1}. {section.module} - {section.subsection}</div>
-              <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>
+            <div key={section.id} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 10, background: 'var(--bg-elevated)' }}>
+              <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{index + 1}. {section.module} - {section.subsection}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
                 Rows: {section.rowCount} | Fields: {section.fieldCount} | Fill Rate: {section.fillRate}%
               </div>
               <div style={{ marginTop: 6 }}>
@@ -744,7 +744,7 @@ export default function CustomReportBuilder({ onOpenSection = null }) {
             </div>
           ))}
           {masterSections.length === 0 && (
-            <div style={{ color: '#475569' }}>No sections available for current scope.</div>
+            <div style={{ color: 'var(--text-secondary)' }}>No sections available for current scope.</div>
           )}
         </div>
       </div>

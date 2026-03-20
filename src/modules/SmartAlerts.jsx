@@ -55,7 +55,7 @@ export default function SmartAlerts({ onNavigate }) {
       case PRIORITY.LOW:
         return { bg: '#dbeafe', border: '#3b82f6', color: '#1e40af', icon: 'ℹ️' }
       default:
-        return { bg: '#f3f4f6', border: '#9ca3af', color: '#374151', icon: '📌' }
+        return { bg: '#f3f4f6', border: '#9ca3af', color: 'var(--text-secondary)', icon: '📌' }
     }
   }
 

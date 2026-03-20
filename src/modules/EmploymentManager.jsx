@@ -455,11 +455,11 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
   }
 
   const overviewCards = [
-    { label: 'Total Employees', value: employees.length, color: '#0f172a' },
+    { label: 'Total Employees', value: employees.length, color: 'var(--text-primary)' },
     { label: 'Active Employees', value: activeEmployees, color: '#065f46' },
     { label: 'On Leave', value: onLeaveEmployees, color: '#1d4ed8' },
     { label: 'Pending Leave Requests', value: pendingLeaves, color: '#92400e' },
-    { label: 'Attendance Rate (30d)', value: `${attendanceRate}%`, color: '#374151' }
+    { label: 'Attendance Rate (30d)', value: `${attendanceRate}%`, color: 'var(--text-secondary)' }
   ]
 
   const tabButton = (tab, label) => (
@@ -778,7 +778,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
           <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14, overflowX: 'auto', color: 'var(--text-primary)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#f8fafc' }}>
+                <tr style={{ background: 'var(--bg-secondary)' }}>
                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Employee</th>
                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Off Date</th>
                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Type</th>
@@ -797,7 +797,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
                     <td style={{ padding: 8, borderBottom: '1px solid #f1f5f9' }}>{entry.reason || '-'}</td>
                     <td style={{ padding: 8, borderBottom: '1px solid #f1f5f9' }}>
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <button onClick={() => editOff(entry)} style={{ border: '1px solid #cbd5e1', borderRadius: 6, background: '#fff', cursor: 'pointer' }}>Edit</button>
+                        <button onClick={() => editOff(entry)} style={{ border: '1px solid #cbd5e1', borderRadius: 6, background: 'var(--bg-elevated)', cursor: 'pointer' }}>Edit</button>
                         <button onClick={() => deleteOff(entry.id)} style={{ border: '1px solid #fecaca', borderRadius: 6, background: '#fff1f2', color: '#9f1239', cursor: 'pointer' }}>Delete</button>
                       </div>
                     </td>
@@ -879,7 +879,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
           <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14, overflowX: 'auto', color: 'var(--text-primary)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#f8fafc' }}>
+                <tr style={{ background: 'var(--bg-secondary)' }}>
                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Employee</th>
                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Type</th>
                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Period</th>
@@ -902,7 +902,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
                     </td>
                     <td style={{ padding: 8, borderBottom: '1px solid #f1f5f9' }}>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        <button onClick={() => editLeave(entry)} style={{ border: '1px solid #cbd5e1', borderRadius: 6, background: '#fff', cursor: 'pointer' }}>Edit</button>
+                        <button onClick={() => editLeave(entry)} style={{ border: '1px solid #cbd5e1', borderRadius: 6, background: 'var(--bg-elevated)', cursor: 'pointer' }}>Edit</button>
                         <button onClick={() => updateLeaveStatus(entry.id, 'approved')} style={{ border: '1px solid #bbf7d0', borderRadius: 6, background: '#f0fdf4', color: '#166534', cursor: 'pointer' }}>Approve</button>
                         <button onClick={() => updateLeaveStatus(entry.id, 'rejected')} style={{ border: '1px solid #fecaca', borderRadius: 6, background: '#fff1f2', color: '#9f1239', cursor: 'pointer' }}>Reject</button>
                         <button onClick={() => deleteLeave(entry.id)} style={{ border: '1px solid #fecaca', borderRadius: 6, background: '#fff1f2', color: '#9f1239', cursor: 'pointer' }}>Delete</button>
@@ -984,7 +984,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
           <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-primary)', borderRadius: 14, padding: 14, overflowX: 'auto', color: 'var(--text-primary)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#f8fafc' }}>
+                <tr style={{ background: 'var(--bg-secondary)' }}>
                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Employee</th>
                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Date</th>
                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0' }}>Shift</th>
@@ -1003,7 +1003,7 @@ export default function EmploymentManager({ initialTab = TABS.registry, recordSo
                     <td style={{ padding: 8, borderBottom: '1px solid #f1f5f9' }}>{entry.hoursWorked || 0} (OT: {entry.overtimeHours || 0})</td>
                     <td style={{ padding: 8, borderBottom: '1px solid #f1f5f9' }}>
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <button onClick={() => editAttendance(entry)} style={{ border: '1px solid #cbd5e1', borderRadius: 6, background: '#fff', cursor: 'pointer' }}>Edit</button>
+                        <button onClick={() => editAttendance(entry)} style={{ border: '1px solid #cbd5e1', borderRadius: 6, background: 'var(--bg-elevated)', cursor: 'pointer' }}>Edit</button>
                         <button onClick={() => deleteAttendance(entry.id)} style={{ border: '1px solid #fecaca', borderRadius: 6, background: '#fff1f2', color: '#9f1239', cursor: 'pointer' }}>Delete</button>
                       </div>
                     </td>

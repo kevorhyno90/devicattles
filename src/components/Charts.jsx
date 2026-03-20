@@ -10,7 +10,7 @@ import React from 'react'
  */
 export function LineChart({ data, width = 600, height = 300, title = '', xLabel = '', yLabel = '', color = '#059669' }) {
   if (!data || data.length === 0) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: '#4b5563' }}>No data available</div>
+    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>No data available</div>
   }
 
   const padding = { top: 40, right: 40, bottom: 50, left: 60 }
@@ -33,7 +33,7 @@ export function LineChart({ data, width = 600, height = 300, title = '', xLabel 
   return (
     <div style={{ marginBottom: '20px' }}>
       {title && <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600' }}>{title}</h4>}
-      <svg width={width} height={height} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', background: 'white' }}>
+      <svg width={width} height={height} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', background: 'var(--bg-elevated)' }}>
         {/* Grid lines */}
         {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
           const y = padding.top + chartHeight * ratio
@@ -141,7 +141,7 @@ export function LineChart({ data, width = 600, height = 300, title = '', xLabel 
  */
 export function BarChart({ data, width = 600, height = 300, title = '', xLabel = '', yLabel = '', color = '#3b82f6' }) {
   if (!data || data.length === 0) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: '#4b5563' }}>No data available</div>
+    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>No data available</div>
   }
 
   const padding = { top: 40, right: 40, bottom: 50, left: 60 }
@@ -155,7 +155,7 @@ export function BarChart({ data, width = 600, height = 300, title = '', xLabel =
   return (
     <div style={{ marginBottom: '20px' }}>
       {title && <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600' }}>{title}</h4>}
-      <svg width={width} height={height} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', background: 'white' }}>
+      <svg width={width} height={height} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', background: 'var(--bg-elevated)' }}>
         {/* Grid lines */}
         {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
           const y = padding.top + chartHeight * ratio
@@ -260,7 +260,7 @@ export function BarChart({ data, width = 600, height = 300, title = '', xLabel =
  */
 export function PieChart({ data, width = 300, height = 300, title = '' }) {
   if (!data || data.length === 0) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: '#4b5563' }}>No data available</div>
+    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>No data available</div>
   }
 
   const total = data.reduce((sum, d) => sum + d.value, 0)
