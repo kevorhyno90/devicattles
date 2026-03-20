@@ -2058,7 +2058,14 @@ function AppContent() {
 
 // Theme selector component for appearance settings
 function ThemeSelector() {
-  const { theme, setThemeMode } = useTheme();
+  let theme = 'light', setThemeMode = () => {};
+  try {
+    const ctx = useTheme();
+    theme = ctx.theme;
+    setThemeMode = ctx.setThemeMode;
+  } catch (e) {
+    // ThemeProvider not available
+  }
   
   return (
     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>

@@ -204,12 +204,18 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
+const defaultThemeContext = {
+  theme: 'light',
+  toggleTheme: () => {},
+  setThemeMode: () => {},
+  getThemeColors: () => themes.light,
+};
+
 export const useTheme = () => {
   const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
+  // Return safe defaults instead of throwing — ThemeProvider may not be loaded
+  // due to lazy import timeout in main.jsx
+  return context || defaultThemeContext;
 };
 
 // Utility function to get themed styles
