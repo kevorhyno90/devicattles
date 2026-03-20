@@ -242,6 +242,9 @@ import { getCurrentUserName, getCurrentUserRole } from './lib/auth'
 // import { installAllRules } from './lib/farmAlertRules'
 
 // App content component that uses theme
+// Stable fallback context created once at module level — never inside render
+const _FallbackViewContext = React.createContext({ view: 'landing', setView: () => {}, editMode: false, setEditMode: () => {} });
+
 function AppContent() {
   const appSafeMode = typeof window !== 'undefined' && window.__APP_SAFE_MODE__ === true
   const getColorsFromCSS = () => {
@@ -267,9 +270,11 @@ function AppContent() {
     }
   }
 
-  const colors = getColorsFromCSS();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const colors = React.useMemo(() => getColorsFromCSS(), []);
 
-  const AppViewContextLocal = (typeof window !== 'undefined' && window.AppViewContext) ? window.AppViewContext : React.createContext({ view: 'landing', setView: () => {}, editMode: false, setEditMode: () => {} });
+  // Use the stable module-level fallback — never create context inside render
+  const AppViewContextLocal = (typeof window !== 'undefined' && window.AppViewContext) ? window.AppViewContext : _FallbackViewContext;
   const { view, setView, editMode, setEditMode } = useContext(AppViewContextLocal);
   const ThemeToggle = (typeof window !== 'undefined' && window.ThemeToggleButton) ? window.ThemeToggleButton : null;
   // Authentication state is managed via hook

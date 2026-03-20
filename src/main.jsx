@@ -9,8 +9,8 @@ import App from './App';
 // import { initializeAudio } from './lib/notifications.js';
 import './styles.css'
 
-const SAFE_MODE_WINDOW_MS = 20000
-const SAFE_MODE_THRESHOLD = 3
+const SAFE_MODE_WINDOW_MS = 60000
+const SAFE_MODE_THRESHOLD = 5
 
 const detectBootLoop = () => {
   if (typeof window === 'undefined') return false
