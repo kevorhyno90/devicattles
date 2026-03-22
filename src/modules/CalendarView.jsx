@@ -4,19 +4,71 @@ export default function CalendarView() {
   const [view, setView] = useState('month') // month, week, day
   const [currentDate, setCurrentDate] = useState(new Date())
   const [events, setEvents] = useState([])
+  const [focusType, setFocusType] = useState('all')
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showEventModal, setShowEventModal] = useState(false)
+  const [taskCreated, setTaskCreated] = useState(false)
 
   useEffect(() => {
     loadEvents()
   }, [currentDate])
 
+  const createTaskFromEvent = (event) => {
+    const titleMap = {
+      'breeding-heat': `Heat check — ${event.animalName || event.title}`,
+      'breeding-due':  `Expected birth — ${event.animalName || event.title}`,
+      'breeding-event': `Follow-up: breeding — ${event.animalName || event.title}`,
+    }
+    const categoryMap = {
+      'breeding-heat': 'Breeding',
+      'breeding-due':  'Breeding',
+      'breeding-event': 'Breeding',
+    }
+    const priorityMap = {
+      'breeding-heat': 'Medium',
+      'breeding-due':  'High',
+      'breeding-event': 'Medium',
+    }
+    const dueDate = event.date ? event.date.slice(0, 10) : new Date().toISOString().slice(0, 10)
+    const newTask = {
+      id: 'T-' + Math.floor(1000 + Math.random() * 9000),
+      title: titleMap[event.type] || event.title,
+      description: event.description || '',
+      assignedTo: '',
+      due: dueDate,
+      priority: priorityMap[event.type] || 'Medium',
+      category: categoryMap[event.type] || 'Breeding',
+      estimatedHours: 1,
+      location: '',
+      done: false,
+      createdDate: new Date().toISOString().slice(0, 10),
+      notes: [],
+      sourceEvent: { type: event.type, animalId: event.animalId || '' }
+    }
+    try {
+      const existing = JSON.parse(localStorage.getItem('cattalytics:tasks') || '[]')
+      localStorage.setItem('cattalytics:tasks', JSON.stringify([...existing, newTask]))
+    } catch { /* storage full or parse error — skip */ }
+    setTaskCreated(true)
+    setTimeout(() => { setTaskCreated(false); setShowEventModal(false) }, 1800)
+  }
+
   const loadEvents = () => {
     try {
       const allEvents = []
+      const safeRead = (key, fallback = []) => {
+        try {
+          const raw = localStorage.getItem(key)
+          if (!raw) return fallback
+          const parsed = JSON.parse(raw)
+          return Array.isArray(parsed) ? parsed : fallback
+        } catch {
+          return fallback
+        }
+      }
 
       // Load tasks
-      const tasks = JSON.parse(localStorage.getItem('cattalytics:tasks') || '[]')
+      const tasks = safeRead('cattalytics:tasks')
       tasks.forEach(task => {
         if (task.dueDate) {
           allEvents.push({
@@ -35,7 +87,7 @@ export default function CalendarView() {
       })
 
       // Load schedules
-      const schedules = JSON.parse(localStorage.getItem('cattalytics:schedules') || '[]')
+      const schedules = safeRead('cattalytics:schedules')
       schedules.forEach(schedule => {
         if (schedule.date) {
           allEvents.push({
@@ -53,7 +105,12 @@ export default function CalendarView() {
       })
 
       // Load animal treatments
-      const animals = JSON.parse(localStorage.getItem('cattalytics:animals') || '[]')
+      const animals = safeRead('cattalytics:animals')
+      const animalNameById = {}
+      animals.forEach((animal) => {
+        animalNameById[animal.id] = animal.name || animal.tag || animal.tagNumber || animal.id
+      })
+
       animals.forEach(animal => {
         if (animal.treatments && animal.treatments.length > 0) {
           animal.treatments.forEach(treatment => {
@@ -71,6 +128,26 @@ export default function CalendarView() {
               })
             }
           })
+        }
+
+        // Heat-cycle reminders from last breeding date when present
+        if (animal.lastBreeding) {
+          const lastBreeding = new Date(animal.lastBreeding)
+          if (!Number.isNaN(lastBreeding.getTime())) {
+            const returnToHeat = new Date(lastBreeding)
+            returnToHeat.setDate(returnToHeat.getDate() + 21)
+            allEvents.push({
+              id: `heat-${animal.id}-${animal.lastBreeding}`,
+              title: `Heat check: ${animal.name || animal.tagNumber || animal.id}`,
+              date: returnToHeat.toISOString().slice(0, 10),
+              time: '06:30',
+              type: 'breeding-heat',
+              category: 'Breeding',
+              description: `${animal.name || animal.id} estimated return-to-heat date`,
+              animalName: animal.name,
+              color: '#db2777'
+            })
+          }
         }
 
         // Load breeding schedules
@@ -92,8 +169,56 @@ export default function CalendarView() {
         }
       })
 
+      // Load standalone breeding records from breeding module
+      const breedingRecords = safeRead('cattalytics:animal:breeding')
+      breedingRecords.forEach(record => {
+        const animalLabel = animalNameById[record.animalId] || record.animalId || 'Unknown animal'
+
+        if (record.date) {
+          allEvents.push({
+            id: `breed-event-${record.id}`,
+            title: `${record.event || 'Breeding'}: ${animalLabel}`,
+            date: record.date,
+            time: '07:30',
+            type: 'breeding-event',
+            category: 'Breeding',
+            description: `${record.method || 'Breeding'} • ${record.status || 'Pending'}`,
+            animalName: animalLabel,
+            color: '#ec4899'
+          })
+        }
+
+        if (record.returnToHeat) {
+          allEvents.push({
+            id: `return-heat-${record.id}`,
+            title: `Return to heat: ${animalLabel}`,
+            date: record.returnToHeat,
+            time: '06:00',
+            type: 'breeding-heat',
+            category: 'Breeding',
+            description: 'Follow-up heat cycle check',
+            animalName: animalLabel,
+            color: '#be185d'
+          })
+        }
+
+        if (record.expectedDue) {
+          allEvents.push({
+            id: `due-date-${record.id}`,
+            title: `Expected birth: ${animalLabel}`,
+            date: record.expectedDue,
+            time: '08:30',
+            type: 'breeding-due',
+            category: 'Breeding',
+            description: `${animalLabel} expected due date`,
+            animalName: animalLabel,
+            color: '#f97316'
+          })
+        }
+      })
+
       // Load crop treatments
-      const crops = JSON.parse(localStorage.getItem('cattalytics:crops') || '[]')
+      const crops = safeRead('cattalytics:crops:v2', safeRead('cattalytics:crops'))
       crops.forEach(crop => {
         if (crop.treatments && crop.treatments.length > 0) {
           crop.treatments.forEach(treatment => {
@@ -128,7 +253,12 @@ export default function CalendarView() {
 
       // Load schedules from other modules
 
-      setEvents(allEvents)
+      const sorted = allEvents.sort((a, b) => {
+        const da = new Date(`${a.date || ''}T${a.time || '00:00'}`)
+        const db = new Date(`${b.date || ''}T${b.time || '00:00'}`)
+        return da - db
+      })
+      setEvents(sorted)
     } catch (e) {
       console.error('Failed to load events:', e)
     }
@@ -172,7 +302,12 @@ export default function CalendarView() {
   const getEventsForDate = (date) => {
     if (!date) return []
     const dateStr = date.toISOString().slice(0, 10)
-    return events.filter(event => event.date === dateStr)
+    return events.filter(event => {
+      if (event.date !== dateStr) return false
+      if (focusType === 'all') return true
+      if (focusType === 'breeding') return (event.category || '').toLowerCase() === 'breeding'
+      return event.type === focusType
+    })
   }
 
   const navigateMonth = (direction) => {
@@ -471,6 +606,23 @@ export default function CalendarView() {
             Day
           </button>
         </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label style={{ fontSize: 13, fontWeight: 600 }}>Focus</label>
+          <select
+            value={focusType}
+            onChange={(e) => setFocusType(e.target.value)}
+            style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #d1d5db' }}
+          >
+            <option value="all">All Events</option>
+            <option value="breeding">Breeding Only</option>
+            <option value="breeding-heat">Heat Checks</option>
+            <option value="breeding-due">Expected Births</option>
+            <option value="task">Tasks</option>
+            <option value="treatment">Treatments</option>
+            <option value="harvest">Harvest</option>
+          </select>
+        </div>
       </div>
 
       {/* Legend */}
@@ -622,10 +774,30 @@ export default function CalendarView() {
               )}
             </div>
 
+            {['breeding-heat', 'breeding-due', 'breeding-event'].includes(selectedEvent.type) && (
+              <button
+                onClick={() => createTaskFromEvent(selectedEvent)}
+                disabled={taskCreated}
+                style={{
+                  marginTop: '20px',
+                  width: '100%',
+                  padding: '10px',
+                  background: taskCreated ? '#16a34a' : '#7c3aed',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: taskCreated ? 'default' : 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                {taskCreated ? '✓ Task created!' : '📝 Create Task'}
+              </button>
+            )}
+
             <button
               onClick={() => setShowEventModal(false)}
               style={{
-                marginTop: '20px',
+                marginTop: '8px',
                 width: '100%',
                 padding: '10px',
                 background: '#3b82f6',

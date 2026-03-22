@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
+import { useTaskStore } from '../stores'
 import EditableField from '../components/EditableField'
+import { LineChart } from '../components/Charts'
 import { getDashboardData } from '../lib/analytics'
 import { getFinancialSummary as getIntegratedFinancials } from '../lib/moduleIntegration'
 import { getCacheStats } from '../lib/dataCache'
@@ -11,6 +13,46 @@ import { exportToCSV } from '../lib/exportImport'
 import { getLivestockDataQualityReport, applyLivestockAutoFix, applyAllLivestockAutoFixes, dismissLivestockQualityIssue, clearDismissedLivestockQualityIssues } from '../lib/livestockPhase1'
 
 export default function Dashboard({ onNavigate }) {
+  const addTask = useTaskStore(state => state.addTask)
+    // Week 3: One-click action handlers
+    const handleCreateUrgentTask = (type) => {
+      let task = null
+      if (type === 'runway') {
+        task = {
+          title: 'Review Cash Runway – Critical',
+          description: 'Cash runway is below critical threshold. Review expenses, delay non-essentials, or seek funding.',
+          priority: 'high',
+          dueDate: new Date(Date.now() + 24*60*60*1000).toISOString().slice(0,10),
+          category: 'Finance',
+          assignedTo: '',
+          estimatedHours: 2
+        }
+      } else if (type === 'overdue') {
+        task = {
+          title: 'Resolve Overdue Tasks',
+          description: 'There are overdue high-priority tasks. Review and resolve immediately.',
+          priority: 'high',
+          dueDate: new Date().toISOString().slice(0,10),
+          category: 'Operations',
+          assignedTo: '',
+          estimatedHours: 1
+        }
+      } else if (type === 'inventory') {
+        task = {
+          title: 'Replenish Critical Inventory',
+          description: 'Inventory coverage is at critical risk. Place urgent orders for at-risk items.',
+          priority: 'high',
+          dueDate: new Date(Date.now() + 48*60*60*1000).toISOString().slice(0,10),
+          category: 'Inventory',
+          assignedTo: '',
+          estimatedHours: 1
+        }
+      }
+      if (task) {
+        addTask(task)
+        alert('Urgent task created!')
+      }
+    }
   const [dashboardData, setDashboardData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [autoRefresh, setAutoRefresh] = useState(true)
@@ -24,6 +66,23 @@ export default function Dashboard({ onNavigate }) {
   const [quickActionsTitle, setQuickActionsTitle] = useState('🩺 ezyVet Quick Actions')
   const [qaLabels, setQaLabels] = useState({
     alerts: '🔔 Smart Alerts'
+  })
+  const [showWeek3Config, setShowWeek3Config] = useState(false)
+  // Per-device config key
+  const deviceIdKey = 'devinsfarm:deviceId'
+  let deviceId = null
+  try { deviceId = localStorage.getItem(deviceIdKey) } catch (e) { }
+  if (!deviceId) {
+    deviceId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`
+    try { localStorage.setItem(deviceIdKey, deviceId) } catch (e) {}
+  }
+  const week3ConfigKey = `cattalytics:dashboard:week3-config:${deviceId}`
+  const [week3Config, setWeek3Config] = useState({
+    cashWindowDays: 90,
+    runwayWarningDays: 30,
+    runwayCriticalDays: 14,
+    taskDueHours: 48,
+    inventoryRiskDays: 14
   })
 
   // Persist quick actions edits
@@ -45,6 +104,24 @@ export default function Dashboard({ onNavigate }) {
     } catch {}
   }, [quickActionsTitle, qaLabels])
 
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(week3ConfigKey) || 'null')
+      if (saved && typeof saved === 'object') {
+        setWeek3Config((prev) => ({
+          ...prev,
+          ...saved
+        }))
+      }
+    } catch {}
+  }, [week3ConfigKey])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(week3ConfigKey, JSON.stringify(week3Config))
+    } catch {}
+  }, [week3Config, week3ConfigKey])
+
   // Voice control removed
 
   useEffect(() => {
@@ -57,12 +134,12 @@ export default function Dashboard({ onNavigate }) {
       }, 60000) // Refresh every minute
       return () => clearInterval(interval)
     }
-  }, [autoRefresh])
+  }, [autoRefresh, week3Config])
 
   const loadDashboard = () => {
     setLoading(true)
     try {
-      const data = getDashboardData()
+      const data = getDashboardData({ week3: week3Config })
       const integratedFinance = getIntegratedFinancials() || { bySource: {}, totalIncome: 0, totalExpenses: 0, netProfit: 0 }
       // Convert bySource object to sources array for rendering
       integratedFinance.sources = Object.entries(integratedFinance.bySource || {}).map(([source, data]) => ({
@@ -91,7 +168,7 @@ export default function Dashboard({ onNavigate }) {
         const animals = loadData('cattalytics:animals', [])
         const crops = loadData('cattalytics:crops:v2', [])
         const finance = loadData('cattalytics:finance', [])
-        const milkRecords = loadData('cattalytics:milk-yield', [])
+        const milkRecords = loadData('cattalytics:animal:milkyield', [])
         const cropYields = loadData('cattalytics:crop-yield', [])
         
         const predictiveData = getPredictiveDashboard(animals, crops, finance, milkRecords, cropYields)
@@ -204,7 +281,10 @@ export default function Dashboard({ onNavigate }) {
   }
 
   const { 
-    animals, breeding, health, tasks, finance, feedCosts, inventory, milkProduction, integratedFinance,
+    animals, breeding, health, tasks, finance, costPerAnimal, feedCosts, inventory, milkProduction, integratedFinance,
+    lactation, vaccinationFocus,
+    weightVelocity, inventoryReorder, milkComposition, breedingReadiness, healthRisk,
+    cashRunway, taskPulse, inventoryCoverage,
     crops, cropYield, cropSales, cropTreatments,
     azolla, bsf, poultry, canines, pets, calves,
     pastures, schedules, notifications,
@@ -320,6 +400,31 @@ export default function Dashboard({ onNavigate }) {
           {tasks.overdue > 0 && <span> {tasks.overdue} overdue task(s)</span>}
           {health.totalAlerts > 0 && <span> • {health.totalAlerts} health alert(s)</span>}
           {inventory.criticalStock > 0 && <span> • {inventory.criticalStock} critical inventory item(s)</span>}
+        </div>
+      )}
+
+      {/* Week 1: Vaccination Focus */}
+      {vaccinationFocus?.totals && (vaccinationFocus.totals.overdue > 0 || vaccinationFocus.totals.dueSoon > 0 || vaccinationFocus.totals.missing > 0) && (
+        <div className="card" style={{ padding: '18px', marginBottom: '20px', border: '1px solid #fecaca', background: '#fff7ed' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, gap: 10, flexWrap: 'wrap' }}>
+            <h3 style={{ margin: 0, color: '#9a3412' }}>💉 Week 1 Focus: Vaccination Triage</h3>
+            <button onClick={() => onNavigate && onNavigate('health')} className="btn-secondary">Open Health</button>
+          </div>
+          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 10, fontSize: 13 }}>
+            <span><strong>Overdue:</strong> {vaccinationFocus.totals.overdue}</span>
+            <span><strong>Due Soon:</strong> {vaccinationFocus.totals.dueSoon}</span>
+            <span><strong>No Record:</strong> {vaccinationFocus.totals.missing}</span>
+          </div>
+          {vaccinationFocus.overdue.length > 0 && (
+            <div style={{ display: 'grid', gap: 8 }}>
+              {vaccinationFocus.overdue.slice(0, 3).map((item) => (
+                <div key={item.animalId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-elevated)', borderRadius: 8, padding: '8px 10px' }}>
+                  <div style={{ fontSize: 13, color: 'var(--text-primary)' }}>{item.label}</div>
+                  <div style={{ fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>{item.daysOverdue} days overdue</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -493,6 +598,32 @@ export default function Dashboard({ onNavigate }) {
           </div>
         </div>
 
+        {/* Cost Per Animal */}
+        <div className="kpi-card" onClick={() => onNavigate && onNavigate('finance')}>
+          <div className="kpi-icon">🧮</div>
+          <div className="kpi-content">
+            <h3>Cost Per Animal</h3>
+            <div className="kpi-value" style={{ color: '#2563eb', fontSize: '28px' }}>
+              KES {(costPerAnimal?.perAnimalPeriod || 0).toFixed(2)}
+            </div>
+            <div className="kpi-subtitle">This Month</div>
+            <div className="kpi-details">
+              <div className="kpi-detail-item">
+                <span>Daily/Head:</span> <strong>KES {(costPerAnimal?.perAnimalDaily || 0).toFixed(2)}</strong>
+              </div>
+              <div className="kpi-detail-item">
+                <span>Feed/Head:</span> <strong>KES {(costPerAnimal?.feedPerAnimal || 0).toFixed(2)}</strong>
+              </div>
+              <div className="kpi-detail-item">
+                <span>Vet/Head:</span> <strong>KES {(costPerAnimal?.vetPerAnimal || 0).toFixed(2)}</strong>
+              </div>
+              <div className="kpi-detail-item">
+                <span>Active Herd:</span> <strong>{costPerAnimal?.activeAnimals || 0}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Health Alerts */}
         <div className="kpi-card" onClick={() => onNavigate && onNavigate('health')}>
           <div className="kpi-icon">🏥</div>
@@ -516,6 +647,405 @@ export default function Dashboard({ onNavigate }) {
           </div>
         </div>
       </div>
+
+      {/* Week 1: Lactation Curve Insights */}
+      {lactation && lactation.records > 0 && (
+        <div className="card" style={{ padding: '18px', marginTop: '20px', border: '1px solid #bfdbfe', background: '#eff6ff' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+            <h3 style={{ margin: 0, color: '#1d4ed8' }}>🥛 Lactation Curve Snapshot (Last {lactation.windowDays} Days)</h3>
+            <button onClick={() => onNavigate && onNavigate('milkyield')} className="btn-secondary">Open Milk Yield</button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 10, marginBottom: 12 }}>
+            <div style={{ background: 'var(--bg-elevated)', borderRadius: 8, padding: 10 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Total Milk</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#1e3a8a' }}>{(lactation.totalMilk || 0).toFixed(1)} L</div>
+            </div>
+            <div style={{ background: 'var(--bg-elevated)', borderRadius: 8, padding: 10 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Daily Average</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#1e3a8a' }}>{(lactation.avgDaily || 0).toFixed(1)} L</div>
+            </div>
+            <div style={{ background: 'var(--bg-elevated)', borderRadius: 8, padding: 10 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Trend</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: lactation.trend === 'up' ? '#059669' : lactation.trend === 'down' ? '#dc2626' : '#6b7280' }}>
+                {lactation.trend === 'up' ? '↗' : lactation.trend === 'down' ? '↘' : '→'} {lactation.trend} {lactation.trendPercent ? `(${lactation.trendPercent}%)` : ''}
+              </div>
+            </div>
+          </div>
+          {lactation.topProducers?.length > 0 && (
+            <div style={{ display: 'grid', gap: 8 }}>
+              {lactation.topProducers.slice(0, 3).map((producer) => (
+                <div key={producer.animalId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-elevated)', borderRadius: 8, padding: '8px 10px' }}>
+                  <div style={{ fontSize: 13, color: 'var(--text-primary)' }}>{producer.label}</div>
+                  <div style={{ fontSize: 12, color: '#1d4ed8', fontWeight: 700 }}>{producer.total.toFixed(1)} L total</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Week 2: Health Risk Scoring ── */}
+      {healthRisk && healthRisk.atRisk?.length > 0 && (
+        <div className="card" style={{ padding: '18px', marginTop: '20px', border: '1px solid #fecaca', background: '#fff5f5' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+            <h3 style={{ margin: 0, color: '#b91c1c' }}>⚠️ Health Risk Scores — Top At-Risk Animals</h3>
+            <div style={{ display: 'flex', gap: 12, fontSize: 13 }}>
+              <span style={{ background: '#fee2e2', borderRadius: 6, padding: '3px 10px', color: '#b91c1c', fontWeight: 700 }}>🔴 High Risk: {healthRisk.highRiskCount}</span>
+              <span style={{ color: 'var(--text-secondary)' }}>Avg Score: {healthRisk.avgScore}/100</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {healthRisk.atRisk.map(a => (
+              <div key={a.animalId} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg-elevated)', borderRadius: 8, padding: '10px 12px' }}>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, color: 'white', flexShrink: 0,
+                  background: a.score >= 70 ? '#dc2626' : a.score >= 50 ? '#f97316' : '#f59e0b' }}>
+                  {a.score}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>{a.label} <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 400 }}>({a.type})</span></div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 3 }}>{a.factors.join(' · ')}</div>
+                </div>
+                <button onClick={() => onNavigate && onNavigate('health')} style={{ padding: '5px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600, flexShrink: 0 }}>→ Health</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Week 2: Breeding Readiness ── */}
+      {breedingReadiness && breedingReadiness.totalHeats > 0 && (
+        <div className="card" style={{ padding: '18px', marginTop: '20px', border: '1px solid #fbcfe8', background: '#fdf2f8' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+            <h3 style={{ margin: 0, color: '#9d174d' }}>🐄 Breeding Readiness — Heat Window Tracker</h3>
+            <button onClick={() => onNavigate && onNavigate('breeding')} className="btn-secondary">Open Breeding</button>
+          </div>
+          {breedingReadiness.readyNow?.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#be185d', marginBottom: 6 }}>🔴 In Heat / Ready Now ({breedingReadiness.readyNow.length})</div>
+              <div style={{ display: 'grid', gap: 6 }}>
+                {breedingReadiness.readyNow.map(a => (
+                  <div key={a.animalId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-elevated)', borderRadius: 7, padding: '8px 12px' }}>
+                    <div>
+                      <span style={{ fontWeight: 700, fontSize: 14 }}>{a.label}</span>
+                      <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--text-secondary)' }}>{a.type}</span>
+                    </div>
+                    <span style={{ fontSize: 12, background: '#fce7f3', color: '#9d174d', borderRadius: 5, padding: '2px 8px', fontWeight: 600 }}>{a.reason}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {breedingReadiness.readySoon?.length > 0 && (
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#c026d3', marginBottom: 6 }}>🟡 Heat Expected Soon ({breedingReadiness.readySoon.length})</div>
+              <div style={{ display: 'grid', gap: 6 }}>
+                {breedingReadiness.readySoon.map(a => (
+                  <div key={a.animalId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-elevated)', borderRadius: 7, padding: '8px 12px' }}>
+                    <span style={{ fontWeight: 700, fontSize: 14 }}>{a.label}</span>
+                    <span style={{ fontSize: 12, background: '#fae8ff', color: '#86198f', borderRadius: 5, padding: '2px 8px', fontWeight: 600 }}>{a.reason}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Week 2: Weight Velocity ── */}
+      {weightVelocity && weightVelocity.total > 0 && (
+        <div className="card" style={{ padding: '18px', marginTop: '20px', border: '1px solid #bbf7d0', background: '#f0fdf4' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+            <h3 style={{ margin: 0, color: '#14532d' }}>📏 Weight Gain/Loss Velocity</h3>
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Herd avg: <strong style={{ color: weightVelocity.avgGainRate >= 0 ? '#15803d' : '#dc2626' }}>{weightVelocity.avgGainRate >= 0 ? '+' : ''}{weightVelocity.avgGainRate} kg/mo</strong></span>
+          </div>
+          {weightVelocity.alertAnimals?.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 6 }}>⚠️ Weight Loss Alerts ({weightVelocity.alertAnimals.length})</div>
+              {weightVelocity.alertAnimals.map(a => (
+                <div key={a.animalId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fef2f2', borderRadius: 7, padding: '8px 12px', marginBottom: 5 }}>
+                  <div>
+                    <span style={{ fontWeight: 700, fontSize: 14 }}>{a.label}</span>
+                    <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--text-secondary)' }}>{a.latestWeight}kg</span>
+                  </div>
+                  <span style={{ fontSize: 13, color: '#dc2626', fontWeight: 700 }}>{a.ratePerMonth < 0 ? '' : '+'}{a.ratePerMonth} kg/mo</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#15803d', marginBottom: 6 }}>🔼 Top Gainers</div>
+              {weightVelocity.topGainers?.slice(0, 3).map(a => (
+                <div key={a.animalId} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0', borderBottom: '1px solid #dcfce7' }}>
+                  <span>{a.label}</span>
+                  <span style={{ color: '#15803d', fontWeight: 700 }}>+{a.ratePerMonth} kg/mo</span>
+                </div>
+              ))}
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#9a3412', marginBottom: 6 }}>🔽 Lowest Gain</div>
+              {weightVelocity.bottomGainers?.slice(0, 3).map(a => (
+                <div key={a.animalId} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0', borderBottom: '1px solid #ffedd5' }}>
+                  <span>{a.label}</span>
+                  <span style={{ color: a.ratePerMonth < 0 ? '#dc2626' : '#9a3412', fontWeight: 700 }}>{a.ratePerMonth >= 0 ? '+' : ''}{a.ratePerMonth} kg/mo</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Week 2: Milk Quality Composition ── */}
+      {milkComposition && milkComposition.records > 0 && (
+        <div className="card" style={{ padding: '18px', marginTop: '20px', border: '1px solid #e0e7ff', background: '#f5f3ff' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+            <h3 style={{ margin: 0, color: '#3730a3' }}>🧪 Milk Quality Composition (Last {milkComposition.windowDays} Days)</h3>
+            <button onClick={() => onNavigate && onNavigate('milkyield')} className="btn-secondary">Open Milk Yield</button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 14 }}>
+            {[['Fat%', milkComposition.avgFat, milkComposition.avgFat >= 3.5 ? '#15803d' : milkComposition.avgFat >= 3.0 ? '#d97706' : '#dc2626'],
+              ['Protein%', milkComposition.avgProtein, milkComposition.avgProtein >= 3.2 ? '#15803d' : '#d97706'],
+              ['SNF%', milkComposition.avgSNF, milkComposition.avgSNF >= 8.5 ? '#15803d' : '#d97706'],
+              ['SCC (×1000)', milkComposition.avgSCC ? (milkComposition.avgSCC / 1000).toFixed(0) : '—', milkComposition.avgSCC < 200000 ? '#15803d' : milkComposition.avgSCC < 400000 ? '#d97706' : '#dc2626']
+            ].map(([label, val, color]) => (
+              <div key={label} style={{ background: 'var(--bg-elevated)', borderRadius: 8, padding: 12, textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4 }}>{label}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color }}>{val !== 0 && val !== '—' ? val : '—'}</div>
+              </div>
+            ))}
+          </div>
+          {milkComposition.flaggedAnimals?.length > 0 && (
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#7c3aed', marginBottom: 6 }}>🚩 Quality Flags</div>
+              {milkComposition.flaggedAnimals.map(a => (
+                <div key={a.animalId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-elevated)', borderRadius: 7, padding: '7px 12px', marginBottom: 5 }}>
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>{a.label}</span>
+                  <div style={{ display: 'flex', gap: 5 }}>
+                    {a.flags.map(f => <span key={f} style={{ fontSize: 11, background: '#ede9fe', color: '#6d28d9', borderRadius: 4, padding: '2px 7px', fontWeight: 600 }}>{f}</span>)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {Object.keys(milkComposition.gradeBreakdown || {}).length > 0 && (
+            <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text-secondary)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {Object.entries(milkComposition.gradeBreakdown).map(([grade, count]) => (
+                <span key={grade}><strong>{grade}:</strong> {count}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Week 2: Inventory Reorder Insights ── */}
+      {inventoryReorder && inventoryReorder.total > 0 && (
+        <div className="card" style={{ padding: '18px', marginTop: '20px', border: '1px solid #fed7aa', background: '#fff7ed' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+            <h3 style={{ margin: 0, color: '#c2410c' }}>📦 Inventory Reorder Required ({inventoryReorder.total} items)</h3>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Est. reorder: <strong style={{ color: '#c2410c' }}>KES {inventoryReorder.totalReorderCost.toLocaleString()}</strong></span>
+              <button onClick={() => onNavigate && onNavigate('inventory')} className="btn-secondary">Open Inventory</button>
+            </div>
+          </div>
+          {inventoryReorder.critical?.length > 0 && (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 6 }}>🚨 Out of Stock ({inventoryReorder.critical.length})</div>
+              {inventoryReorder.critical.map(item => (
+                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fef2f2', borderRadius: 7, padding: '8px 12px', marginBottom: 5 }}>
+                  <div>
+                    <span style={{ fontWeight: 700, fontSize: 14 }}>{item.name}</span>
+                    <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--text-secondary)' }}>{item.category}</span>
+                  </div>
+                  <span style={{ fontSize: 12, color: '#dc2626', fontWeight: 600 }}>Order {item.reorderQty} {item.unit} · KES {item.reorderCost.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {inventoryReorder.needsReorder?.length > 0 && (
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#ea580c', marginBottom: 6 }}>⚠️ Low Stock — Below Reorder Point ({inventoryReorder.needsReorder.length})</div>
+              {inventoryReorder.needsReorder.slice(0, 5).map(item => (
+                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-elevated)', borderRadius: 7, padding: '8px 12px', marginBottom: 5 }}>
+                  <div>
+                    <span style={{ fontWeight: 700, fontSize: 14 }}>{item.name}</span>
+                    <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--text-secondary)' }}>{item.quantity} {item.unit} left (min {item.reorderPoint})</span>
+                  </div>
+                  <span style={{ fontSize: 12, color: '#ea580c', fontWeight: 600 }}>+{item.reorderQty} {item.unit} · KES {item.reorderCost.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Week 3: Decision Intelligence */}
+      {(cashRunway || taskPulse || inventoryCoverage) && (
+        <div className="card" style={{ padding: '18px', marginTop: '20px', border: '1px solid #bfdbfe', background: '#f8fafc' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+            <h3 style={{ margin: 0, color: '#1d4ed8' }}>🧠 Week 3 Focus: Decision Intelligence</h3>
+            <button className="btn-secondary" onClick={() => setShowWeek3Config((v) => !v)}>
+              {showWeek3Config ? 'Hide Settings' : 'Tune Thresholds'}
+            </button>
+          </div>
+
+          {/* One-click actions row */}
+          <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+            {cashRunway?.status === 'critical' && (
+              <button className="btn-danger" onClick={() => handleCreateUrgentTask('runway')}>
+                Create Urgent Task: Cash Runway
+              </button>
+            )}
+            {taskPulse?.overdue > 0 && (
+              <button className="btn-danger" onClick={() => handleCreateUrgentTask('overdue')}>
+                Create Urgent Task: Overdue Tasks
+              </button>
+            )}
+            {inventoryCoverage?.critical > 0 && (
+              <button className="btn-danger" onClick={() => handleCreateUrgentTask('inventory')}>
+                Create Urgent Task: Inventory Risk
+              </button>
+            )}
+          </div>
+
+          {showWeek3Config && (
+            <div style={{
+              marginBottom: 14,
+              padding: 12,
+              background: 'var(--bg-elevated)',
+              borderRadius: 10,
+              border: '1px solid #dbeafe',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+              gap: 10
+            }}>
+              <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                Cash Window (days)
+                <input
+                  type="number"
+                  min="7"
+                  max="365"
+                  value={week3Config.cashWindowDays}
+                  onChange={(e) => setWeek3Config((prev) => ({ ...prev, cashWindowDays: Number(e.target.value) || 90 }))}
+                  style={{ marginTop: 4 }}
+                />
+              </label>
+              <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                Runway Warning (days)
+                <input
+                  type="number"
+                  min="7"
+                  max="120"
+                  value={week3Config.runwayWarningDays}
+                  onChange={(e) => setWeek3Config((prev) => ({ ...prev, runwayWarningDays: Number(e.target.value) || 30 }))}
+                  style={{ marginTop: 4 }}
+                />
+              </label>
+              <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                Runway Critical (days)
+                <input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={week3Config.runwayCriticalDays}
+                  onChange={(e) => setWeek3Config((prev) => ({ ...prev, runwayCriticalDays: Number(e.target.value) || 14 }))}
+                  style={{ marginTop: 4 }}
+                />
+              </label>
+              <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                Task Due Soon (hours)
+                <input
+                  type="number"
+                  min="6"
+                  max="168"
+                  value={week3Config.taskDueHours}
+                  onChange={(e) => setWeek3Config((prev) => ({ ...prev, taskDueHours: Number(e.target.value) || 48 }))}
+                  style={{ marginTop: 4 }}
+                />
+              </label>
+              <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                Inventory Risk (days)
+                <input
+                  type="number"
+                  min="3"
+                  max="60"
+                  value={week3Config.inventoryRiskDays}
+                  onChange={(e) => setWeek3Config((prev) => ({ ...prev, inventoryRiskDays: Number(e.target.value) || 14 }))}
+                  style={{ marginTop: 4 }}
+                />
+              </label>
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+            {/* Cash Runway Card with Sparkline */}
+            <div style={{ background: 'var(--bg-elevated)', borderRadius: 10, padding: 12, border: '1px solid #dbeafe' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Cash Runway</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: cashRunway?.status === 'critical' || cashRunway?.status === 'negative' ? '#dc2626' : cashRunway?.status === 'warning' ? '#d97706' : '#059669' }}>
+                {Math.max(0, cashRunway?.runwayDays || 0).toFixed(0)} days
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
+                Net cash: KES {(cashRunway?.cashBalance || 0).toLocaleString()} • Burn/mo: KES {(cashRunway?.monthlyBurn || 0).toFixed(0)}
+              </div>
+              {/* Mini-trend sparkline for runway (last 6 months) */}
+              {dashboardData?.finance?.runwayHistory && dashboardData.finance.runwayHistory.length > 1 && (
+                <div style={{ marginTop: 10 }}>
+                  <LineChart
+                    data={dashboardData.finance.runwayHistory.map((v, i) => ({ label: v.label, value: v.value }))}
+                    width={140}
+                    height={40}
+                    color="#dc2626"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Task Execution Pulse Card with Sparkline */}
+            <div style={{ background: 'var(--bg-elevated)', borderRadius: 10, padding: 12, border: '1px solid #e5e7eb' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Task Execution Pulse</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#1f2937' }}>
+                {taskPulse?.totalOpen || 0} open
+              </div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 6, fontSize: 12 }}>
+                <span>High: <strong style={{ color: '#b91c1c' }}>{taskPulse?.highPriorityOpen || 0}</strong></span>
+                <span>Due {taskPulse?.hoursAhead || 48}h: <strong style={{ color: '#b45309' }}>{taskPulse?.dueSoon || 0}</strong></span>
+                <span>Overdue: <strong style={{ color: '#dc2626' }}>{taskPulse?.overdue || 0}</strong></span>
+              </div>
+              {/* Mini-trend sparkline for overdue tasks (last 6 weeks) */}
+              {dashboardData?.tasks?.overdueHistory && dashboardData.tasks.overdueHistory.length > 1 && (
+                <div style={{ marginTop: 10 }}>
+                  <LineChart
+                    data={dashboardData.tasks.overdueHistory.map((v, i) => ({ label: v.label, value: v.value }))}
+                    width={140}
+                    height={40}
+                    color="#dc2626"
+                  />
+                </div>
+              )}
+              {taskPulse?.nextDue?.length > 0 && (
+                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
+                  Next: {taskPulse.nextDue[0].title} ({taskPulse.nextDue[0].due})
+                </div>
+              )}
+            </div>
+
+            {/* Inventory Coverage Card (unchanged) */}
+            <div style={{ background: 'var(--bg-elevated)', borderRadius: 10, padding: 12, border: '1px solid #ffedd5' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Inventory Coverage</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: inventoryCoverage?.critical > 0 ? '#dc2626' : '#0369a1' }}>
+                {inventoryCoverage?.atRisk || 0} at risk
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
+                Critical (&le;7 days): {inventoryCoverage?.critical || 0} • Tracked: {inventoryCoverage?.tracked || 0}
+              </div>
+              {inventoryCoverage?.items?.length > 0 && (
+                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
+                  Most urgent: {inventoryCoverage.items[0].name} ({Math.max(0, inventoryCoverage.items[0].daysLeft).toFixed(1)} days)
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Comprehensive Financial Breakdown */}
       {integratedFinance && integratedFinance.sources && integratedFinance.sources.length > 0 && (

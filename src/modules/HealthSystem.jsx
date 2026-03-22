@@ -439,6 +439,12 @@ function RecordsView({ patients = [], addPatient, updatePatient, removePatient, 
                 <label style={{ display:'block' }}>Name<input value={form.name||''} onChange={e=>{ setForm({...form, name: e.target.value}); if(selected) updatePatient(selected, { name: e.target.value }) }} /></label>
                 <label style={{ display:'block' }}>Tag<input value={form.tag||''} onChange={e=>{ setForm({...form, tag: e.target.value}); if(selected) updatePatient(selected, { tag: e.target.value }) }} /></label>
                 <label style={{ display:'block' }}>Owner<input value={form.owner?.name||''} onChange={e=>{ setForm({...form, owner:{...(form.owner||{}), name: e.target.value}}); if(selected) updatePatient(selected, { owner: {...(form.owner||{}), name: e.target.value} }) }} /></label>
+                <label style={{ display:'block' }}>Animal Reference
+                  <select value={form.animalId||''} onChange={e=>{ const v=e.target.value; setForm({...form, animalId: v}); if(selected) updatePatient(selected, { animalId: v }) }}>
+                    <option value="">— none —</option>
+                    {(animals||[]).map(a=> <option key={a.id} value={a.id}>{a.name||a.tag||a.id}{a.tag && a.name ? ` (${a.tag})` : ''}</option>)}
+                  </select>
+                </label>
                 <div style={{ marginTop:8 }}><button onClick={()=>{ save(); /* already saved via updatePatient */ }}>Save</button></div>
                 <div style={{ marginTop:8 }}>
                   {form.admitted ? (

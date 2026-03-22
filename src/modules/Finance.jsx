@@ -55,7 +55,9 @@ const normalizeTransaction = (entry = {}) => {
     category: entry.category || 'Other',
     subcategory: entry.subcategory || 'Miscellaneous',
     description: entry.description || 'Untitled transaction',
-    type: entry.type || (amount >= 0 ? 'income' : 'expense')
+    type: entry.type || (amount >= 0 ? 'income' : 'expense'),
+    entityType: entry.entityType || '',
+    entityId: entry.entityId || ''
   }
 }
 
@@ -85,6 +87,7 @@ export default function Finance(){
   const [formData, setFormData] = useState({
     amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', 
     description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10),
+    entityType: '', entityId: '',
     attachments: [] // For receipt/photo attachments
   })
 
@@ -195,7 +198,7 @@ export default function Finance(){
       `Added ${newEntry.type}: ${newEntry.description} - KES ${Math.abs(newEntry.amount).toLocaleString()}`,
       newEntry
     )
-    setFormData({ amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10) })
+    setFormData({ amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10), entityType: '', entityId: '' })
     setShowAddForm(false)
   }
 
@@ -315,7 +318,9 @@ export default function Finance(){
       description: entry.description || '',
       paymentMethod: entry.paymentMethod || 'Cash',
       vendor: entry.vendor || '',
-      date: entry.date || new Date().toISOString().slice(0,10)
+      date: entry.date || new Date().toISOString().slice(0,10),
+      entityType: entry.entityType || '',
+      entityId: entry.entityId || ''
     })
     setEditingId(entry.id)
     setShowAddForm(true)
@@ -333,13 +338,13 @@ export default function Finance(){
       amount: finalAmount,
       description: formData.description.trim()
     } : i))
-    setFormData({ amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10) })
+    setFormData({ amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10), entityType: '', entityId: '' })
     setEditingId(null)
     setShowAddForm(false)
   }
 
   function cancelEdit(){
-    setFormData({ amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10) })
+    setFormData({ amount: '', type: 'expense', category: 'Feed', subcategory: 'Hay', description: '', paymentMethod: 'Cash', vendor: '', date: new Date().toISOString().slice(0,10), entityType: '', entityId: '' })
     setEditingId(null)
     setShowAddForm(false)
   }
@@ -356,7 +361,9 @@ export default function Finance(){
           (entry.category || '').toLowerCase().includes(q) ||
           (entry.subcategory || '').toLowerCase().includes(q) ||
           (entry.vendor || '').toLowerCase().includes(q) ||
-          (entry.paymentMethod || '').toLowerCase().includes(q)
+          (entry.paymentMethod || '').toLowerCase().includes(q) ||
+          (entry.entityType || '').toLowerCase().includes(q) ||
+          (entry.entityId || '').toLowerCase().includes(q)
         if (!matchesSearch) return false
       }
       
@@ -576,6 +583,21 @@ export default function Finance(){
               <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Vendor/Customer</label>
               <input placeholder="Enter vendor or customer name" value={formData.vendor} onChange={e => setFormData({...formData, vendor: e.target.value})} />
             </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Reference Type</label>
+              <select value={formData.entityType} onChange={e => setFormData({...formData, entityType: e.target.value})}>
+                <option value="">None</option>
+                <option value="animal">Animal</option>
+                <option value="crop">Crop</option>
+                <option value="inventory">Inventory Item</option>
+                <option value="task">Task</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500' }}>Reference ID</label>
+              <input placeholder="e.g. A-002 / CROP-01" value={formData.entityId} onChange={e => setFormData({...formData, entityId: e.target.value})} />
+            </div>
           </div>
           <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
             <button onClick={editingId ? saveEdit : add} style={{ background: 'var(--green)', color: '#fff', padding: '10px 16px', border: 'none', borderRadius: '6px' }}>{editingId ? 'Save Changes' : 'Add Transaction'}</button>
@@ -731,6 +753,7 @@ export default function Finance(){
                     <span>📅 {entry.date}</span>
                     <span>💳 {entry.paymentMethod}</span>
                     <span>🏪{' '}<EditableField value={entry.vendor || ''} onChange={(v)=>updateEntry(entry.id, { vendor: v })} inputStyle={{ fontSize: 13 }} /></span>
+                    {entry.entityType && entry.entityId && <span>🔗 {entry.entityType}:{entry.entityId}</span>}
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -816,6 +839,8 @@ export default function Finance(){
                     <div><strong>Date:</strong> {entry.date}</div>
                     <div><strong>Payment Method:</strong> {entry.paymentMethod}</div>
                     {entry.vendor && <div><strong>Vendor/Customer:</strong> {entry.vendor}</div>}
+                    {entry.entityType && <div><strong>Reference Type:</strong> {entry.entityType}</div>}
+                    {entry.entityId && <div><strong>Reference ID:</strong> {entry.entityId}</div>}
                     <div><strong>Transaction ID:</strong> {entry.id}</div>
                     {entry.createdDate && <div><strong>Created:</strong> {new Date(entry.createdDate).toLocaleString()}</div>}
                   </div>
